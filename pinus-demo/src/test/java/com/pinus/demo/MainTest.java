@@ -20,6 +20,17 @@ public class MainTest {
 		System.out.println(value);
 		echoService.discard();
 		echoService.discard("discard pinus");
+
+		try {
+			echoService.error();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		try {
+			echoService.rterror();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 }

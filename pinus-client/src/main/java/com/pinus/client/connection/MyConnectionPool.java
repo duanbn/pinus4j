@@ -82,20 +82,6 @@ public class MyConnectionPool extends AbstractLifecycle implements ConnectionPoo
         throw new IOException("创建连接失败");
     }
 
-    private static ConnectionPool instance;
-
-    public static ConnectionPool getInstance(String host, int port) {
-        if (instance == null) {
-            synchronized (MyConnectionPool.class) {
-                if (instance == null) {
-                    instance = new MyConnectionPool(host, port);
-                    log.info("目标主机=" + host + ", 目标端口=" + port);
-                }
-            }
-        }
-        return instance;
-    }
-
     public void setMinConnect(int num) {
         this.minConnectNum = num;
     }

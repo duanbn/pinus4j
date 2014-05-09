@@ -36,7 +36,7 @@ public class RpcProcessor implements IProcessor {
 			Object returnVal = m.invoke(service, args);
 			out.setBody(returnVal);
 		} catch (InvocationTargetException e) {
-			out.setBody(e);
+			out.setBody(e.getTargetException());
 		} catch (Exception e) {
 			out.setBody(e);
 		}

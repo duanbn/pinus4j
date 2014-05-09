@@ -16,7 +16,7 @@ public class ConnectionTest {
 	@Test
 	public void test() {
 		try {
-			ConnectionPool cp = MyConnectionPool.getInstance(HOST, PORT);
+			ConnectionPool cp = new MyConnectionPool(HOST, PORT);
 			cp.startup();
 			Connection conn = cp.getConnection();
 

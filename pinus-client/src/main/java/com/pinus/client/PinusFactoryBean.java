@@ -8,9 +8,9 @@ import com.pinus.client.connection.MyConnectionPool;
 public class PinusFactoryBean {
 
 	private ConnectionPool cpool;
-	
+
 	private String host;
-	
+
 	private int port;
 
 	private String serviceName;
@@ -25,7 +25,7 @@ public class PinusFactoryBean {
 	}
 
 	public void startup() {
-		this.cpool = MyConnectionPool.getInstance(host, port);
+		this.cpool = new MyConnectionPool(host, port);
 		this.cpool.startup();
 	}
 

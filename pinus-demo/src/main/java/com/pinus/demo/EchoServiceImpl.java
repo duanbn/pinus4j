@@ -20,4 +20,14 @@ public class EchoServiceImpl implements IEchoService {
 		System.out.println("invoke discard " + value);
 	}
 
+	@Override
+	public void error() throws Exception {
+		throw new Exception("pinus test error");
+	}
+
+	@Override
+	public void rterror() {
+		throw new RuntimeException("pinus test rterror");
+	}
+
 }

@@ -27,10 +27,10 @@
 	<bean id="pinusFactoryBean" class="com.pinus.client.PinusFactoryBean"
 		init-method="startup" destroy-method="destroy">
 		<property name="host" value="localhost" />
-		<property name="port" value="9999" />
+		<property name="port" value="9090" />
 	</bean>
 	<bean id="echo" factory-bean="pinusFactoryBean" factory-method="create">
-		<constructor-arg type="java.lang.String" value="echoServiceImpl" />
-		<constructor-arg type="java.lang.String" value="com.pinus.demo.IEchoService" />
+		<constructor-arg value="echoServiceImpl" />
+		<constructor-arg value="com.pinus.demo.IEchoService" />
 	</bean>
 </beans>
