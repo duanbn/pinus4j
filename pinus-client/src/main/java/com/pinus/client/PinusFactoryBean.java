@@ -8,15 +8,14 @@ import com.pinus.client.connection.MyConnectionPool;
 public class PinusFactoryBean {
 
 	private ConnectionPool cpool;
+	
+	private String host;
+	
+	private int port;
 
 	private String serviceName;
 
 	private String interfaceClass;
-
-	public PinusFactoryBean(String host, int port) {
-		this.cpool = MyConnectionPool.getInstance(host, port);
-		this.cpool.startup();
-	}
 
 	public Object create(String serviceName, String interfaceClass) throws ClassNotFoundException {
 		ClassLoader cl = Thread.currentThread().getContextClassLoader();
@@ -25,8 +24,29 @@ public class PinusFactoryBean {
 		return Proxy.newProxyInstance(cl, new Class<?>[] { clazz }, rpcInvokeHandler);
 	}
 
+	public void startup() {
+		this.cpool = MyConnectionPool.getInstance(host, port);
+		this.cpool.startup();
+	}
+
 	public void destroy() {
 		this.cpool.shutdown();
+	}
+
+	public String getHost() {
+		return host;
+	}
+
+	public void setHost(String host) {
+		this.host = host;
+	}
+
+	public int getPort() {
+		return port;
+	}
+
+	public void setPort(int port) {
+		this.port = port;
 	}
 
 	public String getServiceName() {

@@ -24,15 +24,13 @@
 		</property>
 	</bean>
 
-	<bean id="pinusFactoryBean" class="com.pinus.client.PinusFactoryBean">
-		<constructor-arg index="0" value="localhost" />
-		<constructor-arg index="1" value="9999" />
+	<bean id="pinusFactoryBean" class="com.pinus.client.PinusFactoryBean"
+		init-method="startup" destroy-method="destroy">
+		<property name="host" value="localhost" />
+		<property name="port" value="9999" />
 	</bean>
 	<bean id="echo" factory-bean="pinusFactoryBean" factory-method="create">
 		<constructor-arg type="java.lang.String" value="echoServiceImpl" />
 		<constructor-arg type="java.lang.String" value="com.pinus.demo.IEchoService" />
 	</bean>
-
-	<context:component-scan base-package="com.pinus.demo" />
-
 </beans>

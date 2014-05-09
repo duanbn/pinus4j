@@ -18,6 +18,8 @@ public class MainTest {
 	public void test() {
 		String value = echoService.echo("hello pinus");
 		System.out.println(value);
+		echoService.discard();
+		echoService.discard("discard pinus");
 	}
 
 }

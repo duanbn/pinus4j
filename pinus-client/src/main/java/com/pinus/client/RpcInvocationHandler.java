@@ -2,14 +2,12 @@ package com.pinus.client;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
-import java.io.IOException;
+
+import org.apache.log4j.Logger;
 
 import com.pinus.client.connection.Connection;
 import com.pinus.client.connection.ConnectionPool;
-import com.pinus.core.message.*;
-import com.pinus.core.util.StringUtil;
-
-import org.apache.log4j.Logger;
+import com.pinus.core.message.RpcMessage;
 
 /**
  * 客户端动态代理执行类.

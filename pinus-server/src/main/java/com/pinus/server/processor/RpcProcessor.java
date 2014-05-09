@@ -21,9 +21,12 @@ public class RpcProcessor implements IProcessor {
 		String serviceName = msg.getServiceName();
 		String methodName = msg.getMethodName();
 		Object[] args = msg.getArgs();
-		Class<?>[] argClass = new Class<?>[args.length];
-		for (int i = 0; i < args.length; i++) {
-			argClass[i] = args[i].getClass();
+		Class<?>[] argClass = null;
+		if (args != null) {
+			argClass = new Class<?>[args.length];
+			for (int i = 0; i < args.length; i++) {
+				argClass[i] = args[i].getClass();
+			}
 		}
 
 		Object service = this.springCtx.getBean(serviceName);
