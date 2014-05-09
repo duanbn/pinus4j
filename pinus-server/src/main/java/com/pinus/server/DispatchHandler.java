@@ -13,12 +13,16 @@ import com.pinus.core.ser.Serializer;
 import com.pinus.server.processor.IProcessor;
 
 public class DispatchHandler extends IoHandlerAdapter {
+
 	private Serializer ser;
 	private Deserializer deser;
 
-	public DispatchHandler() {
+	private ProcessorLoader pl;
+
+	public DispatchHandler(ProcessorLoader pl) {
 		this.ser = MySerializer.getInstance();
 		this.deser = MyDeserializer.getInstance();
+		this.pl = pl;
 	}
 
 	@Override
@@ -26,7 +30,7 @@ public class DispatchHandler extends IoHandlerAdapter {
 		byte[] pkg = (byte[]) message;
 		Message in = deser.deser(pkg, Message.class);
 
-		IProcessor processor = ProcessorConfig.get(in.getClass());
+		IProcessor processor = pl.get(in.getClass());
 		Message out = processor.process(in);
 
 		pkg = ser.ser(out);

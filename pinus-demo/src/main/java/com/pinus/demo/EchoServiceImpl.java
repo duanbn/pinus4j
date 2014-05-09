@@ -1,4 +1,4 @@
-package com.pinus.server.service;
+package com.pinus.demo;
 
 import org.springframework.stereotype.Service;
 

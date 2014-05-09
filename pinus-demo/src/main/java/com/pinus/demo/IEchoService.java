@@ -1,4 +1,4 @@
-package com.pinus.server.service;
+package com.pinus.demo;
 
 public interface IEchoService {
 
