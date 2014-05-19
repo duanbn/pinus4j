@@ -1,7 +1,7 @@
 --version 0.5.0 (TODO)
 1.增加读写分离特性
   当配置的从库集群时，所有的写操作都是走主库，所有的读操作根据条件选择主库或者从库
-  选择从库的规则，需要配置一个主从的同步延迟时间，并且kaola-storage需要监控DB的写状态知道哪个表发生了写操作
+  选择从库的规则，需要配置一个主从的同步延迟时间，并且pinus需要监控DB的写状态知道哪个表发生了写操作
 2.添加线性扩展特性
   可以管理更多的集群，并对每个表设置集群容量
   
@@ -29,7 +29,7 @@
 1. 基于zookeeper的全局ID生成器
 1.1 需要依赖zookeeper来做集群锁做同步, zookeeper连接需要在storage-config.properties里进行配置.
 1.2 全局表的主键不能设置为自增
-2. 所有的表的主键必须不能自增，主键由kaola-storage框架统一生成.
+2. 所有的表的主键必须不能自增，主键由pinus框架统一生成.
 
 --version 0.3.2
 1. 添加了三个接口save、update、saveOrUpdate，支持单个参数数据对象, 但是数据对象需要实现IShardingValue接口
@@ -46,7 +46,7 @@
 -- version 0.2.1
 1. 添加findOneByQuery接口
 2. 代码优化
-2.1 将DBGenerator和IdGenerator抽取到com.kaola.storage.generator包中
+2.1 将DBGenerator和IdGenerator抽取到com.pinus.generator包中
 3. 缓存方式改为针对单个实体进行缓存
 4. 修复部分bug
 

@@ -46,7 +46,7 @@ public class BaseTest {
 
 		client = new ShardingStorageClientImpl();
 		client.setMode(EnumMode.DISTRIBUTED);
-		client.setScanPackage("com.kaola.entity");
+		client.setScanPackage("com.entity");
 		client.setCreateTable(true);
 		client.setPrimaryCache(primaryCache);
 		client.init();
