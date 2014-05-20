@@ -46,16 +46,6 @@ public abstract class AbstractDBCluster implements IDBCluster {
 	private static final Logger LOG = Logger.getLogger(AbstractDBCluster.class);
 
 	/**
-	 * 主全局库.
-	 */
-	private Map<String, DataSource> masterGlobalDs = new HashMap<String, DataSource>();
-
-	/**
-	 * 从全局库.
-	 */
-	private Map<String, Map<Integer, DataSource>> slaveGlobalDs = new HashMap<String, Map<Integer, DataSource>>();
-
-	/**
 	 * 是否创建数据库表.
 	 */
 	private boolean isCreateTable;
@@ -76,14 +66,19 @@ public abstract class AbstractDBCluster implements IDBCluster {
 	private IDBGenerator dbGenerator;
 
 	/**
-	 * 集群中的表集合. {集群名称, {分库下标, {表名, 分表数}}}
-	 */
-	Map<String, Map<Integer, Map<String, Integer>>> tableCluster = new HashMap<String, Map<Integer, Map<String, Integer>>>();
-
-	/**
 	 * 数据库路由器
 	 */
 	private IClusterRouter dbRouter;
+
+    /**
+	 * 主全局库.
+	 */
+	private Map<String, DataSource> masterGlobalDs = new HashMap<String, DataSource>();
+
+	/**
+	 * 从全局库.
+	 */
+	private Map<String, Map<Integer, DataSource>> slaveGlobalDs = new HashMap<String, Map<Integer, DataSource>>();
 
 	/**
 	 * 主库集群数据源. {集群名, [集群连接]}
@@ -94,6 +89,11 @@ public abstract class AbstractDBCluster implements IDBCluster {
 	 * 从库集群数据源. {集群名, {从库号, [集群连接]}}
 	 */
 	private Map<String, Map<Integer, List<DataSource>>> slaveDSCluster = new HashMap<String, Map<Integer, List<DataSource>>>();
+
+    /**
+	 * 集群中的表集合. {集群名称, {分库下标, {表名, 分表数}}}
+	 */
+	Map<String, Map<Integer, Map<String, Integer>>> tableCluster = new HashMap<String, Map<Integer, Map<String, Integer>>>();
 
 	/**
 	 * 构造方法.
@@ -121,9 +121,9 @@ public abstract class AbstractDBCluster implements IDBCluster {
 		Map<String, DBConnectionInfo> masterGlobalInfo = config.loadMasterGlobalInfo();
 		// 加载从全局库
 		Map<String, Map<Integer, DBConnectionInfo>> slaveGlobalInfo = config.loadSlaveGlobalInfo();
-		// 加载主库
+		// 加载主库集群
 		Map<String, DBClusterInfo> masterDbCluster = config.loadMasterDbClusterInfo();
-		// 加载从库
+		// 加载从库集群
 		Map<String, Map<Integer, DBClusterInfo>> slaveDbCluster = config.loadSlaveDbClusterInfo();
 
 		// 给路由器设置集群信息

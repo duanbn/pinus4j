@@ -23,7 +23,7 @@
 		<minEvictableIdleTimeMillis>10000</minEvictableIdleTimeMillis>
 	</db-connection-pool>
 
-	<cluster name="klstorage">
+	<cluster name="klstorage" capacity="1-10000000">
 		<master>
 			<global>
 				<db.username>root</db.username>
@@ -100,7 +100,7 @@
 		</slave>
 	</cluster>
 
-	<cluster name="user">
+	<cluster name="user" capacity="1-1000000">
 		<master>
 			<global>
 				<db.username>root</db.username>
