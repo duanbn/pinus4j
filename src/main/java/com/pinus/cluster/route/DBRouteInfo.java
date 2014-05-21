@@ -1,6 +1,5 @@
 package com.pinus.cluster.route;
 
-
 /**
  * 表示一次路由操作的结果.
  * 
@@ -12,6 +11,11 @@ public class DBRouteInfo {
 	 * 集群名称. 等于不带下标的数据库名
 	 */
 	private String clusterName;
+
+	/**
+	 * 集群下标
+	 */
+	private int clusterIndex;
 
 	/**
 	 * 被选中的数据库下标.
@@ -30,13 +34,8 @@ public class DBRouteInfo {
 
 	@Override
 	public String toString() {
-		StringBuilder info = new StringBuilder("[");
-		info.append("clusterName=").append(this.clusterName);
-		info.append(", dbIndex=").append(this.dbIndex);
-		info.append(", tableName").append(this.tableName);
-		info.append(", tableIndex").append(this.tableIndex);
-		info.append("]");
-		return info.toString();
+		return "DBRouteInfo [clusterName=" + clusterName + ", clusterIndex=" + clusterIndex + ", dbIndex=" + dbIndex
+				+ ", tableName=" + tableName + ", tableIndex=" + tableIndex + "]";
 	}
 
 	public String getClusterName() {
@@ -45,6 +44,14 @@ public class DBRouteInfo {
 
 	public void setClusterName(String clusterName) {
 		this.clusterName = clusterName;
+	}
+
+	public int getClusterIndex() {
+		return clusterIndex;
+	}
+
+	public void setClusterIndex(int clusterIndex) {
+		this.clusterIndex = clusterIndex;
 	}
 
 	public int getDbIndex() {

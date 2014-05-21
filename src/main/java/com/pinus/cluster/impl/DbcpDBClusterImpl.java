@@ -1,10 +1,10 @@
 package com.pinus.cluster.impl;
 
+import java.sql.SQLException;
 import java.util.Map;
 
-import javax.sql.DataSource;
-
 import org.apache.commons.dbcp.BasicDataSource;
+import org.apache.log4j.Logger;
 
 import com.pinus.api.enums.EnumDB;
 import com.pinus.cluster.AbstractDBCluster;
@@ -18,6 +18,8 @@ import com.pinus.constant.Const;
  */
 public class DbcpDBClusterImpl extends AbstractDBCluster {
 
+	public static final Logger LOG = Logger.getLogger(DbcpDBClusterImpl.class);
+
 	/**
 	 * 构造方法.
 	 * 
@@ -29,7 +31,7 @@ public class DbcpDBClusterImpl extends AbstractDBCluster {
 	}
 
 	@Override
-	public DataSource buildDataSource(DBConnectionInfo dbConnInfo) {
+	public void buildDataSource(DBConnectionInfo dbConnInfo) {
 		BasicDataSource ds = new BasicDataSource();
 		ds.setDriverClassName(enumDb.getDriverClass());
 		ds.setUsername(dbConnInfo.getUsername());
@@ -44,17 +46,22 @@ public class DbcpDBClusterImpl extends AbstractDBCluster {
 		ds.setMaxIdle((Integer) dbConnPoolInfo.get(Const.PROP_MAXIDLE));
 		ds.setInitialSize((Integer) dbConnPoolInfo.get(Const.PROP_INITIALSIZE));
 		ds.setRemoveAbandoned((Boolean) dbConnPoolInfo.get(Const.PROP_REMOVEABANDONED));
-		ds.setRemoveAbandonedTimeout((Integer) dbConnPoolInfo
-				.get(Const.PROP_REMOVEABANDONEDTIMEOUT));
+		ds.setRemoveAbandonedTimeout((Integer) dbConnPoolInfo.get(Const.PROP_REMOVEABANDONEDTIMEOUT));
 		ds.setMaxWait((Integer) dbConnPoolInfo.get(Const.PROP_MAXWAIT));
-		ds.setTimeBetweenEvictionRunsMillis((Integer) dbConnPoolInfo
-				.get(Const.PROP_TIMEBETWEENEVICTIONRUNSMILLIS));
-		ds.setNumTestsPerEvictionRun((Integer) dbConnPoolInfo
-				.get(Const.PROP_NUMTESTSPEREVICTIONRUN));
-		ds.setMinEvictableIdleTimeMillis((Integer) dbConnPoolInfo
-				.get(Const.PROP_MINEVICTABLEIDLETIMEMILLIS));
+		ds.setTimeBetweenEvictionRunsMillis((Integer) dbConnPoolInfo.get(Const.PROP_TIMEBETWEENEVICTIONRUNSMILLIS));
+		ds.setNumTestsPerEvictionRun((Integer) dbConnPoolInfo.get(Const.PROP_NUMTESTSPEREVICTIONRUN));
+		ds.setMinEvictableIdleTimeMillis((Integer) dbConnPoolInfo.get(Const.PROP_MINEVICTABLEIDLETIMEMILLIS));
 
-		return ds;
+		dbConnInfo.setDatasource(ds);
+	}
+
+	@Override
+	public void closeDataSource(DBConnectionInfo dbConnInfo) {
+		try {
+			((BasicDataSource) dbConnInfo.getDatasource()).close();
+		} catch (SQLException e) {
+			LOG.error(e.getMessage());
+		}
 	}
 
 }

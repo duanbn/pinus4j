@@ -16,13 +16,6 @@ public class Const {
 	 */
 	public static final String PROP_ZK_URL = "db.cluster.zk";
 
-	/**
-	 * 集群全局唯一id生辰表.
-	 */
-	public static final String TABLE_GLOBALID_NAME = "global_id";
-	public static final String TABLE_GLOBALID_FIELD_TABLENAME = "table_name";
-	public static final String TABLE_GLOBALID_FIELD_ID = "global_id";
-
 	// SQL相关
 	/**
 	 * 查询count的慢日志时间阈值

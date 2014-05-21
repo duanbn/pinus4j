@@ -1,9 +1,9 @@
 package com.pinus.config;
 
+import java.util.List;
 import java.util.Map;
 
 import com.pinus.cluster.beans.DBClusterInfo;
-import com.pinus.cluster.beans.DBConnectionInfo;
 import com.pinus.cluster.enums.HashAlgoEnum;
 
 /**
@@ -34,31 +34,17 @@ public interface IClusterConfig {
 	public HashAlgoEnum getHashAlgo();
 
 	/**
-	 * 加载主全局库.
-	 * 
-	 * @return {集群名, 连接信息}
-	 */
-	public Map<String, DBConnectionInfo> loadMasterGlobalInfo();
-
-	/**
-	 * 加载从全局库.
-	 * 
-	 * @return {集群名, {从库号, 连接信息}}
-	 */
-	public Map<String, Map<Integer, DBConnectionInfo>> loadSlaveGlobalInfo();
-
-	/**
 	 * 加载主库集群信息.
 	 * 
 	 * @return 主库集群信息, key:数据库名, value:集群信息.
 	 */
-	public Map<String, DBClusterInfo> loadMasterDbClusterInfo();
+	public Map<String, List<DBClusterInfo>> loadMasterDbClusterInfo();
 
 	/**
 	 * 加载从库集群信息.
 	 * 
 	 * @return 从库集群信息, key:数据库名, value:从库信息key:从库号, value集群信息
 	 */
-	public Map<String, Map<Integer, DBClusterInfo>> loadSlaveDbClusterInfo();
+	public Map<String, List<List<DBClusterInfo>>> loadSlaveDbClusterInfo();
 
 }

@@ -1,5 +1,6 @@
 package com.pinus.cluster.route;
 
+import java.util.List;
 import java.util.Map;
 
 import com.pinus.api.IShardingValue;
@@ -36,14 +37,14 @@ public interface IClusterRouter {
      *
      * @param masterDbClusterInfo 主库集群信息.
      */
-    public void setMasterDbClusterInfo(Map<String, DBClusterInfo> masterDbClusterInfo);
+    public void setMasterDbClusterInfo(Map<String, List<DBClusterInfo>> masterDbClusterInfo);
 
     /**
      * 设置从库集群.
      * 
      * @param slaveDbClusterInfo 从库集群信息.
      */
-    public void setSlaveDbClusterInfo(Map<String, Map<Integer, DBClusterInfo>> slaveDbClusterInfo);
+    public void setSlaveDbClusterInfo(Map<String, List<List<DBClusterInfo>>> slaveDbClusterInfo);
 
     /**
      * 设置数据表集群.

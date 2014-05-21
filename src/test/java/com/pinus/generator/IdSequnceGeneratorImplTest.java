@@ -15,7 +15,16 @@ public class IdSequnceGeneratorImplTest extends BaseTest {
 	public static final Set<Long> longIds = new ConcurrentHashSet<Long>();
 
 	@Test
-	public void test() throws Exception {
+	public void testGen() throws Exception {
+		IIdGenerator idGenerator = client.getIdGenerator();
+
+		for (int i = 0; i < 10; i++) {
+			System.out.println(idGenerator.genClusterUniqueLongId(client.getDbCluster(), CLUSTER_NAME, "test_entity"));
+		}
+	}
+
+	@Test
+	public void testConcurrent() throws Exception {
 		IIdGenerator idGenerator = client.getIdGenerator();
 		long start = System.currentTimeMillis();
 		Thread th = null;

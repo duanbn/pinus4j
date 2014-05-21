@@ -2,6 +2,8 @@ package com.pinus.cluster.beans;
 
 import java.util.Map;
 
+import javax.sql.DataSource;
+
 import com.pinus.util.StringUtils;
 
 /**
@@ -24,6 +26,16 @@ public class DBConnectionInfo {
 	 */
 	private Map<String, Object> connPoolInfo;
 
+	/**
+	 * 数据源
+	 */
+	private DataSource datasource;
+
+	/**
+	 * 校验对象的合法性
+	 * 
+	 * @return
+	 */
 	public boolean check() {
 		if (StringUtils.isBlank(this.username)) {
 			return false;
@@ -39,8 +51,50 @@ public class DBConnectionInfo {
 
 	@Override
 	public String toString() {
-		return "DBConnectionInfo [clusterName=" + clusterName + ", username=" + username + ", password=" + password
-				+ ", url=" + url + ", connPoolInfo=" + connPoolInfo + "]";
+		return "DBConnectionInfo [url=" + url + "]";
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((clusterName == null) ? 0 : clusterName.hashCode());
+		result = prime * result + ((password == null) ? 0 : password.hashCode());
+		result = prime * result + ((url == null) ? 0 : url.hashCode());
+		result = prime * result + ((username == null) ? 0 : username.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		DBConnectionInfo other = (DBConnectionInfo) obj;
+		if (clusterName == null) {
+			if (other.clusterName != null)
+				return false;
+		} else if (!clusterName.equals(other.clusterName))
+			return false;
+		if (password == null) {
+			if (other.password != null)
+				return false;
+		} else if (!password.equals(other.password))
+			return false;
+		if (url == null) {
+			if (other.url != null)
+				return false;
+		} else if (!url.equals(other.url))
+			return false;
+		if (username == null) {
+			if (other.username != null)
+				return false;
+		} else if (!username.equals(other.username))
+			return false;
+		return true;
 	}
 
 	public String getUsername() {
@@ -81,5 +135,13 @@ public class DBConnectionInfo {
 
 	public Map<String, Object> getConnPoolInfo() {
 		return this.connPoolInfo;
+	}
+
+	public DataSource getDatasource() {
+		return datasource;
+	}
+
+	public void setDatasource(DataSource datasource) {
+		this.datasource = datasource;
 	}
 }

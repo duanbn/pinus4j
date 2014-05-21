@@ -1,14 +1,13 @@
 package com.pinus.cluster;
 
-import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 
-import javax.sql.DataSource;
-
 import com.pinus.api.IShardingValue;
 import com.pinus.api.enums.EnumDBMasterSlave;
+import com.pinus.cluster.beans.DBClusterInfo;
+import com.pinus.cluster.beans.DBConnectionInfo;
 import com.pinus.cluster.route.IClusterRouter;
 import com.pinus.exception.DBClusterException;
 import com.pinus.generator.IDBGenerator;
@@ -35,43 +34,39 @@ public interface IDBCluster {
 	 *             关闭失败
 	 */
 	public void shutdown() throws DBClusterException;
+	
+	public List<DBConnectionInfo> getMasterGlobalDbConn(String clusterName);
+	
+	public DBConnectionInfo getMasterGlobalDbConn(Number pk, String clusterName);
+	
+	/**
+	 * 获取主全局库连接
+	 * 
+	 * @param pks
+	 * @param clusterName
+	 * @return
+	 */
+	public Map<DBConnectionInfo, List<Number>> getMasterGlobalDbConn(Number[] pks, String clusterName);
 
 	/**
 	 * 获取主全局库连接.
 	 * 
 	 * @return 数据库连接.
 	 */
-	public Connection getMasterGlobalDbConn(String clusterName) throws SQLException;
+	public Map<DBConnectionInfo, List> getMasterGlobalDbConn(List entities, String clusterName);
+	
+	
+	
+	public DBConnectionInfo getSlaveGlobalDbConn(Number pk, String clusterName, EnumDBMasterSlave slave);
+	
+	public List<DBConnectionInfo> getSlaveGlobalDbConn(String clusterName, EnumDBMasterSlave slave);
 
 	/**
 	 * 获取从全局库连接.
 	 * 
 	 * @return 数据库连接.
 	 */
-	public Connection getSlaveGlobalDbConn(String clusterName, EnumDBMasterSlave slave) throws SQLException;
-
-	/**
-	 * 设置数据库路由器.
-	 */
-	public void setDbRouter(IClusterRouter dbRouter);
-
-	/**
-	 * 获取数据库路由器.
-	 */
-	public IClusterRouter getDbRouter();
-
-	/**
-	 * 获取主库的零号库信息.
-	 * 
-	 * @param clusterName
-	 *            数据库集群名称
-	 * 
-	 * @return 主库的零号库
-	 * 
-	 * @throws DBClusterException
-	 *             获取失败
-	 */
-	public DB getGlobalIdFromMaster(String clusterName) throws DBClusterException;
+	public Map<DBConnectionInfo, List> getSlaveGlobalDbConn(List entities, String clusterName, EnumDBMasterSlave slave);
 
 	/**
 	 * 从主库集群中获取被操作的库表.
@@ -97,6 +92,16 @@ public interface IDBCluster {
 	 */
 	public DB selectDbFromSlave(EnumDBMasterSlave slave, String tableName, IShardingValue<?> value)
 			throws DBClusterException;
+
+	/**
+	 * 设置数据库路由器.
+	 */
+	public void setDbRouter(IClusterRouter dbRouter);
+
+	/**
+	 * 获取数据库路由器.
+	 */
+	public IClusterRouter getDbRouter();
 
 	/**
 	 * 设置是否创建表.
@@ -134,7 +139,7 @@ public interface IDBCluster {
 	 * 
 	 * @return 集群数据源
 	 */
-	public Map<String, List<DataSource>> getMasterDsCluster();
+	public Map<String, List<DBClusterInfo>> getMasterCluster();
 
 	/**
 	 * 获取集群表集合

@@ -5,6 +5,7 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.log4j.Logger;
 
@@ -12,6 +13,7 @@ import com.pinus.api.IShardingValue;
 import com.pinus.cache.IPrimaryCache;
 import com.pinus.cluster.DB;
 import com.pinus.cluster.IDBCluster;
+import com.pinus.cluster.beans.DBConnectionInfo;
 import com.pinus.datalayer.IShardingUpdate;
 import com.pinus.datalayer.SQLBuilder;
 import com.pinus.exception.DBClusterException;
@@ -67,25 +69,32 @@ public class ShardingUpdateImpl implements IShardingUpdate {
 		int[] newPks = this.idGenerator.genClusterUniqueIntIdBatch(dbCluster, clusterName, tableName, entities.size());
 
 		Number[] pks = new Number[newPks.length];
-		Connection conn = null;
-		try {
-			for (int i = 0; i < entities.size(); i++) {
+		for (int i = 0; i < entities.size(); i++) {
+			try {
 				ReflectUtil.setPkValue(entities.get(i), newPks[i]);
-				pks[i] = newPks[i];
+			} catch (Exception e) {
+				throw new DBOperationException(e);
 			}
-
-			conn = this.dbCluster.getMasterGlobalDbConn(clusterName);
-
-			_saveBatchGlobal(conn, entities);
-		} catch (Exception e1) {
-			throw new DBOperationException(e1);
-		} finally {
-			SQLBuilder.close(conn);
+			pks[i] = newPks[i];
 		}
 
-		if (primaryCache != null) {
-			primaryCache.putGlobal(clusterName, tableName, pks, entities);
-			primaryCache.incrCountGlobal(clusterName, tableName, pks.length);
+		Map<DBConnectionInfo, List> map = this.dbCluster.getMasterGlobalDbConn(entities, clusterName);
+
+		Connection conn = null;
+		for (Map.Entry<DBConnectionInfo, List> entry : map.entrySet()) {
+			try {
+				conn = entry.getKey().getDatasource().getConnection();
+				_saveBatchGlobal(conn, entry.getValue());
+
+				if (primaryCache != null) {
+					primaryCache.putGlobal(clusterName, tableName, pks, entry.getValue());
+					primaryCache.incrCountGlobal(clusterName, tableName, pks.length);
+				}
+			} catch (Exception e1) {
+				throw new DBOperationException(e1);
+			} finally {
+				SQLBuilder.close(conn);
+			}
 		}
 
 		return pks;
@@ -103,29 +112,28 @@ public class ShardingUpdateImpl implements IShardingUpdate {
 		Class<?> clazz = entities.get(0).getClass();
 		String tableName = ReflectUtil.getTableName(clazz);
 
+		Map<DBConnectionInfo, List> map = this.dbCluster.getMasterGlobalDbConn(entities, clusterName);
+
 		Connection conn = null;
-		try {
-			conn = this.dbCluster.getMasterGlobalDbConn(clusterName);
+		for (Map.Entry<DBConnectionInfo, List> entry : map.entrySet()) {
+			try {
+				conn = entry.getKey().getDatasource().getConnection();
+				_updateBatchGlobal(conn, entry.getValue());
 
-			_updateBatchGlobal(conn, entities);
-
-			Number[] pks = new Number[entities.size()];
-			for (int i = 0; i < entities.size(); i++) {
-				try {
-					pks[i] = ReflectUtil.getPkValue(entities.get(i));
-				} catch (Exception e) {
-					throw new DBOperationException("获取更新数据的主键值失败");
+				Number[] pks = new Number[entry.getValue().size()];
+				for (int i = 0; i < entry.getValue().size(); i++) {
+					pks[i] = ReflectUtil.getPkValue(entry.getValue().get(i));
 				}
-			}
 
-			// 更新缓存
-			if (primaryCache != null) {
-				primaryCache.putGlobal(clusterName, tableName, pks, entities);
+				// 更新缓存
+				if (primaryCache != null) {
+					primaryCache.putGlobal(clusterName, tableName, pks, entry.getValue());
+				}
+			} catch (SQLException e) {
+				throw new DBOperationException(e);
+			} finally {
+				SQLBuilder.close(conn);
 			}
-		} catch (SQLException e1) {
-			throw new DBOperationException(e1);
-		} finally {
-			SQLBuilder.close(conn);
 		}
 	}
 
@@ -137,21 +145,26 @@ public class ShardingUpdateImpl implements IShardingUpdate {
 	@Override
 	public void globalRemoveByPks(Number[] pks, Class<?> clazz, String clusterName) {
 		Connection conn = null;
-		try {
-			conn = this.dbCluster.getMasterGlobalDbConn(clusterName);
+		Map<DBConnectionInfo, List<Number>> map = this.dbCluster.getMasterGlobalDbConn(pks, clusterName);
 
-			_removeByPksGlobal(conn, pks, clazz);
+		for (Map.Entry<DBConnectionInfo, List<Number>> entry : map.entrySet()) {
+			try {
+				conn = entry.getKey().getDatasource().getConnection();
 
-			// 删除缓存
-			if (primaryCache != null) {
-				String tableName = ReflectUtil.getTableName(clazz);
-				primaryCache.removeGlobal(clusterName, tableName, pks);
-				primaryCache.decrCountGlobal(clusterName, tableName, pks.length);
+				List<Number> pkList = entry.getValue();
+				_removeByPksGlobal(conn, pkList.toArray(new Number[pkList.size()]), clazz);
+
+				// 删除缓存
+				if (primaryCache != null) {
+					String tableName = ReflectUtil.getTableName(clazz);
+					primaryCache.removeGlobal(clusterName, tableName, pkList.toArray(new Number[pkList.size()]));
+					primaryCache.decrCountGlobal(clusterName, tableName, pkList.size());
+				}
+			} catch (SQLException e) {
+				throw new DBOperationException(e);
+			} finally {
+				SQLBuilder.close(conn);
 			}
-		} catch (SQLException e) {
-			throw new DBOperationException(e);
-		} finally {
-			SQLBuilder.close(conn);
 		}
 	}
 
@@ -222,11 +235,7 @@ public class ShardingUpdateImpl implements IShardingUpdate {
 		if (primaryCache != null) {
 			Number[] pks = new Number[entities.size()];
 			for (int i = 0; i < entities.size(); i++) {
-				try {
-					pks[i] = (Number) ReflectUtil.getPkValue(entities.get(i));
-				} catch (Exception e) {
-					throw new DBOperationException("获取更新数据的主键值失败");
-				}
+				pks[i] = (Number) ReflectUtil.getPkValue(entities.get(i));
 			}
 			primaryCache.put(db, pks, entities);
 		}

@@ -1,5 +1,6 @@
 package com.pinus.config;
 
+import java.util.List;
 import java.util.Map;
 
 import org.junit.Test;
@@ -36,34 +37,29 @@ public class XmlCinfigImplTest {
 	}
 
 	@Test
-	public void testLoadMasterGlobalInfo() {
-		Map<String, DBConnectionInfo> map = this.config.loadMasterGlobalInfo();
-		for (Map.Entry<String, DBConnectionInfo> entry : map.entrySet()) {
-			System.out.println(entry.getKey() + ":" + entry.getValue());
-		}
-	}
-
-	@Test
-	public void testLoadSlaveGlobalInfo() {
-		Map<String, Map<Integer, DBConnectionInfo>> map = this.config.loadSlaveGlobalInfo();
-		for (Map.Entry<String, Map<Integer, DBConnectionInfo>> entry : map.entrySet()) {
-			System.out.println(entry.getKey() + ":" + entry.getValue());
-		}
-	}
-
-	@Test
 	public void testLoadMasterDbClusterInfo() {
-		Map<String, DBClusterInfo> map = this.config.loadMasterDbClusterInfo();
-		for (Map.Entry<String, DBClusterInfo> entry : map.entrySet()) {
-			System.out.println(entry.getKey() + ":" + entry.getValue());
+		Map<String, List<DBClusterInfo>> map = this.config.loadMasterDbClusterInfo();
+		List<DBClusterInfo> list = map.get("klstorage");
+		for (DBClusterInfo a : list) {
+			System.out.println(a.getStart() + ":" + a.getEnd() + " " + a.getGlobalConnInfo());
+			for (DBConnectionInfo cinfo : a.getDbConnInfos()) {
+				System.out.println(a.getStart() + ":" + a.getEnd() + " " + cinfo);
+			}
 		}
 	}
 
 	@Test
 	public void testLoadSlaveDbClusterInfo() {
-		Map<String, Map<Integer, DBClusterInfo>> map = this.config.loadSlaveDbClusterInfo();
-		for (Map.Entry<String, Map<Integer, DBClusterInfo>> entry : map.entrySet()) {
-			System.out.println(entry.getKey() + ":" + entry.getValue());
+		Map<String, List<List<DBClusterInfo>>> map = this.config.loadSlaveDbClusterInfo();
+		List<List<DBClusterInfo>> a = map.get("user");
+		for (int i = 0; i < a.size(); i++) {
+			System.out.println(i);
+			for (DBClusterInfo c : a.get(i)) {
+				System.out.println(c.getGlobalConnInfo());
+				for (DBConnectionInfo dbConnInfo : c.getDbConnInfos()) {
+					System.out.println(c.getStart() + ":" + c.getEnd() + " " + dbConnInfo);
+				}
+			}
 		}
 	}
 }

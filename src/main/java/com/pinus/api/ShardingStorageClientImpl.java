@@ -22,7 +22,6 @@ import com.pinus.datalayer.IShardingStatistics;
 import com.pinus.datalayer.IShardingUpdate;
 import com.pinus.datalayer.jdbc.ShardingMasterQueryImpl;
 import com.pinus.datalayer.jdbc.ShardingSlaveQueryImpl;
-import com.pinus.datalayer.jdbc.ShardingStatisticsImpl;
 import com.pinus.datalayer.jdbc.ShardingUpdateImpl;
 import com.pinus.exception.DBClusterException;
 import com.pinus.generator.IDBGenerator;
@@ -496,9 +495,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 
 	@Override
 	public IShardingStatistics getShardingStatistic() {
-		IShardingStatistics staticstic = new ShardingStatisticsImpl();
-		staticstic.setDbCluster(this.dbCluster);
-		return staticstic;
+		throw new UnsupportedOperationException();
 	}
 
 	@Override

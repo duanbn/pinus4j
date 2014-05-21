@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.log4j.Logger;
 
@@ -12,6 +13,7 @@ import com.pinus.api.SQL;
 import com.pinus.api.query.IQuery;
 import com.pinus.cluster.DB;
 import com.pinus.cluster.IDBCluster;
+import com.pinus.cluster.beans.DBConnectionInfo;
 import com.pinus.datalayer.IShardingMasterQuery;
 import com.pinus.datalayer.SQLBuilder;
 import com.pinus.exception.DBClusterException;
@@ -62,35 +64,48 @@ public class ShardingMasterQueryImpl extends AbstractShardingQuery implements IS
 
 	@Override
 	public Number getGlobalCountFromMaster(String clusterName, Class<?> clazz) {
-		Connection conn = null;
-		try {
-			conn = this.dbCluster.getMasterGlobalDbConn(clusterName);
-			return selectCountGlobalWithCache(conn, clusterName, clazz);
-		} catch (SQLException e) {
-			throw new DBOperationException(e);
-		} finally {
-			SQLBuilder.close(conn);
+		long count = 0;
+		List<DBConnectionInfo> dbConnInfos = this.dbCluster.getMasterGlobalDbConn(clusterName);
+		for (DBConnectionInfo dbConnInfo : dbConnInfos) {
+			Connection conn = null;
+			try {
+				conn = dbConnInfo.getDatasource().getConnection();
+				count += selectCountGlobalWithCache(conn, clusterName, clazz).longValue();
+			} catch (SQLException e) {
+				throw new DBOperationException(e);
+			} finally {
+				SQLBuilder.close(conn);
+			}
 		}
+
+		return count;
 	}
 
 	@Override
 	public Number getGlobalCountFromMaster(String clusterName, SQL<?> sql) {
-		Connection conn = null;
-		try {
-			conn = this.dbCluster.getMasterGlobalDbConn(clusterName);
-			return selectCountGlobal(conn, sql);
-		} catch (SQLException e) {
-			throw new DBOperationException(e);
-		} finally {
-			SQLBuilder.close(conn);
+		long count = 0;
+		List<DBConnectionInfo> dbConnInfos = this.dbCluster.getMasterGlobalDbConn(clusterName);
+		for (DBConnectionInfo dbConnInfo : dbConnInfos) {
+			Connection conn = null;
+			try {
+				conn = dbConnInfo.getDatasource().getConnection();
+				count += selectCountGlobal(conn, sql).longValue();
+			} catch (SQLException e) {
+				throw new DBOperationException(e);
+			} finally {
+				SQLBuilder.close(conn);
+			}
 		}
+
+		return count;
+
 	}
 
 	@Override
 	public <T> T findGlobalByPkFromMaster(Number pk, String clusterName, Class<T> clazz) {
 		Connection conn = null;
 		try {
-			conn = this.dbCluster.getMasterGlobalDbConn(clusterName);
+			conn = this.dbCluster.getMasterGlobalDbConn(pk, clusterName).getDatasource().getConnection();
 			return selectByPkWithCache(conn, clusterName, pk, clazz);
 		} catch (SQLException e) {
 			throw new DBOperationException(e);
@@ -101,15 +116,24 @@ public class ShardingMasterQueryImpl extends AbstractShardingQuery implements IS
 
 	@Override
 	public <T> List<T> findGlobalByPksFromMaster(String clusterName, Class<T> clazz, Number... pks) {
-		Connection conn = null;
-		try {
-			conn = this.dbCluster.getMasterGlobalDbConn(clusterName);
-			return selectByPksGlobalWithCache(conn, clusterName, clazz, pks);
-		} catch (SQLException e) {
-			throw new DBOperationException(e);
-		} finally {
-			SQLBuilder.close(conn);
+		Map<DBConnectionInfo, List<Number>> map = this.dbCluster.getMasterGlobalDbConn(pks, clusterName);
+
+		List<T> result = new ArrayList<T>();
+
+		for (Map.Entry<DBConnectionInfo, List<Number>> entry : map.entrySet()) {
+			Connection conn = null;
+			try {
+				conn = entry.getKey().getDatasource().getConnection();
+				result.addAll(selectByPksGlobalWithCache(conn, clusterName, clazz,
+						entry.getValue().toArray(new Number[entry.getValue().size()])));
+			} catch (SQLException e) {
+				throw new DBOperationException(e);
+			} finally {
+				SQLBuilder.close(conn);
+			}
 		}
+
+		return result;
 	}
 
 	@Override
@@ -119,67 +143,73 @@ public class ShardingMasterQueryImpl extends AbstractShardingQuery implements IS
 
 	@Override
 	public <T> List<T> findGlobalMoreFromMaster(String clusterName, Class<T> clazz, int start, int limit) {
-		Connection conn = null;
-		try {
-			conn = this.dbCluster.getMasterGlobalDbConn(clusterName);
-
-			List<T> result = null;
-			if (isCacheAvailable(clazz)) {
-				Number[] pkValues = selectPksMoreGlobal(conn, clazz, start, limit);
-				result = selectByPksGlobalWithCache(conn, clusterName, clazz, pkValues);
-			} else {
-				result = selectMoreGlobal(conn, clazz, start, limit);
-			}
-
-			return result;
-		} catch (SQLException e) {
-			throw new DBOperationException(e);
-		} finally {
-			SQLBuilder.close(conn);
-		}
+		throw new UnsupportedOperationException();
+		// Connection conn = null;
+		// try {
+		// conn = this.dbCluster.getMasterGlobalDbConn(clusterName);
+		//
+		// List<T> result = null;
+		// if (isCacheAvailable(clazz)) {
+		// Number[] pkValues = selectPksMoreGlobal(conn, clazz, start, limit);
+		// result = selectByPksGlobalWithCache(conn, clusterName, clazz,
+		// pkValues);
+		// } else {
+		// result = selectMoreGlobal(conn, clazz, start, limit);
+		// }
+		//
+		// return result;
+		// } catch (SQLException e) {
+		// throw new DBOperationException(e);
+		// } finally {
+		// SQLBuilder.close(conn);
+		// }
 	}
 
 	@Override
 	public <T> List<T> findGlobalBySqlFromMaster(SQL<T> sql, String clusterName) {
-		Connection conn = null;
-		try {
-			conn = this.dbCluster.getMasterGlobalDbConn(clusterName);
-			List<T> result = null;
-			if (isCacheAvailable(sql.getClazz())) {
-				Number[] pkValues = selectPksBySqlGlobal(conn, sql);
-				result = selectByPksGlobalWithCache(conn, clusterName, sql.getClazz(), pkValues);
-			} else {
-				result = selectBySqlGlobal(conn, sql);
-			}
-
-			return result;
-		} catch (SQLException e) {
-			throw new DBOperationException(e);
-		} finally {
-			SQLBuilder.close(conn);
-		}
+		throw new UnsupportedOperationException();
+		// Connection conn = null;
+		// try {
+		// conn = this.dbCluster.getMasterGlobalDbConn(clusterName);
+		// List<T> result = null;
+		// if (isCacheAvailable(sql.getClazz())) {
+		// Number[] pkValues = selectPksBySqlGlobal(conn, sql);
+		// result = selectByPksGlobalWithCache(conn, clusterName,
+		// sql.getClazz(), pkValues);
+		// } else {
+		// result = selectBySqlGlobal(conn, sql);
+		// }
+		//
+		// return result;
+		// } catch (SQLException e) {
+		// throw new DBOperationException(e);
+		// } finally {
+		// SQLBuilder.close(conn);
+		// }
 	}
 
 	@Override
 	public <T> List<T> findGlobalByQueryFromMaster(IQuery query, String clusterName, Class<T> clazz) {
-		Connection conn = null;
-		try {
-			conn = this.dbCluster.getMasterGlobalDbConn(clusterName);
-
-			List<T> result = null;
-			if (isCacheAvailable(clazz)) {
-				Number[] pkValues = selectPksByQueryGlobal(conn, query, clazz);
-				result = selectByPksGlobalWithCache(conn, clusterName, clazz, pkValues);
-			} else {
-				result = selectByQueryGlobal(conn, query, clazz);
-			}
-
-			return result;
-		} catch (SQLException e) {
-			throw new DBOperationException(e);
-		} finally {
-			SQLBuilder.close(conn);
-		}
+		throw new UnsupportedOperationException();
+		// Connection conn = null;
+		// try {
+		// conn = this.dbCluster.getMasterGlobalDbConn(clusterName);
+		//
+		// List<T> result = null;
+		// if (isCacheAvailable(clazz)) {
+		// Number[] pkValues = selectPksByQueryGlobal(conn, query, clazz);
+		// result = selectByPksGlobalWithCache(conn, clusterName, clazz,
+		// pkValues);
+		// } else {
+		// result = selectByQueryGlobal(conn, query, clazz);
+		// }
+		//
+		// return result;
+		// } catch (SQLException e) {
+		// throw new DBOperationException(e);
+		// } finally {
+		// SQLBuilder.close(conn);
+		// }
 	}
 
 	@Override

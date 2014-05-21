@@ -1,5 +1,6 @@
 package com.pinus.cluster.route.impl;
 
+import java.util.List;
 import java.util.Map;
 
 import com.pinus.api.IShardingValue;
@@ -18,18 +19,34 @@ import com.pinus.exception.DBRouteException;
 public class SimpleHashClusterRouterImpl extends AbstractDBRouterImpl {
 
 	@Override
-	public DBRouteInfo doSelectFromMaster(Map<String, DBClusterInfo> dbMasterCluster, IShardingValue<?> value)
+	public DBRouteInfo doSelectFromMaster(Map<String, List<DBClusterInfo>> dbMasterCluster, IShardingValue<?> value)
 			throws DBRouteException {
 		DBRouteInfo dbRoute = new DBRouteInfo();
 
 		String clusterName = value.getClusterName();
-		DBClusterInfo dbCluster = dbMasterCluster.get(clusterName);
-		if (dbCluster == null) {
+		List<DBClusterInfo> dbClusters = dbMasterCluster.get(clusterName);
+		if (dbClusters == null || dbClusters.isEmpty()) {
 			throw new DBRouteException("查找主库集群失败, dbname=" + clusterName);
 		}
-		int dbNum = dbCluster.getDbConnInfos().size();
-		int dbIndex = computeMod(value, dbNum);
 
+		long shardingValue = getShardingValue(value);
+		DBClusterInfo rangeClusterInfo = null;
+		int clusterIndex = 0;
+		for (DBClusterInfo dbClusterInfo : dbClusters) {
+			if (dbClusterInfo.getStart() <= shardingValue && dbClusterInfo.getEnd() >= shardingValue) {
+				rangeClusterInfo = dbClusterInfo;
+				break;
+			}
+			clusterIndex++;
+		}
+		if (rangeClusterInfo == null) {
+			throw new DBRouteException("查找集群失败, 超出容量, dbname=" + clusterName + ", shardingvalue=" + shardingValue);
+		}
+
+		int dbNum = rangeClusterInfo.getDbConnInfos().size();
+		int dbIndex = (int) shardingValue % dbNum;
+
+		dbRoute.setClusterIndex(clusterIndex);
 		dbRoute.setClusterName(clusterName);
 		dbRoute.setDbIndex(dbIndex);
 
@@ -37,22 +54,40 @@ public class SimpleHashClusterRouterImpl extends AbstractDBRouterImpl {
 	}
 
 	@Override
-	public DBRouteInfo doSelectFromSlave(Map<String, Map<Integer, DBClusterInfo>> dbSlaveCluster, int slaveIndex,
+	public DBRouteInfo doSelectFromSlave(Map<String, List<List<DBClusterInfo>>> dbSlaveCluster, int slaveIndex,
 			IShardingValue<?> value) throws DBRouteException {
 		DBRouteInfo dbRoute = new DBRouteInfo();
 
 		String clusterName = value.getClusterName();
-		Map<Integer, DBClusterInfo> slaveCluster = null;
-		DBClusterInfo dbCluster = null;
-		try {
-			slaveCluster = dbSlaveCluster.get(clusterName);
-			dbCluster = slaveCluster.get(slaveIndex);
-		} catch (Exception e) {
+		List<List<DBClusterInfo>> slaveCluster = dbSlaveCluster.get(clusterName);
+		if (slaveCluster == null || slaveCluster.isEmpty()) {
+			throw new DBRouteException("查找从库集群失败, dbname=" + clusterName);
+		}
+
+		List<DBClusterInfo> dbClusters = slaveCluster.get(slaveIndex);
+		if (dbClusters == null || dbClusters.isEmpty()) {
 			throw new DBRouteException("查找从库集群失败, dbname=" + clusterName + ", slaveindex=" + slaveIndex);
 		}
-		int dbNum = dbCluster.getDbConnInfos().size();
-		int dbIndex = computeMod(value, dbNum);
 
+		long shardingValue = getShardingValue(value);
+		DBClusterInfo rangeClusterInfo = null;
+		int clusterIndex = 0;
+		for (DBClusterInfo dbClusterInfo : dbClusters) {
+			if (dbClusterInfo.getStart() <= shardingValue && dbClusterInfo.getEnd() >= shardingValue) {
+				rangeClusterInfo = dbClusterInfo;
+				break;
+			}
+			clusterIndex++;
+		}
+		if (rangeClusterInfo == null) {
+			throw new DBRouteException("查找集群失败, 超出容量, dbname=" + clusterName + ", shardingvalue=" + shardingValue);
+		}
+
+		int dbNum = rangeClusterInfo.getDbConnInfos().size();
+
+		int dbIndex = (int) shardingValue % dbNum;
+
+		dbRoute.setClusterIndex(clusterIndex);
 		dbRoute.setClusterName(clusterName);
 		dbRoute.setDbIndex(dbIndex);
 

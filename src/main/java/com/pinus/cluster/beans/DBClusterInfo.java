@@ -20,9 +20,24 @@ public class DBClusterInfo {
 	private String clusterName;
 
 	/**
+	 * 集群中的全局库
+	 */
+	private DBConnectionInfo globalConnInfo;
+
+	/**
 	 * 数据库集群连接.
 	 */
 	private List<DBConnectionInfo> dbConnInfos;
+
+	/**
+	 * 集群容量范围开始值
+	 */
+	private long start;
+
+	/**
+	 * 集群容量结束值
+	 */
+	private long end;
 
 	public DBClusterInfo(byte masterSlaveType) {
 		this.masterSlaveType = masterSlaveType;
@@ -30,8 +45,9 @@ public class DBClusterInfo {
 
 	@Override
 	public String toString() {
-		return "DBClusterInfo [masterSlaveType=" + masterSlaveType + ", clusterName=" + clusterName + ", dbConnInfos="
-				+ dbConnInfos + "]";
+		return "DBClusterInfo [clusterName=" + clusterName
+				+ ", globalConnInfo=" + globalConnInfo + ", dbConnInfos=" + dbConnInfos + ", start=" + start + ", end="
+				+ end + "]";
 	}
 
 	public byte getMasterSlaveType() {
@@ -46,12 +62,36 @@ public class DBClusterInfo {
 		this.clusterName = clusterName;
 	}
 
+	public DBConnectionInfo getGlobalConnInfo() {
+		return globalConnInfo;
+	}
+
+	public void setGlobalConnInfo(DBConnectionInfo globalConnInfo) {
+		this.globalConnInfo = globalConnInfo;
+	}
+
 	public List<DBConnectionInfo> getDbConnInfos() {
 		return dbConnInfos;
 	}
 
 	public void setDbConnInfos(List<DBConnectionInfo> dbConnInfos) {
 		this.dbConnInfos = dbConnInfos;
+	}
+
+	public long getStart() {
+		return start;
+	}
+
+	public void setStart(long start) {
+		this.start = start;
+	}
+
+	public long getEnd() {
+		return end;
+	}
+
+	public void setEnd(long end) {
+		this.end = end;
 	}
 
 }

@@ -15,11 +15,11 @@
 		<level value="warn" />
 	</category>
 	<category name="com.pinus">
-		<level value="warn" />
+		<level value="info" />
 	</category>
 
 	<root>
-		<priority value="warn" />
+		<priority value="info" />
 		<appender-ref ref="console" />
 	</root>
 

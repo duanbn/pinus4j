@@ -48,9 +48,13 @@ public class ReflectUtil {
 	 * @throws Exception
 	 *             获取失败
 	 */
-	public static Number getPkValue(Object obj) throws Exception {
+	public static Number getPkValue(Object obj) {
 		String pkName = getPkName(obj.getClass());
-		return (Number) getProperty(obj, pkName);
+		try {
+			return (Number) getProperty(obj, pkName);
+		} catch (Exception e) {
+			throw new RuntimeException("获取主键值失败" + e);
+		}
 	}
 
 	/**
@@ -238,7 +242,7 @@ public class ReflectUtil {
 				f.set(obj, new Timestamp(System.currentTimeMillis()));
 				continue;
 			}
-			
+
 			value = f.get(obj);
 
 			if (filteNull && value == null) {
@@ -277,7 +281,7 @@ public class ReflectUtil {
 			if (f.getAnnotation(UpdateTime.class) != null) {
 				f.set(obj, new Timestamp(System.currentTimeMillis()));
 			}
-			
+
 			value = f.get(obj);
 
 			if (filteNull && value == null) {

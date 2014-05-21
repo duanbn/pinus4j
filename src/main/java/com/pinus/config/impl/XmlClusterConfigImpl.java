@@ -43,23 +43,13 @@ public class XmlClusterConfigImpl implements IClusterConfig {
 	private static HashAlgoEnum hashAlgo;
 
 	/**
-	 * 主全局库. {集群名, 连接信息}
-	 */
-	private static Map<String, DBConnectionInfo> masterGlobal = new HashMap<String, DBConnectionInfo>();
-
-	/**
-	 * 从全局库. {集群名, {从库号,连接信息}}
-	 */
-	private static Map<String, Map<Integer, DBConnectionInfo>> slaveGlobal = new HashMap<String, Map<Integer, DBConnectionInfo>>();
-
-	/**
 	 * 主库集群. {集群名, 集群信息}
 	 */
-	private static Map<String, DBClusterInfo> masterDbCluster = new HashMap<String, DBClusterInfo>();
+	private static Map<String, List<DBClusterInfo>> masterDbCluster = new HashMap<String, List<DBClusterInfo>>();
 	/**
-	 * 从库集群. {集群名, {从库号, 集群信息}}
+	 * 从库集群. {集群名, {从集群信息}}
 	 */
-	private static Map<String, Map<Integer, DBClusterInfo>> slaveDbCluster = new HashMap<String, Map<Integer, DBClusterInfo>>();
+	private static Map<String, List<List<DBClusterInfo>>> slaveDbCluster = new HashMap<String, List<List<DBClusterInfo>>>();
 
 	private DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 	private DocumentBuilder builder;
@@ -72,18 +62,19 @@ public class XmlClusterConfigImpl implements IClusterConfig {
 			is = Thread.currentThread().getContextClassLoader().getResourceAsStream(Const.DEFAULT_CONFIG_FILENAME);
 			xmlDoc = builder.parse(new InputSource(is));
 
+			// 加载id生成器
 			_loadIdGeneratorBatch(xmlDoc);
 
+			// 加载zookeeper
 			_loadZkUrl(xmlDoc);
 
+			// 加载hash algo
 			_loadHashAlgo(xmlDoc);
 
-			_loadMasterGlobal(xmlDoc);
-
-			_loadSlaveGlobal(xmlDoc);
-
+			// 加载主库集群
 			_loadMasterDbCluster(xmlDoc);
 
+			// 加载从库集群
 			_loadSlaveDbCluster(xmlDoc);
 		} catch (Exception e) {
 			throw new LoadConfigException(e);
@@ -196,131 +187,155 @@ public class XmlClusterConfigImpl implements IClusterConfig {
 		}
 	}
 
-	private void _loadMasterGlobal(Document xmlDoc) throws LoadConfigException {
-		List<Node> clusterNodeList = getNodeListByName(getRoot(xmlDoc), "cluster");
-		
-		DBConnectionInfo dbConnInfo = null;
-		for (Node clusterNode : clusterNodeList) {
-			String clusterName = clusterNode.getAttributes().getNamedItem("name").getNodeValue();
-			Node masterNode = getChildNodeByName(clusterNode, "master");
-			Node globalNode = getChildNodeByName(masterNode, "global");
-
-			String username = getChildNodeByName(globalNode, "db.username").getTextContent().trim();
-			String password = getChildNodeByName(globalNode, "db.password").getTextContent().trim();
-			String url = getChildNodeByName(globalNode, "db.url").getTextContent().trim();
-
-			dbConnInfo = new DBConnectionInfo();
-			dbConnInfo.setClusterName(clusterName);
-			dbConnInfo.setUsername(username);
-			dbConnInfo.setPassword(password);
-			dbConnInfo.setUrl(url);
-			dbConnInfo.setConnPoolInfo(_loadDbConnectInfo(xmlDoc));
-
-			masterGlobal.put(clusterName, dbConnInfo);
+	private long[] parseCapacity(String clusterName, String clusterCapacity) throws LoadConfigException {
+		long[] capacity = new long[2];
+		String[] strCapacity = clusterCapacity.split("\\-");
+		if (strCapacity.length != 2) {
+			throw new LoadConfigException("解析集群容量错误");
 		}
+
+		long start = -1, end = -1;
+		try {
+			start = Long.parseLong(strCapacity[0]);
+			end = Long.parseLong(strCapacity[1]);
+		} catch (Exception e) {
+			throw new LoadConfigException("解析集群容量错误, clusterName=" + clusterName, e);
+		}
+
+		if (start < 0 || end < 0 || end <= start) {
+			throw new LoadConfigException("集群容量参数有误, clusterName=" + clusterName + ", start=" + start + ", end=" + end);
+		}
+
+		capacity[0] = start;
+		capacity[1] = end;
+
+		return capacity;
 	}
 
-	private void _loadSlaveGlobal(Document xmlDoc) throws LoadConfigException {
-		List<Node> clusterNodeList = getNodeListByName(getRoot(xmlDoc), "cluster");
-		DBConnectionInfo dbConnInfo = null;
-		for (Node clusterNode : clusterNodeList) {
-			String clusterName = clusterNode.getAttributes().getNamedItem("name").getNodeValue();
-			List<Node> slaveNodeList = getNodeListByName(clusterNode, "slave");
+	private DBConnectionInfo _getDBConnInfo(Node node) {
+		DBConnectionInfo dbConnInfo = new DBConnectionInfo();
 
-			Map<Integer, DBConnectionInfo> slaveMap = new HashMap<Integer, DBConnectionInfo>();
-			Node slaveGlobalNode = null;
-			for (int i = 0; i < slaveNodeList.size(); i++) {
-				slaveGlobalNode = slaveNodeList.get(i);
-				Node globalNode = getChildNodeByName(slaveGlobalNode, "global");
-				String username = getChildNodeByName(globalNode, "db.username").getTextContent().trim();
-				String password = getChildNodeByName(globalNode, "db.password").getTextContent().trim();
-				String url = getChildNodeByName(globalNode, "db.url").getTextContent().trim();
+		String username = getChildNodeByName(node, "db.username").getTextContent().trim();
+		String password = getChildNodeByName(node, "db.password").getTextContent().trim();
+		String url = getChildNodeByName(node, "db.url").getTextContent().trim();
 
-				dbConnInfo = new DBConnectionInfo();
-				dbConnInfo.setClusterName(clusterName);
-				dbConnInfo.setUsername(username);
-				dbConnInfo.setPassword(password);
-				dbConnInfo.setUrl(url);
-				dbConnInfo.setConnPoolInfo(_loadDbConnectInfo(xmlDoc));
+		dbConnInfo.setUsername(username);
+		dbConnInfo.setPassword(password);
+		dbConnInfo.setUrl(url);
 
-				slaveMap.put(i, dbConnInfo);
-			}
-
-			slaveGlobal.put(clusterName, slaveMap);
-		}
+		return dbConnInfo;
 	}
 
 	private void _loadMasterDbCluster(Document xmlDoc) throws LoadConfigException {
+		// 获取cluster节点
 		List<Node> clusterNodeList = getNodeListByName(getRoot(xmlDoc), "cluster");
-		DBConnectionInfo dbConnInfo = null;
+
+		DBClusterInfo masterDbClusterInfo = null;
 		for (Node clusterNode : clusterNodeList) {
+
+			masterDbClusterInfo = new DBClusterInfo(Const.MSTYPE_MASTER);
 			String clusterName = clusterNode.getAttributes().getNamedItem("name").getNodeValue();
+			masterDbClusterInfo.setClusterName(clusterName);
+			// 加载集群容量
+			String clusterCapacity = clusterNode.getAttributes().getNamedItem("capacity").getNodeValue();
+			long[] capacity = parseCapacity(clusterName, clusterCapacity);
+			masterDbClusterInfo.setStart(capacity[0]);
+			masterDbClusterInfo.setEnd(capacity[1]);
+
 			Node masterNode = getChildNodeByName(clusterNode, "master");
 
+			// 加载global db
+			Node globalNode = getChildNodeByName(masterNode, "global");
+			DBConnectionInfo dbConnInfo = _getDBConnInfo(globalNode);
+			dbConnInfo.setClusterName(clusterName);
+			dbConnInfo.setConnPoolInfo(_loadDbConnectInfo(xmlDoc));
+			masterDbClusterInfo.setGlobalConnInfo(dbConnInfo);
+
+			// 加载sharding db
 			List<Node> shardingNodeList = getNodeListByName(masterNode, "sharding");
 			Node shardingNode = null;
-			DBClusterInfo masterDbClusterInfo = new DBClusterInfo(Const.MSTYPE_MASTER);
-			masterDbClusterInfo.setClusterName(clusterName);
-			// 设置集群连接信息
 			List<DBConnectionInfo> dbConnInfos = new ArrayList<DBConnectionInfo>();
 			for (int i = 0; i < shardingNodeList.size(); i++) {
 				shardingNode = shardingNodeList.get(i);
-				String username = getChildNodeByName(shardingNode, "db.username").getTextContent().trim();
-				String password = getChildNodeByName(shardingNode, "db.password").getTextContent().trim();
-				String url = getChildNodeByName(shardingNode, "db.url").getTextContent().trim();
-
-				dbConnInfo = new DBConnectionInfo();
+				dbConnInfo = _getDBConnInfo(shardingNode);
 				dbConnInfo.setClusterName(clusterName);
-				dbConnInfo.setUsername(username);
-				dbConnInfo.setPassword(password);
-				dbConnInfo.setUrl(url);
 				dbConnInfo.setConnPoolInfo(_loadDbConnectInfo(xmlDoc));
-
 				dbConnInfos.add(dbConnInfo);
 			}
 			masterDbClusterInfo.setDbConnInfos(dbConnInfos);
 
-			masterDbCluster.put(clusterName, masterDbClusterInfo);
+			if (masterDbCluster.get(clusterName) != null) {
+				masterDbCluster.get(clusterName).add(masterDbClusterInfo);
+			} else {
+				List<DBClusterInfo> dbClusterInfos = new ArrayList<DBClusterInfo>();
+				dbClusterInfos.add(masterDbClusterInfo);
+				masterDbCluster.put(clusterName, dbClusterInfos);
+			}
 		}
 	}
 
 	private void _loadSlaveDbCluster(Document xmlDoc) throws LoadConfigException {
 		List<Node> clusterNodeList = getNodeListByName(getRoot(xmlDoc), "cluster");
+
 		DBConnectionInfo dbConnInfo = null;
 		for (Node clusterNode : clusterNodeList) {
 			String clusterName = clusterNode.getAttributes().getNamedItem("name").getNodeValue();
+
+			String clusterCapacity = clusterNode.getAttributes().getNamedItem("capacity").getNodeValue();
+			long[] capacity = parseCapacity(clusterName, clusterCapacity);
+
+			List<DBClusterInfo> a = new ArrayList<DBClusterInfo>();
+
 			List<Node> slaveNodeList = getNodeListByName(clusterNode, "slave");
-
-			Map<Integer, DBClusterInfo> oneSlaveMap = new HashMap<Integer, DBClusterInfo>();
-
-			Node slaveNode = null;
 			List<Node> shardingNodeList = null;
-			for (int i = 0; i < slaveNodeList.size(); i++) {
+			for (Node slaveNode : slaveNodeList) {
 				DBClusterInfo slaveDbClusterInfo = new DBClusterInfo(Const.MSTYPE_SLAVE);
 				slaveDbClusterInfo.setClusterName(clusterName);
-				slaveNode = slaveNodeList.get(i);
+				slaveDbClusterInfo.setStart(capacity[0]);
+				slaveDbClusterInfo.setEnd(capacity[1]);
+
+				// 加载global db
+				Node globalNode = getChildNodeByName(slaveNode, "global");
+				dbConnInfo = _getDBConnInfo(globalNode);
+				dbConnInfo.setClusterName(clusterName);
+				dbConnInfo.setConnPoolInfo(_loadDbConnectInfo(xmlDoc));
+				slaveDbClusterInfo.setGlobalConnInfo(dbConnInfo);
+
+				// 加载sharding db
 				shardingNodeList = getNodeListByName(slaveNode, "sharding");
-				// 设置集群连接信息
 				List<DBConnectionInfo> dbConnInfos = new ArrayList<DBConnectionInfo>();
 				for (Node shardingNode : shardingNodeList) {
-					String username = getChildNodeByName(shardingNode, "db.username").getTextContent().trim();
-					String password = getChildNodeByName(shardingNode, "db.password").getTextContent().trim();
-					String url = getChildNodeByName(shardingNode, "db.url").getTextContent().trim();
-
-					dbConnInfo = new DBConnectionInfo();
+					dbConnInfo = _getDBConnInfo(shardingNode);
 					dbConnInfo.setClusterName(clusterName);
-					dbConnInfo.setUsername(username);
-					dbConnInfo.setPassword(password);
-					dbConnInfo.setUrl(url);
 					dbConnInfo.setConnPoolInfo(_loadDbConnectInfo(xmlDoc));
 
 					dbConnInfos.add(dbConnInfo);
 				}
 				slaveDbClusterInfo.setDbConnInfos(dbConnInfos);
-				oneSlaveMap.put(i, slaveDbClusterInfo);
+
+				a.add(slaveDbClusterInfo);
 			}
 
-			slaveDbCluster.put(clusterName, oneSlaveMap);
+			if (slaveDbCluster.get(clusterName) != null) {
+				slaveDbCluster.get(clusterName).add(a);
+			} else {
+				List<List<DBClusterInfo>> c = new ArrayList<List<DBClusterInfo>>();
+				c.add(a);
+				slaveDbCluster.put(clusterName, c);
+			}
+		}
+
+		for (Map.Entry<String, List<List<DBClusterInfo>>> entry : slaveDbCluster.entrySet()) {
+			int slaveNum = entry.getValue().get(0).size();
+			List<List<DBClusterInfo>> f = new ArrayList<List<DBClusterInfo>>();
+			for (int i = 0; i < slaveNum; i++) {
+				List<DBClusterInfo> d = new ArrayList<DBClusterInfo>();
+				for (List<DBClusterInfo> e : entry.getValue()) {
+					d.add(e.get(i));
+				}
+				f.add(d);
+			}
+			slaveDbCluster.put(entry.getKey(), f);
 		}
 	}
 
@@ -354,22 +369,12 @@ public class XmlClusterConfigImpl implements IClusterConfig {
 	}
 
 	@Override
-	public Map<String, DBConnectionInfo> loadMasterGlobalInfo() {
-		return masterGlobal;
-	}
-
-	@Override
-	public Map<String, Map<Integer, DBConnectionInfo>> loadSlaveGlobalInfo() {
-		return slaveGlobal;
-	}
-
-	@Override
-	public Map<String, DBClusterInfo> loadMasterDbClusterInfo() {
+	public Map<String, List<DBClusterInfo>> loadMasterDbClusterInfo() {
 		return masterDbCluster;
 	}
 
 	@Override
-	public Map<String, Map<Integer, DBClusterInfo>> loadSlaveDbClusterInfo() {
+	public Map<String, List<List<DBClusterInfo>>> loadSlaveDbClusterInfo() {
 		return slaveDbCluster;
 	}
 

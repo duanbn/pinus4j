@@ -22,8 +22,8 @@
 		<numTestsPerEvictionRun>10</numTestsPerEvictionRun>
 		<minEvictableIdleTimeMillis>10000</minEvictableIdleTimeMillis>
 	</db-connection-pool>
-
-	<cluster name="klstorage" capacity="1-10000000">
+	
+	<cluster name="klstorage" capacity="1-100000">
 		<master>
 			<global>
 				<db.username>root</db.username>
@@ -46,13 +46,15 @@
 					jdbc:mysql://localhost:3306/klstorage1?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
 				</db.url>
 			</sharding>
-			<sharding>
+		</master>
+		<slave>
+			<global>
 				<db.username>root</db.username>
 				<db.password>root%1234</db.password>
 				<db.url>
 					jdbc:mysql://localhost:3306/klstorage2?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
 				</db.url>
-			</sharding>
+			</global>
 			<sharding>
 				<db.username>root</db.username>
 				<db.password>root%1234</db.password>
@@ -60,15 +62,6 @@
 					jdbc:mysql://localhost:3306/klstorage3?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
 				</db.url>
 			</sharding>
-		</master>
-		<slave>
-			<global>
-				<db.username>root</db.username>
-				<db.password>root%1234</db.password>
-				<db.url>
-					jdbc:mysql://localhost:3306/klstorage8?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
-				</db.url>
-			</global>
 			<sharding>
 				<db.username>root</db.username>
 				<db.password>root%1234</db.password>
@@ -76,13 +69,15 @@
 					jdbc:mysql://localhost:3306/klstorage4?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
 				</db.url>
 			</sharding>
-			<sharding>
+		</slave>
+		<slave>
+			<global>
 				<db.username>root</db.username>
 				<db.password>root%1234</db.password>
 				<db.url>
 					jdbc:mysql://localhost:3306/klstorage5?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
 				</db.url>
-			</sharding>
+			</global>
 			<sharding>
 				<db.username>root</db.username>
 				<db.password>root%1234</db.password>
@@ -99,8 +94,79 @@
 			</sharding>
 		</slave>
 	</cluster>
-
-	<cluster name="user" capacity="1-1000000">
+	<cluster name="klstorage" capacity="100001-200000">
+		<master>
+			<global>
+				<db.username>root</db.username>
+				<db.password>root%1234</db.password>
+				<db.url>
+					jdbc:mysql://localhost:3306/klstorage8?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
+				</db.url>
+			</global>
+			<sharding>
+				<db.username>root</db.username>
+				<db.password>root%1234</db.password>
+				<db.url>
+					jdbc:mysql://localhost:3306/klstorage9?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
+				</db.url>
+			</sharding>
+			<sharding>
+				<db.username>root</db.username>
+				<db.password>root%1234</db.password>
+				<db.url>
+					jdbc:mysql://localhost:3306/klstorage10?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
+				</db.url>
+			</sharding>
+		</master>
+		<slave>
+			<global>
+				<db.username>root</db.username>
+				<db.password>root%1234</db.password>
+				<db.url>
+					jdbc:mysql://localhost:3306/klstorage11?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
+				</db.url>
+			</global>
+			<sharding>
+				<db.username>root</db.username>
+				<db.password>root%1234</db.password>
+				<db.url>
+					jdbc:mysql://localhost:3306/klstorage12?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
+				</db.url>
+			</sharding>
+			<sharding>
+				<db.username>root</db.username>
+				<db.password>root%1234</db.password>
+				<db.url>
+					jdbc:mysql://localhost:3306/klstorage13?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
+				</db.url>
+			</sharding>
+		</slave>
+		<slave>
+			<global>
+				<db.username>root</db.username>
+				<db.password>root%1234</db.password>
+				<db.url>
+					jdbc:mysql://localhost:3306/klstorage14?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
+				</db.url>
+			</global>
+			<sharding>
+				<db.username>root</db.username>
+				<db.password>root%1234</db.password>
+				<db.url>
+					jdbc:mysql://localhost:3306/klstorage15?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
+				</db.url>
+			</sharding>
+			<sharding>
+				<db.username>root</db.username>
+				<db.password>root%1234</db.password>
+				<db.url>
+					jdbc:mysql://localhost:3306/klstorage16?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
+				</db.url>
+			</sharding>
+		</slave>
+	</cluster>
+	
+	<cluster name="user" capacity="1-100000">
 		<master>
 			<global>
 				<db.username>root</db.username>
@@ -123,13 +189,15 @@
 					jdbc:mysql://localhost:3306/user1?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
 				</db.url>
 			</sharding>
-			<sharding>
+		</master>
+		<slave>
+			<global>
 				<db.username>root</db.username>
 				<db.password>root%1234</db.password>
 				<db.url>
 					jdbc:mysql://localhost:3306/user2?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
 				</db.url>
-			</sharding>
+			</global>
 			<sharding>
 				<db.username>root</db.username>
 				<db.password>root%1234</db.password>
@@ -137,15 +205,6 @@
 					jdbc:mysql://localhost:3306/user3?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
 				</db.url>
 			</sharding>
-		</master>
-		<slave>
-			<global>
-				<db.username>root</db.username>
-				<db.password>root%1234</db.password>
-				<db.url>
-					jdbc:mysql://localhost:3306/user8?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
-				</db.url>
-			</global>
 			<sharding>
 				<db.username>root</db.username>
 				<db.password>root%1234</db.password>
@@ -153,13 +212,15 @@
 					jdbc:mysql://localhost:3306/user4?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
 				</db.url>
 			</sharding>
-			<sharding>
+		</slave>
+		<slave>
+			<global>
 				<db.username>root</db.username>
 				<db.password>root%1234</db.password>
 				<db.url>
 					jdbc:mysql://localhost:3306/user5?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
 				</db.url>
-			</sharding>
+			</global>
 			<sharding>
 				<db.username>root</db.username>
 				<db.password>root%1234</db.password>
@@ -172,6 +233,77 @@
 				<db.password>root%1234</db.password>
 				<db.url>
 					jdbc:mysql://localhost:3306/user7?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
+				</db.url>
+			</sharding>
+		</slave>
+	</cluster>
+	<cluster name="user" capacity="100001-200000">
+		<master>
+			<global>
+				<db.username>root</db.username>
+				<db.password>root%1234</db.password>
+				<db.url>
+					jdbc:mysql://localhost:3306/user8?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
+				</db.url>
+			</global>
+			<sharding>
+				<db.username>root</db.username>
+				<db.password>root%1234</db.password>
+				<db.url>
+					jdbc:mysql://localhost:3306/user9?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
+				</db.url>
+			</sharding>
+			<sharding>
+				<db.username>root</db.username>
+				<db.password>root%1234</db.password>
+				<db.url>
+					jdbc:mysql://localhost:3306/user10?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
+				</db.url>
+			</sharding>
+		</master>
+		<slave>
+			<global>
+				<db.username>root</db.username>
+				<db.password>root%1234</db.password>
+				<db.url>
+					jdbc:mysql://localhost:3306/user11?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
+				</db.url>
+			</global>
+			<sharding>
+				<db.username>root</db.username>
+				<db.password>root%1234</db.password>
+				<db.url>
+					jdbc:mysql://localhost:3306/user12?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
+				</db.url>
+			</sharding>
+			<sharding>
+				<db.username>root</db.username>
+				<db.password>root%1234</db.password>
+				<db.url>
+					jdbc:mysql://localhost:3306/user13?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
+				</db.url>
+			</sharding>
+		</slave>
+		<slave>
+			<global>
+				<db.username>root</db.username>
+				<db.password>root%1234</db.password>
+				<db.url>
+					jdbc:mysql://localhost:3306/user14?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
+				</db.url>
+			</global>
+			<sharding>
+				<db.username>root</db.username>
+				<db.password>root%1234</db.password>
+				<db.url>
+					jdbc:mysql://localhost:3306/user14?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
+				</db.url>
+			</sharding>
+			<sharding>
+				<db.username>root</db.username>
+				<db.password>root%1234</db.password>
+				<db.url>
+					jdbc:mysql://localhost:3306/user15?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
 				</db.url>
 			</sharding>
 		</slave>

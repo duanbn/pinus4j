@@ -1,5 +1,6 @@
 package com.pinus.cluster.route;
 
+import java.util.List;
 import java.util.Map;
 
 import com.pinus.api.IShardingValue;
@@ -23,11 +24,11 @@ public abstract class AbstractDBRouterImpl implements IClusterRouter {
 	/**
 	 * 主库集群.
 	 */
-	private Map<String, DBClusterInfo> dbMasterCluster;
+	private Map<String, List<DBClusterInfo>> dbMasterCluster;
 	/**
 	 * 从库集群.
 	 */
-	private Map<String, Map<Integer, DBClusterInfo>> dbSlaveCluster;
+	private Map<String, List<List<DBClusterInfo>>> dbSlaveCluster;
 
 	/**
 	 * 数据表集群. {库名, {库下标, {表名, 表个数}}}
@@ -45,12 +46,12 @@ public abstract class AbstractDBRouterImpl implements IClusterRouter {
 	}
 
 	@Override
-	public void setMasterDbClusterInfo(Map<String, DBClusterInfo> masterDbClusterInfo) {
+	public void setMasterDbClusterInfo(Map<String, List<DBClusterInfo>> masterDbClusterInfo) {
 		this.dbMasterCluster = masterDbClusterInfo;
 	}
 
 	@Override
-	public void setSlaveDbClusterInfo(Map<String, Map<Integer, DBClusterInfo>> slaveDbClusterInfo) {
+	public void setSlaveDbClusterInfo(Map<String, List<List<DBClusterInfo>>> slaveDbClusterInfo) {
 		this.dbSlaveCluster = slaveDbClusterInfo;
 	}
 
@@ -90,7 +91,7 @@ public abstract class AbstractDBRouterImpl implements IClusterRouter {
 			int tableNum = tableCluster.get(tableName);
 
 			// 计算分表下标
-			int tableIndex = computeMod(value, tableNum);
+			int tableIndex = (int) getShardingValue(value) % tableNum;
 
 			dbRouteInfo.setTableName(tableName);
 			dbRouteInfo.setTableIndex(tableIndex);
@@ -103,25 +104,24 @@ public abstract class AbstractDBRouterImpl implements IClusterRouter {
 	}
 
 	/**
-	 * 计算取模.
+	 * 获取shardingvalue的值，如果是String则转成long
 	 * 
 	 * @param shardingValue
 	 * @param mod
 	 * @return
 	 */
-	protected int computeMod(IShardingValue<?> value, int mod) {
-		int modValue = -1;
+	protected long getShardingValue(IShardingValue<?> value) {
 		Object shardingValue = value.getShardingValue();
+
 		if (shardingValue instanceof String) {
-			modValue = (int) this.hashAlgo.hash((String) shardingValue) % mod;
+			return (int) this.hashAlgo.hash((String) shardingValue);
 		} else if (shardingValue instanceof Integer) {
-			modValue = (Integer) shardingValue % mod;
+			return (Integer) shardingValue;
 		} else if (shardingValue instanceof Long) {
-			modValue = new Long((Long) shardingValue).intValue() % mod;
+			return (Long) shardingValue;
 		} else {
 			throw new IllegalArgumentException("sharding value的值只能是String或者Number " + shardingValue);
 		}
-		return modValue;
 	}
 
 	/**
@@ -133,7 +133,7 @@ public abstract class AbstractDBRouterImpl implements IClusterRouter {
 	 *            分库分表因子
 	 * @return 路由结果
 	 */
-	protected abstract DBRouteInfo doSelectFromMaster(Map<String, DBClusterInfo> dbMasterCluster,
+	protected abstract DBRouteInfo doSelectFromMaster(Map<String, List<DBClusterInfo>> dbMasterCluster,
 			IShardingValue<?> value) throws DBRouteException;
 
 	/**
@@ -145,7 +145,7 @@ public abstract class AbstractDBRouterImpl implements IClusterRouter {
 	 *            分库分表因子
 	 * @return 路由结果
 	 */
-	protected abstract DBRouteInfo doSelectFromSlave(Map<String, Map<Integer, DBClusterInfo>> dbSlaveCluster,
+	protected abstract DBRouteInfo doSelectFromSlave(Map<String, List<List<DBClusterInfo>>> dbSlaveCluster,
 			int slaveIndex, IShardingValue<?> value) throws DBRouteException;
 
 }

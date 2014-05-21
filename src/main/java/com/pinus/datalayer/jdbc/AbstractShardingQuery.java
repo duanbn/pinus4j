@@ -994,7 +994,7 @@ public abstract class AbstractShardingQuery {
 	 * @throws Exception
 	 *             获取pk值失败
 	 */
-	private <T> Map<Number, T> _getPkValues(List<T> entities) throws Exception {
+	private <T> Map<Number, T> _getPkValues(List<T> entities) {
 		Map<Number, T> map = new HashMap<Number, T>();
 
 		Number pkValue = null;
