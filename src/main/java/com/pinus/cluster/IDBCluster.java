@@ -34,11 +34,24 @@ public interface IDBCluster {
 	 *             关闭失败
 	 */
 	public void shutdown() throws DBClusterException;
-	
+
+	/**
+	 * 获取所有集群的全局库连接
+	 * 
+	 * @param clusterName
+	 * @return
+	 */
 	public List<DBConnectionInfo> getMasterGlobalDbConn(String clusterName);
-	
+
+	/**
+	 * 根据主键获取全局库连接
+	 * 
+	 * @param pk
+	 * @param clusterName
+	 * @return
+	 */
 	public DBConnectionInfo getMasterGlobalDbConn(Number pk, String clusterName);
-	
+
 	/**
 	 * 获取主全局库连接
 	 * 
@@ -54,11 +67,24 @@ public interface IDBCluster {
 	 * @return 数据库连接.
 	 */
 	public Map<DBConnectionInfo, List> getMasterGlobalDbConn(List entities, String clusterName);
-	
-	
-	
+
+	/**
+	 * 根据主键获取从库的全局库连接
+	 * 
+	 * @param pk
+	 * @param clusterName
+	 * @param slave
+	 * @return
+	 */
 	public DBConnectionInfo getSlaveGlobalDbConn(Number pk, String clusterName, EnumDBMasterSlave slave);
-	
+
+	/**
+	 * 获取从库的全局库连接
+	 * 
+	 * @param clusterName
+	 * @param slave
+	 * @return
+	 */
 	public List<DBConnectionInfo> getSlaveGlobalDbConn(String clusterName, EnumDBMasterSlave slave);
 
 	/**
