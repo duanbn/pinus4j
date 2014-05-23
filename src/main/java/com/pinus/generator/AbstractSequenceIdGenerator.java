@@ -19,7 +19,7 @@ import org.apache.zookeeper.data.Stat;
 
 import com.pinus.cluster.IDBCluster;
 import com.pinus.config.IClusterConfig;
-import com.pinus.config.impl.XmlClusterConfigImpl;
+import com.pinus.config.impl.XmlDBClusterConfigImpl;
 import com.pinus.exception.DBOperationException;
 import com.pinus.exception.LoadConfigException;
 import com.pinus.util.StringUtils;
@@ -61,7 +61,7 @@ public abstract class AbstractSequenceIdGenerator implements IIdGenerator, Watch
 	public AbstractSequenceIdGenerator() {
 		IClusterConfig config;
 		try {
-			config = XmlClusterConfigImpl.getInstance();
+			config = XmlDBClusterConfigImpl.getInstance();
 		} catch (LoadConfigException e) {
 			throw new RuntimeException(e);
 		}

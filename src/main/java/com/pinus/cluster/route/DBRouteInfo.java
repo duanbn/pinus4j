@@ -15,7 +15,7 @@ public class DBRouteInfo {
 	/**
 	 * 集群下标
 	 */
-	private int clusterIndex;
+	private int regionIndex;
 
 	/**
 	 * 被选中的数据库下标.
@@ -34,7 +34,7 @@ public class DBRouteInfo {
 
 	@Override
 	public String toString() {
-		return "DBRouteInfo [clusterName=" + clusterName + ", clusterIndex=" + clusterIndex + ", dbIndex=" + dbIndex
+		return "DBRouteInfo [clusterName=" + clusterName + ", regionIndex=" + regionIndex + ", dbIndex=" + dbIndex
 				+ ", tableName=" + tableName + ", tableIndex=" + tableIndex + "]";
 	}
 
@@ -46,12 +46,12 @@ public class DBRouteInfo {
 		this.clusterName = clusterName;
 	}
 
-	public int getClusterIndex() {
-		return clusterIndex;
+	public int getRegionIndex() {
+		return regionIndex;
 	}
 
-	public void setClusterIndex(int clusterIndex) {
-		this.clusterIndex = clusterIndex;
+	public void setRegionIndex(int regionIndex) {
+		this.regionIndex = regionIndex;
 	}
 
 	public int getDbIndex() {

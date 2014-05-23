@@ -22,7 +22,7 @@ import org.apache.zookeeper.ZooKeeper.States;
 import org.apache.zookeeper.data.Stat;
 
 import com.pinus.config.IClusterConfig;
-import com.pinus.config.impl.XmlClusterConfigImpl;
+import com.pinus.config.impl.XmlDBClusterConfigImpl;
 import com.pinus.exception.LoadConfigException;
 import com.pinus.util.StringUtils;
 
@@ -76,7 +76,7 @@ public class DistributedLock implements Lock, Watcher {
 
 		IClusterConfig clusterConfig;
 		try {
-			clusterConfig = XmlClusterConfigImpl.getInstance();
+			clusterConfig = XmlDBClusterConfigImpl.getInstance();
 		} catch (LoadConfigException e) {
 			throw new LockException("读取zk url失败");
 		}

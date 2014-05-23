@@ -20,7 +20,7 @@ import com.pinus.cluster.beans.DBTable;
 import com.pinus.cluster.route.DBRouteInfo;
 import com.pinus.cluster.route.IClusterRouter;
 import com.pinus.config.IClusterConfig;
-import com.pinus.config.impl.XmlClusterConfigImpl;
+import com.pinus.config.impl.XmlDBClusterConfigImpl;
 import com.pinus.constant.Const;
 import com.pinus.exception.DBClusterException;
 import com.pinus.exception.DBRouteException;
@@ -66,11 +66,10 @@ public abstract class AbstractDBCluster implements IDBCluster {
 	 */
 	private IClusterRouter dbRouter;
 
-	// 加载主库集群
-	Map<String, List<DBClusterInfo>> masterDbCluster;
-
-	// 加载从库集群
-	Map<String, List<List<DBClusterInfo>>> slaveDbCluster;
+	/**
+	 * 分库分表信息
+	 */
+	private Map<String, DBClusterInfo> dbClusterInfo;
 
 	/**
 	 * 集群中的表集合. {集群名称, {分库下标, {表名, 分表数}}}
@@ -99,10 +98,8 @@ public abstract class AbstractDBCluster implements IDBCluster {
 			throw new RuntimeException(e);
 		}
 
-		// 加载主库集群
-		masterDbCluster = config.loadMasterDbClusterInfo();
-		// 加载从库集群
-		slaveDbCluster = config.loadSlaveDbClusterInfo();
+		// 加载DB集群信息
+		dbClusterInfo = config.getDBClusterInfo();
 
 		// 给路由器设置集群信息
 		if (this.dbRouter == null) {
@@ -117,10 +114,7 @@ public abstract class AbstractDBCluster implements IDBCluster {
 
 		try {
 			// 初始化主集群连接
-			_initMasterCluster(this.masterDbCluster);
-
-			// 初始化从集群连接
-			_initSlaveCluster(this.slaveDbCluster);
+			_initDBCluster(this.dbClusterInfo);
 
 			// 初始化数据表集群信息.
 			// 优先使用shard_cluster表的信息，获取失败则使用@Table的信息
@@ -176,176 +170,6 @@ public abstract class AbstractDBCluster implements IDBCluster {
 		}
 	}
 
-	@Override
-	public List<DBConnectionInfo> getMasterGlobalDbConn(String clusterName) {
-		List<DBClusterInfo> dbClusterInfos = this.masterDbCluster.get(clusterName);
-
-		List<DBConnectionInfo> result = new ArrayList<DBConnectionInfo>();
-
-		for (DBClusterInfo dbClusterInfo : dbClusterInfos) {
-			result.add(dbClusterInfo.getGlobalConnInfo());
-		}
-
-		return result;
-	}
-
-	@Override
-	public DBConnectionInfo getMasterGlobalDbConn(Number pk, String clusterName) {
-		List<DBClusterInfo> dbClusterInfos = this.masterDbCluster.get(clusterName);
-
-		long pkValue = pk.longValue();
-		DBClusterInfo rangeClusterInfo = null;
-		for (DBClusterInfo dbClusterInfo : dbClusterInfos) {
-			if (dbClusterInfo.getStart() <= pkValue && dbClusterInfo.getEnd() >= pkValue) {
-				rangeClusterInfo = dbClusterInfo;
-				break;
-			}
-		}
-		if (rangeClusterInfo == null) {
-			throw new IllegalArgumentException("找不到主全局库, clusterName=" + clusterName + ", pk=" + pkValue);
-		}
-
-		return rangeClusterInfo.getGlobalConnInfo();
-	}
-
-	@SuppressWarnings({ "unchecked", "rawtypes" })
-	@Override
-	public Map<DBConnectionInfo, List<Number>> getMasterGlobalDbConn(Number[] pks, String clusterName) {
-		List<DBClusterInfo> dbClusterInfos = this.masterDbCluster.get(clusterName);
-
-		Map<DBConnectionInfo, List<Number>> result = new HashMap<DBConnectionInfo, List<Number>>();
-		for (Number pkNumber : pks) {
-			long pk = pkNumber.longValue();
-
-			DBClusterInfo rangeClusterInfo = null;
-			for (DBClusterInfo dbClusterInfo : dbClusterInfos) {
-				if (dbClusterInfo.getStart() <= pk && dbClusterInfo.getEnd() >= pk) {
-					rangeClusterInfo = dbClusterInfo;
-					break;
-				}
-			}
-			if (rangeClusterInfo == null) {
-				throw new IllegalArgumentException("找不到主全局库, clusterName=" + clusterName + ", pk=" + pk);
-			}
-
-			List list = null;
-			if (result.get(rangeClusterInfo.getGlobalConnInfo()) != null) {
-				list = result.get(rangeClusterInfo.getGlobalConnInfo());
-			} else {
-				list = new ArrayList();
-			}
-			list.add(pk);
-			result.put(rangeClusterInfo.getGlobalConnInfo(), list);
-		}
-
-		return result;
-	}
-
-	@SuppressWarnings({ "rawtypes", "unchecked" })
-	@Override
-	public Map<DBConnectionInfo, List> getMasterGlobalDbConn(List entities, String clusterName) {
-		List<DBClusterInfo> dbClusterInfos = this.masterDbCluster.get(clusterName);
-
-		Map<DBConnectionInfo, List> result = new HashMap<DBConnectionInfo, List>();
-		for (Object entity : entities) {
-			long pk = ReflectUtil.getPkValue(entity).longValue();
-
-			DBClusterInfo rangeClusterInfo = null;
-			for (DBClusterInfo dbClusterInfo : dbClusterInfos) {
-				if (dbClusterInfo.getStart() <= pk && dbClusterInfo.getEnd() >= pk) {
-					rangeClusterInfo = dbClusterInfo;
-					break;
-				}
-			}
-			if (rangeClusterInfo == null) {
-				throw new IllegalArgumentException("找不到主全局库, clusterName=" + clusterName + ", pk=" + pk);
-			}
-
-			List list = null;
-			if (result.get(rangeClusterInfo.getGlobalConnInfo()) != null) {
-				list = result.get(rangeClusterInfo.getGlobalConnInfo());
-			} else {
-				list = new ArrayList();
-			}
-			list.add(entity);
-			result.put(rangeClusterInfo.getGlobalConnInfo(), list);
-		}
-
-		return result;
-	}
-
-	@Override
-	public DBConnectionInfo getSlaveGlobalDbConn(Number pk, String clusterName, EnumDBMasterSlave slave) {
-		List<DBClusterInfo> dbClusterInfos = this.slaveDbCluster.get(clusterName).get(slave.getValue());
-
-		long pkValue = pk.longValue();
-
-		DBClusterInfo rangeClusterInfo = null;
-		for (DBClusterInfo dbClusterInfo : dbClusterInfos) {
-			if (dbClusterInfo.getStart() <= pkValue && dbClusterInfo.getEnd() >= pkValue) {
-				rangeClusterInfo = dbClusterInfo;
-				break;
-			}
-		}
-
-		if (rangeClusterInfo == null) {
-			throw new IllegalArgumentException("找不到从全局库, clusterName=" + clusterName + ", slave num="
-					+ slave.getValue());
-		}
-
-		return rangeClusterInfo.getGlobalConnInfo();
-	}
-
-	@Override
-	public List<DBConnectionInfo> getSlaveGlobalDbConn(String clusterName, EnumDBMasterSlave slave) {
-		List<DBClusterInfo> dbClusterInfos = this.slaveDbCluster.get(clusterName).get(slave.getValue());
-
-		List<DBConnectionInfo> result = new ArrayList<DBConnectionInfo>();
-
-		for (DBClusterInfo dbClusterInfo : dbClusterInfos) {
-			result.add(dbClusterInfo.getGlobalConnInfo());
-		}
-
-		return result;
-	}
-
-	@SuppressWarnings({ "rawtypes", "unchecked" })
-	@Override
-	public Map<DBConnectionInfo, List> getSlaveGlobalDbConn(List entities, String clusterName, EnumDBMasterSlave slave) {
-		List<List<DBClusterInfo>> oneSlaves = this.slaveDbCluster.get(clusterName);
-
-		Map<DBConnectionInfo, List> result = new HashMap<DBConnectionInfo, List>();
-
-		List<DBClusterInfo> oneSlave = oneSlaves.get(slave.getValue());
-
-		for (Object entity : entities) {
-			long pk = ReflectUtil.getPkValue(entity).longValue();
-
-			DBClusterInfo rangeClusterInfo = null;
-			for (DBClusterInfo dbClusterInfo : oneSlave) {
-				if (dbClusterInfo.getStart() <= pk && dbClusterInfo.getEnd() >= pk) {
-					rangeClusterInfo = dbClusterInfo;
-					break;
-				}
-			}
-
-			if (rangeClusterInfo == null) {
-				throw new IllegalArgumentException("找不到从全局库, clusterName=" + clusterName + ", slave num="
-						+ slave.getValue());
-			}
-
-			List list = null;
-			if (result.get(rangeClusterInfo.getGlobalConnInfo()) != null) {
-				list = result.get(rangeClusterInfo.getGlobalConnInfo());
-			} else {
-				list = new ArrayList();
-			}
-			list.add(entity);
-			result.put(rangeClusterInfo.getGlobalConnInfo(), list);
-		}
-
-		return result;
-	}
 
 	@Override
 	public DB selectDbFromMaster(String tableName, IShardingKey<?> value) throws DBClusterException {
@@ -507,30 +331,8 @@ public abstract class AbstractDBCluster implements IDBCluster {
 		}
 	}
 
-	private void _initMasterCluster(Map<String, List<DBClusterInfo>> masterCluster) {
-		for (List<DBClusterInfo> dbClusterInfos : masterCluster.values()) {
-			for (DBClusterInfo dbClusterInfo : dbClusterInfos) {
-				buildDataSource(dbClusterInfo.getGlobalConnInfo());
-
-				for (DBConnectionInfo dbConnInfo : dbClusterInfo.getDbConnInfos()) {
-					buildDataSource(dbConnInfo);
-				}
-			}
-		}
-	}
-
-	private void _initSlaveCluster(Map<String, List<List<DBClusterInfo>>> slaveCluster) {
-		for (List<List<DBClusterInfo>> dbClusterInfos : slaveCluster.values()) {
-			for (List<DBClusterInfo> dbClusterInfo : dbClusterInfos) {
-				for (DBClusterInfo value : dbClusterInfo) {
-					buildDataSource(value.getGlobalConnInfo());
-
-					for (DBConnectionInfo dbConnInfo : value.getDbConnInfos()) {
-						buildDataSource(dbConnInfo);
-					}
-				}
-			}
-		}
+	private void _initDBCluster(Map<String, DBClusterInfo> dbClusterInfo) {
+		// TODO:
 	}
 
 	/**
@@ -605,7 +407,7 @@ public abstract class AbstractDBCluster implements IDBCluster {
 		if (StringUtils.isNotBlank(zkHost)) {
 			// TODO: 配置信息从zookeeper中获取.
 		} else {
-			config = XmlClusterConfigImpl.getInstance();
+			config = XmlDBClusterConfigImpl.getInstance();
 		}
 
 		return config;
@@ -648,11 +450,6 @@ public abstract class AbstractDBCluster implements IDBCluster {
 	@Override
 	public void setScanPackage(String scanPackage) {
 		this.scanPackage = scanPackage;
-	}
-
-	@Override
-	public Map<String, List<DBClusterInfo>> getMasterCluster() {
-		return this.masterDbCluster;
 	}
 
 	@Override

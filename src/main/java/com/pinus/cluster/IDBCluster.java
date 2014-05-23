@@ -5,7 +5,6 @@ import java.util.Map;
 
 import com.pinus.api.IShardingKey;
 import com.pinus.api.enums.EnumDBMasterSlave;
-import com.pinus.cluster.beans.DBClusterInfo;
 import com.pinus.cluster.beans.DBConnectionInfo;
 import com.pinus.cluster.route.IClusterRouter;
 import com.pinus.exception.DBClusterException;
@@ -35,49 +34,6 @@ public interface IDBCluster {
 	public void shutdown() throws DBClusterException;
 
 	/**
-	 * 获取所有集群的全局库连接
-	 * 
-	 * @param clusterName
-	 * @return
-	 */
-	public List<DBConnectionInfo> getMasterGlobalDbConn(String clusterName);
-
-	/**
-	 * 根据主键获取全局库连接
-	 * 
-	 * @param pk
-	 * @param clusterName
-	 * @return
-	 */
-	public DBConnectionInfo getMasterGlobalDbConn(Number pk, String clusterName);
-
-	/**
-	 * 获取主全局库连接
-	 * 
-	 * @param pks
-	 * @param clusterName
-	 * @return
-	 */
-	public Map<DBConnectionInfo, List<Number>> getMasterGlobalDbConn(Number[] pks, String clusterName);
-
-	/**
-	 * 获取主全局库连接.
-	 * 
-	 * @return 数据库连接.
-	 */
-	public Map<DBConnectionInfo, List> getMasterGlobalDbConn(List entities, String clusterName);
-
-	/**
-	 * 根据主键获取从库的全局库连接
-	 * 
-	 * @param pk
-	 * @param clusterName
-	 * @param slave
-	 * @return
-	 */
-	public DBConnectionInfo getSlaveGlobalDbConn(Number pk, String clusterName, EnumDBMasterSlave slave);
-
-	/**
 	 * 获取从库的全局库连接
 	 * 
 	 * @param clusterName
@@ -86,12 +42,6 @@ public interface IDBCluster {
 	 */
 	public List<DBConnectionInfo> getSlaveGlobalDbConn(String clusterName, EnumDBMasterSlave slave);
 
-	/**
-	 * 获取从全局库连接.
-	 * 
-	 * @return 数据库连接.
-	 */
-	public Map<DBConnectionInfo, List> getSlaveGlobalDbConn(List entities, String clusterName, EnumDBMasterSlave slave);
 
 	/**
 	 * 从主库集群中获取被操作的库表.
@@ -158,13 +108,6 @@ public interface IDBCluster {
 	 *            包名
 	 */
 	public void setScanPackage(String scanPackage);
-
-	/**
-	 * 获取集群数据源
-	 * 
-	 * @return 集群数据源
-	 */
-	public Map<String, List<DBClusterInfo>> getMasterCluster();
 
 	/**
 	 * 获取集群表集合

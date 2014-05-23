@@ -6,6 +6,8 @@ import java.util.Map;
 import com.pinus.api.IShardingKey;
 import com.pinus.api.enums.EnumDBMasterSlave;
 import com.pinus.cluster.beans.DBClusterInfo;
+import com.pinus.cluster.beans.DBClusterRegionInfo;
+import com.pinus.cluster.beans.DBConnectionInfo;
 import com.pinus.cluster.enums.HashAlgoEnum;
 import com.pinus.exception.DBRouteException;
 
@@ -24,11 +26,7 @@ public abstract class AbstractDBRouterImpl implements IClusterRouter {
 	/**
 	 * 主库集群.
 	 */
-	private Map<String, List<DBClusterInfo>> dbMasterCluster;
-	/**
-	 * 从库集群.
-	 */
-	private Map<String, List<List<DBClusterInfo>>> dbSlaveCluster;
+	private Map<String, DBClusterInfo> dbClusterInfo;
 
 	/**
 	 * 数据表集群. {库名, {库下标, {表名, 表个数}}}
@@ -46,13 +44,8 @@ public abstract class AbstractDBRouterImpl implements IClusterRouter {
 	}
 
 	@Override
-	public void setMasterDbClusterInfo(Map<String, List<DBClusterInfo>> masterDbClusterInfo) {
-		this.dbMasterCluster = masterDbClusterInfo;
-	}
-
-	@Override
-	public void setSlaveDbClusterInfo(Map<String, List<List<DBClusterInfo>>> slaveDbClusterInfo) {
-		this.dbSlaveCluster = slaveDbClusterInfo;
+	public void setDbClusterInfo(Map<String, DBClusterInfo> dbClusterInfo) {
+		this.dbClusterInfo = dbClusterInfo;
 	}
 
 	@Override
@@ -70,19 +63,45 @@ public abstract class AbstractDBRouterImpl implements IClusterRouter {
 			throws DBRouteException {
 		DBRouteInfo dbRouteInfo = null;
 
+		long shardingValue = getShardingValue(value);
+		String clusterName = value.getClusterName();
+		List<DBClusterRegionInfo> regionInfos = this.dbClusterInfo.get(clusterName).getDbRegions();
+
+		if (regionInfos == null || regionInfos.isEmpty()) {
+			throw new DBRouteException("查找集群失败, clustername=" + clusterName);
+		}
+
+		DBClusterRegionInfo regionInfo = null;
+		int regionIndex = 0;
+		for (DBClusterRegionInfo region : regionInfos) {
+			if (region.getStart() <= shardingValue && region.getEnd() >= shardingValue) {
+				regionInfo = region;
+				break;
+			}
+			regionIndex++;
+		}
+		if (regionInfo == null) {
+			throw new DBRouteException("查找集群失败, 超出容量, dbname=" + clusterName + ", shardingvalue=" + shardingValue);
+		}
+
 		switch (clusterType) {
 		case MASTER:
-			dbRouteInfo = doSelectFromMaster(this.dbMasterCluster, value);
+			if (regionInfo.getMasterConnection() == null || regionInfo.getMasterConnection().isEmpty()) {
+				throw new DBRouteException("查找集群失败, clustername=" + clusterName);
+			}
+			dbRouteInfo = doSelectFromMaster(regionInfo.getMasterConnection(), value);
 			break;
 		default:
 			int slaveIndex = clusterType.getValue();
-			dbRouteInfo = doSelectFromSlave(this.dbSlaveCluster, slaveIndex, value);
+			dbRouteInfo = doSelectFromSlave(regionInfo.getSlaveConnection(), slaveIndex, value);
 			break;
 		}
-
 		if (dbRouteInfo == null) {
 			throw new RuntimeException("路由操作失败， 找不到相关的库表, clusterType=" + clusterType + ", sharding value=" + value);
 		}
+
+		dbRouteInfo.setClusterName(clusterName);
+		dbRouteInfo.setRegionIndex(regionIndex);
 
 		// 计算分表.
 		try {
@@ -133,8 +152,8 @@ public abstract class AbstractDBRouterImpl implements IClusterRouter {
 	 *            分库分表因子
 	 * @return 路由结果
 	 */
-	protected abstract DBRouteInfo doSelectFromMaster(Map<String, List<DBClusterInfo>> dbMasterCluster,
-			IShardingKey<?> value) throws DBRouteException;
+	protected abstract DBRouteInfo doSelectFromMaster(List<DBConnectionInfo> masterConnections, IShardingKey<?> value)
+			throws DBRouteException;
 
 	/**
 	 * 路由操作. 从从库中获取路由库表.
@@ -145,7 +164,7 @@ public abstract class AbstractDBRouterImpl implements IClusterRouter {
 	 *            分库分表因子
 	 * @return 路由结果
 	 */
-	protected abstract DBRouteInfo doSelectFromSlave(Map<String, List<List<DBClusterInfo>>> dbSlaveCluster,
-			int slaveIndex, IShardingKey<?> value) throws DBRouteException;
+	protected abstract DBRouteInfo doSelectFromSlave(List<List<DBConnectionInfo>> slaveConnection, int slaveIndex,
+			IShardingKey<?> value) throws DBRouteException;
 
 }

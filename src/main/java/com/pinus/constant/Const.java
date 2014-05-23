@@ -7,15 +7,6 @@ package com.pinus.constant;
  */
 public class Const {
 
-	public static final String PROP_IDGEN_BATCH = "db.cluster.generateid.batch";
-
-	public static final String PROP_HASH_ALGO = "db.cluster.hash.algo";
-
-	/**
-	 * zookeeper连接地址
-	 */
-	public static final String PROP_ZK_URL = "db.cluster.zk";
-
 	// SQL相关
 	/**
 	 * 查询count的慢日志时间阈值
@@ -41,16 +32,6 @@ public class Const {
 	 * 根据多主键查询的慢日志时间阈值
 	 */
 	public static final int SLOWQUERY_PKS = 10;
-	/**
-	 * 查询shardcluster表
-	 */
-	public static final String TABLE_SHARDCLUSTER_NAME = "shard_cluster";
-	public static final String FIELD_DB_NAME = "db_name";
-	public static final String FIELD_DB_INDEX = "db_index";
-	public static final String FIELD_TABLE_NAME = "table_name";
-	public static final String FIELD_TABLE_NUM = "table_num";
-	public static final String SQL_SELECT_SHARDCLUSTER = "SELECT * FROM " + TABLE_SHARDCLUSTER_NAME
-			+ " WHERE db_name=? AND db_index=?";
 
 	//
 	// 配置文件相关常量.
@@ -59,6 +40,18 @@ public class Const {
 	 * 默认读取的配置文件名.
 	 */
 	public static final String DEFAULT_CONFIG_FILENAME = "storage-config.xml";
+
+	public static final String ATTR_CATALOG_MYSQL = "mysql";
+	public static final String ATTR_CATALOG_REDIS = "redis";
+
+	public static final String PROP_IDGEN_BATCH = "db.cluster.generateid.batch";
+
+	public static final String PROP_HASH_ALGO = "db.cluster.hash.algo";
+
+	/**
+	 * zookeeper连接地址
+	 */
+	public static final String PROP_ZK_URL = "db.cluster.zk";
 
 	// dbcp连接池
 	public static final String PROP_MAXACTIVE = "maxActive";
@@ -71,18 +64,6 @@ public class Const {
 	public static final String PROP_TIMEBETWEENEVICTIONRUNSMILLIS = "timeBetweenEvictionRunsMillis";
 	public static final String PROP_NUMTESTSPEREVICTIONRUN = "numTestsPerEvictionRun";
 	public static final String PROP_MINEVICTABLEIDLETIMEMILLIS = "minEvictableIdleTimeMillis";
-
-	/**
-	 * 集群信息.
-	 */
-	public static final String PROP_DB_CLUSTER_NAME = "db.cluster.name";
-	public static final String PROP_DB_CLUSTER_SIZE = "db.cluster.{clusterName}.size";
-	public static final String PROP_DB_SLAVE_SIZE = "db.slave.{clusterName}.size";
-	/**
-	 * mysql数据库连接信息配置键的前缀.
-	 */
-	public static final String PROP_DBMASTER_MYSQL_PREFIX = "db.master.mysql.";
-	public static final String PROP_DBSLAVE_MYSQL_PREFIX = "db.slave{index}.mysql.";
 
 	//
 	// 系统变量相关常量.

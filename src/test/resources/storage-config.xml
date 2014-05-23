@@ -22,7 +22,7 @@
 		<numTestsPerEvictionRun>10</numTestsPerEvictionRun>
 		<minEvictableIdleTimeMillis>10000</minEvictableIdleTimeMillis>
 	</db-connection-pool>
-	
+
 	<cluster name="klstorage" capacity="1-200">
 		<master>
 			<global>
@@ -165,7 +165,7 @@
 			</sharding>
 		</slave>
 	</cluster>
-	
+
 	<cluster name="user" capacity="1-100000">
 		<master>
 			<global>

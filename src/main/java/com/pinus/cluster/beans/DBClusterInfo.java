@@ -10,11 +10,6 @@ import java.util.List;
 public class DBClusterInfo {
 
 	/**
-	 * 此集群是主还是从. 可选值, Const.MSTYPE_MASTER, Const.MSTYPE_SLAVE.
-	 */
-	private byte masterSlaveType;
-
-	/**
 	 * 数据库集群名称.
 	 */
 	private String clusterName;
@@ -22,71 +17,11 @@ public class DBClusterInfo {
 	/**
 	 * 集群中的全局库
 	 */
-	private DBConnectionInfo globalConnInfo;
+	private DBConnectionInfo masterGlobalConnection;
 
-	/**
-	 * 数据库集群连接.
-	 */
-	private List<DBConnectionInfo> dbConnInfos;
+	private List<DBConnectionInfo> slaveGlobalConnection;
 
-	/**
-	 * 集群容量范围开始值
-	 */
-	private long start;
-
-	/**
-	 * 集群容量结束值
-	 */
-	private long end;
-
-	public DBClusterInfo(byte masterSlaveType) {
-		this.masterSlaveType = masterSlaveType;
-	}
-
-	@Override
-	public String toString() {
-		return "DBClusterInfo [clusterName=" + clusterName
-				+ ", globalConnInfo=" + globalConnInfo + ", dbConnInfos=" + dbConnInfos + ", start=" + start + ", end="
-				+ end + "]";
-	}
-
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((clusterName == null) ? 0 : clusterName.hashCode());
-		result = prime * result + (int) (end ^ (end >>> 32));
-		result = prime * result + masterSlaveType;
-		result = prime * result + (int) (start ^ (start >>> 32));
-		return result;
-	}
-
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		DBClusterInfo other = (DBClusterInfo) obj;
-		if (clusterName == null) {
-			if (other.clusterName != null)
-				return false;
-		} else if (!clusterName.equals(other.clusterName))
-			return false;
-		if (end != other.end)
-			return false;
-		if (masterSlaveType != other.masterSlaveType)
-			return false;
-		if (start != other.start)
-			return false;
-		return true;
-	}
-
-	public byte getMasterSlaveType() {
-		return masterSlaveType;
-	}
+	private List<DBClusterRegionInfo> dbRegions;
 
 	public String getClusterName() {
 		return clusterName;
@@ -96,36 +31,28 @@ public class DBClusterInfo {
 		this.clusterName = clusterName;
 	}
 
-	public DBConnectionInfo getGlobalConnInfo() {
-		return globalConnInfo;
+	public DBConnectionInfo getMasterGlobalConnection() {
+		return masterGlobalConnection;
 	}
 
-	public void setGlobalConnInfo(DBConnectionInfo globalConnInfo) {
-		this.globalConnInfo = globalConnInfo;
+	public void setMasterGlobalConnection(DBConnectionInfo masterGlobalConnection) {
+		this.masterGlobalConnection = masterGlobalConnection;
 	}
 
-	public List<DBConnectionInfo> getDbConnInfos() {
-		return dbConnInfos;
+	public List<DBConnectionInfo> getSlaveGlobalConnection() {
+		return slaveGlobalConnection;
 	}
 
-	public void setDbConnInfos(List<DBConnectionInfo> dbConnInfos) {
-		this.dbConnInfos = dbConnInfos;
+	public void setSlaveGlobalConnection(List<DBConnectionInfo> slaveGlobalConnection) {
+		this.slaveGlobalConnection = slaveGlobalConnection;
 	}
 
-	public long getStart() {
-		return start;
+	public List<DBClusterRegionInfo> getDbRegions() {
+		return dbRegions;
 	}
 
-	public void setStart(long start) {
-		this.start = start;
-	}
-
-	public long getEnd() {
-		return end;
-	}
-
-	public void setEnd(long end) {
-		this.end = end;
+	public void setDbRegions(List<DBClusterRegionInfo> dbRegions) {
+		this.dbRegions = dbRegions;
 	}
 
 }
