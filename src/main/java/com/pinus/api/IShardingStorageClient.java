@@ -9,10 +9,7 @@ import com.pinus.api.enums.EnumMode;
 import com.pinus.api.query.IQuery;
 import com.pinus.cache.IPrimaryCache;
 import com.pinus.cluster.IDBCluster;
-import com.pinus.datalayer.IShardingMasterQuery;
-import com.pinus.datalayer.IShardingSlaveQuery;
 import com.pinus.datalayer.IShardingStatistics;
-import com.pinus.datalayer.IShardingUpdate;
 import com.pinus.exception.DBOperationException;
 import com.pinus.generator.IIdGenerator;
 
@@ -123,7 +120,7 @@ public interface IShardingStorageClient {
 	 * @throws DBOperationException
 	 *             操作失败
 	 */
-	public Number[] saveBatch(List<? extends Object> entities, IShardingValue<?> shardingValue);
+	public Number[] saveBatch(List<? extends Object> entities, IShardingKey<?> shardingValue);
 
 	/**
 	 * 更新分库分表数据.
@@ -146,7 +143,7 @@ public interface IShardingStorageClient {
 	 * @throws DBOperationException
 	 *             操作失败
 	 */
-	public void updateBatch(List<? extends Object> entities, IShardingValue<?> shardingValue);
+	public void updateBatch(List<? extends Object> entities, IShardingKey<?> shardingValue);
 
 	/**
 	 * 根据主键删除数据.
@@ -161,7 +158,7 @@ public interface IShardingStorageClient {
 	 * @throws DBOperationException
 	 *             操作失败
 	 */
-	public void removeByPk(Number pk, IShardingValue<?> shardingValue, Class<?> clazz);
+	public void removeByPk(Number pk, IShardingKey<?> shardingValue, Class<?> clazz);
 
 	/**
 	 * 根据主键批量删除数据.
@@ -176,7 +173,7 @@ public interface IShardingStorageClient {
 	 * @throws DBOperationException
 	 *             操作失败
 	 */
-	public void removeByPks(Number[] pks, IShardingValue<?> shardingValue, Class<?> clazz);
+	public void removeByPks(Number[] pks, IShardingKey<?> shardingValue, Class<?> clazz);
 
 	// ////////////////////////////////////////////////////////
 	// query相关
@@ -259,21 +256,6 @@ public interface IShardingStorageClient {
 	public <T> List<T> findGlobalByPks(List<? extends Number> pks, String clusterName, Class<T> clazz);
 
 	/**
-	 * 分页遍历整个全局表. 当查询不到数据时返回空的List，不会返回null.
-	 * 
-	 * @param clusterName
-	 *            集群名
-	 * @param clazz
-	 *            实体对象
-	 * @param start
-	 *            开始偏移量
-	 * @param limit
-	 *            分页长度
-	 * @return 数据
-	 */
-	public <T> List<T> findGlobalMore(String clusterName, Class<T> clazz, int start, int limit);
-
-	/**
 	 * 根据sql查询全局表. 当查询不到数据时返回空的List，不会返回null.
 	 * 
 	 * @param sql
@@ -314,7 +296,7 @@ public interface IShardingStorageClient {
 	 * @throws IllegalArgumentException
 	 *             输入参数错误
 	 */
-	public Number getCount(IShardingValue<?> shardingValue, Class<?> clazz);
+	public Number getCount(IShardingKey<?> shardingValue, Class<?> clazz);
 
 	/**
 	 * 根据条件获取分库分表记录数.
@@ -330,7 +312,7 @@ public interface IShardingStorageClient {
 	 * @throws IllegalArgumentException
 	 *             输入参数错误
 	 */
-	public Number getCount(IShardingValue<?> shardingValue, SQL<?> sql);
+	public Number getCount(IShardingKey<?> shardingValue, SQL<?> sql);
 
 	/**
 	 * 一个主分库分表, 根据主键查询. 查询不到则返回null
@@ -349,7 +331,7 @@ public interface IShardingStorageClient {
 	 * @throws IllegalArgumentException
 	 *             输入参数错误
 	 */
-	public <T> T findByPk(Number pk, IShardingValue<?> shardingValue, Class<T> clazz);
+	public <T> T findByPk(Number pk, IShardingKey<?> shardingValue, Class<T> clazz);
 
 	/**
 	 * 根据查询条件获取一条数据. 如果查询到多条则返回第一条.当查询不到数据时返回空的List，不会返回null.
@@ -359,7 +341,7 @@ public interface IShardingStorageClient {
 	 * @param clazz
 	 * @return 查询结果，找不到返回null
 	 */
-	public <T> T findOneByQuery(IQuery query, IShardingValue<?> shardingValue, Class<T> clazz);
+	public <T> T findOneByQuery(IQuery query, IShardingKey<?> shardingValue, Class<T> clazz);
 
 	/**
 	 * 一个主分库分表, 根据多个主键查询.当查询不到数据时返回空的List，不会返回null.
@@ -378,7 +360,7 @@ public interface IShardingStorageClient {
 	 * @throws IllegalArgumentException
 	 *             输入参数错误
 	 */
-	public <T> List<T> findByPks(IShardingValue<?> shardingValue, Class<T> clazz, Number... pks);
+	public <T> List<T> findByPks(IShardingKey<?> shardingValue, Class<T> clazz, Number... pks);
 
 	/**
 	 * 一个主分库分表, 根据多个主键查询.当查询不到数据时返回空的List，不会返回null.
@@ -397,7 +379,7 @@ public interface IShardingStorageClient {
 	 * @throws IllegalArgumentException
 	 *             输入参数错误
 	 */
-	public <T> List<T> findByPkList(List<? extends Number> pks, IShardingValue<?> shardingValue, Class<T> clazz);
+	public <T> List<T> findByPkList(List<? extends Number> pks, IShardingKey<?> shardingValue, Class<T> clazz);
 
 	/**
 	 * 多个主分库分表, 多个主键查询, 一个主键对应一个分库分表.
@@ -417,7 +399,7 @@ public interface IShardingStorageClient {
 	 * @throws IllegalArgumentException
 	 *             输入参数错误
 	 */
-	public <T> List<T> findByShardingPair(List<IShardingValue<?>> shardingValues, Class<T> clazz, Number... pks);
+	public <T> List<T> findByShardingPair(List<IShardingKey<?>> shardingValues, Class<T> clazz, Number... pks);
 
 	/**
 	 * 多个主分库分表, 多个主键查询. 主键列表和分库分表因子的列表必须是一一对应, 当查询不到数据时返回空的List，不会返回null.
@@ -436,29 +418,8 @@ public interface IShardingStorageClient {
 	 * @throws IllegalArgumentException
 	 *             输入参数错误
 	 */
-	public <T> List<T> findByShardingPair(List<? extends Number> pks, List<IShardingValue<?>> shardingValues,
+	public <T> List<T> findByShardingPair(List<? extends Number> pks, List<IShardingKey<?>> shardingValues,
 			Class<T> clazz);
-
-	/**
-	 * 一个主分库分表, 无条件查询全部.当查询不到数据时返回空的List，不会返回null.
-	 * 
-	 * @param shardingValue
-	 *            分库分表因子
-	 * @param clazz
-	 *            数据对象类型
-	 * @param start
-	 *            分页偏移量
-	 * @param limit
-	 *            分页大小
-	 * 
-	 * @return 查询结果
-	 * 
-	 * @throws DBOperationException
-	 *             操作失败
-	 * @throws IllegalArgumentException
-	 *             输入参数错误
-	 */
-	public <T> List<T> findMore(IShardingValue<?> shardingValue, Class<T> clazz, int start, int limit);
 
 	/**
 	 * 一个主分库分表, 根据条件查询.当查询不到数据时返回空的List，不会返回null.
@@ -475,7 +436,7 @@ public interface IShardingStorageClient {
 	 * @throws IllegalArgumentException
 	 *             输入参数错误
 	 */
-	public <T> List<T> findBySql(SQL<T> sql, IShardingValue<?> shardingValue);
+	public <T> List<T> findBySql(SQL<T> sql, IShardingKey<?> shardingValue);
 
 	/**
 	 * 根据查询条件对象进行查询.当查询不到数据时返回空的List，不会返回null.
@@ -490,7 +451,7 @@ public interface IShardingStorageClient {
 	 * @throws IllegalArgumentException
 	 *             输入参数错误
 	 */
-	public <T> List<T> findByQuery(IQuery query, IShardingValue<?> shardingValue, Class<T> clazz);
+	public <T> List<T> findByQuery(IQuery query, IShardingKey<?> shardingValue, Class<T> clazz);
 
 	// ////////////////////////////////////////////////////////
 	// other
@@ -592,27 +553,6 @@ public interface IShardingStorageClient {
 	 * @return 查询条件对象
 	 */
 	public IQuery createQuery();
-
-	/**
-	 * 获取更新实现.
-	 * 
-	 * @return 更新实现.
-	 */
-	public IShardingUpdate getShardingUpdate();
-
-	/**
-	 * 获取主库查询实现.
-	 * 
-	 * @return 主库查询实现
-	 */
-	public IShardingMasterQuery getShardingMasterQuery();
-
-	/**
-	 * 获取从库查询实现.
-	 * 
-	 * @return 从库查询实现
-	 */
-	public IShardingSlaveQuery getShardingSlaveQuery();
 
 	/**
 	 * 设置存储使用的数据库. 默认使用mysql

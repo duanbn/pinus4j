@@ -3,7 +3,7 @@ package com.pinus.cluster.route.impl;
 import java.util.List;
 import java.util.Map;
 
-import com.pinus.api.IShardingValue;
+import com.pinus.api.IShardingKey;
 import com.pinus.cluster.beans.DBClusterInfo;
 import com.pinus.cluster.route.AbstractDBRouterImpl;
 import com.pinus.cluster.route.DBRouteInfo;
@@ -19,7 +19,7 @@ import com.pinus.exception.DBRouteException;
 public class SimpleHashClusterRouterImpl extends AbstractDBRouterImpl {
 
 	@Override
-	public DBRouteInfo doSelectFromMaster(Map<String, List<DBClusterInfo>> dbMasterCluster, IShardingValue<?> value)
+	public DBRouteInfo doSelectFromMaster(Map<String, List<DBClusterInfo>> dbMasterCluster, IShardingKey<?> value)
 			throws DBRouteException {
 		DBRouteInfo dbRoute = new DBRouteInfo();
 
@@ -55,7 +55,7 @@ public class SimpleHashClusterRouterImpl extends AbstractDBRouterImpl {
 
 	@Override
 	public DBRouteInfo doSelectFromSlave(Map<String, List<List<DBClusterInfo>>> dbSlaveCluster, int slaveIndex,
-			IShardingValue<?> value) throws DBRouteException {
+			IShardingKey<?> value) throws DBRouteException {
 		DBRouteInfo dbRoute = new DBRouteInfo();
 
 		String clusterName = value.getClusterName();

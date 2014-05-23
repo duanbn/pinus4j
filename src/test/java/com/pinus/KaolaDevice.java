@@ -1,4 +1,4 @@
-package com.entity;
+package com.pinus;
 
 import java.io.Serializable;
 import java.sql.Timestamp;

@@ -2,7 +2,7 @@ package com.pinus.util;
 
 import java.util.List;
 
-import com.pinus.api.IShardingValue;
+import com.pinus.api.IShardingKey;
 import com.pinus.api.SQL;
 import com.pinus.api.annotation.Table;
 import com.pinus.api.enums.EnumDBMasterSlave;
@@ -130,16 +130,16 @@ public class CheckUtil {
 	 * @throws IllegalArgumentException
 	 *             校验失败
 	 */
-	public static void checkShardingValue(IShardingValue<?> shardingValue) {
-		if (shardingValue == null || shardingValue.getShardingValue() == null) {
-			throw new IllegalArgumentException("参数错误, shardingValue=" + shardingValue);
+	public static void checkShardingValue(IShardingKey<?> shardingKey) {
+		if (shardingKey == null || StringUtils.isBlank(shardingKey.getClusterName())) {
+			throw new IllegalArgumentException("参数错误, shardingKey=" + shardingKey);
 		}
 	}
 
 	/**
 	 * 校验分库分表因子列表参数.
 	 */
-	public static void checkShardingValueList(List<IShardingValue<?>> shardingValueList) {
+	public static void checkShardingValueList(List<IShardingKey<?>> shardingValueList) {
 		if (shardingValueList == null || shardingValueList.isEmpty()) {
 			throw new IllegalArgumentException("参数错误, sharding value list=" + shardingValueList);
 		}

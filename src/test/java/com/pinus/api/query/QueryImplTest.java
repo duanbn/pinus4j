@@ -8,7 +8,7 @@ import com.pinus.api.query.Order;
 import com.pinus.api.query.QueryImpl;
 
 public class QueryImplTest {
-
+	
     @Test
     public void testAdd() throws Exception {
         IQuery query = new QueryImpl();

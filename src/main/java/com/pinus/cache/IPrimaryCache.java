@@ -87,7 +87,7 @@ public interface IPrimaryCache {
 	 * @param data
 	 *            批量数据
 	 */
-	public void putGlobal(String clusterName, String tableName, Number[] ids, List<? extends Object> data);
+	public void putGlobal(String clusterName, String tableName, List<? extends Object> data);
 
 	/**
 	 * 批量添加记录

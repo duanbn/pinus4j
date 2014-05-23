@@ -13,6 +13,7 @@ import com.pinus.api.SQL;
 import com.pinus.api.query.IQuery;
 import com.pinus.cache.IPrimaryCache;
 import com.pinus.cluster.DB;
+import com.pinus.cluster.beans.DBConnectionInfo;
 import com.pinus.constant.Const;
 import com.pinus.datalayer.SQLBuilder;
 import com.pinus.datalayer.SlowQueryLogger;
@@ -83,7 +84,7 @@ public abstract class AbstractShardingQuery {
 	 * @param clazz
 	 * @return count数
 	 */
-	protected Number selectCountGlobalWithCache(Connection conn, String clusterName, Class<?> clazz) {
+	protected Number selectCountGlobalWithCache(List<DBConnectionInfo> dbConnInfos, String clusterName, Class<?> clazz) {
 		String tableName = ReflectUtil.getTableName(clazz);
 
 		// 操作缓存
@@ -94,7 +95,18 @@ public abstract class AbstractShardingQuery {
 			}
 		}
 
-		long count = _selectCountGlobal(conn, clazz).longValue();
+		long count = 0;
+		for (DBConnectionInfo dbConnInfo : dbConnInfos) {
+			Connection conn = null;
+			try {
+				conn = dbConnInfo.getDatasource().getConnection();
+				count += _selectCountGlobal(conn, clazz).longValue();
+			} catch (SQLException e) {
+				throw new DBOperationException(e);
+			} finally {
+				SQLBuilder.close(conn);
+			}
+		}
 
 		// 操作缓存
 		if (isCacheAvailable(clazz) && count > 0)
@@ -454,7 +466,7 @@ public abstract class AbstractShardingQuery {
 				}
 			} else {
 				result = _selectByPksGlobal(conn, clazz, pks);
-				primaryCache.putGlobal(clusterName, tableName, pks, result);
+				primaryCache.putGlobal(clusterName, tableName, result);
 			}
 		} else {
 			result = _selectByPksGlobal(conn, clazz, pks);

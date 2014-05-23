@@ -7,40 +7,40 @@ import junit.framework.Assert;
 import org.junit.Test;
 
 import com.pinus.BaseTest;
-import com.pinus.api.IShardingValue;
-import com.pinus.api.ShardingValue;
+import com.pinus.api.IShardingKey;
+import com.pinus.api.ShardingKey;
 import com.pinus.cluster.DB;
 
 public class MemCachedPrimaryCacheImplTest extends BaseTest {
 
 	@Test
 	public void decrCount() throws Exception {
-		IShardingValue<?> shardingValue = new ShardingValue<Integer>(CLUSTER_NAME, 1);
-		DB db = dbCluster.selectDbFromMaster("test_entity", shardingValue);
+		IShardingKey<?> shardingValue = new ShardingKey<Integer>(CLUSTER_NAME, 1);
+		DB db = client.getDbCluster().selectDbFromMaster("test_entity", shardingValue);
 		long count = primaryCache.decrCount(db, 1);
 		System.out.println(count);
 	}
 
 	@Test
 	public void incrCount() throws Exception {
-		IShardingValue<?> shardingValue = new ShardingValue<Integer>(CLUSTER_NAME, 1);
-		DB db = dbCluster.selectDbFromMaster("test_entity", shardingValue);
+		IShardingKey<?> shardingValue = new ShardingKey<Integer>(CLUSTER_NAME, 1);
+		DB db = client.getDbCluster().selectDbFromMaster("test_entity", shardingValue);
 		long count = primaryCache.incrCount(db, 1);
 		System.out.println(count);
 	}
 
 	@Test
 	public void getCount() throws Exception {
-		IShardingValue<?> shardingValue = new ShardingValue<Integer>(CLUSTER_NAME, 1);
-		DB db = dbCluster.selectDbFromMaster("test_entity", shardingValue);
+		IShardingKey<?> shardingValue = new ShardingKey<Integer>(CLUSTER_NAME, 1);
+		DB db = client.getDbCluster().selectDbFromMaster("test_entity", shardingValue);
 		long count = primaryCache.getCount(db);
 		System.out.println(count);
 	}
 
 	@Test
 	public void put() throws Exception {
-		IShardingValue<?> shardingValue = new ShardingValue<Integer>(CLUSTER_NAME, 1);
-		DB db = dbCluster.selectDbFromMaster("test_entity", shardingValue);
+		IShardingKey<?> shardingValue = new ShardingKey<Integer>(CLUSTER_NAME, 1);
+		DB db = client.getDbCluster().selectDbFromMaster("test_entity", shardingValue);
 		primaryCache.put(db, 1, "test cache");
 		Assert.assertEquals("test cache", primaryCache.get(db, 1));
 
@@ -55,8 +55,8 @@ public class MemCachedPrimaryCacheImplTest extends BaseTest {
 
 	@Test
 	public void remove() throws Exception {
-		IShardingValue<?> shardingValue = new ShardingValue<Integer>(CLUSTER_NAME, 1);
-		DB db = dbCluster.selectDbFromMaster("test_entity", shardingValue);
+		IShardingKey<?> shardingValue = new ShardingKey<Integer>(CLUSTER_NAME, 1);
+		DB db = client.getDbCluster().selectDbFromMaster("test_entity", shardingValue);
 		primaryCache.remove(db, 1);
 		Assert.assertNull(primaryCache.get(db, 1));
 

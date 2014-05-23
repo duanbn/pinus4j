@@ -3,7 +3,7 @@ package com.pinus.cluster.route;
 import java.util.List;
 import java.util.Map;
 
-import com.pinus.api.IShardingValue;
+import com.pinus.api.IShardingKey;
 import com.pinus.api.enums.EnumDBMasterSlave;
 import com.pinus.cluster.beans.DBClusterInfo;
 import com.pinus.cluster.enums.HashAlgoEnum;
@@ -71,6 +71,6 @@ public interface IClusterRouter {
      *
      * @throws DBRouteException 路由操作失败
      */
-    public DBRouteInfo select(EnumDBMasterSlave clusterType, String tableName, IShardingValue<?> value) throws DBRouteException;
+    public DBRouteInfo select(EnumDBMasterSlave clusterType, String tableName, IShardingKey<?> value) throws DBRouteException;
 
 }

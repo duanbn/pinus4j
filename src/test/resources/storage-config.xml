@@ -11,10 +11,10 @@
 	<db.cluster.generateid.batch>5</db.cluster.generateid.batch>
 
 	<db-connection-pool>
-		<maxActive>10</maxActive>
+		<maxActive>5</maxActive>
 		<minIdle>10</minIdle>
 		<maxIdle>50</maxIdle>
-		<initialSize>5</initialSize>
+		<initialSize>1</initialSize>
 		<removeAbandoned>true</removeAbandoned>
 		<removeAbandonedTimeout>10</removeAbandonedTimeout>
 		<maxWait>1000</maxWait>
@@ -23,7 +23,7 @@
 		<minEvictableIdleTimeMillis>10000</minEvictableIdleTimeMillis>
 	</db-connection-pool>
 	
-	<cluster name="klstorage" capacity="1-100000">
+	<cluster name="klstorage" capacity="1-200">
 		<master>
 			<global>
 				<db.username>root</db.username>
@@ -94,7 +94,7 @@
 			</sharding>
 		</slave>
 	</cluster>
-	<cluster name="klstorage" capacity="100001-200000">
+	<cluster name="klstorage" capacity="201-1000">
 		<master>
 			<global>
 				<db.username>root</db.username>

@@ -1,27 +1,23 @@
-package com.entity;
+package com.pinus;
 
 import java.io.Serializable;
-import java.sql.Timestamp;
 import java.util.Date;
 
-import org.apache.commons.lang.builder.ToStringBuilder;
-
-import com.pinus.api.IShardingEntity;
+import com.pinus.api.IGlobalEntity;
 import com.pinus.api.annotation.DateTime;
 import com.pinus.api.annotation.Field;
 import com.pinus.api.annotation.PrimaryKey;
 import com.pinus.api.annotation.Table;
-import com.pinus.api.annotation.UpdateTime;
 
-@Table(name = "test_entity", cluster = "klstorage", shardingNum = 25, cache = true)
-public class TestEntity implements Serializable, IShardingEntity<Long> {
+@Table(cluster = "klstorage", cache = true)
+public class TestGlobalEntity implements Serializable, IGlobalEntity {
 
 	private static final long serialVersionUID = 1L;
 
-	@PrimaryKey(comment = "这是一个主键")
-	private long testId;
+	@PrimaryKey
+	private long id;
 
-	@Field(comment = "测试byte类型的字段")
+	@Field
 	private byte testByte;
 
 	@Field
@@ -48,33 +44,20 @@ public class TestEntity implements Serializable, IShardingEntity<Long> {
 	@Field
 	private String testString;
 
+	@DateTime
+	private Date testDate;
+
 	@Override
 	public String getClusterName() {
 		return "klstorage";
 	}
 
-	@Override
-	public Long getShardingValue() {
-		return this.testId;
+	public long getId() {
+		return id;
 	}
 
-	@DateTime(comment = "日期类型")
-	private Date testDate;
-
-	@UpdateTime(comment = "自动更新时间")
-	private Timestamp testTime;
-
-	@Override
-	public String toString() {
-		return ToStringBuilder.reflectionToString(this);
-	}
-
-	public long getTestId() {
-		return testId;
-	}
-
-	public void setTestId(long testId) {
-		this.testId = testId;
+	public void setId(long id) {
+		this.id = id;
 	}
 
 	public byte getTestByte() {
@@ -155,14 +138,6 @@ public class TestEntity implements Serializable, IShardingEntity<Long> {
 
 	public void setTestDate(Date testDate) {
 		this.testDate = testDate;
-	}
-
-	public Timestamp getTestTime() {
-		return testTime;
-	}
-
-	public void setTestTime(Timestamp testTime) {
-		this.testTime = testTime;
 	}
 
 }

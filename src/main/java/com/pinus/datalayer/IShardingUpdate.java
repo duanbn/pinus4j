@@ -2,7 +2,7 @@ package com.pinus.datalayer;
 
 import java.util.List;
 
-import com.pinus.api.IShardingValue;
+import com.pinus.api.IShardingKey;
 import com.pinus.cache.IPrimaryCache;
 import com.pinus.cluster.IDBCluster;
 import com.pinus.exception.DBOperationException;
@@ -109,7 +109,7 @@ public interface IShardingUpdate {
 	 * @throws DBOperationException
 	 *             操作失败
 	 */
-	public Number save(Object entity, IShardingValue<?> shardingValue);
+	public Number save(Object entity, IShardingKey<?> shardingValue);
 
 	/**
 	 * 批量保存数据.
@@ -124,7 +124,7 @@ public interface IShardingUpdate {
 	 * @throws DBOperationException
 	 *             操作失败
 	 */
-	public Number[] saveBatch(List<? extends Object> entities, IShardingValue<?> shardingValue);
+	public Number[] saveBatch(List<? extends Object> entities, IShardingKey<?> shardingValue);
 
 	/**
 	 * 更新数据. <b>忽略空值的更新</b>
@@ -137,7 +137,7 @@ public interface IShardingUpdate {
 	 * @throws DBOperationException
 	 *             操作失败
 	 */
-	public void update(Object entity, IShardingValue<?> shardingValue);
+	public void update(Object entity, IShardingKey<?> shardingValue);
 
 	/**
 	 * 单数据库多数据批量更新.
@@ -150,7 +150,7 @@ public interface IShardingUpdate {
 	 * @throws DBOperationException
 	 *             操作失败
 	 */
-	public void updateBatch(List<? extends Object> entities, IShardingValue<?> shardingValue);
+	public void updateBatch(List<? extends Object> entities, IShardingKey<?> shardingValue);
 
 	/**
 	 * 根据主键删除数据.
@@ -165,7 +165,7 @@ public interface IShardingUpdate {
 	 * @throws DBOperationException
 	 *             操作失败
 	 */
-	public void removeByPk(Number pk, IShardingValue<?> shardingValue, Class<?> clazz);
+	public void removeByPk(Number pk, IShardingKey<?> shardingValue, Class<?> clazz);
 
 	/**
 	 * 根据主键批量删除数据.
@@ -180,7 +180,7 @@ public interface IShardingUpdate {
 	 * @throws DBOperationException
 	 *             操作失败
 	 */
-	public void removeByPks(Number[] pks, IShardingValue<?> shardingValue, Class<?> clazz);
+	public void removeByPks(Number[] pks, IShardingKey<?> shardingValue, Class<?> clazz);
 
 	/**
 	 * 设置数据库集群.

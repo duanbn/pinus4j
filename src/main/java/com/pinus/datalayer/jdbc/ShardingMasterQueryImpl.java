@@ -8,7 +8,7 @@ import java.util.Map;
 
 import org.apache.log4j.Logger;
 
-import com.pinus.api.IShardingValue;
+import com.pinus.api.IShardingKey;
 import com.pinus.api.SQL;
 import com.pinus.api.query.IQuery;
 import com.pinus.cluster.DB;
@@ -48,7 +48,7 @@ public class ShardingMasterQueryImpl extends AbstractShardingQuery implements IS
 	}
 
 	@Override
-	public <T> T findOneByQueryFromMaster(IQuery query, IShardingValue<?> shardingValue, Class<T> clazz) {
+	public <T> T findOneByQueryFromMaster(IQuery query, IShardingKey<?> shardingValue, Class<T> clazz) {
 		List<T> entities = findByQueryFromMaster(query, shardingValue, clazz);
 
 		if (entities.isEmpty()) {
@@ -64,19 +64,8 @@ public class ShardingMasterQueryImpl extends AbstractShardingQuery implements IS
 
 	@Override
 	public Number getGlobalCountFromMaster(String clusterName, Class<?> clazz) {
-		long count = 0;
 		List<DBConnectionInfo> dbConnInfos = this.dbCluster.getMasterGlobalDbConn(clusterName);
-		for (DBConnectionInfo dbConnInfo : dbConnInfos) {
-			Connection conn = null;
-			try {
-				conn = dbConnInfo.getDatasource().getConnection();
-				count += selectCountGlobalWithCache(conn, clusterName, clazz).longValue();
-			} catch (SQLException e) {
-				throw new DBOperationException(e);
-			} finally {
-				SQLBuilder.close(conn);
-			}
-		}
+		long count = selectCountGlobalWithCache(dbConnInfos, clusterName, clazz).longValue();
 
 		return count;
 	}
@@ -142,30 +131,6 @@ public class ShardingMasterQueryImpl extends AbstractShardingQuery implements IS
 	}
 
 	@Override
-	public <T> List<T> findGlobalMoreFromMaster(String clusterName, Class<T> clazz, int start, int limit) {
-		throw new UnsupportedOperationException();
-		// Connection conn = null;
-		// try {
-		// conn = this.dbCluster.getMasterGlobalDbConn(clusterName);
-		//
-		// List<T> result = null;
-		// if (isCacheAvailable(clazz)) {
-		// Number[] pkValues = selectPksMoreGlobal(conn, clazz, start, limit);
-		// result = selectByPksGlobalWithCache(conn, clusterName, clazz,
-		// pkValues);
-		// } else {
-		// result = selectMoreGlobal(conn, clazz, start, limit);
-		// }
-		//
-		// return result;
-		// } catch (SQLException e) {
-		// throw new DBOperationException(e);
-		// } finally {
-		// SQLBuilder.close(conn);
-		// }
-	}
-
-	@Override
 	public <T> List<T> findGlobalBySqlFromMaster(SQL<T> sql, String clusterName) {
 		throw new UnsupportedOperationException();
 		// Connection conn = null;
@@ -213,7 +178,7 @@ public class ShardingMasterQueryImpl extends AbstractShardingQuery implements IS
 	}
 
 	@Override
-	public Number getCountFromMaster(IShardingValue<?> shardingValue, Class<?> clazz) {
+	public Number getCountFromMaster(IShardingKey<?> shardingValue, Class<?> clazz) {
 		DB db = _getDbFromMaster(clazz, shardingValue);
 
 		try {
@@ -224,7 +189,7 @@ public class ShardingMasterQueryImpl extends AbstractShardingQuery implements IS
 	}
 
 	@Override
-	public Number getCountFromMaster(IShardingValue<?> shardingValue, SQL<?> sql) {
+	public Number getCountFromMaster(IShardingKey<?> shardingValue, SQL<?> sql) {
 		DB db = _getDbFromMaster(sql.getClazz(), shardingValue);
 
 		try {
@@ -235,7 +200,7 @@ public class ShardingMasterQueryImpl extends AbstractShardingQuery implements IS
 	}
 
 	@Override
-	public <T> T findByPkFromMaster(Number pk, IShardingValue<?> shardingValue, Class<T> clazz) {
+	public <T> T findByPkFromMaster(Number pk, IShardingKey<?> shardingValue, Class<T> clazz) {
 		DB db = _getDbFromMaster(clazz, shardingValue);
 
 		try {
@@ -246,7 +211,7 @@ public class ShardingMasterQueryImpl extends AbstractShardingQuery implements IS
 	}
 
 	@Override
-	public <T> List<T> findByPksFromMaster(IShardingValue<?> shardingValue, Class<T> clazz, Number... pks) {
+	public <T> List<T> findByPksFromMaster(IShardingKey<?> shardingValue, Class<T> clazz, Number... pks) {
 		DB db = _getDbFromMaster(clazz, shardingValue);
 
 		try {
@@ -257,20 +222,18 @@ public class ShardingMasterQueryImpl extends AbstractShardingQuery implements IS
 	}
 
 	@Override
-	public <T> List<T> findByPkListFromMaster(List<? extends Number> pks, IShardingValue<?> shardingValue,
-			Class<T> clazz) {
+	public <T> List<T> findByPkListFromMaster(List<? extends Number> pks, IShardingKey<?> shardingValue, Class<T> clazz) {
 		return findByPksFromMaster(shardingValue, clazz, pks.toArray(new Number[pks.size()]));
 	}
 
 	@Override
-	public <T> List<T> findByShardingPairFromMaster(List<IShardingValue<?>> shardingValues, Class<T> clazz,
-			Number... pks) {
+	public <T> List<T> findByShardingPairFromMaster(List<IShardingKey<?>> shardingValues, Class<T> clazz, Number... pks) {
 		if (shardingValues.size() != pks.length) {
 			throw new DBOperationException("分库分表列表和主键数量不等");
 		}
 
 		List<T> result = new ArrayList<T>(pks.length);
-		IShardingValue<?> shardingValue = null;
+		IShardingKey<?> shardingValue = null;
 		Number pk = null;
 		DB db = null;
 		T data = null;
@@ -293,32 +256,13 @@ public class ShardingMasterQueryImpl extends AbstractShardingQuery implements IS
 	}
 
 	@Override
-	public <T> List<T> findByShardingPairFromMaster(List<? extends Number> pks, List<IShardingValue<?>> shardingValues,
+	public <T> List<T> findByShardingPairFromMaster(List<? extends Number> pks, List<IShardingKey<?>> shardingValues,
 			Class<T> clazz) {
 		return findByShardingPairFromMaster(shardingValues, clazz, pks.toArray(new Number[pks.size()]));
 	}
 
 	@Override
-	public <T> List<T> findMoreFromMaster(IShardingValue<?> shardingValue, Class<T> clazz, int start, int limit) {
-		DB db = _getDbFromMaster(clazz, shardingValue);
-
-		List<T> result = null;
-		try {
-			if (isCacheAvailable(clazz)) {
-				Number[] pkValues = selectPksMore(db, clazz, start, limit);
-				result = selectByPksWithCache(db, clazz, pkValues);
-			} else {
-				result = selectMore(db, clazz, start, limit);
-			}
-		} finally {
-			SQLBuilder.close(db.getDbConn());
-		}
-
-		return result;
-	}
-
-	@Override
-	public <T> List<T> findBySqlFromMaster(SQL<T> sql, IShardingValue<?> shardingValue) {
+	public <T> List<T> findBySqlFromMaster(SQL<T> sql, IShardingKey<?> shardingValue) {
 		DB db = _getDbFromMaster(sql.getClazz(), shardingValue);
 
 		List<T> result = null;
@@ -337,7 +281,7 @@ public class ShardingMasterQueryImpl extends AbstractShardingQuery implements IS
 	}
 
 	@Override
-	public <T> List<T> findByQueryFromMaster(IQuery query, IShardingValue<?> shardingValue, Class<T> clazz) {
+	public <T> List<T> findByQueryFromMaster(IQuery query, IShardingKey<?> shardingValue, Class<T> clazz) {
 		DB db = _getDbFromMaster(clazz, shardingValue);
 
 		List<T> result = null;
@@ -377,7 +321,7 @@ public class ShardingMasterQueryImpl extends AbstractShardingQuery implements IS
 	 * @param shardingValue
 	 *            路由因子
 	 */
-	private DB _getDbFromMaster(Class<?> clazz, IShardingValue<?> shardingValue) {
+	private DB _getDbFromMaster(Class<?> clazz, IShardingKey<?> shardingValue) {
 		String tableName = ReflectUtil.getTableName(clazz);
 		DB db = null;
 		try {

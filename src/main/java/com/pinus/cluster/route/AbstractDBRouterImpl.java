@@ -3,7 +3,7 @@ package com.pinus.cluster.route;
 import java.util.List;
 import java.util.Map;
 
-import com.pinus.api.IShardingValue;
+import com.pinus.api.IShardingKey;
 import com.pinus.api.enums.EnumDBMasterSlave;
 import com.pinus.cluster.beans.DBClusterInfo;
 import com.pinus.cluster.enums.HashAlgoEnum;
@@ -66,7 +66,7 @@ public abstract class AbstractDBRouterImpl implements IClusterRouter {
 	}
 
 	@Override
-	public DBRouteInfo select(EnumDBMasterSlave clusterType, String tableName, IShardingValue<?> value)
+	public DBRouteInfo select(EnumDBMasterSlave clusterType, String tableName, IShardingKey<?> value)
 			throws DBRouteException {
 		DBRouteInfo dbRouteInfo = null;
 
@@ -110,8 +110,8 @@ public abstract class AbstractDBRouterImpl implements IClusterRouter {
 	 * @param mod
 	 * @return
 	 */
-	protected long getShardingValue(IShardingValue<?> value) {
-		Object shardingValue = value.getShardingValue();
+	protected long getShardingValue(IShardingKey<?> value) {
+		Object shardingValue = value.getValue();
 
 		if (shardingValue instanceof String) {
 			return (int) this.hashAlgo.hash((String) shardingValue);
@@ -134,7 +134,7 @@ public abstract class AbstractDBRouterImpl implements IClusterRouter {
 	 * @return 路由结果
 	 */
 	protected abstract DBRouteInfo doSelectFromMaster(Map<String, List<DBClusterInfo>> dbMasterCluster,
-			IShardingValue<?> value) throws DBRouteException;
+			IShardingKey<?> value) throws DBRouteException;
 
 	/**
 	 * 路由操作. 从从库中获取路由库表.
@@ -146,6 +146,6 @@ public abstract class AbstractDBRouterImpl implements IClusterRouter {
 	 * @return 路由结果
 	 */
 	protected abstract DBRouteInfo doSelectFromSlave(Map<String, List<List<DBClusterInfo>>> dbSlaveCluster,
-			int slaveIndex, IShardingValue<?> value) throws DBRouteException;
+			int slaveIndex, IShardingKey<?> value) throws DBRouteException;
 
 }

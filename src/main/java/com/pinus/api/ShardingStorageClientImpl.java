@@ -274,7 +274,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 	public Number save(IShardingEntity<?> entity) {
 		CheckUtil.checkEntity(entity);
 
-		IShardingValue<Object> shardingValue = new ShardingValue<Object>(entity.getClusterName(),
+		IShardingKey<Object> shardingValue = new ShardingKey<Object>(entity.getClusterName(),
 				entity.getShardingValue());
 		CheckUtil.checkShardingValue(shardingValue);
 
@@ -285,7 +285,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 	public void update(IShardingEntity<?> entity) {
 		CheckUtil.checkEntity(entity);
 
-		IShardingValue<Object> shardingValue = new ShardingValue<Object>(entity.getClusterName(),
+		IShardingKey<Object> shardingValue = new ShardingKey<Object>(entity.getClusterName(),
 				entity.getShardingValue());
 		CheckUtil.checkShardingValue(shardingValue);
 
@@ -293,7 +293,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 	}
 
 	@Override
-	public Number[] saveBatch(List<? extends Object> entities, IShardingValue<?> shardingValue) {
+	public Number[] saveBatch(List<? extends Object> entities, IShardingKey<?> shardingValue) {
 		CheckUtil.checkEntityList(entities);
 		CheckUtil.checkShardingValue(shardingValue);
 
@@ -301,7 +301,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 	}
 
 	@Override
-	public void updateBatch(List<? extends Object> entities, IShardingValue<?> shardingValue) {
+	public void updateBatch(List<? extends Object> entities, IShardingKey<?> shardingValue) {
 		CheckUtil.checkEntityList(entities);
 		CheckUtil.checkShardingValue(shardingValue);
 
@@ -309,7 +309,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 	}
 
 	@Override
-	public void removeByPk(Number pk, IShardingValue<?> shardingValue, Class<?> clazz) {
+	public void removeByPk(Number pk, IShardingKey<?> shardingValue, Class<?> clazz) {
 		CheckUtil.checkNumberGtZero(pk);
 		CheckUtil.checkShardingValue(shardingValue);
 		CheckUtil.checkClass(clazz);
@@ -318,7 +318,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 	}
 
 	@Override
-	public void removeByPks(Number[] pks, IShardingValue<?> shardingValue, Class<?> clazz) {
+	public void removeByPks(Number[] pks, IShardingKey<?> shardingValue, Class<?> clazz) {
 		CheckUtil.checkNumberArray(pks);
 		CheckUtil.checkShardingValue(shardingValue);
 		CheckUtil.checkClass(clazz);
@@ -332,7 +332,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 	}
 
 	@Override
-	public <T> T findOneByQuery(IQuery query, IShardingValue<?> shardingValue, Class<T> clazz) {
+	public <T> T findOneByQuery(IQuery query, IShardingKey<?> shardingValue, Class<T> clazz) {
 		return this.masterQueryer.findOneByQueryFromMaster(query, shardingValue, clazz);
 	}
 
@@ -380,15 +380,6 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 	}
 
 	@Override
-	public <T> List<T> findGlobalMore(String clusterName, Class<T> clazz, int start, int limit) {
-		CheckUtil.checkClusterName(clusterName);
-		CheckUtil.checkClass(clazz);
-		CheckUtil.checkLimit(start, limit);
-
-		return this.masterQueryer.findGlobalMoreFromMaster(clusterName, clazz, start, limit);
-	}
-
-	@Override
 	public <T> List<T> findGlobalBySql(SQL<T> sql, String clusterName) {
 		CheckUtil.checkSQL(sql);
 		CheckUtil.checkClusterName(clusterName);
@@ -406,7 +397,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 	}
 
 	@Override
-	public Number getCount(IShardingValue<?> shardingValue, Class<?> clazz) {
+	public Number getCount(IShardingKey<?> shardingValue, Class<?> clazz) {
 		CheckUtil.checkShardingValue(shardingValue);
 		CheckUtil.checkClass(clazz);
 
@@ -414,7 +405,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 	}
 
 	@Override
-	public Number getCount(IShardingValue<?> shardingValue, SQL<?> sql) {
+	public Number getCount(IShardingKey<?> shardingValue, SQL<?> sql) {
 		CheckUtil.checkShardingValue(shardingValue);
 		CheckUtil.checkSQL(sql);
 
@@ -422,7 +413,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 	}
 
 	@Override
-	public <T> T findByPk(Number pk, IShardingValue<?> shardingValue, Class<T> clazz) {
+	public <T> T findByPk(Number pk, IShardingKey<?> shardingValue, Class<T> clazz) {
 		CheckUtil.checkNumberGtZero(pk);
 		CheckUtil.checkShardingValue(shardingValue);
 		CheckUtil.checkClass(clazz);
@@ -431,7 +422,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 	}
 
 	@Override
-	public <T> List<T> findByPks(IShardingValue<?> shardingValue, Class<T> clazz, Number... pks) {
+	public <T> List<T> findByPks(IShardingKey<?> shardingValue, Class<T> clazz, Number... pks) {
 		CheckUtil.checkShardingValue(shardingValue);
 		CheckUtil.checkClass(clazz);
 		CheckUtil.checkNumberArray(pks);
@@ -440,7 +431,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 	}
 
 	@Override
-	public <T> List<T> findByPkList(List<? extends Number> pks, IShardingValue<?> shardingValue, Class<T> clazz) {
+	public <T> List<T> findByPkList(List<? extends Number> pks, IShardingKey<?> shardingValue, Class<T> clazz) {
 		CheckUtil.checkNumberList(pks);
 		CheckUtil.checkShardingValue(shardingValue);
 		CheckUtil.checkClass(clazz);
@@ -449,7 +440,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 	}
 
 	@Override
-	public <T> List<T> findByShardingPair(List<IShardingValue<?>> shardingValues, Class<T> clazz, Number... pks) {
+	public <T> List<T> findByShardingPair(List<IShardingKey<?>> shardingValues, Class<T> clazz, Number... pks) {
 		CheckUtil.checkShardingValueList(shardingValues);
 		CheckUtil.checkClass(clazz);
 		CheckUtil.checkNumberArray(pks);
@@ -458,7 +449,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 	}
 
 	@Override
-	public <T> List<T> findByShardingPair(List<? extends Number> pks, List<IShardingValue<?>> shardingValues,
+	public <T> List<T> findByShardingPair(List<? extends Number> pks, List<IShardingKey<?>> shardingValues,
 			Class<T> clazz) {
 		CheckUtil.checkNumberList(pks);
 		CheckUtil.checkShardingValueList(shardingValues);
@@ -468,16 +459,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 	}
 
 	@Override
-	public <T> List<T> findMore(IShardingValue<?> shardingValue, Class<T> clazz, int start, int limit) {
-		CheckUtil.checkShardingValue(shardingValue);
-		CheckUtil.checkClass(clazz);
-		CheckUtil.checkLimit(start, limit);
-
-		return this.masterQueryer.findMoreFromMaster(shardingValue, clazz, start, limit);
-	}
-
-	@Override
-	public <T> List<T> findBySql(SQL<T> sql, IShardingValue<?> shardingValue) {
+	public <T> List<T> findBySql(SQL<T> sql, IShardingKey<?> shardingValue) {
 		CheckUtil.checkShardingValue(shardingValue);
 		CheckUtil.checkSQL(sql);
 
@@ -485,7 +467,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 	}
 
 	@Override
-	public <T> List<T> findByQuery(IQuery query, IShardingValue<?> shardingValue, Class<T> clazz) {
+	public <T> List<T> findByQuery(IQuery query, IShardingKey<?> shardingValue, Class<T> clazz) {
 		CheckUtil.checkQuery(query);
 		CheckUtil.checkShardingValue(shardingValue);
 		CheckUtil.checkClass(clazz);
@@ -540,21 +522,6 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 	public IQuery createQuery() {
 		IQuery query = new QueryImpl();
 		return query;
-	}
-
-	@Override
-	public IShardingUpdate getShardingUpdate() {
-		return this.updater;
-	}
-
-	@Override
-	public IShardingMasterQuery getShardingMasterQuery() {
-		return this.masterQueryer;
-	}
-
-	@Override
-	public IShardingSlaveQuery getShardingSlaveQuery() {
-		return this.slaveQueryer;
 	}
 
 	public EnumDB getEnumDb() {

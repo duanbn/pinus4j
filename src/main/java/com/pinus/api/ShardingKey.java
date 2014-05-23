@@ -5,7 +5,7 @@ package com.pinus.api;
  * 
  * @author duanbn
  */
-public class ShardingValue<T> implements IShardingValue<T> {
+public class ShardingKey<T> implements IShardingKey<T> {
 
 	/**
 	 * 集群数据库名称.
@@ -23,7 +23,7 @@ public class ShardingValue<T> implements IShardingValue<T> {
 	 * @param clusterName
 	 *            数据库集群名
 	 */
-	public ShardingValue(String clusterName) {
+	public ShardingKey(String clusterName) {
 		this(clusterName, null);
 	}
 
@@ -35,19 +35,24 @@ public class ShardingValue<T> implements IShardingValue<T> {
 	 * @param value
 	 *            分库分表因子值
 	 */
-	public ShardingValue(String clusterName, T value) {
+	public ShardingKey(String clusterName, T value) {
 		this.clusterName = clusterName;
 		this.value = value;
 	}
-
+	
 	@Override
 	public String getClusterName() {
 		return this.clusterName;
 	}
 
 	@Override
-	public T getShardingValue() {
+	public T getValue() {
 		return this.value;
+	}
+	
+	@Override
+	public void setValue(T value) {
+		this.value = value;
 	}
 
 	@Override

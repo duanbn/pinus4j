@@ -4,8 +4,8 @@ import java.util.Map;
 
 import org.junit.Test;
 
-import com.entity.TestEntity;
 import com.pinus.BaseTest;
+import com.pinus.TestEntity;
 
 public class ReflectUtilTest extends BaseTest {
 

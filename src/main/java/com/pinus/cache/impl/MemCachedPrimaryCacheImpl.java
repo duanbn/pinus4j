@@ -10,6 +10,7 @@ import org.apache.log4j.Logger;
 
 import com.pinus.cache.IPrimaryCache;
 import com.pinus.cluster.DB;
+import com.pinus.util.ReflectUtil;
 
 /**
  * memcached缓存实现. 考拉存储主缓存的实现. 缓存中的数据不设置过期时间，考拉存储负责缓存与数据库之间的数据一致性.
@@ -81,14 +82,15 @@ public class MemCachedPrimaryCacheImpl implements IPrimaryCache {
 	}
 
 	@Override
-	public void putGlobal(String clusterName, String tableName, Number[] ids, List<? extends Object> data) {
+	public void putGlobal(String clusterName, String tableName, List<? extends Object> data) {
 		List<String> keys = new ArrayList<String>();
-		for (Number id : ids) {
+		for (Object d : data) {
+			Number id = ReflectUtil.getPkValue(d);
 			keys.add(_buildGlobalKey(clusterName, tableName, id));
 		}
 		_put(keys, data);
 	}
-	
+
 	@Override
 	public void putGlobal(String clusterName, String tableName, Map<Number, ? extends Object> data) {
 		List<String> keys = new ArrayList<String>();
@@ -399,6 +401,21 @@ public class MemCachedPrimaryCacheImpl implements IPrimaryCache {
 	}
 
 	/**
+	 * 创建count主键. [clusterName + dbIndex].[start + end].[tableName +
+	 * tableIndex].c
+	 */
+	private String _buildCountKey(DB db) {
+		StringBuilder key = new StringBuilder();
+		key.append(db.getClusterName()).append(db.getDbIndex());
+		key.append(".");
+		key.append(db.getStart()).append(db.getEnd());
+		key.append(".");
+		key.append(db.getTableName()).append(db.getTableIndex());
+		key.append(".c");
+		return key.toString();
+	}
+
+	/**
 	 * 创建全局表主键. [clusterName].[tableName].[id]
 	 */
 	private String _buildGlobalKey(String clusterName, String tableName, Number id) {
@@ -409,23 +426,14 @@ public class MemCachedPrimaryCacheImpl implements IPrimaryCache {
 	}
 
 	/**
-	 * 创建count主键. [clusterName + dbIndex].[tableName + tableIndex].c
-	 */
-	private String _buildCountKey(DB db) {
-		StringBuilder key = new StringBuilder();
-		key.append(db.getClusterName()).append(db.getDbIndex());
-		key.append(".");
-		key.append(db.getTableName()).append(db.getTableIndex());
-		key.append(".c");
-		return key.toString();
-	}
-
-	/**
-	 * 创建memcached主键. [clusterName + dbIndex].[tableName + tableIndex].[id]
+	 * 创建memcached主键. [clusterName + dbIndex].[start + end].[tableName +
+	 * tableIndex].[id]
 	 */
 	private String _buildKey(DB db, Number id) {
 		StringBuilder key = new StringBuilder();
 		key.append(db.getClusterName()).append(db.getDbIndex());
+		key.append(".");
+		key.append(db.getStart()).append(db.getEnd());
 		key.append(".");
 		key.append(db.getTableName()).append(db.getTableIndex());
 		key.append(".");

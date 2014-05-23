@@ -1,23 +1,28 @@
-package com.entity;
+package com.pinus;
 
 import java.io.Serializable;
+import java.sql.Timestamp;
 import java.util.Date;
 
-import com.pinus.api.IGlobalEntity;
+import org.apache.commons.lang.builder.ToStringBuilder;
+import org.apache.commons.lang.builder.ToStringStyle;
+
+import com.pinus.api.IShardingEntity;
 import com.pinus.api.annotation.DateTime;
 import com.pinus.api.annotation.Field;
 import com.pinus.api.annotation.PrimaryKey;
 import com.pinus.api.annotation.Table;
+import com.pinus.api.annotation.UpdateTime;
 
-@Table(cluster = "klstorage", cache = true)
-public class TestGlobalEntity implements Serializable, IGlobalEntity {
+@Table(name = "test_entity", cluster = "klstorage", shardingNum = 25, cache = true)
+public class TestEntity implements Serializable, IShardingEntity<Long> {
 
 	private static final long serialVersionUID = 1L;
 
-	@PrimaryKey
-	private long testId;
+	@PrimaryKey(comment = "这是一个主键")
+	private long id;
 
-	@Field
+	@Field(comment = "测试byte类型的字段")
 	private byte testByte;
 
 	@Field
@@ -44,20 +49,33 @@ public class TestGlobalEntity implements Serializable, IGlobalEntity {
 	@Field
 	private String testString;
 
-	@DateTime
-	private Date testDate;
-
 	@Override
 	public String getClusterName() {
 		return "klstorage";
 	}
 
-	public long getTestId() {
-		return testId;
+	@Override
+	public Long getShardingValue() {
+		return this.id;
 	}
 
-	public void setTestId(long testId) {
-		this.testId = testId;
+	@DateTime(comment = "日期类型")
+	private Date testDate;
+
+	@UpdateTime(comment = "自动更新时间")
+	private Timestamp testTime;
+
+	@Override
+	public String toString() {
+		return ToStringBuilder.reflectionToString(this, ToStringStyle.SHORT_PREFIX_STYLE);
+	}
+
+	public long getId() {
+		return id;
+	}
+
+	public void setId(long id) {
+		this.id = id;
 	}
 
 	public byte getTestByte() {
@@ -138,6 +156,14 @@ public class TestGlobalEntity implements Serializable, IGlobalEntity {
 
 	public void setTestDate(Date testDate) {
 		this.testDate = testDate;
+	}
+
+	public Timestamp getTestTime() {
+		return testTime;
+	}
+
+	public void setTestTime(Timestamp testTime) {
+		this.testTime = testTime;
 	}
 
 }

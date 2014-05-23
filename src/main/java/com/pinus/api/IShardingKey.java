@@ -6,7 +6,7 @@ package com.pinus.api;
  * 
  * @author duanbn
  */
-public interface IShardingValue<T> {
+public interface IShardingKey<T> {
 
 	/**
 	 * 获取集群名称.
@@ -16,6 +16,8 @@ public interface IShardingValue<T> {
 	/**
 	 * 获取分库分表因子.
 	 */
-	public T getShardingValue();
+	public T getValue();
+	
+	public void setValue(T value);
 
 }

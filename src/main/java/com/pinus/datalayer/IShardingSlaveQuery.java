@@ -2,7 +2,7 @@ package com.pinus.datalayer;
 
 import java.util.List;
 
-import com.pinus.api.IShardingValue;
+import com.pinus.api.IShardingKey;
 import com.pinus.api.SQL;
 import com.pinus.api.enums.EnumDBMasterSlave;
 import com.pinus.api.query.IQuery;
@@ -31,9 +31,6 @@ public interface IShardingSlaveQuery {
 	public <T> List<T> findGlobalByPksFromSlave(List<? extends Number> pks, String clusterName, Class<T> clazz,
 			EnumDBMasterSlave slave);
 
-	public <T> List<T> findGlobalMoreFromSlave(String clusterName, Class<T> clazz, int start, int limit,
-			EnumDBMasterSlave slave);
-
 	public <T> List<T> findGlobalBySqlFromSlave(SQL<T> sql, String clusterName, EnumDBMasterSlave slave);
 
 	public <T> List<T> findGlobalByQueryFromSlave(IQuery query, String clusterName, Class<T> clazz,
@@ -58,7 +55,7 @@ public interface IShardingSlaveQuery {
 	 * @throws IllegalArgumentException
 	 *             输入参数错误
 	 */
-	public Number getCountFromSlave(IShardingValue<?> shardingValue, Class<?> clazz, EnumDBMasterSlave slave);
+	public Number getCountFromSlave(IShardingKey<?> shardingValue, Class<?> clazz, EnumDBMasterSlave slave);
 
 	/**
 	 * 根据条件获取从分库分表记录数.
@@ -74,7 +71,7 @@ public interface IShardingSlaveQuery {
 	 * @throws IllegalArgumentException
 	 *             输入参数错误
 	 */
-	public Number getCountFromSlave(IShardingValue<?> shardingValue, SQL<?> sql, EnumDBMasterSlave slave);
+	public Number getCountFromSlave(IShardingKey<?> shardingValue, SQL<?> sql, EnumDBMasterSlave slave);
 
 	/**
 	 * 一个从分库分表, 根据主键查询.
@@ -95,7 +92,7 @@ public interface IShardingSlaveQuery {
 	 * @throws IllegalArgumentException
 	 *             输入参数错误
 	 */
-	public <T> T findByPkFromSlave(Number pk, IShardingValue<?> shardingValue, Class<T> clazz, EnumDBMasterSlave slave);
+	public <T> T findByPkFromSlave(Number pk, IShardingKey<?> shardingValue, Class<T> clazz, EnumDBMasterSlave slave);
 
 	/**
 	 * 根据查询条件获取一条数据. 如果查询到多条则返回第一条.
@@ -106,7 +103,7 @@ public interface IShardingSlaveQuery {
 	 * @param slave
 	 * @return 查询结果，找不到返回null
 	 */
-	public <T> T findOneByQueryFromSlave(IQuery query, IShardingValue<?> shardingValue, Class<T> clazz,
+	public <T> T findOneByQueryFromSlave(IQuery query, IShardingKey<?> shardingValue, Class<T> clazz,
 			EnumDBMasterSlave slave);
 
 	/**
@@ -128,7 +125,7 @@ public interface IShardingSlaveQuery {
 	 * @throws IllegalArgumentException
 	 *             输入参数错误
 	 */
-	public <T> List<T> findByPksFromSlave(IShardingValue<?> shardingValue, Class<T> clazz, EnumDBMasterSlave slave,
+	public <T> List<T> findByPksFromSlave(IShardingKey<?> shardingValue, Class<T> clazz, EnumDBMasterSlave slave,
 			Number... pks);
 
 	/**
@@ -150,7 +147,7 @@ public interface IShardingSlaveQuery {
 	 * @throws IllegalArgumentException
 	 *             输入参数错误
 	 */
-	public <T> List<T> findByPkListFromSlave(List<? extends Number> pks, IShardingValue<?> shardingValue, Class<T> clazz,
+	public <T> List<T> findByPkListFromSlave(List<? extends Number> pks, IShardingKey<?> shardingValue, Class<T> clazz,
 			EnumDBMasterSlave slave);
 
 	/**
@@ -172,7 +169,7 @@ public interface IShardingSlaveQuery {
 	 * @throws IllegalArgumentException
 	 *             输入参数错误
 	 */
-	public <T> List<T> findByShardingPairFromSlave(List<IShardingValue<?>> shardingValues, Class<T> clazz,
+	public <T> List<T> findByShardingPairFromSlave(List<IShardingKey<?>> shardingValues, Class<T> clazz,
 			EnumDBMasterSlave slave, Number... pks);
 
 	/**
@@ -194,32 +191,8 @@ public interface IShardingSlaveQuery {
 	 * @throws IllegalArgumentException
 	 *             输入参数错误
 	 */
-	public <T> List<T> findByShardingPairFromSlave(List<Number> pks, List<IShardingValue<?>> shardingValues,
+	public <T> List<T> findByShardingPairFromSlave(List<Number> pks, List<IShardingKey<?>> shardingValues,
 			Class<T> clazz, EnumDBMasterSlave slave);
-
-	/**
-	 * 一个从分库分表, 无条件查询全部.
-	 * 
-	 * @param shardingValue
-	 *            分库分表因子
-	 * @param clazz
-	 *            数据对象类型
-	 * @param start
-	 *            分页偏移量
-	 * @param limit
-	 *            分页大小
-	 * @param slave
-	 *            主从库枚举
-	 * 
-	 * @return 查询结果
-	 * 
-	 * @throws DBOperationException
-	 *             操作失败
-	 * @throws IllegalArgumentException
-	 *             输入参数错误
-	 */
-	public <T> List<T> findMoreFromSlave(IShardingValue<?> shardingValue, Class<T> clazz, int start, int limit,
-			EnumDBMasterSlave slave);
 
 	/**
 	 * 一个从分库分表, 根据条件查询.
@@ -238,7 +211,7 @@ public interface IShardingSlaveQuery {
 	 * @throws IllegalArgumentException
 	 *             输入参数错误
 	 */
-	public <T> List<T> findBySqlFromSlave(SQL<T> sql, IShardingValue<?> shardingValue, EnumDBMasterSlave slave);
+	public <T> List<T> findBySqlFromSlave(SQL<T> sql, IShardingKey<?> shardingValue, EnumDBMasterSlave slave);
 
 	/**
 	 * 根据查询条件对象进行查询.
@@ -255,7 +228,7 @@ public interface IShardingSlaveQuery {
 	 * @throws IllegalArgumentException
 	 *             输入参数错误
 	 */
-	public <T> List<T> findByQueryFromSlave(IQuery query, IShardingValue<?> shardingValue, Class<T> clazz,
+	public <T> List<T> findByQueryFromSlave(IQuery query, IShardingKey<?> shardingValue, Class<T> clazz,
 			EnumDBMasterSlave slave);
 
 	/**

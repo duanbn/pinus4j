@@ -1,6 +1,5 @@
 package com.pinus.generator;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Queue;
@@ -10,19 +9,17 @@ import java.util.concurrent.locks.Lock;
 
 import org.apache.log4j.Logger;
 import org.apache.zookeeper.CreateMode;
-import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.WatchedEvent;
 import org.apache.zookeeper.Watcher;
+import org.apache.zookeeper.Watcher.Event.KeeperState;
 import org.apache.zookeeper.ZooDefs;
 import org.apache.zookeeper.ZooKeeper;
-import org.apache.zookeeper.Watcher.Event.KeeperState;
 import org.apache.zookeeper.ZooKeeper.States;
 import org.apache.zookeeper.data.Stat;
 
 import com.pinus.cluster.IDBCluster;
 import com.pinus.config.IClusterConfig;
 import com.pinus.config.impl.XmlClusterConfigImpl;
-import com.pinus.exception.DBClusterException;
 import com.pinus.exception.DBOperationException;
 import com.pinus.exception.LoadConfigException;
 import com.pinus.util.StringUtils;
@@ -114,6 +111,10 @@ public abstract class AbstractSequenceIdGenerator implements IIdGenerator, Watch
 			}
 		}
 
+		if (id == 0) {
+			throw new RuntimeException("生成id失败");
+		}
+
 		return new Long(id).intValue();
 	}
 
@@ -135,6 +136,10 @@ public abstract class AbstractSequenceIdGenerator implements IIdGenerator, Watch
 				}
 			}
 		}
+		
+		if (id == 0) {
+			throw new RuntimeException("生成id失败");
+		}
 
 		return id;
 	}
@@ -153,6 +158,11 @@ public abstract class AbstractSequenceIdGenerator implements IIdGenerator, Watch
 			longIdBuffer.put(getBufferKey(clusterName, name), buffer);
 		}
 		Long id = buffer.poll();
+		
+		if (id == 0) {
+			throw new RuntimeException("生成id失败");
+		}
+		
 		return id;
 	}
 

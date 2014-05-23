@@ -1,10 +1,9 @@
 package com.pinus.cluster;
 
-import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 
-import com.pinus.api.IShardingValue;
+import com.pinus.api.IShardingKey;
 import com.pinus.api.enums.EnumDBMasterSlave;
 import com.pinus.cluster.beans.DBClusterInfo;
 import com.pinus.cluster.beans.DBConnectionInfo;
@@ -103,7 +102,7 @@ public interface IDBCluster {
 	 *            分库分表因子.
 	 * @return 被操作的库表
 	 */
-	public DB selectDbFromMaster(String tableName, IShardingValue<?> value) throws DBClusterException;
+	public DB selectDbFromMaster(String tableName, IShardingKey<?> value) throws DBClusterException;
 
 	/**
 	 * 从从库集群中获取被操作的库表.
@@ -116,7 +115,7 @@ public interface IDBCluster {
 	 *            分库分表因子
 	 * @return 被操作的库表
 	 */
-	public DB selectDbFromSlave(EnumDBMasterSlave slave, String tableName, IShardingValue<?> value)
+	public DB selectDbFromSlave(EnumDBMasterSlave slave, String tableName, IShardingKey<?> value)
 			throws DBClusterException;
 
 	/**

@@ -14,6 +14,22 @@ public class IdSequnceGeneratorImplTest extends BaseTest {
 	public static final Set<Integer> ids = new ConcurrentHashSet<Integer>();
 	public static final Set<Long> longIds = new ConcurrentHashSet<Long>();
 
+	private static final String TABLE_NAME = "test_entity";
+
+	@Test
+	public void testBatchGen() throws Exception {
+		IIdGenerator idGenerator = client.getIdGenerator();
+
+		int[] intIds = idGenerator.genClusterUniqueIntIdBatch(client.getDbCluster(), CLUSTER_NAME, TABLE_NAME, 10);
+		for (int i = 0; i < intIds.length; i++) {
+			System.out.print(intIds[i] + " ");
+		}
+		long[] longIds = idGenerator.genClusterUniqueLongIdBatch(client.getDbCluster(), CLUSTER_NAME, TABLE_NAME, 10);
+		for (int i = 0; i < longIds.length; i++) {
+			System.out.print(longIds[i] + " ");
+		}
+	}
+
 	@Test
 	public void testGen() throws Exception {
 		IIdGenerator idGenerator = client.getIdGenerator();

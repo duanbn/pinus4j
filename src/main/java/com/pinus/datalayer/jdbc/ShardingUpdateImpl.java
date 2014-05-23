@@ -9,7 +9,7 @@ import java.util.Map;
 
 import org.apache.log4j.Logger;
 
-import com.pinus.api.IShardingValue;
+import com.pinus.api.IShardingKey;
 import com.pinus.cache.IPrimaryCache;
 import com.pinus.cluster.DB;
 import com.pinus.cluster.IDBCluster;
@@ -60,6 +60,7 @@ public class ShardingUpdateImpl implements IShardingUpdate {
 		return globalSaveBatch(entities, clusterName)[0];
 	}
 
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
 	public Number[] globalSaveBatch(List<? extends Object> entities, String clusterName) {
 		Class<?> clazz = entities.get(0).getClass();
@@ -81,14 +82,16 @@ public class ShardingUpdateImpl implements IShardingUpdate {
 		Map<DBConnectionInfo, List> map = this.dbCluster.getMasterGlobalDbConn(entities, clusterName);
 
 		Connection conn = null;
+		List data = null;
 		for (Map.Entry<DBConnectionInfo, List> entry : map.entrySet()) {
 			try {
 				conn = entry.getKey().getDatasource().getConnection();
-				_saveBatchGlobal(conn, entry.getValue());
+				data = entry.getValue();
+				_saveBatchGlobal(conn, data);
 
 				if (primaryCache != null) {
-					primaryCache.putGlobal(clusterName, tableName, pks, entry.getValue());
-					primaryCache.incrCountGlobal(clusterName, tableName, pks.length);
+					primaryCache.putGlobal(clusterName, tableName, data);
+					primaryCache.incrCountGlobal(clusterName, tableName, data.size());
 				}
 			} catch (Exception e1) {
 				throw new DBOperationException(e1);
@@ -107,6 +110,7 @@ public class ShardingUpdateImpl implements IShardingUpdate {
 		globalUpdateBatch(entities, clusterName);
 	}
 
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
 	public void globalUpdateBatch(List<? extends Object> entities, String clusterName) {
 		Class<?> clazz = entities.get(0).getClass();
@@ -115,19 +119,17 @@ public class ShardingUpdateImpl implements IShardingUpdate {
 		Map<DBConnectionInfo, List> map = this.dbCluster.getMasterGlobalDbConn(entities, clusterName);
 
 		Connection conn = null;
+		List data = null;
 		for (Map.Entry<DBConnectionInfo, List> entry : map.entrySet()) {
 			try {
 				conn = entry.getKey().getDatasource().getConnection();
-				_updateBatchGlobal(conn, entry.getValue());
+				data = entry.getValue();
 
-				Number[] pks = new Number[entry.getValue().size()];
-				for (int i = 0; i < entry.getValue().size(); i++) {
-					pks[i] = ReflectUtil.getPkValue(entry.getValue().get(i));
-				}
+				_updateBatchGlobal(conn, data);
 
 				// 更新缓存
 				if (primaryCache != null) {
-					primaryCache.putGlobal(clusterName, tableName, pks, entry.getValue());
+					primaryCache.putGlobal(clusterName, tableName, data);
 				}
 			} catch (SQLException e) {
 				throw new DBOperationException(e);
@@ -144,14 +146,16 @@ public class ShardingUpdateImpl implements IShardingUpdate {
 
 	@Override
 	public void globalRemoveByPks(Number[] pks, Class<?> clazz, String clusterName) {
-		Connection conn = null;
+
 		Map<DBConnectionInfo, List<Number>> map = this.dbCluster.getMasterGlobalDbConn(pks, clusterName);
 
+		Connection conn = null;
+		List<Number> pkList = null;
 		for (Map.Entry<DBConnectionInfo, List<Number>> entry : map.entrySet()) {
 			try {
 				conn = entry.getKey().getDatasource().getConnection();
+				pkList = entry.getValue();
 
-				List<Number> pkList = entry.getValue();
 				_removeByPksGlobal(conn, pkList.toArray(new Number[pkList.size()]), clazz);
 
 				// 删除缓存
@@ -168,19 +172,59 @@ public class ShardingUpdateImpl implements IShardingUpdate {
 		}
 	}
 
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Override
-	public Number save(Object entity, IShardingValue<?> shardingValue) {
+	public Number save(Object entity, IShardingKey shardingKey) {
+		String tableName = ReflectUtil.getTableName(entity.getClass());
+
+		long pk = this.idGenerator.genClusterUniqueLongId(dbCluster, shardingKey.getClusterName(), tableName);
+		try {
+			if (shardingKey.getValue() == null) {
+				ReflectUtil.setPkValue(entity, pk);
+				shardingKey.setValue(pk);
+			} else if (shardingKey.getValue() instanceof Number) {
+				if (((Number) shardingKey.getValue()).intValue() == 0) {
+					ReflectUtil.setPkValue(entity, pk);
+					shardingKey.setValue(pk);
+				}
+			}
+		} catch (Exception e) {
+			throw new DBOperationException(e);
+		}
+
+		DB db = _getDbFromMaster(tableName, shardingKey);
+
 		List<Object> entities = new ArrayList<Object>(1);
 		entities.add(entity);
-		return saveBatch(entities, shardingValue)[0];
+		Connection conn = null;
+		try {
+			conn = db.getDbConn();
+
+			_saveBatch(conn, entities, db.getTableIndex());
+		} catch (Exception e) {
+			throw new DBOperationException(e);
+		} finally {
+			SQLBuilder.close(conn);
+		}
+
+		if (primaryCache != null) {
+			primaryCache.put(db, pk, entity);
+			primaryCache.incrCount(db, 1);
+		}
+
+		return pk;
 	}
 
 	@Override
-	public Number[] saveBatch(List<? extends Object> entities, IShardingValue<?> shardingValue) {
+	public Number[] saveBatch(List<? extends Object> entities, IShardingKey<?> shardingKey) {
+		if (shardingKey.getValue() instanceof Number && ((Number) shardingKey.getValue()).intValue() == 0) {
+			throw new DBOperationException("分库分表因子的值不能为0, shardingKey=" + shardingKey);
+		}
+
 		Class<?> clazz = entities.get(0).getClass();
 		String tableName = ReflectUtil.getTableName(clazz);
 
-		DB db = _getDbFromMaster(clazz, shardingValue);
+		DB db = _getDbFromMaster(tableName, shardingKey);
 
 		// 生成主键
 		int[] newPks = this.idGenerator.genClusterUniqueIntIdBatch(dbCluster, db.getClusterName(), tableName,
@@ -212,17 +256,18 @@ public class ShardingUpdateImpl implements IShardingUpdate {
 	}
 
 	@Override
-	public void update(Object entity, IShardingValue<?> shardingValue) {
+	public void update(Object entity, IShardingKey<?> shardingKey) {
 		List<Object> entities = new ArrayList<Object>();
 		entities.add(entity);
-		updateBatch(entities, shardingValue);
+		updateBatch(entities, shardingKey);
 	}
 
 	@Override
-	public void updateBatch(List<? extends Object> entities, IShardingValue<?> shardingValue) {
-		Class<?> entityClass = entities.get(0).getClass();
+	public void updateBatch(List<? extends Object> entities, IShardingKey<?> shardingKey) {
+		Class<?> clazz = entities.get(0).getClass();
 
-		DB db = _getDbFromMaster(entityClass, shardingValue);
+		String talbeName = ReflectUtil.getTableName(clazz);
+		DB db = _getDbFromMaster(talbeName, shardingKey);
 		Connection conn = null;
 		try {
 			conn = db.getDbConn();
@@ -243,13 +288,14 @@ public class ShardingUpdateImpl implements IShardingUpdate {
 	}
 
 	@Override
-	public void removeByPk(Number pk, IShardingValue<?> shardingValue, Class<?> clazz) {
-		removeByPks(new Number[] { pk }, shardingValue, clazz);
+	public void removeByPk(Number pk, IShardingKey<?> shardingKey, Class<?> clazz) {
+		removeByPks(new Number[] { pk }, shardingKey, clazz);
 	}
 
 	@Override
-	public void removeByPks(Number[] pks, IShardingValue<?> shardingValue, Class<?> clazz) {
-		DB db = _getDbFromMaster(clazz, shardingValue);
+	public void removeByPks(Number[] pks, IShardingKey<?> shardingKey, Class<?> clazz) {
+		String talbeName = ReflectUtil.getTableName(clazz);
+		DB db = _getDbFromMaster(talbeName, shardingKey);
 
 		Connection conn = null;
 		try {
@@ -280,14 +326,13 @@ public class ShardingUpdateImpl implements IShardingUpdate {
 	 * 
 	 * @param clazz
 	 *            数据对象
-	 * @param shardingValue
+	 * @param shardingKey
 	 *            路由因子
 	 */
-	private DB _getDbFromMaster(Class<?> clazz, IShardingValue<?> shardingValue) {
-		String tableName = ReflectUtil.getTableName(clazz);
+	private DB _getDbFromMaster(String tableName, IShardingKey<?> shardingKey) {
 		DB db = null;
 		try {
-			db = this.dbCluster.selectDbFromMaster(tableName, shardingValue);
+			db = this.dbCluster.selectDbFromMaster(tableName, shardingKey);
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("[" + db + "]");
 			}

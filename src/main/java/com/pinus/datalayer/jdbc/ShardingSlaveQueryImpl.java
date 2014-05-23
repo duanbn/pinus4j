@@ -8,7 +8,7 @@ import java.util.Map;
 
 import org.apache.log4j.Logger;
 
-import com.pinus.api.IShardingValue;
+import com.pinus.api.IShardingKey;
 import com.pinus.api.SQL;
 import com.pinus.api.enums.EnumDBMasterSlave;
 import com.pinus.api.query.IQuery;
@@ -51,7 +51,7 @@ public class ShardingSlaveQueryImpl extends AbstractShardingQuery implements ISh
 	}
 
 	@Override
-	public <T> T findOneByQueryFromSlave(IQuery query, IShardingValue<?> shardingValue, Class<T> clazz,
+	public <T> T findOneByQueryFromSlave(IQuery query, IShardingKey<?> shardingValue, Class<T> clazz,
 			EnumDBMasterSlave slave) {
 		List<T> entities = findByQueryFromSlave(query, shardingValue, clazz, slave);
 
@@ -64,19 +64,8 @@ public class ShardingSlaveQueryImpl extends AbstractShardingQuery implements ISh
 
 	@Override
 	public Number getGlobalCountFromSlave(String clusterName, Class<?> clazz, EnumDBMasterSlave slave) {
-		long count = 0;
 		List<DBConnectionInfo> dbConnInfos = this.dbCluster.getSlaveGlobalDbConn(clusterName, slave);
-		for (DBConnectionInfo dbConnInfo : dbConnInfos) {
-			Connection conn = null;
-			try {
-				conn = dbConnInfo.getDatasource().getConnection();
-				count += selectCountGlobalWithCache(conn, clusterName, clazz).longValue();
-			} catch (SQLException e) {
-				throw new DBOperationException(e);
-			} finally {
-				SQLBuilder.close(conn);
-			}
-		}
+		long count = selectCountGlobalWithCache(dbConnInfos, clusterName, clazz).longValue();
 
 		return count;
 	}
@@ -144,31 +133,6 @@ public class ShardingSlaveQueryImpl extends AbstractShardingQuery implements ISh
 	}
 
 	@Override
-	public <T> List<T> findGlobalMoreFromSlave(String clusterName, Class<T> clazz, int start, int limit,
-			EnumDBMasterSlave slave) {
-		throw new UnsupportedOperationException();
-		// Connection conn = null;
-		// try {
-		// conn = this.dbCluster.getSlaveGlobalDbConn(clusterName, slave);
-		//
-		// List<T> result = null;
-		// if (isCacheAvailable(clazz)) {
-		// Number[] pkValues = selectPksMoreGlobal(conn, clazz, start, limit);
-		// result = selectByPksGlobalWithCache(conn, clusterName, clazz,
-		// pkValues);
-		// } else {
-		// result = selectMoreGlobal(conn, clazz, start, limit);
-		// }
-		//
-		// return result;
-		// } catch (SQLException e) {
-		// throw new DBOperationException(e);
-		// } finally {
-		// SQLBuilder.close(conn);
-		// }
-	}
-
-	@Override
 	public <T> List<T> findGlobalBySqlFromSlave(SQL<T> sql, String clusterName, EnumDBMasterSlave slave) {
 		throw new UnsupportedOperationException();
 		// Connection conn = null;
@@ -217,7 +181,7 @@ public class ShardingSlaveQueryImpl extends AbstractShardingQuery implements ISh
 	}
 
 	@Override
-	public Number getCountFromSlave(IShardingValue<?> shardingValue, Class<?> clazz, EnumDBMasterSlave slave) {
+	public Number getCountFromSlave(IShardingKey<?> shardingValue, Class<?> clazz, EnumDBMasterSlave slave) {
 		DB db = _getDbFromSlave(slave, clazz, shardingValue);
 
 		try {
@@ -228,7 +192,7 @@ public class ShardingSlaveQueryImpl extends AbstractShardingQuery implements ISh
 	}
 
 	@Override
-	public Number getCountFromSlave(IShardingValue<?> shardingValue, SQL<?> sql, EnumDBMasterSlave slave) {
+	public Number getCountFromSlave(IShardingKey<?> shardingValue, SQL<?> sql, EnumDBMasterSlave slave) {
 		DB db = _getDbFromSlave(slave, sql.getClazz(), shardingValue);
 
 		try {
@@ -239,7 +203,7 @@ public class ShardingSlaveQueryImpl extends AbstractShardingQuery implements ISh
 	}
 
 	@Override
-	public <T> T findByPkFromSlave(Number pk, IShardingValue<?> shardingValue, Class<T> clazz, EnumDBMasterSlave slave) {
+	public <T> T findByPkFromSlave(Number pk, IShardingKey<?> shardingValue, Class<T> clazz, EnumDBMasterSlave slave) {
 		DB db = _getDbFromSlave(slave, clazz, shardingValue);
 
 		try {
@@ -250,7 +214,7 @@ public class ShardingSlaveQueryImpl extends AbstractShardingQuery implements ISh
 	}
 
 	@Override
-	public <T> List<T> findByPksFromSlave(IShardingValue<?> shardingValue, Class<T> clazz, EnumDBMasterSlave slave,
+	public <T> List<T> findByPksFromSlave(IShardingKey<?> shardingValue, Class<T> clazz, EnumDBMasterSlave slave,
 			Number... pks) {
 		DB db = _getDbFromSlave(slave, clazz, shardingValue);
 
@@ -262,20 +226,20 @@ public class ShardingSlaveQueryImpl extends AbstractShardingQuery implements ISh
 	}
 
 	@Override
-	public <T> List<T> findByPkListFromSlave(List<? extends Number> pks, IShardingValue<?> shardingValue,
-			Class<T> clazz, EnumDBMasterSlave slave) {
+	public <T> List<T> findByPkListFromSlave(List<? extends Number> pks, IShardingKey<?> shardingValue, Class<T> clazz,
+			EnumDBMasterSlave slave) {
 		return findByPksFromSlave(shardingValue, clazz, slave, pks.toArray(new Number[pks.size()]));
 	}
 
 	@Override
-	public <T> List<T> findByShardingPairFromSlave(List<IShardingValue<?>> shardingValues, Class<T> clazz,
+	public <T> List<T> findByShardingPairFromSlave(List<IShardingKey<?>> shardingValues, Class<T> clazz,
 			EnumDBMasterSlave slave, Number... pks) {
 		if (shardingValues.size() != pks.length) {
 			throw new DBOperationException("分库分表列表和主键数量不等");
 		}
 
 		List<T> result = new ArrayList<T>(pks.length);
-		IShardingValue<?> shardingValue = null;
+		IShardingKey<?> shardingValue = null;
 		Number pk = null;
 		DB db = null;
 		T data = null;
@@ -298,33 +262,13 @@ public class ShardingSlaveQueryImpl extends AbstractShardingQuery implements ISh
 	}
 
 	@Override
-	public <T> List<T> findByShardingPairFromSlave(List<Number> pks, List<IShardingValue<?>> shardingValues,
+	public <T> List<T> findByShardingPairFromSlave(List<Number> pks, List<IShardingKey<?>> shardingValues,
 			Class<T> clazz, EnumDBMasterSlave slave) {
 		return findByShardingPairFromSlave(shardingValues, clazz, slave, pks.toArray(new Number[pks.size()]));
 	}
 
 	@Override
-	public <T> List<T> findMoreFromSlave(IShardingValue<?> shardingValue, Class<T> clazz, int start, int limit,
-			EnumDBMasterSlave slave) {
-		DB db = _getDbFromSlave(slave, clazz, shardingValue);
-
-		List<T> result = null;
-		try {
-			if (isCacheAvailable(clazz)) {
-				Number[] pkValues = selectPksMore(db, clazz, start, limit);
-				result = selectByPksWithCache(db, clazz, pkValues);
-			} else {
-				result = selectMore(db, clazz, start, limit);
-			}
-		} finally {
-			SQLBuilder.close(db.getDbConn());
-		}
-
-		return result;
-	}
-
-	@Override
-	public <T> List<T> findBySqlFromSlave(SQL<T> sql, IShardingValue<?> shardingValue, EnumDBMasterSlave slave) {
+	public <T> List<T> findBySqlFromSlave(SQL<T> sql, IShardingKey<?> shardingValue, EnumDBMasterSlave slave) {
 		DB db = _getDbFromSlave(slave, sql.getClazz(), shardingValue);
 
 		List<T> result = null;
@@ -343,7 +287,7 @@ public class ShardingSlaveQueryImpl extends AbstractShardingQuery implements ISh
 	}
 
 	@Override
-	public <T> List<T> findByQueryFromSlave(IQuery query, IShardingValue<?> shardingValue, Class<T> clazz,
+	public <T> List<T> findByQueryFromSlave(IQuery query, IShardingKey<?> shardingValue, Class<T> clazz,
 			EnumDBMasterSlave slave) {
 		DB db = _getDbFromSlave(slave, clazz, shardingValue);
 
@@ -375,7 +319,7 @@ public class ShardingSlaveQueryImpl extends AbstractShardingQuery implements ISh
 	 * @param shardingValue
 	 *            路由因子
 	 */
-	private DB _getDbFromSlave(EnumDBMasterSlave slave, Class<?> clazz, IShardingValue<?> shardingValue) {
+	private DB _getDbFromSlave(EnumDBMasterSlave slave, Class<?> clazz, IShardingKey<?> shardingValue) {
 		String tableName = ReflectUtil.getTableName(clazz);
 		DB db = null;
 		try {

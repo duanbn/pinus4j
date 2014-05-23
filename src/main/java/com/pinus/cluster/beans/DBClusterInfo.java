@@ -50,6 +50,40 @@ public class DBClusterInfo {
 				+ end + "]";
 	}
 
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((clusterName == null) ? 0 : clusterName.hashCode());
+		result = prime * result + (int) (end ^ (end >>> 32));
+		result = prime * result + masterSlaveType;
+		result = prime * result + (int) (start ^ (start >>> 32));
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		DBClusterInfo other = (DBClusterInfo) obj;
+		if (clusterName == null) {
+			if (other.clusterName != null)
+				return false;
+		} else if (!clusterName.equals(other.clusterName))
+			return false;
+		if (end != other.end)
+			return false;
+		if (masterSlaveType != other.masterSlaveType)
+			return false;
+		if (start != other.start)
+			return false;
+		return true;
+	}
+
 	public byte getMasterSlaveType() {
 		return masterSlaveType;
 	}

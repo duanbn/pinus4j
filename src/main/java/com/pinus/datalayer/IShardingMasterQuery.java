@@ -2,7 +2,7 @@ package com.pinus.datalayer;
 
 import java.util.List;
 
-import com.pinus.api.IShardingValue;
+import com.pinus.api.IShardingKey;
 import com.pinus.api.SQL;
 import com.pinus.api.query.IQuery;
 import com.pinus.cache.IPrimaryCache;
@@ -91,21 +91,6 @@ public interface IShardingMasterQuery {
 	public <T> List<T> findGlobalByPksFromMaster(List<? extends Number> pks, String clusterName, Class<T> clazz);
 
 	/**
-	 * 分页遍历整个全局表. 当查询不到数据时返回空的List，不会返回null.
-	 * 
-	 * @param clusterName
-	 *            集群名
-	 * @param clazz
-	 *            实体对象
-	 * @param start
-	 *            开始偏移量
-	 * @param limit
-	 *            分页长度
-	 * @return 数据
-	 */
-	public <T> List<T> findGlobalMoreFromMaster(String clusterName, Class<T> clazz, int start, int limit);
-
-	/**
 	 * 根据sql查询全局表. 当查询不到数据时返回空的List，不会返回null.
 	 * 
 	 * @param sql
@@ -148,7 +133,7 @@ public interface IShardingMasterQuery {
 	 * @throws IllegalArgumentException
 	 *             输入参数错误
 	 */
-	public Number getCountFromMaster(IShardingValue<?> shardingValue, Class<?> clazz);
+	public Number getCountFromMaster(IShardingKey<?> shardingValue, Class<?> clazz);
 
 	/**
 	 * 根据条件获取分库分表记录数.
@@ -164,7 +149,7 @@ public interface IShardingMasterQuery {
 	 * @throws IllegalArgumentException
 	 *             输入参数错误
 	 */
-	public Number getCountFromMaster(IShardingValue<?> shardingValue, SQL<?> sql);
+	public Number getCountFromMaster(IShardingKey<?> shardingValue, SQL<?> sql);
 
 	/**
 	 * 一个主分库分表, 根据主键查询. 查询不到则返回null
@@ -183,7 +168,7 @@ public interface IShardingMasterQuery {
 	 * @throws IllegalArgumentException
 	 *             输入参数错误
 	 */
-	public <T> T findByPkFromMaster(Number pk, IShardingValue<?> shardingValue, Class<T> clazz);
+	public <T> T findByPkFromMaster(Number pk, IShardingKey<?> shardingValue, Class<T> clazz);
 
 	/**
 	 * 根据查询条件获取一条数据. 如果查询到多条则返回第一条.当查询不到数据时返回空的List，不会返回null.
@@ -193,7 +178,7 @@ public interface IShardingMasterQuery {
 	 * @param clazz
 	 * @return 查询结果，找不到返回null
 	 */
-	public <T> T findOneByQueryFromMaster(IQuery query, IShardingValue<?> shardingValue, Class<T> clazz);
+	public <T> T findOneByQueryFromMaster(IQuery query, IShardingKey<?> shardingValue, Class<T> clazz);
 
 	/**
 	 * 一个主分库分表, 根据多个主键查询.当查询不到数据时返回空的List，不会返回null.
@@ -212,7 +197,7 @@ public interface IShardingMasterQuery {
 	 * @throws IllegalArgumentException
 	 *             输入参数错误
 	 */
-	public <T> List<T> findByPksFromMaster(IShardingValue<?> shardingValue, Class<T> clazz, Number... pks);
+	public <T> List<T> findByPksFromMaster(IShardingKey<?> shardingValue, Class<T> clazz, Number... pks);
 
 	/**
 	 * 一个主分库分表, 根据多个主键查询.当查询不到数据时返回空的List，不会返回null.
@@ -231,7 +216,7 @@ public interface IShardingMasterQuery {
 	 * @throws IllegalArgumentException
 	 *             输入参数错误
 	 */
-	public <T> List<T> findByPkListFromMaster(List<? extends Number> pks, IShardingValue<?> shardingValue, Class<T> clazz);
+	public <T> List<T> findByPkListFromMaster(List<? extends Number> pks, IShardingKey<?> shardingValue, Class<T> clazz);
 
 	/**
 	 * 多个主分库分表, 多个主键查询, 一个主键对应一个分库分表.
@@ -251,7 +236,7 @@ public interface IShardingMasterQuery {
 	 * @throws IllegalArgumentException
 	 *             输入参数错误
 	 */
-	public <T> List<T> findByShardingPairFromMaster(List<IShardingValue<?>> shardingValues, Class<T> clazz, Number... pks);
+	public <T> List<T> findByShardingPairFromMaster(List<IShardingKey<?>> shardingValues, Class<T> clazz, Number... pks);
 
 	/**
 	 * 多个主分库分表, 多个主键查询. 主键列表和分库分表因子的列表必须是一一对应, 当查询不到数据时返回空的List，不会返回null.
@@ -270,29 +255,8 @@ public interface IShardingMasterQuery {
 	 * @throws IllegalArgumentException
 	 *             输入参数错误
 	 */
-	public <T> List<T> findByShardingPairFromMaster(List<? extends Number> pks, List<IShardingValue<?>> shardingValues,
+	public <T> List<T> findByShardingPairFromMaster(List<? extends Number> pks, List<IShardingKey<?>> shardingValues,
 			Class<T> clazz);
-
-	/**
-	 * 一个主分库分表, 无条件查询全部.当查询不到数据时返回空的List，不会返回null.
-	 * 
-	 * @param shardingValue
-	 *            分库分表因子
-	 * @param clazz
-	 *            数据对象类型
-	 * @param start
-	 *            分页偏移量
-	 * @param limit
-	 *            分页大小
-	 * 
-	 * @return 查询结果
-	 * 
-	 * @throws DBOperationException
-	 *             操作失败
-	 * @throws IllegalArgumentException
-	 *             输入参数错误
-	 */
-	public <T> List<T> findMoreFromMaster(IShardingValue<?> shardingValue, Class<T> clazz, int start, int limit);
 
 	/**
 	 * 一个主分库分表, 根据条件查询.当查询不到数据时返回空的List，不会返回null.
@@ -309,7 +273,7 @@ public interface IShardingMasterQuery {
 	 * @throws IllegalArgumentException
 	 *             输入参数错误
 	 */
-	public <T> List<T> findBySqlFromMaster(SQL<T> sql, IShardingValue<?> shardingValue);
+	public <T> List<T> findBySqlFromMaster(SQL<T> sql, IShardingKey<?> shardingValue);
 
 	/**
 	 * 根据查询条件对象进行查询.当查询不到数据时返回空的List，不会返回null.
@@ -324,7 +288,7 @@ public interface IShardingMasterQuery {
 	 * @throws IllegalArgumentException
 	 *             输入参数错误
 	 */
-	public <T> List<T> findByQueryFromMaster(IQuery query, IShardingValue<?> shardingValue, Class<T> clazz);
+	public <T> List<T> findByQueryFromMaster(IQuery query, IShardingKey<?> shardingValue, Class<T> clazz);
 
 	/**
 	 * 设置缓存. 当不设置时则不适用缓存

@@ -11,7 +11,7 @@ import javax.sql.DataSource;
 
 import org.apache.log4j.Logger;
 
-import com.pinus.api.IShardingValue;
+import com.pinus.api.IShardingKey;
 import com.pinus.api.enums.EnumDB;
 import com.pinus.api.enums.EnumDBMasterSlave;
 import com.pinus.cluster.beans.DBClusterInfo;
@@ -208,6 +208,7 @@ public abstract class AbstractDBCluster implements IDBCluster {
 		return rangeClusterInfo.getGlobalConnInfo();
 	}
 
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Override
 	public Map<DBConnectionInfo, List<Number>> getMasterGlobalDbConn(Number[] pks, String clusterName) {
 		List<DBClusterInfo> dbClusterInfos = this.masterDbCluster.get(clusterName);
@@ -228,8 +229,8 @@ public abstract class AbstractDBCluster implements IDBCluster {
 			}
 
 			List list = null;
-			if (result.get(rangeClusterInfo) != null) {
-				list = result.get(rangeClusterInfo);
+			if (result.get(rangeClusterInfo.getGlobalConnInfo()) != null) {
+				list = result.get(rangeClusterInfo.getGlobalConnInfo());
 			} else {
 				list = new ArrayList();
 			}
@@ -240,6 +241,7 @@ public abstract class AbstractDBCluster implements IDBCluster {
 		return result;
 	}
 
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
 	public Map<DBConnectionInfo, List> getMasterGlobalDbConn(List entities, String clusterName) {
 		List<DBClusterInfo> dbClusterInfos = this.masterDbCluster.get(clusterName);
@@ -260,8 +262,8 @@ public abstract class AbstractDBCluster implements IDBCluster {
 			}
 
 			List list = null;
-			if (result.get(rangeClusterInfo) != null) {
-				list = result.get(rangeClusterInfo);
+			if (result.get(rangeClusterInfo.getGlobalConnInfo()) != null) {
+				list = result.get(rangeClusterInfo.getGlobalConnInfo());
 			} else {
 				list = new ArrayList();
 			}
@@ -307,6 +309,7 @@ public abstract class AbstractDBCluster implements IDBCluster {
 		return result;
 	}
 
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
 	public Map<DBConnectionInfo, List> getSlaveGlobalDbConn(List entities, String clusterName, EnumDBMasterSlave slave) {
 		List<List<DBClusterInfo>> oneSlaves = this.slaveDbCluster.get(clusterName);
@@ -332,8 +335,8 @@ public abstract class AbstractDBCluster implements IDBCluster {
 			}
 
 			List list = null;
-			if (result.get(rangeClusterInfo) != null) {
-				list = result.get(rangeClusterInfo);
+			if (result.get(rangeClusterInfo.getGlobalConnInfo()) != null) {
+				list = result.get(rangeClusterInfo.getGlobalConnInfo());
 			} else {
 				list = new ArrayList();
 			}
@@ -345,7 +348,7 @@ public abstract class AbstractDBCluster implements IDBCluster {
 	}
 
 	@Override
-	public DB selectDbFromMaster(String tableName, IShardingValue<?> value) throws DBClusterException {
+	public DB selectDbFromMaster(String tableName, IShardingKey<?> value) throws DBClusterException {
 
 		// 计算分库
 		DBRouteInfo routeInfo = null;
@@ -389,7 +392,7 @@ public abstract class AbstractDBCluster implements IDBCluster {
 	}
 
 	@Override
-	public DB selectDbFromSlave(EnumDBMasterSlave slaveNum, String tableName, IShardingValue<?> value)
+	public DB selectDbFromSlave(EnumDBMasterSlave slaveNum, String tableName, IShardingKey<?> value)
 			throws DBClusterException {
 
 		// 选择分库
@@ -455,12 +458,9 @@ public abstract class AbstractDBCluster implements IDBCluster {
 				for (Integer dbIndex : oneDbTables.keySet()) {
 					for (DBClusterInfo dbClusterInfo : this.masterDbCluster.get(clusterName)) {
 						Connection dbConn = dbClusterInfo.getDbConnInfos().get(dbIndex).getDatasource().getConnection();
-						LOG.debug("开始创建主库库表, 库名:" + dbConn.getCatalog());
-						long start = System.currentTimeMillis();
 						int tableNum = oneDbTables.get(dbIndex).get(table.getName());
 						this.dbGenerator.syncTable(dbConn, table, tableNum);
 						dbConn.close();
-						LOG.debug("创建完毕， 耗时" + (System.currentTimeMillis() - start) + "ms");
 					}
 				}
 
@@ -474,12 +474,9 @@ public abstract class AbstractDBCluster implements IDBCluster {
 						for (Integer dbIndex : oneDbTables.keySet()) {
 							Connection dbConn = slaveDbClusterInfos.get(i).getDbConnInfos().get(dbIndex)
 									.getDatasource().getConnection();
-							LOG.debug("开始创建从库库表, 库名:" + dbConn.getCatalog() + ", 从库号:" + i);
-							long start = System.currentTimeMillis();
 							int tableNum = oneDbTables.get(dbIndex).get(table.getName());
 							this.dbGenerator.syncTable(dbConn, table, tableNum);
 							dbConn.close();
-							LOG.debug("创建完毕， 耗时" + (System.currentTimeMillis() - start) + "ms");
 						}
 					}
 				}
