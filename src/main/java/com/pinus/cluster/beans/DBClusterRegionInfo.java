@@ -18,6 +18,12 @@ public class DBClusterRegionInfo {
 
 	private List<List<DBConnectionInfo>> slaveConnection;
 
+	@Override
+	public String toString() {
+		return "DBClusterRegionInfo [start=" + start + ", end=" + end + ", masterConnection=" + masterConnection
+				+ ", slaveConnection=" + slaveConnection + "]";
+	}
+
 	public long getStart() {
 		return start;
 	}

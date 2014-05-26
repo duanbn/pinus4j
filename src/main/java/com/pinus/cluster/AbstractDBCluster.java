@@ -2,7 +2,6 @@ package com.pinus.cluster;
 
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -15,6 +14,7 @@ import com.pinus.api.IShardingKey;
 import com.pinus.api.enums.EnumDB;
 import com.pinus.api.enums.EnumDBMasterSlave;
 import com.pinus.cluster.beans.DBClusterInfo;
+import com.pinus.cluster.beans.DBClusterRegionInfo;
 import com.pinus.cluster.beans.DBConnectionInfo;
 import com.pinus.cluster.beans.DBTable;
 import com.pinus.cluster.route.DBRouteInfo;
@@ -26,7 +26,6 @@ import com.pinus.exception.DBClusterException;
 import com.pinus.exception.DBRouteException;
 import com.pinus.exception.LoadConfigException;
 import com.pinus.generator.IDBGenerator;
-import com.pinus.util.ReflectUtil;
 import com.pinus.util.StringUtils;
 
 /**
@@ -105,10 +104,8 @@ public abstract class AbstractDBCluster implements IDBCluster {
 		if (this.dbRouter == null) {
 			throw new DBClusterException("启动前需要设置DBClusterRouter");
 		}
-		// 设置主库信息
-		this.dbRouter.setMasterDbClusterInfo(masterDbCluster);
-		// 设置从库信息
-		this.dbRouter.setSlaveDbClusterInfo(slaveDbCluster);
+		// 设置集群信息
+		this.dbRouter.setDbClusterInfo(dbClusterInfo);
 		// 设置hash算法
 		this.dbRouter.setHashAlgo(config.getHashAlgo());
 
@@ -122,7 +119,7 @@ public abstract class AbstractDBCluster implements IDBCluster {
 				throw new IllegalStateException("未设置需要扫描的实体对象包, 参考IShardingStorageClient.setScanPackage()");
 			}
 			List<DBTable> tables = this.dbGenerator.scanEntity(scanPackage);
-			_initTableCluster(masterDbCluster, tables);
+			_initTableCluster(dbClusterInfo, tables);
 
 			// 创建数据库表
 			if (isCreateTable) {
@@ -142,39 +139,66 @@ public abstract class AbstractDBCluster implements IDBCluster {
 	@Override
 	public void shutdown() throws DBClusterException {
 		try {
-			// 关闭主库集群连接
-			for (Map.Entry<String, List<DBClusterInfo>> entry : this.masterDbCluster.entrySet()) {
-				for (DBClusterInfo dbClusterInfo : entry.getValue()) {
-					closeDataSource(dbClusterInfo.getGlobalConnInfo());
 
-					for (DBConnectionInfo connInfo : dbClusterInfo.getDbConnInfos()) {
-						closeDataSource(connInfo);
-					}
+			for (Map.Entry<String, DBClusterInfo> entry : this.dbClusterInfo.entrySet()) {
+				// 关闭全局库
+				// 主全局库
+				DBConnectionInfo masterGlobal = entry.getValue().getMasterGlobalConnection();
+				closeDataSource(masterGlobal);
+
+				// 从全局库
+				for (DBConnectionInfo slaveGlobal : entry.getValue().getSlaveGlobalConnection()) {
+					closeDataSource(slaveGlobal);
 				}
-			}
 
-			// 关闭从库集群连接
-			for (Map.Entry<String, List<List<DBClusterInfo>>> entry : this.slaveDbCluster.entrySet()) {
-				for (List<DBClusterInfo> clusterInfos : entry.getValue()) {
-					for (DBClusterInfo clusterInfo : clusterInfos) {
-						closeDataSource(clusterInfo.getGlobalConnInfo());
+				// 关闭集群库
+				for (DBClusterRegionInfo regionInfo : entry.getValue().getDbRegions()) {
+					// 主集群
+					for (DBConnectionInfo dbConnInfo : regionInfo.getMasterConnection()) {
+						closeDataSource(dbConnInfo);
+					}
 
-						for (DBConnectionInfo connInfo : clusterInfo.getDbConnInfos()) {
-							closeDataSource(connInfo);
+					// 从集群
+					for (List<DBConnectionInfo> dbConnInfos : regionInfo.getSlaveConnection()) {
+						for (DBConnectionInfo dbConnInfo : dbConnInfos) {
+							closeDataSource(dbConnInfo);
 						}
 					}
 				}
 			}
+
 		} catch (Exception e) {
 			throw new DBClusterException("关闭数据库集群失败", e);
 		}
 	}
 
+	@Override
+	public DBConnectionInfo getMasterGlobalConn(String clusterName) throws DBClusterException {
+		DBClusterInfo dbClusterInfo = this.dbClusterInfo.get(clusterName);
+		if (dbClusterInfo == null) {
+			throw new DBClusterException("没有找到集群信息, clustername=" + clusterName);
+		}
+
+		DBConnectionInfo masterConnection = dbClusterInfo.getMasterGlobalConnection();
+		return masterConnection;
+	}
+
+	@Override
+	public DBConnectionInfo getSlaveGlobalDbConn(String clusterName, EnumDBMasterSlave slave) throws DBClusterException {
+		DBClusterInfo dbClusterInfo = this.dbClusterInfo.get(clusterName);
+		if (dbClusterInfo == null) {
+			throw new DBClusterException("没有找到集群信息, clustername=" + clusterName);
+		}
+
+		DBConnectionInfo slaveConnection = dbClusterInfo.getSlaveGlobalConnection().get(slave.getValue());
+		return slaveConnection;
+	}
 
 	@Override
 	public DB selectDbFromMaster(String tableName, IShardingKey<?> value) throws DBClusterException {
 
 		// 计算分库
+		// 计算路由信息
 		DBRouteInfo routeInfo = null;
 		try {
 			routeInfo = dbRouter.select(EnumDBMasterSlave.MASTER, tableName, value);
@@ -185,23 +209,27 @@ public abstract class AbstractDBCluster implements IDBCluster {
 		int dbIndex = routeInfo.getDbIndex();
 		int tableIndex = routeInfo.getTableIndex();
 
-		List<DBClusterInfo> dbClusterInfos = this.masterDbCluster.get(clusterName);
-		DBClusterInfo dbClusterInfo = dbClusterInfos.get(routeInfo.getClusterIndex());
+		// 获取连接信息
+		DBClusterInfo dbClusterInfo = this.dbClusterInfo.get(clusterName);
 		if (dbClusterInfo == null) {
-			throw new DBClusterException("找不到数据库集群, db name=" + clusterName);
+			throw new DBClusterException("找不到数据库集群, shardingkey=" + value + ", tablename=" + tableName);
 		}
-		List<DBConnectionInfo> dbList = dbClusterInfo.getDbConnInfos();
-		if (dbList == null || dbList.isEmpty()) {
-			throw new DBClusterException("找不到数据库集群, db name=" + clusterName);
+		DBClusterRegionInfo regionInfo = dbClusterInfo.getDbRegions().get(routeInfo.getRegionIndex());
+		if (regionInfo == null) {
+			throw new DBClusterException("找不到数据库集群, shardingkey=" + value + ", tablename=" + tableName);
 		}
-
+		List<DBConnectionInfo> masterConntions = regionInfo.getMasterConnection();
+		if (masterConntions == null || masterConntions.isEmpty()) {
+			throw new DBClusterException("找不到数据库集群, shardingkey=" + value + ", tablename=" + tableName);
+		}
 		Connection dbConn = null;
 		try {
-			dbConn = dbList.get(dbIndex).getDatasource().getConnection();
+			dbConn = masterConntions.get(dbIndex).getDatasource().getConnection();
 		} catch (SQLException e) {
 			throw new DBClusterException(e);
 		}
 
+		// 返回分库分表信息
 		DB db = new DB();
 		db.setDbConn(dbConn);
 		db.setTableName(tableName);
@@ -209,8 +237,8 @@ public abstract class AbstractDBCluster implements IDBCluster {
 		db.setClusterName(clusterName);
 		db.setDbIndex(dbIndex);
 		db.setDbCluster(this);
-		db.setStart(dbClusterInfo.getStart());
-		db.setEnd(dbClusterInfo.getEnd());
+		db.setStart(regionInfo.getStart());
+		db.setEnd(regionInfo.getEnd());
 
 		return db;
 	}
@@ -219,34 +247,43 @@ public abstract class AbstractDBCluster implements IDBCluster {
 	public DB selectDbFromSlave(EnumDBMasterSlave slaveNum, String tableName, IShardingKey<?> value)
 			throws DBClusterException {
 
-		// 选择分库
+		// 计算分库
+		// 计算路由信息
 		DBRouteInfo routeInfo = null;
 		try {
 			routeInfo = dbRouter.select(slaveNum, tableName, value);
 		} catch (DBRouteException e) {
 			throw new DBClusterException(e);
 		}
-
 		// 获取分库分表的下标
 		String clusterName = routeInfo.getClusterName();
 		int dbIndex = routeInfo.getDbIndex();
 		int tableIndex = routeInfo.getTableIndex();
 
-		List<List<DBClusterInfo>> slaveClusters = this.slaveDbCluster.get(clusterName);
-		List<DBClusterInfo> slaveCluster = slaveClusters.get(slaveNum.getValue());
-		DBClusterInfo dbClusterInfo = slaveCluster.get(routeInfo.getClusterIndex());
+		// 获取连接信息
+		DBClusterInfo dbClusterInfo = this.dbClusterInfo.get(clusterName);
 		if (dbClusterInfo == null) {
-			throw new DBClusterException("找不到数据库集群, db name=" + clusterName);
+			throw new DBClusterException("找不到数据库集群, shardingkey=" + value + ", tablename=" + tableName + ", slavenum="
+					+ slaveNum.getValue());
 		}
-
-		// 获取数据库连接
+		DBClusterRegionInfo regionInfo = dbClusterInfo.getDbRegions().get(routeInfo.getRegionIndex());
+		if (regionInfo == null) {
+			throw new DBClusterException("找不到数据库集群, shardingkey=" + value + ", tablename=" + tableName + ", slavenum="
+					+ slaveNum.getValue());
+		}
+		List<DBConnectionInfo> slaveConnections = regionInfo.getSlaveConnection().get(slaveNum.getValue());
+		if (slaveConnections == null || slaveConnections.isEmpty()) {
+			throw new DBClusterException("找不到数据库集群, shardingkey=" + value + ", tablename=" + tableName + ", slavenum="
+					+ slaveNum.getValue());
+		}
 		Connection dbConn = null;
 		try {
-			dbConn = dbClusterInfo.getDbConnInfos().get(dbIndex).getDatasource().getConnection();
+			dbConn = slaveConnections.get(dbIndex).getDatasource().getConnection();
 		} catch (SQLException e) {
 			throw new DBClusterException(e);
 		}
 
+		// 返回分库分表信息
 		DB db = new DB();
 		db.setDbConn(dbConn);
 		db.setClusterName(clusterName);
@@ -254,8 +291,8 @@ public abstract class AbstractDBCluster implements IDBCluster {
 		db.setTableName(tableName);
 		db.setTableIndex(tableIndex);
 		db.setDbCluster(this);
-		db.setStart(dbClusterInfo.getStart());
-		db.setEnd(dbClusterInfo.getEnd());
+		db.setStart(regionInfo.getStart());
+		db.setEnd(regionInfo.getEnd());
 
 		return db;
 	}
@@ -277,53 +314,49 @@ public abstract class AbstractDBCluster implements IDBCluster {
 			if (table.getShardingNum() > 0) { // 当ShardingNumber大于0时表示分库分表
 				// 读取分表信息
 				oneDbTables = tableCluster.get(clusterName);
+				DBClusterInfo dbClusterInfo = this.dbClusterInfo.get(clusterName);
 
-				// 创建主库库表
 				for (Integer dbIndex : oneDbTables.keySet()) {
-					for (DBClusterInfo dbClusterInfo : this.masterDbCluster.get(clusterName)) {
-						Connection dbConn = dbClusterInfo.getDbConnInfos().get(dbIndex).getDatasource().getConnection();
+
+					// 创建主库库表
+					for (DBClusterRegionInfo region : dbClusterInfo.getDbRegions()) {
+						Connection dbConn = region.getMasterConnection().get(dbIndex).getDatasource().getConnection();
 						int tableNum = oneDbTables.get(dbIndex).get(table.getName());
 						this.dbGenerator.syncTable(dbConn, table, tableNum);
 						dbConn.close();
 					}
-				}
 
-				// 创建从库库表
-				List<List<DBClusterInfo>> slaveDbs = this.slaveDbCluster.get(clusterName);
-				if (slaveDbs == null) {
-					continue;
-				}
-				for (List<DBClusterInfo> slaveDbClusterInfos : slaveDbs) {
-					for (int i = 0; i < slaveDbClusterInfos.size(); i++) {
-						for (Integer dbIndex : oneDbTables.keySet()) {
-							Connection dbConn = slaveDbClusterInfos.get(i).getDbConnInfos().get(dbIndex)
-									.getDatasource().getConnection();
-							int tableNum = oneDbTables.get(dbIndex).get(table.getName());
-							this.dbGenerator.syncTable(dbConn, table, tableNum);
-							dbConn.close();
+					// 创建从库库表
+					for (DBClusterRegionInfo region : dbClusterInfo.getDbRegions()) {
+						List<List<DBConnectionInfo>> slaveDbs = region.getSlaveConnection();
+						for (List<DBConnectionInfo> slaveConns : slaveDbs) {
+							for (DBConnectionInfo dbConnInfo : slaveConns) {
+								Connection dbConn = dbConnInfo.getDatasource().getConnection();
+								int tableNum = oneDbTables.get(dbIndex).get(table.getName());
+								this.dbGenerator.syncTable(dbConn, table, tableNum);
+								dbConn.close();
+							}
 						}
 					}
 				}
+
 			} else { // 当ShardingNumber等于0时表示全局表
-				// 全局主库
-				List<DBClusterInfo> masterClusterInfos = this.masterDbCluster.get(clusterName);
-				for (DBClusterInfo dbClusterInfo : masterClusterInfos) {
-					DataSource globalDs = dbClusterInfo.getGlobalConnInfo().getDatasource();
+
+				for (Map.Entry<String, DBClusterInfo> entry : this.dbClusterInfo.entrySet()) {
+					// 全局主库
+					DBConnectionInfo dbConnInfo = entry.getValue().getMasterGlobalConnection();
+					DataSource globalDs = dbConnInfo.getDatasource();
 					if (globalDs != null) {
 						Connection conn = globalDs.getConnection();
 						this.dbGenerator.syncTable(conn, table);
 						conn.close();
 					}
-				}
-				// 全局从库
-				List<List<DBClusterInfo>> slaveDs = this.slaveDbCluster.get(clusterName);
-				if (slaveDs != null) {
-					for (List<DBClusterInfo> dbClusterInfos : slaveDs) {
-						for (DBClusterInfo dbClusterInfo : dbClusterInfos) {
-							Connection conn = dbClusterInfo.getGlobalConnInfo().getDatasource().getConnection();
-							this.dbGenerator.syncTable(conn, table);
-							conn.close();
-						}
+
+					// 全局从库
+					for (DBConnectionInfo slaveConnInfo : entry.getValue().getSlaveGlobalConnection()) {
+						Connection conn = slaveConnInfo.getDatasource().getConnection();
+						this.dbGenerator.syncTable(conn, table);
+						conn.close();
 					}
 				}
 			}
@@ -332,7 +365,31 @@ public abstract class AbstractDBCluster implements IDBCluster {
 	}
 
 	private void _initDBCluster(Map<String, DBClusterInfo> dbClusterInfo) {
-		// TODO:
+		for (Map.Entry<String, DBClusterInfo> entry : dbClusterInfo.entrySet()) {
+			// 初始化全局主库
+			DBConnectionInfo masterGlobalConnection = entry.getValue().getMasterGlobalConnection();
+			buildDataSource(masterGlobalConnection);
+
+			// 初始化全局从库
+			for (DBConnectionInfo slaveGlobalConnection : entry.getValue().getSlaveGlobalConnection()) {
+				buildDataSource(slaveGlobalConnection);
+			}
+
+			// 初始化集群
+			for (DBClusterRegionInfo regionInfo : entry.getValue().getDbRegions()) {
+				// 初始化集群主库
+				for (DBConnectionInfo masterConnection : regionInfo.getMasterConnection()) {
+					buildDataSource(masterConnection);
+				}
+
+				// 初始化集群从库
+				for (List<DBConnectionInfo> slaveConnections : regionInfo.getSlaveConnection()) {
+					for (DBConnectionInfo slaveConnection : slaveConnections) {
+						buildDataSource(slaveConnection);
+					}
+				}
+			}
+		}
 	}
 
 	/**
@@ -341,19 +398,19 @@ public abstract class AbstractDBCluster implements IDBCluster {
 	 * @throws DBClusterException
 	 *             初始化失败
 	 */
-	private void _initTableCluster(Map<String, List<DBClusterInfo>> masterDbCluster, List<DBTable> tables)
+	private void _initTableCluster(Map<String, DBClusterInfo> dbCluster, List<DBTable> tables)
 			throws DBClusterException {
 
 		// {分库下标, {表名, 分表数}}
 		Map<Integer, Map<String, Integer>> oneDbTable = null;
 
 		Map<String, Integer> tableNum = null;
-		for (Map.Entry<String, List<DBClusterInfo>> clusterInfo : masterDbCluster.entrySet()) {
+		for (Map.Entry<String, DBClusterInfo> entry : dbClusterInfo.entrySet()) {
 			oneDbTable = new HashMap<Integer, Map<String, Integer>>();
 
-			String clusterName = clusterInfo.getKey();
+			String clusterName = entry.getKey();
 
-			int dbNum = clusterInfo.getValue().get(0).getDbConnInfos().size();
+			int dbNum = entry.getValue().getDbRegions().get(0).getMasterConnection().size();
 
 			for (int i = 0; i < dbNum; i++) {
 				tableNum = _loadTableCluster(clusterName, tables);

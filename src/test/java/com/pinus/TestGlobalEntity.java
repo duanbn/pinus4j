@@ -6,10 +6,13 @@ import java.util.Date;
 import com.pinus.api.IGlobalEntity;
 import com.pinus.api.annotation.DateTime;
 import com.pinus.api.annotation.Field;
+import com.pinus.api.annotation.Index;
+import com.pinus.api.annotation.Indexes;
 import com.pinus.api.annotation.PrimaryKey;
 import com.pinus.api.annotation.Table;
 
 @Table(cluster = "klstorage", cache = true)
+@Indexes({ @Index(field = "testInt", isUnique = true) })
 public class TestGlobalEntity implements Serializable, IGlobalEntity {
 
 	private static final long serialVersionUID = 1L;

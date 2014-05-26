@@ -84,7 +84,7 @@ public abstract class AbstractShardingQuery {
 	 * @param clazz
 	 * @return count数
 	 */
-	protected Number selectCountGlobalWithCache(List<DBConnectionInfo> dbConnInfos, String clusterName, Class<?> clazz) {
+	protected Number selectCountGlobalWithCache(DBConnectionInfo dbConnInfo, String clusterName, Class<?> clazz) {
 		String tableName = ReflectUtil.getTableName(clazz);
 
 		// 操作缓存
@@ -96,16 +96,14 @@ public abstract class AbstractShardingQuery {
 		}
 
 		long count = 0;
-		for (DBConnectionInfo dbConnInfo : dbConnInfos) {
-			Connection conn = null;
-			try {
-				conn = dbConnInfo.getDatasource().getConnection();
-				count += _selectCountGlobal(conn, clazz).longValue();
-			} catch (SQLException e) {
-				throw new DBOperationException(e);
-			} finally {
-				SQLBuilder.close(conn);
-			}
+		Connection conn = null;
+		try {
+			conn = dbConnInfo.getDatasource().getConnection();
+			count = _selectCountGlobal(conn, clazz).longValue();
+		} catch (SQLException e) {
+			throw new DBOperationException(e);
+		} finally {
+			SQLBuilder.close(conn);
 		}
 
 		// 操作缓存

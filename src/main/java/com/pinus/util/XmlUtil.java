@@ -93,7 +93,7 @@ public class XmlUtil {
 	}
 
 	public Node getFirstChildByName(Node parent, String name) {
-		NodeList childs = xmlDoc.getChildNodes();
+		NodeList childs = parent.getChildNodes();
 		if (childs == null || childs.getLength() == 0) {
 			return null;
 		}
@@ -111,7 +111,7 @@ public class XmlUtil {
 
 	public List<Node> getChildByName(Node parent, String name) {
 		List<Node> list = new ArrayList<Node>();
-		NodeList childs = xmlDoc.getChildNodes();
+		NodeList childs = parent.getChildNodes();
 		if (childs == null || childs.getLength() == 0) {
 			return null;
 		}

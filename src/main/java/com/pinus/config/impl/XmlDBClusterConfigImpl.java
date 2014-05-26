@@ -12,6 +12,7 @@ import org.w3c.dom.NodeList;
 import com.pinus.cluster.beans.DBClusterInfo;
 import com.pinus.cluster.beans.DBClusterRegionInfo;
 import com.pinus.cluster.beans.DBConnectionInfo;
+import com.pinus.cluster.enums.EnumClusterCatalog;
 import com.pinus.cluster.enums.HashAlgoEnum;
 import com.pinus.config.IClusterConfig;
 import com.pinus.constant.Const;
@@ -192,6 +193,7 @@ public class XmlDBClusterConfigImpl implements IClusterConfig {
 	private DBClusterInfo _getDBClusterInfo(String clusterName, Node clusterNode) throws LoadConfigException {
 		DBClusterInfo dbClusterInfo = new DBClusterInfo();
 		dbClusterInfo.setClusterName(clusterName);
+		dbClusterInfo.setCatalog(EnumClusterCatalog.MYSQL);
 
 		// 加载master global
 		Node global = xmlUtil.getFirstChildByName(clusterNode, "global");
@@ -231,13 +233,15 @@ public class XmlDBClusterConfigImpl implements IClusterConfig {
 
 			// load region slave
 			List<List<DBConnectionInfo>> regionSlaveConnection = new ArrayList<List<DBConnectionInfo>>();
-			List<DBConnectionInfo> slaveConnections = new ArrayList<DBConnectionInfo>();
 			List<Node> slaveNodeList = xmlUtil.getChildByName(regionNode, "slave");
 			for (Node slaveNode : slaveNodeList) {
 				shardingNodeList = xmlUtil.getChildByName(slaveNode, "sharding");
+				
+				List<DBConnectionInfo> slaveConnections = new ArrayList<DBConnectionInfo>();
 				for (Node shardingNode : shardingNodeList) {
 					slaveConnections.add(_getDBConnInfo(clusterName, shardingNode));
 				}
+				
 				regionSlaveConnection.add(slaveConnections);
 			}
 			regionInfo.setSlaveConnection(regionSlaveConnection);
@@ -259,7 +263,7 @@ public class XmlDBClusterConfigImpl implements IClusterConfig {
 
 		for (Node clusterNode : clusterNodeList) {
 			String catalog = xmlUtil.getAttributeValue(clusterNode, "catalog");
-			if (!catalog.equals(Const.ATTR_CATALOG_MYSQL)) {
+			if (!catalog.equalsIgnoreCase(EnumClusterCatalog.MYSQL.getValue())) {
 				continue;
 			}
 

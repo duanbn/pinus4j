@@ -41,9 +41,6 @@ public class Const {
 	 */
 	public static final String DEFAULT_CONFIG_FILENAME = "storage-config.xml";
 
-	public static final String ATTR_CATALOG_MYSQL = "mysql";
-	public static final String ATTR_CATALOG_REDIS = "redis";
-
 	public static final String PROP_IDGEN_BATCH = "db.cluster.generateid.batch";
 
 	public static final String PROP_HASH_ALGO = "db.cluster.hash.algo";

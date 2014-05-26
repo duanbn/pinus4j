@@ -5,7 +5,6 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.log4j.Logger;
 
@@ -60,7 +59,6 @@ public class ShardingUpdateImpl implements IShardingUpdate {
 		return globalSaveBatch(entities, clusterName)[0];
 	}
 
-	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
 	public Number[] globalSaveBatch(List<? extends Object> entities, String clusterName) {
 		Class<?> clazz = entities.get(0).getClass();
@@ -79,25 +77,20 @@ public class ShardingUpdateImpl implements IShardingUpdate {
 			pks[i] = newPks[i];
 		}
 
-		Map<DBConnectionInfo, List> map = this.dbCluster.getMasterGlobalDbConn(entities, clusterName);
-
 		Connection conn = null;
-		List data = null;
-		for (Map.Entry<DBConnectionInfo, List> entry : map.entrySet()) {
-			try {
-				conn = entry.getKey().getDatasource().getConnection();
-				data = entry.getValue();
-				_saveBatchGlobal(conn, data);
+		try {
+			DBConnectionInfo globalConnection = this.dbCluster.getMasterGlobalConn(clusterName);
+			conn = globalConnection.getDatasource().getConnection();
+			_saveBatchGlobal(conn, entities);
 
-				if (primaryCache != null) {
-					primaryCache.putGlobal(clusterName, tableName, data);
-					primaryCache.incrCountGlobal(clusterName, tableName, data.size());
-				}
-			} catch (Exception e1) {
-				throw new DBOperationException(e1);
-			} finally {
-				SQLBuilder.close(conn);
+			if (primaryCache != null) {
+				primaryCache.putGlobal(clusterName, tableName, entities);
+				primaryCache.incrCountGlobal(clusterName, tableName, entities.size());
 			}
+		} catch (Exception e1) {
+			throw new DBOperationException(e1);
+		} finally {
+			SQLBuilder.close(conn);
 		}
 
 		return pks;
@@ -110,32 +103,27 @@ public class ShardingUpdateImpl implements IShardingUpdate {
 		globalUpdateBatch(entities, clusterName);
 	}
 
-	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
 	public void globalUpdateBatch(List<? extends Object> entities, String clusterName) {
 		Class<?> clazz = entities.get(0).getClass();
 		String tableName = ReflectUtil.getTableName(clazz);
 
-		Map<DBConnectionInfo, List> map = this.dbCluster.getMasterGlobalDbConn(entities, clusterName);
-
 		Connection conn = null;
-		List data = null;
-		for (Map.Entry<DBConnectionInfo, List> entry : map.entrySet()) {
-			try {
-				conn = entry.getKey().getDatasource().getConnection();
-				data = entry.getValue();
+		try {
+			DBConnectionInfo globalConnection = this.dbCluster.getMasterGlobalConn(clusterName);
 
-				_updateBatchGlobal(conn, data);
+			conn = globalConnection.getDatasource().getConnection();
 
-				// 更新缓存
-				if (primaryCache != null) {
-					primaryCache.putGlobal(clusterName, tableName, data);
-				}
-			} catch (SQLException e) {
-				throw new DBOperationException(e);
-			} finally {
-				SQLBuilder.close(conn);
+			_updateBatchGlobal(conn, entities);
+
+			// 更新缓存
+			if (primaryCache != null) {
+				primaryCache.putGlobal(clusterName, tableName, entities);
 			}
+		} catch (Exception e) {
+			throw new DBOperationException(e);
+		} finally {
+			SQLBuilder.close(conn);
 		}
 	}
 
@@ -147,28 +135,24 @@ public class ShardingUpdateImpl implements IShardingUpdate {
 	@Override
 	public void globalRemoveByPks(Number[] pks, Class<?> clazz, String clusterName) {
 
-		Map<DBConnectionInfo, List<Number>> map = this.dbCluster.getMasterGlobalDbConn(pks, clusterName);
-
 		Connection conn = null;
-		List<Number> pkList = null;
-		for (Map.Entry<DBConnectionInfo, List<Number>> entry : map.entrySet()) {
-			try {
-				conn = entry.getKey().getDatasource().getConnection();
-				pkList = entry.getValue();
+		try {
+			DBConnectionInfo globalConnection = this.dbCluster.getMasterGlobalConn(clusterName);
 
-				_removeByPksGlobal(conn, pkList.toArray(new Number[pkList.size()]), clazz);
+			conn = globalConnection.getDatasource().getConnection();
 
-				// 删除缓存
-				if (primaryCache != null) {
-					String tableName = ReflectUtil.getTableName(clazz);
-					primaryCache.removeGlobal(clusterName, tableName, pkList.toArray(new Number[pkList.size()]));
-					primaryCache.decrCountGlobal(clusterName, tableName, pkList.size());
-				}
-			} catch (SQLException e) {
-				throw new DBOperationException(e);
-			} finally {
-				SQLBuilder.close(conn);
+			_removeByPksGlobal(conn, pks, clazz);
+
+			// 删除缓存
+			if (primaryCache != null) {
+				String tableName = ReflectUtil.getTableName(clazz);
+				primaryCache.removeGlobal(clusterName, tableName, pks);
+				primaryCache.decrCountGlobal(clusterName, tableName, pks.length);
 			}
+		} catch (Exception e) {
+			throw new DBOperationException(e);
+		} finally {
+			SQLBuilder.close(conn);
 		}
 	}
 

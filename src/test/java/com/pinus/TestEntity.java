@@ -10,11 +10,14 @@ import org.apache.commons.lang.builder.ToStringStyle;
 import com.pinus.api.IShardingEntity;
 import com.pinus.api.annotation.DateTime;
 import com.pinus.api.annotation.Field;
+import com.pinus.api.annotation.Index;
+import com.pinus.api.annotation.Indexes;
 import com.pinus.api.annotation.PrimaryKey;
 import com.pinus.api.annotation.Table;
 import com.pinus.api.annotation.UpdateTime;
 
 @Table(name = "test_entity", cluster = "klstorage", shardingNum = 25, cache = true)
+@Indexes({ @Index(field = "testString", isUnique = true) })
 public class TestEntity implements Serializable, IShardingEntity<Long> {
 
 	private static final long serialVersionUID = 1L;

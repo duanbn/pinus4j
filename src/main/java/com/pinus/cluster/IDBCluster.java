@@ -1,6 +1,5 @@
 package com.pinus.cluster;
 
-import java.util.List;
 import java.util.Map;
 
 import com.pinus.api.IShardingKey;
@@ -34,14 +33,21 @@ public interface IDBCluster {
 	public void shutdown() throws DBClusterException;
 
 	/**
+	 * 获取主全局库连接.
+	 * 
+	 * @param clusterName
+	 * @return
+	 */
+	public DBConnectionInfo getMasterGlobalConn(String clusterName) throws DBClusterException;
+
+	/**
 	 * 获取从库的全局库连接
 	 * 
 	 * @param clusterName
 	 * @param slave
 	 * @return
 	 */
-	public List<DBConnectionInfo> getSlaveGlobalDbConn(String clusterName, EnumDBMasterSlave slave);
-
+	public DBConnectionInfo getSlaveGlobalDbConn(String clusterName, EnumDBMasterSlave slave) throws DBClusterException;
 
 	/**
 	 * 从主库集群中获取被操作的库表.
