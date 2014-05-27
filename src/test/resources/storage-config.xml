@@ -11,7 +11,7 @@
 	<db.cluster.generateid.batch>5</db.cluster.generateid.batch>
 
 	<db-connection-pool>
-		<maxActive>5</maxActive>
+		<maxActive>100</maxActive>
 		<minIdle>10</minIdle>
 		<maxIdle>50</maxIdle>
 		<initialSize>1</initialSize>
@@ -47,7 +47,7 @@
 				</db.url>
 			</slave>
 		</global>
-		<region capacity="1-200">
+		<region capacity="1-1000000">
 			<master>
 				<sharding>
 					<db.username>root</db.username>
@@ -97,7 +97,7 @@
 				</sharding>
 			</slave>
 		</region>
-		<region capacity="201-400">
+		<region capacity="1000001-2000000">
 			<master>
 				<sharding>
 					<db.username>root</db.username>

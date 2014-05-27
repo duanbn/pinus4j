@@ -15,8 +15,8 @@ public class ShardingStatisticsTest extends BaseTest {
 
 	@Test
 	public void testStatEntity() {
-		IShardingStatistics shardingStatistics = this.client.getShardingStatistic();
-		DBClusterStatInfo statInfo = shardingStatistics.statEntity(CLUSTER_NAME, TestEntity.class);
+		IShardingStatistics shardingStatistics = this.cacheClient.getShardingStatistic();
+		DBClusterStatInfo statInfo = shardingStatistics.statEntity(CLUSTER_KLSTORAGE, TestEntity.class);
 		for (Map.Entry<DB, Integer> entry : statInfo.getShardingEntityCount().entrySet()) {
 			System.out.println(entry.getKey() + " - " + entry.getValue());
 		}
@@ -28,8 +28,8 @@ public class ShardingStatisticsTest extends BaseTest {
 		ShardingKey<String> sv = null;
 		Map<DB, Integer> counter = new HashMap<DB, Integer>();
 		for (int i = 0; i < 100000; i++) {
-			sv = new ShardingKey<String>(CLUSTER_NAME, String.valueOf(++seed));
-			DB db = this.client.getDbCluster().selectDbFromMaster("test_entity", sv);
+			sv = new ShardingKey<String>(CLUSTER_KLSTORAGE, String.valueOf(++seed));
+			DB db = this.cacheClient.getDbCluster().selectDbFromMaster("test_entity", sv);
 			int count = 1;
 			if (counter.get(db) != null) {
 				count += counter.get(db);

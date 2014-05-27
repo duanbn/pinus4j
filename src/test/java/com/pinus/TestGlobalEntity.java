@@ -55,6 +55,36 @@ public class TestGlobalEntity implements Serializable, IGlobalEntity {
 		return "klstorage";
 	}
 
+	@Override
+	public String toString() {
+		return "TestGlobalEntity [id=" + id + ", testByte=" + testByte + ", testBool=" + testBool + ", testChar="
+				+ testChar + ", testShort=" + testShort + ", testInt=" + testInt + ", testLong=" + testLong
+				+ ", testFloat=" + testFloat + ", testDouble=" + testDouble + ", testString=" + testString
+				+ ", testDate=" + testDate + "]";
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + (int) (id ^ (id >>> 32));
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		TestGlobalEntity other = (TestGlobalEntity) obj;
+		if (id != other.id)
+			return false;
+		return true;
+	}
+
 	public long getId() {
 		return id;
 	}

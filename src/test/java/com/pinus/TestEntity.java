@@ -17,7 +17,6 @@ import com.pinus.api.annotation.Table;
 import com.pinus.api.annotation.UpdateTime;
 
 @Table(name = "test_entity", cluster = "klstorage", shardingNum = 25, cache = true)
-@Indexes({ @Index(field = "testString", isUnique = true) })
 public class TestEntity implements Serializable, IShardingEntity<Long> {
 
 	private static final long serialVersionUID = 1L;
@@ -71,6 +70,28 @@ public class TestEntity implements Serializable, IShardingEntity<Long> {
 	@Override
 	public String toString() {
 		return ToStringBuilder.reflectionToString(this, ToStringStyle.SHORT_PREFIX_STYLE);
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + (int) (id ^ (id >>> 32));
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		TestEntity other = (TestEntity) obj;
+		if (id != other.id)
+			return false;
+		return true;
 	}
 
 	public long getId() {

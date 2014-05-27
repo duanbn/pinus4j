@@ -287,10 +287,9 @@ public abstract class AbstractShardingQuery {
 			data = primaryCache.getGlobal(clusterName, tableName, pk);
 			if (data == null) {
 				data = _selectByPkGlobal(conn, pk, clazz);
-			}
-			if (data != null) {
-				primaryCache.putGlobal(clusterName, tableName, pk, data);
-				return data;
+				if (data != null) {
+					primaryCache.putGlobal(clusterName, tableName, pk, data);
+				}
 			}
 		} else {
 			data = _selectByPkGlobal(conn, pk, clazz);

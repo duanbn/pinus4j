@@ -77,12 +77,20 @@ public class MemCachedPrimaryCacheImpl implements IPrimaryCache {
 
 	@Override
 	public void putGlobal(String clusterName, String tableName, Number id, Object data) {
+		if (data == null) {
+			return;
+		}
+
 		String key = _buildGlobalKey(clusterName, tableName, id);
 		_put(key, data);
 	}
 
 	@Override
 	public void putGlobal(String clusterName, String tableName, List<? extends Object> data) {
+		if (data == null || data.isEmpty()) {
+			return;
+		}
+
 		List<String> keys = new ArrayList<String>();
 		for (Object d : data) {
 			Number id = ReflectUtil.getPkValue(d);
@@ -93,6 +101,10 @@ public class MemCachedPrimaryCacheImpl implements IPrimaryCache {
 
 	@Override
 	public void putGlobal(String clusterName, String tableName, Map<Number, ? extends Object> data) {
+		if (data == null || data.isEmpty()) {
+			return;
+		}
+
 		List<String> keys = new ArrayList<String>();
 		List<Object> datas = new ArrayList<Object>();
 		for (Map.Entry<Number, ? extends Object> entry : data.entrySet()) {
@@ -165,12 +177,20 @@ public class MemCachedPrimaryCacheImpl implements IPrimaryCache {
 
 	@Override
 	public void put(DB db, Number id, Object data) {
+		if (data == null) {
+			return;
+		}
+
 		String key = _buildKey(db, id);
 		_put(key, data);
 	}
 
 	@Override
 	public void put(DB db, Number[] ids, List<? extends Object> data) {
+		if (data == null || data.isEmpty()) {
+			return;
+		}
+
 		List<String> keys = new ArrayList<String>();
 		for (Number id : ids) {
 			keys.add(_buildKey(db, id));
@@ -180,6 +200,10 @@ public class MemCachedPrimaryCacheImpl implements IPrimaryCache {
 
 	@Override
 	public void put(DB db, Map<Number, ? extends Object> data) {
+		if (data == null || data.isEmpty()) {
+			return;
+		}
+		
 		List<String> keys = new ArrayList<String>();
 		List<Object> datas = new ArrayList<Object>();
 		for (Map.Entry<Number, ? extends Object> entry : data.entrySet()) {

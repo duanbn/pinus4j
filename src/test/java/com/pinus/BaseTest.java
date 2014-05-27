@@ -23,9 +23,12 @@ public class BaseTest {
 
 	protected Random r = new Random();
 
-	public static final String CLUSTER_NAME = "klstorage";
+	public static final String CLUSTER_KLSTORAGE = "klstorage";
+	public static final String CLUSTER_USER = "user";
 
-	protected IShardingStorageClient client;
+	protected IShardingStorageClient cacheClient;;
+	protected IShardingStorageClient noCacheClient;
+
 	protected IPrimaryCache primaryCache;
 
 	@Before
@@ -38,18 +41,24 @@ public class BaseTest {
 			e.printStackTrace();
 		}
 		primaryCache = new MemCachedPrimaryCacheImpl(memcachedClient);
-
-		client = new ShardingStorageClientImpl();
-		client.setMode(EnumMode.DISTRIBUTED);
-		client.setScanPackage("com.pinus");
-		client.setCreateTable(true);
-		client.setPrimaryCache(primaryCache);
-		client.init();
+		cacheClient = new ShardingStorageClientImpl();
+		cacheClient.setMode(EnumMode.DISTRIBUTED);
+		cacheClient.setScanPackage("com.pinus");
+		cacheClient.setCreateTable(true);
+		cacheClient.setPrimaryCache(primaryCache);
+		cacheClient.init();
+		
+		noCacheClient = new ShardingStorageClientImpl();
+		noCacheClient.setMode(EnumMode.DISTRIBUTED);
+		noCacheClient.setScanPackage("com.pinus");
+		noCacheClient.setCreateTable(true);
+		noCacheClient.init();
 	}
 
 	@After
 	public void setDown() {
-		this.client.destroy();
+		this.cacheClient.destroy();
+		this.noCacheClient.destroy();
 	}
 
 	String[] seeds = new String[] { "a", "b", "c", "d", "e", "f", "g", "h", "i" };

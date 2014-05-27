@@ -18,13 +18,13 @@ public class IdSequnceGeneratorImplTest extends BaseTest {
 
 	@Test
 	public void testBatchGen() throws Exception {
-		IIdGenerator idGenerator = client.getIdGenerator();
+		IIdGenerator idGenerator = cacheClient.getIdGenerator();
 
-		int[] intIds = idGenerator.genClusterUniqueIntIdBatch(client.getDbCluster(), CLUSTER_NAME, TABLE_NAME, 10);
+		int[] intIds = idGenerator.genClusterUniqueIntIdBatch(cacheClient.getDbCluster(), CLUSTER_KLSTORAGE, TABLE_NAME, 10);
 		for (int i = 0; i < intIds.length; i++) {
 			System.out.print(intIds[i] + " ");
 		}
-		long[] longIds = idGenerator.genClusterUniqueLongIdBatch(client.getDbCluster(), CLUSTER_NAME, TABLE_NAME, 10);
+		long[] longIds = idGenerator.genClusterUniqueLongIdBatch(cacheClient.getDbCluster(), CLUSTER_KLSTORAGE, TABLE_NAME, 10);
 		for (int i = 0; i < longIds.length; i++) {
 			System.out.print(longIds[i] + " ");
 		}
@@ -32,16 +32,16 @@ public class IdSequnceGeneratorImplTest extends BaseTest {
 
 	@Test
 	public void testGen() throws Exception {
-		IIdGenerator idGenerator = client.getIdGenerator();
+		IIdGenerator idGenerator = cacheClient.getIdGenerator();
 
 		for (int i = 0; i < 10; i++) {
-			System.out.println(idGenerator.genClusterUniqueLongId(client.getDbCluster(), CLUSTER_NAME, "test_entity"));
+			System.out.println(idGenerator.genClusterUniqueLongId(cacheClient.getDbCluster(), CLUSTER_KLSTORAGE, "test_entity"));
 		}
 	}
 
 	@Test
 	public void testConcurrent() throws Exception {
-		IIdGenerator idGenerator = client.getIdGenerator();
+		IIdGenerator idGenerator = cacheClient.getIdGenerator();
 		long start = System.currentTimeMillis();
 		Thread th = null;
 		List<Thread> ts = new ArrayList<Thread>();
@@ -69,8 +69,8 @@ public class IdSequnceGeneratorImplTest extends BaseTest {
 
 		public void run() {
 			for (int i = 0; i < 10; i++) {
-				int id = idGen.genClusterUniqueIntId(client.getDbCluster(), CLUSTER_NAME, "test_entity");
-				long lId = idGen.genClusterUniqueLongId(client.getDbCluster(), CLUSTER_NAME, "testglobalentity");
+				int id = idGen.genClusterUniqueIntId(cacheClient.getDbCluster(), CLUSTER_KLSTORAGE, "test_entity");
+				long lId = idGen.genClusterUniqueLongId(cacheClient.getDbCluster(), CLUSTER_KLSTORAGE, "testglobalentity");
 				ids.add(id);
 				longIds.add(lId);
 			}
