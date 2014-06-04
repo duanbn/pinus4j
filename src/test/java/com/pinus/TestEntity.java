@@ -10,8 +10,6 @@ import org.apache.commons.lang.builder.ToStringStyle;
 import com.pinus.api.IShardingEntity;
 import com.pinus.api.annotation.DateTime;
 import com.pinus.api.annotation.Field;
-import com.pinus.api.annotation.Index;
-import com.pinus.api.annotation.Indexes;
 import com.pinus.api.annotation.PrimaryKey;
 import com.pinus.api.annotation.Table;
 import com.pinus.api.annotation.UpdateTime;

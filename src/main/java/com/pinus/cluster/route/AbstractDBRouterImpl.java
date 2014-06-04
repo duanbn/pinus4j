@@ -110,7 +110,7 @@ public abstract class AbstractDBRouterImpl implements IClusterRouter {
 			int tableNum = tableCluster.get(tableName);
 
 			// 计算分表下标
-			int tableIndex = (int) getShardingValue(value) % tableNum;
+			int tableIndex = (int) shardingValue % tableNum;
 
 			dbRouteInfo.setTableName(tableName);
 			dbRouteInfo.setTableIndex(tableIndex);
