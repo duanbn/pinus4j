@@ -4,6 +4,7 @@ import java.util.Map;
 
 import com.pinus.api.IShardingKey;
 import com.pinus.api.enums.EnumDBMasterSlave;
+import com.pinus.cluster.beans.DBClusterInfo;
 import com.pinus.cluster.beans.DBConnectionInfo;
 import com.pinus.cluster.route.IClusterRouter;
 import com.pinus.exception.DBClusterException;
@@ -15,6 +16,15 @@ import com.pinus.generator.IDBGenerator;
  * @author duanbn
  */
 public interface IDBCluster {
+
+	/**
+	 * 获取集群信息.
+	 * 
+	 * @param clusterName
+	 *            集群名
+	 * @return 集群信息
+	 */
+	public DBClusterInfo getDbClusterInfo(String clusterName);
 
 	/**
 	 * 启动集群. 调用数据库集群前需要调用此方法，为了初始化集群连接.

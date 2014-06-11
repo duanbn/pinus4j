@@ -8,6 +8,16 @@ import com.pinus.api.query.Order;
 import com.pinus.api.query.QueryImpl;
 
 public class QueryImplTest {
+
+    @Test
+    public void testClone() throws Exception {
+        IQuery query = new QueryImpl();
+        Condition cond = Condition.eq("field", "test field");
+        query.add(cond).orderBy("field", Order.ASC).limit(0, 20);
+        System.out.println(query);
+        IQuery cloneOne = query.clone();
+        System.out.println(cloneOne);
+    }
 	
     @Test
     public void testAdd() throws Exception {

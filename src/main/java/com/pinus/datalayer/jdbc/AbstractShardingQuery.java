@@ -190,7 +190,7 @@ public abstract class AbstractShardingQuery {
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 		try {
-			ps = SQLBuilder.buildSelectCountGlobalSql(conn, sql);
+			ps = SQLBuilder.buildSelectCountGlobalBySql(conn, sql);
 			long begin = System.currentTimeMillis();
 			rs = ps.executeQuery();
 			long constTime = System.currentTimeMillis() - begin;
@@ -230,7 +230,7 @@ public abstract class AbstractShardingQuery {
 		ResultSet rs = null;
 		try {
 			conn = db.getDbConn();
-			ps = SQLBuilder.buildSelectCountSql(conn, sql, db.getTableIndex());
+			ps = SQLBuilder.buildSelectCountBySql(conn, sql, db.getTableIndex());
 			long begin = System.currentTimeMillis();
 			rs = ps.executeQuery();
 			long constTime = System.currentTimeMillis() - begin;
@@ -408,7 +408,7 @@ public abstract class AbstractShardingQuery {
 			if (constTime > Const.SLOWQUERY_PKS) {
 				SlowQueryLogger.write(conn, sql, constTime);
 			}
-			result = SQLBuilder.buildResultObjectWithMap(clazz, rs);
+			result = SQLBuilder.buildResultObjectAsMap(clazz, rs);
 		} catch (SQLException e) {
 			throw new DBOperationException(e);
 		} finally {
@@ -531,7 +531,7 @@ public abstract class AbstractShardingQuery {
 			if (constTime > Const.SLOWQUERY_PKS) {
 				SlowQueryLogger.write(db, sql, constTime);
 			}
-			result = SQLBuilder.buildResultObjectWithMap(clazz, rs);
+			result = SQLBuilder.buildResultObjectAsMap(clazz, rs);
 		} catch (SQLException e) {
 			throw new DBOperationException(e);
 		} finally {

@@ -48,7 +48,7 @@ public class SQLBuilder {
 		SQL.append(tableName);
 		String whereSql = query.getWhereSql();
 		if (StringUtils.isNotBlank(whereSql))
-			SQL.append(" WHERE ").append(query.getWhereSql());
+			SQL.append(query.getWhereSql());
 
 		debugSQL(SQL.toString());
 
@@ -66,14 +66,28 @@ public class SQLBuilder {
 		SQL.append(tableName);
 		String whereSql = query.getWhereSql();
 		if (StringUtils.isNotBlank(whereSql))
-			SQL.append(" WHERE ").append(query.getWhereSql());
+		    SQL.append(query.getWhereSql());
 
 		debugSQL(SQL.toString());
 
 		return SQL.toString();
 	}
 
-	public static PreparedStatement buildSelectCountGlobalSql(Connection conn, SQL<?> sql) throws SQLException {
+    public static String buildSelectCountByQuery(Class<?> clazz, int tableIndex, IQuery query) {
+        String tableName = ReflectUtil.getTableName(clazz, tableIndex);
+        String pkName = ReflectUtil.getPkName(clazz);
+		StringBuilder SQL = new StringBuilder("SELECT count(" + pkName + ") FROM ");
+		SQL.append(tableName);
+		String whereSql = query.getWhereSql();
+		if (StringUtils.isNotBlank(whereSql))
+		    SQL.append(query.getWhereSql());
+
+		debugSQL(SQL.toString());
+
+		return SQL.toString();
+    }
+
+	public static PreparedStatement buildSelectCountGlobalBySql(Connection conn, SQL<?> sql) throws SQLException {
 		// 检查sql语句中是否包含count关键字
 		if (!sql.getSql().contains("count")) {
 			throw new SQLException("语法错误:" + sql.getSql());
@@ -106,7 +120,7 @@ public class SQLBuilder {
 	 * @throws SQLException
 	 *             创建失败
 	 */
-	public static PreparedStatement buildSelectCountSql(Connection conn, SQL<?> sql, int tableIndex)
+	public static PreparedStatement buildSelectCountBySql(Connection conn, SQL<?> sql, int tableIndex)
 			throws SQLException {
 		// 检查sql语句中是否包含count关键字
 		if (!sql.getSql().contains("count")) {
@@ -326,7 +340,17 @@ public class SQLBuilder {
 		return list;
 	}
 
-	public static <T> Map<Number, T> buildResultObjectWithMap(Class<T> clazz, ResultSet rs) throws SQLException {
+	/**
+	 * 将数据转换为数据对象
+	 * 
+	 * @param clazz
+	 *            数据对象
+	 * @param rs
+	 *            结果集
+	 * @return {pkValue, Object}
+	 * @throws SQLException
+	 */
+	public static <T> Map<Number, T> buildResultObjectAsMap(Class<T> clazz, ResultSet rs) throws SQLException {
 		Map<Number, T> map = new HashMap<Number, T>();
 
 		ResultSetMetaData rsmd = rs.getMetaData();

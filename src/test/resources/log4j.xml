@@ -15,7 +15,7 @@
 		<level value="warn" />
 	</category>
 	<category name="com.pinus">
-		<level value="debug" />
+		<level value="info" />
 	</category>
 
 	<root>

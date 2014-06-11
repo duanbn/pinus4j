@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 
+import com.pinus.api.annotation.Table;
 import com.pinus.api.enums.EnumDB;
 import com.pinus.api.enums.EnumDBConnect;
 import com.pinus.api.enums.EnumDBRouteAlg;
@@ -13,17 +14,22 @@ import com.pinus.api.query.IQuery;
 import com.pinus.api.query.QueryImpl;
 import com.pinus.cache.IPrimaryCache;
 import com.pinus.cluster.IDBCluster;
+import com.pinus.cluster.beans.DBClusterInfo;
 import com.pinus.cluster.impl.DbcpDBClusterImpl;
 import com.pinus.cluster.route.IClusterRouter;
 import com.pinus.cluster.route.impl.SimpleHashClusterRouterImpl;
+import com.pinus.datalayer.IShardingIterator;
 import com.pinus.datalayer.IShardingMasterQuery;
 import com.pinus.datalayer.IShardingSlaveQuery;
 import com.pinus.datalayer.IShardingStatistics;
 import com.pinus.datalayer.IShardingUpdate;
+import com.pinus.datalayer.beans.DBClusterIteratorInfo;
+import com.pinus.datalayer.jdbc.ShardingIteratorImpl;
 import com.pinus.datalayer.jdbc.ShardingMasterQueryImpl;
 import com.pinus.datalayer.jdbc.ShardingSlaveQueryImpl;
 import com.pinus.datalayer.jdbc.ShardingUpdateImpl;
 import com.pinus.exception.DBClusterException;
+import com.pinus.exception.DBOperationException;
 import com.pinus.generator.IDBGenerator;
 import com.pinus.generator.IIdGenerator;
 import com.pinus.generator.impl.DBMySqlGeneratorImpl;
@@ -274,8 +280,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 	public Number save(IShardingEntity<?> entity) {
 		CheckUtil.checkEntity(entity);
 
-		IShardingKey<Object> shardingValue = new ShardingKey<Object>(entity.getClusterName(),
-				entity.getShardingValue());
+		IShardingKey<Object> shardingValue = new ShardingKey<Object>(entity.getClusterName(), entity.getShardingValue());
 		CheckUtil.checkShardingValue(shardingValue);
 
 		return this.updater.save(entity, shardingValue);
@@ -285,8 +290,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 	public void update(IShardingEntity<?> entity) {
 		CheckUtil.checkEntity(entity);
 
-		IShardingKey<Object> shardingValue = new ShardingKey<Object>(entity.getClusterName(),
-				entity.getShardingValue());
+		IShardingKey<Object> shardingValue = new ShardingKey<Object>(entity.getClusterName(), entity.getShardingValue());
 		CheckUtil.checkShardingValue(shardingValue);
 
 		this.updater.update(entity, shardingValue);
@@ -473,6 +477,52 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 		CheckUtil.checkClass(clazz);
 
 		return this.masterQueryer.findByQueryFromMaster(query, shardingValue, clazz);
+	}
+
+	@Override
+	public <E> IShardingIterator<E> getShardingIterator(Class<E> clazz) {
+		return getShardingIterator(clazz, null);
+	}
+
+	@Override
+	public <E> IShardingIterator<E> getShardingIterator(Class<E> clazz, IQuery query) {
+		return getShardingIterator(clazz, query, null);
+	}
+
+	@Override
+	public <E> IShardingIterator<E> getShardingIterator(Class<E> clazz, IQuery query, DBClusterIteratorInfo itInfo) {
+		if (clazz == null) {
+			throw new RuntimeException();
+		}
+
+		ShardingIteratorImpl<E> shardingIt = new ShardingIteratorImpl<E>(clazz);
+
+		// get cluster name
+		Table annoTable = clazz.getAnnotation(Table.class);
+		if (annoTable == null) {
+			throw new DBOperationException("被遍历的实体必须是@Table注解的实体");
+		}
+		String clusterName = annoTable.cluster();
+		int tableNum = annoTable.shardingNum();
+
+		// get db cluster info
+		DBClusterInfo dbClusterInfo = this.dbCluster.getDbClusterInfo(clusterName);
+		shardingIt.setDbClusterInfo(dbClusterInfo);
+		shardingIt.setMaxTableIndex(tableNum - 1);
+
+		// set query
+		if (query == null)
+			query = this.createQuery();
+		shardingIt.setQuery(query);
+		if (itInfo != null) {
+			shardingIt.setLatestDbIndex(itInfo.getLatestDbIndex());
+			shardingIt.setLatestId(itInfo.getLatestId());
+			shardingIt.setLatestTableIndex(itInfo.getLatestDbIndex());
+		}
+
+		shardingIt.init();
+
+		return shardingIt;
 	}
 
 	@Override

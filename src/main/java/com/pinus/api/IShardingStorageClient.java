@@ -9,7 +9,9 @@ import com.pinus.api.enums.EnumMode;
 import com.pinus.api.query.IQuery;
 import com.pinus.cache.IPrimaryCache;
 import com.pinus.cluster.IDBCluster;
+import com.pinus.datalayer.IShardingIterator;
 import com.pinus.datalayer.IShardingStatistics;
+import com.pinus.datalayer.beans.DBClusterIteratorInfo;
 import com.pinus.exception.DBOperationException;
 import com.pinus.generator.IIdGenerator;
 
@@ -23,7 +25,7 @@ public interface IShardingStorageClient {
 	// ////////////////////////////////////////////////////////
 	// update相关
 	// ////////////////////////////////////////////////////////
-	
+
 	//
 	// global
 	//
@@ -93,7 +95,7 @@ public interface IShardingStorageClient {
 	 * @param clazz
 	 */
 	public void globalRemoveByPks(Number[] pks, Class<?> clazz, String clusterName);
-	
+
 	//
 	// sharding
 	//
@@ -179,7 +181,7 @@ public interface IShardingStorageClient {
 	// ////////////////////////////////////////////////////////
 	// query相关
 	// ////////////////////////////////////////////////////////
-	
+
 	//
 	// global
 	//
@@ -458,7 +460,7 @@ public interface IShardingStorageClient {
 	// ////////////////////////////////////////////////////////
 	// other
 	// ////////////////////////////////////////////////////////
-	
+
 	/**
 	 * 设置ID生成器.
 	 * 
@@ -474,6 +476,39 @@ public interface IShardingStorageClient {
 	 *            模式
 	 */
 	public void setMode(EnumMode mode);
+
+	/**
+	 * 获取数据遍历组件
+	 * 
+	 * @param clazz
+	 *            实体对象Class
+	 * @return 数据遍历组件
+	 */
+	public <E> IShardingIterator<E> getShardingIterator(Class<E> clazz);
+
+	/**
+	 * 获取数据遍历组件
+	 * 
+	 * @param clazz
+	 *            实体对象Class
+	 * @param query
+	 *            查询条件
+	 * @return 数据遍历组件
+	 */
+	public <E> IShardingIterator<E> getShardingIterator(Class<E> clazz, IQuery query);
+
+	/**
+	 * 获取数据遍历组件
+	 * 
+	 * @param clazz
+	 *            实体对象Class
+	 * @param query
+	 *            查询条件
+	 * @param iteratorInfo
+	 *            遍历器参数
+	 * @return 数据遍历组件
+	 */
+	public <E> IShardingIterator<E> getShardingIterator(Class<E> clazz, IQuery query, DBClusterIteratorInfo iteratorInfo);
 
 	/**
 	 * 获取集群统计组件.
@@ -604,7 +639,7 @@ public interface IShardingStorageClient {
 	 * @param scanPackage
 	 */
 	public void setScanPackage(String scanPackage);
-	
+
 	/**
 	 * 设置缓存.
 	 */

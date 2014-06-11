@@ -7,6 +7,13 @@ package com.pinus.api.query;
  */
 public interface IQuery {
 
+    /**
+     * 获取此对象的复制对象.
+     *
+     * @return 此对象实例的复制
+     */
+    public IQuery clone();
+
 	/**
 	 * 添加取值字段.
 	 * 
@@ -14,14 +21,14 @@ public interface IQuery {
 	 *            获取值的字段
 	 * @return
 	 */
-//	public IQuery addField(String... field);
+	// public IQuery addField(String... field);
 
 	/**
 	 * 获取取值字段. 使用逗号分隔
 	 * 
 	 * @return
 	 */
-//	public String getField();
+	// public String getField();
 
 	/**
 	 * 返回查询条件的sql语句.
@@ -57,5 +64,13 @@ public interface IQuery {
 	 *            页大小
 	 */
 	public IQuery limit(int start, int limit);
+
+	/**
+	 * 设置limit参数
+	 * 
+	 * @param limit
+	 *            limit
+	 */
+	public IQuery limit(int limit);
 
 }

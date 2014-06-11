@@ -23,6 +23,7 @@ import com.pinus.config.IClusterConfig;
 import com.pinus.config.impl.XmlDBClusterConfigImpl;
 import com.pinus.constant.Const;
 import com.pinus.exception.DBClusterException;
+import com.pinus.exception.DBOperationException;
 import com.pinus.exception.DBRouteException;
 import com.pinus.exception.LoadConfigException;
 import com.pinus.generator.IDBGenerator;
@@ -66,7 +67,7 @@ public abstract class AbstractDBCluster implements IDBCluster {
 	private IClusterRouter dbRouter;
 
 	/**
-	 * 分库分表信息
+	 * 分库分表信息. {clusterName, clusterInfo}
 	 */
 	private Map<String, DBClusterInfo> dbClusterInfo;
 
@@ -83,6 +84,17 @@ public abstract class AbstractDBCluster implements IDBCluster {
 	 */
 	public AbstractDBCluster(EnumDB enumDb) {
 		this.enumDb = enumDb;
+	}
+
+	@Override
+	public DBClusterInfo getDbClusterInfo(String clusterName) {
+		DBClusterInfo clusterInfo = dbClusterInfo.get(clusterName);
+
+		if (clusterInfo == null) {
+			throw new DBOperationException("找不到集群信息, clusterName=" + clusterName);
+		}
+
+		return clusterInfo;
 	}
 
 	@Override

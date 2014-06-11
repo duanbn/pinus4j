@@ -12,6 +12,7 @@ import net.rubyeye.xmemcached.utils.AddrUtil;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Test;
 
 import com.pinus.api.IShardingStorageClient;
 import com.pinus.api.ShardingStorageClientImpl;
@@ -102,4 +103,13 @@ public class BaseTest {
 		return testEntity;
 	}
 
+    @Test
+    public void genData() throws Exception {
+        TestEntity entity = null;
+        for (int i=0; i<10000; i++) {
+            entity = createEntity();
+            noCacheClient.save(entity);
+        }
+    }
+	
 }
