@@ -80,7 +80,4 @@ public class Const {
 	public static final String TRUE = "1";
 	public static final String FALSE = "0";
 
-	// 遍历器默认buffer
-	public static final int ITERATOR_DEFAULT_BUFFER = 2000;
-
 }

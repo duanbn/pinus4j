@@ -517,7 +517,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 		if (itInfo != null) {
 			shardingIt.setLatestDbIndex(itInfo.getLatestDbIndex());
 			shardingIt.setLatestId(itInfo.getLatestId());
-			shardingIt.setLatestTableIndex(itInfo.getLatestDbIndex());
+			shardingIt.setLatestTableIndex(itInfo.getLatestTableIndex());
 		}
 
 		shardingIt.init();

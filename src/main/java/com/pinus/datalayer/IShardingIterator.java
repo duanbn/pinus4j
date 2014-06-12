@@ -1,5 +1,7 @@
 package com.pinus.datalayer;
 
+import com.pinus.datalayer.beans.DBClusterIteratorInfo;
+
 /**
  * 遍历集群数据接口. 此接口设计用来在集群中对单个数据对象进行遍历。
  * 
@@ -35,5 +37,15 @@ public interface IShardingIterator<E> {
 	 * @return 正在遍历表下标
 	 */
 	public int curTableIndex();
+
+    /**
+     * 获取当前遍历的数据id.
+     */
+    public long curEntityId();
+
+    /**
+     * 获取当前遍历器的遍历信息.
+     */
+    public DBClusterIteratorInfo curIteratorInfo();
 
 }

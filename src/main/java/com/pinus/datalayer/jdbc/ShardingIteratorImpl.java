@@ -14,9 +14,10 @@ import com.pinus.api.query.Order;
 import com.pinus.cluster.beans.DBClusterInfo;
 import com.pinus.cluster.beans.DBClusterRegionInfo;
 import com.pinus.cluster.beans.DBConnectionInfo;
-import com.pinus.constant.Const;
 import com.pinus.datalayer.IShardingIterator;
 import com.pinus.datalayer.SQLBuilder;
+import com.pinus.datalayer.beans.DBClusterIteratorInfo;
+import com.pinus.util.ReflectUtil;
 
 /**
  * 遍历集群数据接口实现.
@@ -35,6 +36,7 @@ public class ShardingIteratorImpl<E> implements IShardingIterator<E> {
 	private DBClusterInfo dbClusterInfo;
 
 	private Class<E> clazz;
+    private int stepLength;
 
 	/**
 	 * 查询条件.
@@ -45,20 +47,17 @@ public class ShardingIteratorImpl<E> implements IShardingIterator<E> {
 	 * 当前遍历页号.
 	 */
 	private int curPage;
-    /**
-     * 单表总页数
-     */
-    private int totalPage;
 
-    private int maxRegionIndex;
-    private int maxDbIndex;
-    private int maxTableIndex;
+	private int maxRegionIndex;
+	private int maxDbIndex;
+	private int maxTableIndex;
+	private long maxId;
 
 	/**
 	 * 最有一次遍历的region
 	 */
 	private int latestRegionIndex;
-	
+
 	/**
 	 * 最后一次遍历的数据库下表
 	 */
@@ -83,9 +82,17 @@ public class ShardingIteratorImpl<E> implements IShardingIterator<E> {
 	public void init() {
 		// init max region index
 		this.maxRegionIndex = dbClusterInfo.getDbRegions().size() - 1;
-		// init max db index
-		this.maxDbIndex = dbClusterInfo.getDbRegions().get(0).getMasterConnection().size() - 1;
 
+        int dbNum = dbClusterInfo.getDbRegions().get(0).getMasterConnection().size();
+		// init max db index
+		this.maxDbIndex = dbNum - 1;
+
+        int tableNum = maxTableIndex + 1;
+        // compute stepLength
+        this.stepLength = dbNum * tableNum / 2 * 1000;
+        // compute cur page
+        this.curPage = (int) latestId / stepLength + 1;
+        
 		// init latest region index
 		if (latestId > 0) {
 			DBClusterRegionInfo r = null;
@@ -97,11 +104,11 @@ public class ShardingIteratorImpl<E> implements IShardingIterator<E> {
 				}
 			}
 		}
-
-        // init maxId
+		
+		// init maxId
 		DBConnectionInfo connInfo = _getConnectionInfo(latestRegionIndex, latestDbIndex);
 		try {
-            totalPage = _getTotalPage(connInfo);
+			maxId = _getMaxId(connInfo);
 		} catch (SQLException e) {
 			throw new RuntimeException(e);
 		}
@@ -123,7 +130,9 @@ public class ShardingIteratorImpl<E> implements IShardingIterator<E> {
 	@SuppressWarnings("unchecked")
 	@Override
 	public E next() {
-		return (E) dataQ.poll();
+        E entity = (E) dataQ.poll();
+        latestId = ReflectUtil.getPkValue(entity).longValue();
+		return entity;
 	}
 
 	@Override
@@ -136,14 +145,26 @@ public class ShardingIteratorImpl<E> implements IShardingIterator<E> {
 		return this.latestTableIndex;
 	}
 
+    @Override
+    public long curEntityId() {
+    	return latestId;
+    }
+
+    @Override
+    public DBClusterIteratorInfo curIteratorInfo() {
+        DBClusterIteratorInfo info = new DBClusterIteratorInfo(this.latestDbIndex, this.latestTableIndex, this.latestId);
+        return info;
+    }
+
 	/**
 	 * get max id
 	 */
-	private int _getTotalPage(DBConnectionInfo connInfo) throws SQLException {
-		IQuery totalPageQuery = this.query.clone();
-		String sql = SQLBuilder.buildSelectCountByQuery(clazz, latestTableIndex, totalPageQuery);
+	private long _getMaxId(DBConnectionInfo connInfo) throws SQLException {
+		IQuery maxIdQuery = this.query.clone();
+		maxIdQuery.orderBy("id", Order.DESC).limit(1);
+		String sql = SQLBuilder.buildSelectByQuery(clazz, latestTableIndex, maxIdQuery);
 
-        long count = 0;
+		long maxId = 0;
 
 		Connection conn = null;
 		ResultSet rs = null;
@@ -153,20 +174,13 @@ public class ShardingIteratorImpl<E> implements IShardingIterator<E> {
 			ps = conn.prepareStatement(sql);
 			rs = ps.executeQuery();
 			if (rs.next()) {
-				count = rs.getLong(1);
+				maxId = rs.getLong("id");
 			}
 		} finally {
 			SQLBuilder.close(conn, ps, rs);
 		}
 
-        int totalPage = 0;
-        if (count % Const.ITERATOR_DEFAULT_BUFFER == 0) {
-            totalPage = (int) (count / Const.ITERATOR_DEFAULT_BUFFER);
-        } else {
-            totalPage = (int) (count / Const.ITERATOR_DEFAULT_BUFFER + 1);
-        }
-
-		return totalPage;
+		return maxId;
 	}
 
 	private DBConnectionInfo _getConnectionInfo(int regionIndex, int dbIndex) {
@@ -178,9 +192,9 @@ public class ShardingIteratorImpl<E> implements IShardingIterator<E> {
 		return connInfo;
 	}
 
-	private List<E> getPageData(DBConnectionInfo connInfo) throws SQLException {
+	private List<E> getData(DBConnectionInfo connInfo, long latestId) throws SQLException {
 		IQuery itQuery = this.query.clone();
-        itQuery.limit(curPage++ * Const.ITERATOR_DEFAULT_BUFFER, Const.ITERATOR_DEFAULT_BUFFER);
+		itQuery.add(Condition.gt("id", latestId)).add(Condition.lte("id", latestId + stepLength));
 		String sql = SQLBuilder.buildSelectByQuery(clazz, latestTableIndex, itQuery);
 
 		ResultSet rs = null;
@@ -199,26 +213,29 @@ public class ShardingIteratorImpl<E> implements IShardingIterator<E> {
 	}
 
 	private void _fill() throws SQLException {
+        //System.out.println("regionIndex=" + latestRegionIndex + ", dbIndex=" + latestDbIndex + ", tableIndex=" + latestTableIndex);
+
 		if (latestRegionIndex <= maxRegionIndex) {
 			if (latestDbIndex <= maxDbIndex) {
-                DBConnectionInfo connInfo = _getConnectionInfo(latestRegionIndex, latestDbIndex);
+				DBConnectionInfo connInfo = _getConnectionInfo(latestRegionIndex, latestDbIndex);
 				if (latestTableIndex <= maxTableIndex) {
-					if (curPage < totalPage) {
-						dataQ.addAll(getPageData(connInfo));
+					if (latestId < maxId) {
+						dataQ.addAll(getData(connInfo, latestId));
+						latestId = curPage++ * stepLength;
 					} else {
 						latestId = 0;
 						curPage = 0;
 						if (++latestTableIndex <= maxTableIndex) {
-                            totalPage = _getTotalPage(connInfo);
-                        }
+							maxId = _getMaxId(connInfo);
+						}
 					}
 				} else {
 					latestTableIndex = 0;
 					latestId = 0;
 					curPage = 0;
 					if (++latestDbIndex <= maxDbIndex) {
-                        totalPage = _getTotalPage(connInfo);
-                    }
+						maxId = _getMaxId(connInfo);
+					}
 				}
 			} else {
 				latestDbIndex = 0;
@@ -226,9 +243,9 @@ public class ShardingIteratorImpl<E> implements IShardingIterator<E> {
 				latestId = 0;
 				curPage = 0;
 				if (++latestRegionIndex <= maxRegionIndex) {
-                    DBConnectionInfo connInfo = _getConnectionInfo(latestRegionIndex, latestDbIndex);
-                    totalPage = _getTotalPage(connInfo);
-                }
+					DBConnectionInfo connInfo = _getConnectionInfo(latestRegionIndex, latestDbIndex);
+					maxId = _getMaxId(connInfo);
+				}
 			}
 
 			// 进行递归遍历
@@ -285,5 +302,4 @@ public class ShardingIteratorImpl<E> implements IShardingIterator<E> {
 	public void setLatestId(long latestId) {
 		this.latestId = latestId;
 	}
-
 }
