@@ -73,7 +73,7 @@ public class ShardingIteratorImpl<E> implements IShardingIterator<E> {
 	 */
 	private long latestId;
 
-	private Queue<Object> dataQ = new LinkedList<Object>();
+	private final Queue<Object> dataQ = new LinkedList<Object>();
 
 	public ShardingIteratorImpl(Class<E> clazz) {
 		this.clazz = clazz;
@@ -113,7 +113,7 @@ public class ShardingIteratorImpl<E> implements IShardingIterator<E> {
 			throw new RuntimeException(e);
 		}
 	}
-
+	
 	@Override
 	public boolean hasNext() {
 		if (dataQ.isEmpty()) {
@@ -267,6 +267,7 @@ public class ShardingIteratorImpl<E> implements IShardingIterator<E> {
 		return query;
 	}
 
+	@Override
 	public void setQuery(IQuery query) {
 		this.query = query;
 	}

@@ -103,7 +103,7 @@ public class BaseTest {
 		return testEntity;
 	}
 
-    @Test
+//    @Test
     public void genData() throws Exception {
         TestEntity entity = null;
         for (int i=0; i<10000; i++) {

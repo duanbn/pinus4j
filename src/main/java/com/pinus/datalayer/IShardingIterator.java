@@ -1,5 +1,6 @@
 package com.pinus.datalayer;
 
+import com.pinus.api.query.IQuery;
 import com.pinus.datalayer.beans.DBClusterIteratorInfo;
 
 /**
@@ -9,6 +10,13 @@ import com.pinus.datalayer.beans.DBClusterIteratorInfo;
  * @since 0.6.0
  */
 public interface IShardingIterator<E> {
+
+	/**
+	 * 设置查询条件
+	 * 
+	 * @param query
+	 */
+	public void setQuery(IQuery query);
 
 	/**
 	 * 是否有下一个元素.
@@ -38,14 +46,14 @@ public interface IShardingIterator<E> {
 	 */
 	public int curTableIndex();
 
-    /**
-     * 获取当前遍历的数据id.
-     */
-    public long curEntityId();
+	/**
+	 * 获取当前遍历的数据id.
+	 */
+	public long curEntityId();
 
-    /**
-     * 获取当前遍历器的遍历信息.
-     */
-    public DBClusterIteratorInfo curIteratorInfo();
+	/**
+	 * 获取当前遍历器的遍历信息.
+	 */
+	public DBClusterIteratorInfo curIteratorInfo();
 
 }
