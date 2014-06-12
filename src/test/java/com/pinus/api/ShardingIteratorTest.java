@@ -17,7 +17,7 @@ public class ShardingIteratorTest extends BaseTest {
 		query.add(Condition.eq("testString", "testData"));
 		DBClusterIteratorInfo itInfo = new DBClusterIteratorInfo(1, 23, 111223);
 
-		IShardingIterator<TestEntity> it = noCacheClient.getShardingIterator(TestEntity.class);
+		IShardingIterator<TestEntity> it = noCacheClient.getShardingIterator(TestEntity.class, query, itInfo);
 		int i = 0;
         long start = System.currentTimeMillis();
 		while (it.hasNext()) {

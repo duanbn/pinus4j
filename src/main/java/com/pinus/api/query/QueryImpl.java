@@ -39,9 +39,9 @@ public class QueryImpl implements IQuery, Cloneable {
     @Override
     public IQuery clone() {
         QueryImpl clone = new QueryImpl();
-        clone.setFieldList(new ArrayList(this.fieldList));
-        clone.setCondList(new ArrayList(this.condList));
-        clone.setOrderList(new ArrayList(this.orderList));
+        clone.setFieldList(new ArrayList<String>(this.fieldList));
+        clone.setCondList(new ArrayList<Condition>(this.condList));
+        clone.setOrderList(new ArrayList<OrderBy>(this.orderList));
         clone.setStart(this.start);
         clone.setLimit(this.limit);
         return clone;

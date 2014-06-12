@@ -12,7 +12,6 @@ import net.rubyeye.xmemcached.utils.AddrUtil;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Test;
 
 import com.pinus.api.IShardingStorageClient;
 import com.pinus.api.ShardingStorageClientImpl;
