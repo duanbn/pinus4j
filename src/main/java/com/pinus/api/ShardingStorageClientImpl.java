@@ -401,6 +401,13 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 	}
 
 	@Override
+	public Number getCount(Class<?> clazz) {
+		CheckUtil.checkClass(clazz);
+
+		return this.masterQueryer.getCountFromMaster(clazz);
+	}
+
+	@Override
 	public Number getCount(IShardingKey<?> shardingValue, Class<?> clazz) {
 		CheckUtil.checkShardingValue(shardingValue);
 		CheckUtil.checkClass(clazz);

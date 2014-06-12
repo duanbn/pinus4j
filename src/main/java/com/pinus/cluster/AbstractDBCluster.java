@@ -2,6 +2,7 @@ package com.pinus.cluster;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,6 +28,7 @@ import com.pinus.exception.DBOperationException;
 import com.pinus.exception.DBRouteException;
 import com.pinus.exception.LoadConfigException;
 import com.pinus.generator.IDBGenerator;
+import com.pinus.util.ReflectUtil;
 import com.pinus.util.StringUtils;
 
 /**
@@ -131,6 +133,9 @@ public abstract class AbstractDBCluster implements IDBCluster {
 				throw new IllegalStateException("未设置需要扫描的实体对象包, 参考IShardingStorageClient.setScanPackage()");
 			}
 			List<DBTable> tables = this.dbGenerator.scanEntity(scanPackage);
+			if (tables.isEmpty()) {
+				throw new DBClusterException("找不到可以创建库表的实体对象, package=" + scanPackage);
+			}
 			_initTableCluster(dbClusterInfo, tables);
 
 			// 创建数据库表
@@ -307,6 +312,46 @@ public abstract class AbstractDBCluster implements IDBCluster {
 		db.setEnd(regionInfo.getEnd());
 
 		return db;
+	}
+
+	@Override
+	public List<DB> getDBAllSharding(Class<?> clazz) {
+		List<DB> dbs = new ArrayList<DB>();
+
+		int tableNum = ReflectUtil.getTableNum(clazz);
+		if (tableNum == 0) {
+			throw new IllegalStateException("table number is 0");
+		}
+
+		DB db = null;
+		String clusterName = ReflectUtil.getClusterName(clazz);
+		String tableName = ReflectUtil.getTableName(clazz);
+		DBClusterInfo dbClusterInfo = this.getDbClusterInfo(clusterName);
+		for (DBClusterRegionInfo region : dbClusterInfo.getDbRegions()) {
+			int dbIndex = 0;
+			for (DBConnectionInfo connInfo : region.getMasterConnection()) {
+				for (int tableIndex = 0; tableIndex < tableNum; tableIndex++) {
+					db = new DB();
+					db.setClusterName(clusterName);
+					db.setDbCluster(this);
+					// 这个地方需要注意关闭数据库连接.
+					try {
+						db.setDbConn(connInfo.getDatasource().getConnection());
+					} catch (SQLException e) {
+						throw new DBOperationException(e);
+					}
+					db.setDbIndex(dbIndex);
+					db.setEnd(region.getEnd());
+					db.setStart(region.getStart());
+					db.setTableName(tableName);
+					db.setTableIndex(tableIndex);
+					dbs.add(db);
+				}
+				dbIndex++;
+			}
+		}
+
+		return dbs;
 	}
 
 	/**

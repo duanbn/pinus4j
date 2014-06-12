@@ -287,6 +287,14 @@ public interface IShardingStorageClient {
 	// sharding
 	//
 	/**
+	 * 获取分片实体的集群总数.
+	 * 
+	 * @param clazz
+	 * @return
+	 */
+	public Number getCount(Class<?> clazz);
+
+	/**
 	 * 获取分库分表记录总数.
 	 * 
 	 * @param shardingValue

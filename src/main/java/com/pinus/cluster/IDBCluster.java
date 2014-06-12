@@ -1,5 +1,6 @@
 package com.pinus.cluster;
 
+import java.util.List;
 import java.util.Map;
 
 import com.pinus.api.IShardingKey;
@@ -83,6 +84,14 @@ public interface IDBCluster {
 	 */
 	public DB selectDbFromSlave(EnumDBMasterSlave slave, String tableName, IShardingKey<?> value)
 			throws DBClusterException;
+
+	/**
+	 * 获取此实体对象对应的所有的分库分表引用.
+	 * 
+	 * @param clazz 数据对象
+	 * @return
+	 */
+	public List<DB> getDBAllSharding(Class<?> clazz);
 
 	/**
 	 * 设置数据库路由器.

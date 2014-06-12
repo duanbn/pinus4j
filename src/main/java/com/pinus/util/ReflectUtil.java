@@ -36,9 +36,19 @@ public class ReflectUtil {
 	public static final Map<Class<?>, Field[]> _fieldCache = new ConcurrentHashMap<Class<?>, Field[]>();
 
 	/**
+	 * 集群名缓存.
+	 */
+	public static final Map<Class<?>, String> _clusterNameCache = new ConcurrentHashMap<Class<?>, String>();
+
+	/**
 	 * 数据表名缓存.
 	 */
 	private static final Map<Class<?>, String> _tableNameCache = new ConcurrentHashMap<Class<?>, String>();
+
+	/**
+	 * 集群表数量
+	 */
+	private static final Map<Class<?>, Integer> _tableNumCache = new ConcurrentHashMap<Class<?>, Integer>();
 
 	/**
 	 * 获取主键值.
@@ -102,6 +112,48 @@ public class ReflectUtil {
 		_pkNameCache.put(clazz, pkName);
 
 		return pkName;
+	}
+
+	/**
+	 * 获取集群名
+	 * 
+	 * @param clazz
+	 * @return
+	 */
+	public static String getClusterName(Class<?> clazz) {
+		String clusterName = _clusterNameCache.get(clazz);
+		if (clusterName == null) {
+			Table annoTable = clazz.getAnnotation(Table.class);
+			if (annoTable == null) {
+				throw new IllegalArgumentException(clazz + "无法转化为数据库，请使用@Table注解");
+			}
+			clusterName = annoTable.cluster();
+
+			_clusterNameCache.put(clazz, clusterName);
+		}
+
+		return clusterName;
+	}
+
+	/**
+	 * 获取集群表数量.
+	 * 
+	 * @param clazz
+	 * @return
+	 */
+	public static int getTableNum(Class<?> clazz) {
+		Integer tableNum = _tableNumCache.get(clazz);
+		if (tableNum == null) {
+			Table annoTable = clazz.getAnnotation(Table.class);
+			if (annoTable == null) {
+				throw new IllegalArgumentException(clazz + "无法转化为数据库，请使用@Table注解");
+			}
+			tableNum = annoTable.shardingNum();
+
+			_tableNumCache.put(clazz, tableNum);
+		}
+
+		return tableNum;
 	}
 
 	/**

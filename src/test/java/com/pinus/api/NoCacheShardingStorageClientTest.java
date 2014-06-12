@@ -17,6 +17,12 @@ import com.pinus.api.query.IQuery;
 public class NoCacheShardingStorageClientTest extends BaseTest {
 
 	@Test
+	public void testGetCount() {
+		long count = noCacheClient.getCount(TestEntity.class).longValue();
+		System.out.println(count);
+	}
+
+	@Test
 	public void testGlobalSave() {
 		TestGlobalEntity entity = createGlobalEntity();
 		entity.setTestString("my name is duanbingnan");

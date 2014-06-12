@@ -5,7 +5,7 @@ import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 
 /**
- * 通过路由算法获得的数据库表.
+ * 通过路由算法获得的分库分表信息.
  * 
  * @author duanbn
  */

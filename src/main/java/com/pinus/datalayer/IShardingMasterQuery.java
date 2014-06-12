@@ -120,6 +120,14 @@ public interface IShardingMasterQuery {
 	public void setDBCluster(IDBCluster dbCluster);
 
 	/**
+	 * 获取集群总数.
+	 * 
+	 * @param clazz
+	 * @return
+	 */
+	public Number getCountFromMaster(Class<?> clazz);
+
+	/**
 	 * 获取分库分表记录总数.
 	 * 
 	 * @param shardingValue
