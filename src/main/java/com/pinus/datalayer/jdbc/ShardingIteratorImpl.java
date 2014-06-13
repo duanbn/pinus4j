@@ -8,6 +8,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 
+import org.apache.log4j.Logger;
+
 import com.pinus.api.query.Condition;
 import com.pinus.api.query.IQuery;
 import com.pinus.api.query.Order;
@@ -31,12 +33,17 @@ import com.pinus.util.ReflectUtil;
 public class ShardingIteratorImpl<E> implements IShardingIterator<E> {
 
 	/**
+	 * Logger
+	 */
+	public static final Logger LOG = Logger.getLogger(ShardingIteratorImpl.class);
+
+	/**
 	 * 数据库集群引用.
 	 */
 	private DBClusterInfo dbClusterInfo;
 
 	private Class<E> clazz;
-    private int stepLength;
+	private int stepLength;
 
 	/**
 	 * 查询条件.
@@ -83,16 +90,16 @@ public class ShardingIteratorImpl<E> implements IShardingIterator<E> {
 		// init max region index
 		this.maxRegionIndex = dbClusterInfo.getDbRegions().size() - 1;
 
-        int dbNum = dbClusterInfo.getDbRegions().get(0).getMasterConnection().size();
+		int dbNum = dbClusterInfo.getDbRegions().get(0).getMasterConnection().size();
 		// init max db index
 		this.maxDbIndex = dbNum - 1;
 
-        int tableNum = maxTableIndex + 1;
-        // compute stepLength
-        this.stepLength = dbNum * tableNum / 2 * 1000;
-        // compute cur page
-        this.curPage = (int) latestId / stepLength + 1;
-        
+		int tableNum = maxTableIndex + 1;
+		// compute stepLength
+		this.stepLength = dbNum * tableNum / 2 * 1000;
+		// compute cur page
+		this.curPage = (int) latestId / stepLength + 1;
+
 		// init latest region index
 		if (latestId > 0) {
 			DBClusterRegionInfo r = null;
@@ -104,7 +111,7 @@ public class ShardingIteratorImpl<E> implements IShardingIterator<E> {
 				}
 			}
 		}
-		
+
 		// init maxId
 		DBConnectionInfo connInfo = _getConnectionInfo(latestRegionIndex, latestDbIndex);
 		try {
@@ -113,7 +120,7 @@ public class ShardingIteratorImpl<E> implements IShardingIterator<E> {
 			throw new RuntimeException(e);
 		}
 	}
-	
+
 	@Override
 	public boolean hasNext() {
 		if (dataQ.isEmpty()) {
@@ -130,8 +137,8 @@ public class ShardingIteratorImpl<E> implements IShardingIterator<E> {
 	@SuppressWarnings("unchecked")
 	@Override
 	public E next() {
-        E entity = (E) dataQ.poll();
-        latestId = ReflectUtil.getPkValue(entity).longValue();
+		E entity = (E) dataQ.poll();
+		latestId = ReflectUtil.getPkValue(entity).longValue();
 		return entity;
 	}
 
@@ -145,16 +152,16 @@ public class ShardingIteratorImpl<E> implements IShardingIterator<E> {
 		return this.latestTableIndex;
 	}
 
-    @Override
-    public long curEntityId() {
-    	return latestId;
-    }
+	@Override
+	public long curEntityId() {
+		return latestId;
+	}
 
-    @Override
-    public DBClusterIteratorInfo curIteratorInfo() {
-        DBClusterIteratorInfo info = new DBClusterIteratorInfo(this.latestDbIndex, this.latestTableIndex, this.latestId);
-        return info;
-    }
+	@Override
+	public DBClusterIteratorInfo curIteratorInfo() {
+		DBClusterIteratorInfo info = new DBClusterIteratorInfo(this.latestDbIndex, this.latestTableIndex, this.latestId);
+		return info;
+	}
 
 	/**
 	 * get max id
@@ -213,7 +220,10 @@ public class ShardingIteratorImpl<E> implements IShardingIterator<E> {
 	}
 
 	private void _fill() throws SQLException {
-        //System.out.println("regionIndex=" + latestRegionIndex + ", dbIndex=" + latestDbIndex + ", tableIndex=" + latestTableIndex);
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("curRegionIndex=" + latestRegionIndex + ", curDbIndex=" + latestDbIndex + ", curTableIndex="
+					+ latestTableIndex);
+		}
 
 		if (latestRegionIndex <= maxRegionIndex) {
 			if (latestDbIndex <= maxDbIndex) {
