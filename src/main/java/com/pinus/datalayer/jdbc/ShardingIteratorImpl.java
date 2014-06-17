@@ -123,11 +123,13 @@ public class ShardingIteratorImpl<E> implements IShardingIterator<E> {
 
 	@Override
 	public boolean hasNext() {
-		if (dataQ.isEmpty()) {
-			try {
-				_fill();
-			} catch (SQLException e) {
-				throw new RuntimeException(e);
+		synchronized (dataQ) {
+			if (dataQ.isEmpty()) {
+				try {
+					_fill();
+				} catch (SQLException e) {
+					throw new RuntimeException(e);
+				}
 			}
 		}
 
@@ -137,9 +139,12 @@ public class ShardingIteratorImpl<E> implements IShardingIterator<E> {
 	@SuppressWarnings("unchecked")
 	@Override
 	public E next() {
-		E entity = (E) dataQ.poll();
-		latestId = ReflectUtil.getPkValue(entity).longValue();
-		return entity;
+		synchronized (dataQ) {
+			E entity = (E) dataQ.poll();
+			if (entity != null)
+				latestId = ReflectUtil.getPkValue(entity).longValue();
+			return entity;
+		}
 	}
 
 	@Override
