@@ -22,6 +22,14 @@ public class CacheShardingStorageClientTest extends BaseTest {
 		System.out.println(count);
 	}
 
+    @Test
+    public void testGetCountQuery() throws Exception {
+        IQuery query = cacheClient.createQuery();
+        query.add(Condition.lt("id", 999999));
+        long count = cacheClient.getCount(TestEntity.class, query).longValue();
+        System.out.println(count);
+    }
+	
 	@Test
 	public void testGlobalSave() {
 		TestGlobalEntity entity = createGlobalEntity();

@@ -181,6 +181,16 @@ public class ShardingMasterQueryImpl extends AbstractShardingQuery implements IS
 		return count;
 	}
 
+    @Override
+    public Number getCountFromMaster(Class<?> clazz, IQuery query) {
+        List<DB> dbs = this.dbCluster.getAllMasterShardingDB(clazz);
+		long count = 0;
+		for (DB db : dbs) {
+			count += selectCount(db, clazz, query).longValue();
+		}
+		return count;
+    }
+
 	@Override
 	public Number getCountFromMaster(IShardingKey<?> shardingValue, Class<?> clazz) {
 		DB db = _getDbFromMaster(clazz, shardingValue);

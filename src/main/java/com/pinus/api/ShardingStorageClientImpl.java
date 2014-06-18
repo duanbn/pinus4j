@@ -405,6 +405,14 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 		return this.masterQueryer.getCountFromMaster(clazz);
 	}
 
+    @Override
+    public Number getCount(Class<?> clazz, IQuery query) {
+        CheckUtil.checkClass(clazz);
+        CheckUtil.checkQuery(query);
+
+        return this.masterQueryer.getCountFromMaster(clazz, query);
+    }
+
 	@Override
 	public Number getCount(IShardingKey<?> shardingValue, Class<?> clazz) {
 		CheckUtil.checkShardingValue(shardingValue);
@@ -533,6 +541,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 				fatDb.setDb(db);
 				fatDbs.add(fatDb);
 			}
+			break;
 		default:
 			for (DB db : this.dbCluster.getAllSlaveShardingDB(clazz, masterSlave)) {
 				fatDb = new FatDB<T>();

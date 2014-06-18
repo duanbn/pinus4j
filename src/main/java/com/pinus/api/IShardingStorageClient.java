@@ -294,6 +294,16 @@ public interface IShardingStorageClient {
 	 */
 	public Number getCount(Class<?> clazz);
 
+    /**
+     * 根据查询条件获取记录.
+     *
+     * @param clazz 实体对象
+     * @param query 查询条件
+     *
+     * @return 记录数
+     */
+    public Number getCount(Class<?> clazz, IQuery query);
+
 	/**
 	 * 获取分库分表记录总数.
 	 * 
