@@ -17,7 +17,7 @@ public class FatDB<T> extends AbstractShardingQuery {
 
 	private DB db;
 
-	public List<T> findByQuery(IQuery query) {
+	public List<T> loadByQuery(IQuery query) {
 		List<T> result = null;
 
 		if (isCacheAvailable(clazz)) {

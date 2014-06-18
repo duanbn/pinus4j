@@ -15,7 +15,7 @@ public class FatDBTest extends BaseTest {
 	public void testFindByQueryQuery() throws Exception {
 		List<FatDB<TestEntity>> list = this.cacheClient.getAllFatDB(TestEntity.class, EnumDBMasterSlave.MASTER);
 		for (FatDB<TestEntity> fatDb : list) {
-			List<TestEntity> entities = fatDb.findByQuery(this.cacheClient.createQuery());
+			List<TestEntity> entities = fatDb.loadByQuery(this.cacheClient.createQuery());
 			System.out.println(entities.size());
 		}
 	}
