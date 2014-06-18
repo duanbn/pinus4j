@@ -66,26 +66,26 @@ public class SQLBuilder {
 		SQL.append(tableName);
 		String whereSql = query.getWhereSql();
 		if (StringUtils.isNotBlank(whereSql))
-		    SQL.append(query.getWhereSql());
+			SQL.append(query.getWhereSql());
 
 		debugSQL(SQL.toString());
 
 		return SQL.toString();
 	}
 
-    public static String buildSelectCountByQuery(Class<?> clazz, int tableIndex, IQuery query) {
-        String tableName = ReflectUtil.getTableName(clazz, tableIndex);
-        String pkName = ReflectUtil.getPkName(clazz);
+	public static String buildSelectCountByQuery(Class<?> clazz, int tableIndex, IQuery query) {
+		String tableName = ReflectUtil.getTableName(clazz, tableIndex);
+		String pkName = ReflectUtil.getPkName(clazz);
 		StringBuilder SQL = new StringBuilder("SELECT count(" + pkName + ") FROM ");
 		SQL.append(tableName);
 		String whereSql = query.getWhereSql();
 		if (StringUtils.isNotBlank(whereSql))
-		    SQL.append(query.getWhereSql());
+			SQL.append(query.getWhereSql());
 
 		debugSQL(SQL.toString());
 
 		return SQL.toString();
-    }
+	}
 
 	public static PreparedStatement buildSelectCountGlobalBySql(Connection conn, SQL<?> sql) throws SQLException {
 		// 检查sql语句中是否包含count关键字
@@ -286,6 +286,7 @@ public class SQLBuilder {
 	public static String buildSelectCountSql(Class<?> clazz, int tableIndex) {
 		String sql = _selectCountCache.get(clazz.getName() + tableIndex);
 		if (sql != null) {
+			debugSQL(sql);
 			return sql;
 		}
 

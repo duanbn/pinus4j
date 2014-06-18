@@ -88,10 +88,13 @@ public interface IDBCluster {
 	/**
 	 * 获取此实体对象对应的所有的分库分表引用.
 	 * 
-	 * @param clazz 数据对象
+	 * @param clazz
+	 *            数据对象
 	 * @return
 	 */
-	public List<DB> getDBAllSharding(Class<?> clazz);
+	public List<DB> getAllMasterShardingDB(Class<?> clazz);
+
+	public List<DB> getAllSlaveShardingDB(Class<?> clazz, EnumDBMasterSlave slave);
 
 	/**
 	 * 设置数据库路由器.

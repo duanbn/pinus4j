@@ -4,6 +4,10 @@ import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 
+import javax.sql.DataSource;
+
+import com.pinus.datalayer.SQLBuilder;
+
 /**
  * 通过路由算法获得的分库分表信息.
  * 
@@ -14,7 +18,7 @@ public class DB implements Comparable<DB> {
 	/**
 	 * jdbc数据库连接对象.
 	 */
-	private Connection dbConn;
+	private DataSource datasource;
 
 	/**
 	 * 集群名称.
@@ -131,21 +135,25 @@ public class DB implements Comparable<DB> {
 		return true;
 	}
 
-	public Connection getDbConn() {
-		return dbConn;
+	public DataSource getDatasource() {
+		return datasource;
 	}
 
-	public void setDbConn(Connection dbConn) {
+	public void setDatasource(DataSource datasource) {
 		DatabaseMetaData dbMeta;
+		Connection dbConn = null;
 		try {
+			dbConn = datasource.getConnection();
 			dbMeta = dbConn.getMetaData();
 			this.databaseProductName = dbMeta.getDatabaseProductName();
 			String url = dbMeta.getURL().substring(13);
 			this.host = url.substring(0, url.indexOf("/"));
 			this.catalog = dbConn.getCatalog();
 		} catch (SQLException e) {
+		} finally {
+			SQLBuilder.close(dbConn);
 		}
-		this.dbConn = dbConn;
+		this.datasource = datasource;
 	}
 
 	public String getTableName() {

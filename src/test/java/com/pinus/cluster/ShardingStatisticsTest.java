@@ -35,7 +35,6 @@ public class ShardingStatisticsTest extends BaseTest {
 				count += counter.get(db);
 			}
 			counter.put(db, count);
-			db.getDbConn().close();
 		}
 		for (Map.Entry<DB, Integer> entry : counter.entrySet()) {
 			System.out.println(entry.getKey() + " - " + entry.getValue());

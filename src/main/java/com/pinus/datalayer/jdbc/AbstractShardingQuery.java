@@ -132,7 +132,7 @@ public abstract class AbstractShardingQuery {
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 		try {
-			conn = db.getDbConn();
+			conn = db.getDatasource().getConnection();
 			String sql = SQLBuilder.buildSelectCountSql(clazz, db.getTableIndex());
 			ps = conn.prepareStatement(sql);
 			long begin = System.currentTimeMillis();
@@ -150,7 +150,7 @@ public abstract class AbstractShardingQuery {
 		} catch (SQLException e) {
 			throw new DBOperationException(e);
 		} finally {
-			SQLBuilder.close(null, ps, rs);
+			SQLBuilder.close(conn, ps, rs);
 		}
 	}
 
@@ -229,7 +229,7 @@ public abstract class AbstractShardingQuery {
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 		try {
-			conn = db.getDbConn();
+			conn = db.getDatasource().getConnection();
 			ps = SQLBuilder.buildSelectCountBySql(conn, sql, db.getTableIndex());
 			long begin = System.currentTimeMillis();
 			rs = ps.executeQuery();
@@ -244,7 +244,7 @@ public abstract class AbstractShardingQuery {
 		} catch (SQLException e) {
 			throw new DBOperationException(e);
 		} finally {
-			SQLBuilder.close(null, ps, rs);
+			SQLBuilder.close(conn, ps, rs);
 		}
 
 		return -1;
@@ -318,7 +318,7 @@ public abstract class AbstractShardingQuery {
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 		try {
-			conn = db.getDbConn();
+			conn = db.getDatasource().getConnection();
 			String sql = SQLBuilder.buildSelectByPk(pk, clazz, db.getTableIndex());
 			ps = conn.prepareStatement(sql);
 			long begin = System.currentTimeMillis();
@@ -335,7 +335,7 @@ public abstract class AbstractShardingQuery {
 		} catch (SQLException e) {
 			throw new DBOperationException(e);
 		} finally {
-			SQLBuilder.close(null, ps, rs);
+			SQLBuilder.close(conn, ps, rs);
 		}
 
 		return null;
@@ -496,7 +496,7 @@ public abstract class AbstractShardingQuery {
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 		try {
-			conn = db.getDbConn();
+			conn = db.getDatasource().getConnection();
 			String sql = SQLBuilder.buildSelectByPks(clazz, db.getTableIndex(), pks);
 			long begin = System.currentTimeMillis();
 			ps = conn.prepareStatement(sql);
@@ -509,7 +509,7 @@ public abstract class AbstractShardingQuery {
 		} catch (SQLException e) {
 			throw new DBOperationException(e);
 		} finally {
-			SQLBuilder.close(null, ps, rs);
+			SQLBuilder.close(conn, ps, rs);
 		}
 
 		return result;
@@ -522,20 +522,23 @@ public abstract class AbstractShardingQuery {
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 		try {
-			conn = db.getDbConn();
+			conn = db.getDatasource().getConnection();
 			String sql = SQLBuilder.buildSelectByPks(clazz, db.getTableIndex(), pks);
 			ps = conn.prepareStatement(sql);
+
 			long begin = System.currentTimeMillis();
 			rs = ps.executeQuery();
 			long constTime = System.currentTimeMillis() - begin;
 			if (constTime > Const.SLOWQUERY_PKS) {
 				SlowQueryLogger.write(db, sql, constTime);
 			}
+
 			result = SQLBuilder.buildResultObjectAsMap(clazz, rs);
+
 		} catch (SQLException e) {
 			throw new DBOperationException(e);
 		} finally {
-			SQLBuilder.close(null, ps, rs);
+			SQLBuilder.close(conn, ps, rs);
 		}
 
 		return result;
@@ -652,7 +655,7 @@ public abstract class AbstractShardingQuery {
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 		try {
-			conn = db.getDbConn();
+			conn = db.getDatasource().getConnection();
 			String sql = SQLBuilder.buildSelectWithLimit(clazz, db.getTableIndex(), start, limit);
 			ps = conn.prepareStatement(sql);
 			long begin = System.currentTimeMillis();
@@ -665,7 +668,7 @@ public abstract class AbstractShardingQuery {
 		} catch (SQLException e) {
 			throw new DBOperationException(e);
 		} finally {
-			SQLBuilder.close(null, ps, rs);
+			SQLBuilder.close(conn, ps, rs);
 		}
 
 		return result;
@@ -717,19 +720,21 @@ public abstract class AbstractShardingQuery {
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 		try {
-			conn = db.getDbConn();
+			conn = db.getDatasource().getConnection();
 			ps = SQLBuilder.buildSelectBySql(conn, sql, db.getTableIndex());
+
 			long begin = System.currentTimeMillis();
 			rs = ps.executeQuery();
 			long constTime = System.currentTimeMillis() - begin;
 			if (constTime > Const.SLOWQUERY_SQL) {
 				SlowQueryLogger.write(db, sql, constTime);
 			}
+
 			result = (List<T>) SQLBuilder.buildResultObject(sql.getClazz(), rs);
 		} catch (SQLException e) {
 			throw new DBOperationException(e);
 		} finally {
-			SQLBuilder.close(null, ps, rs);
+			SQLBuilder.close(conn, ps, rs);
 		}
 
 		return result;
@@ -784,7 +789,7 @@ public abstract class AbstractShardingQuery {
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 		try {
-			conn = db.getDbConn();
+			conn = db.getDatasource().getConnection();
 			String sql = SQLBuilder.buildSelectByQuery(clazz, db.getTableIndex(), query);
 			ps = conn.prepareStatement(sql);
 			long begin = System.currentTimeMillis();
@@ -797,7 +802,7 @@ public abstract class AbstractShardingQuery {
 		} catch (SQLException e) {
 			throw new DBOperationException(e);
 		} finally {
-			SQLBuilder.close(null, ps, rs);
+			SQLBuilder.close(conn, ps, rs);
 		}
 
 		return result;
@@ -848,7 +853,7 @@ public abstract class AbstractShardingQuery {
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 		try {
-			conn = db.getDbConn();
+			conn = db.getDatasource().getConnection();
 			String sql = SQLBuilder.buildSelectPkWithLimit(clazz, db.getTableIndex(), start, limit);
 			ps = conn.prepareStatement(sql);
 			long begin = System.currentTimeMillis();
@@ -863,7 +868,7 @@ public abstract class AbstractShardingQuery {
 		} catch (SQLException e) {
 			throw new DBOperationException(e);
 		} finally {
-			SQLBuilder.close(null, ps, rs);
+			SQLBuilder.close(conn, ps, rs);
 		}
 
 		return result.toArray(new Number[result.size()]);
@@ -908,7 +913,7 @@ public abstract class AbstractShardingQuery {
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 		try {
-			conn = db.getDbConn();
+			conn = db.getDatasource().getConnection();
 			ps = SQLBuilder.buildSelectPkBySql(conn, sql, db.getTableIndex());
 			long begin = System.currentTimeMillis();
 			rs = ps.executeQuery();
@@ -922,7 +927,7 @@ public abstract class AbstractShardingQuery {
 		} catch (SQLException e) {
 			throw new DBOperationException(e);
 		} finally {
-			SQLBuilder.close(null, ps, rs);
+			SQLBuilder.close(conn, ps, rs);
 		}
 
 		return result.toArray(new Number[result.size()]);
@@ -969,7 +974,7 @@ public abstract class AbstractShardingQuery {
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 		try {
-			conn = db.getDbConn();
+			conn = db.getDatasource().getConnection();
 
 			String sql = SQLBuilder.buildSelectPkByQuery(clazz, db.getTableIndex(), query);
 			ps = conn.prepareStatement(sql);
@@ -985,7 +990,7 @@ public abstract class AbstractShardingQuery {
 		} catch (SQLException e) {
 			throw new DBOperationException(e);
 		} finally {
-			SQLBuilder.close(null, ps, rs);
+			SQLBuilder.close(conn, ps, rs);
 		}
 
 		return result.toArray(new Number[result.size()]);

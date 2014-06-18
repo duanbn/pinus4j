@@ -10,7 +10,6 @@ import net.rubyeye.xmemcached.MemcachedClientBuilder;
 import net.rubyeye.xmemcached.XMemcachedClientBuilder;
 import net.rubyeye.xmemcached.utils.AddrUtil;
 
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -28,12 +27,11 @@ public class BaseTest {
 	public static final String CLUSTER_USER = "user";
 
 	protected IShardingStorageClient cacheClient;;
-	protected IShardingStorageClient noCacheClient;
 
 	protected IPrimaryCache primaryCache;
 
 	@Before
-	public void setup() {
+	public void before() {
 		MemcachedClientBuilder builder = new XMemcachedClientBuilder(AddrUtil.getAddresses("localhost:11211"));
 		MemcachedClient memcachedClient = null;
 		try {
@@ -48,18 +46,6 @@ public class BaseTest {
 		cacheClient.setCreateTable(true);
 		cacheClient.setPrimaryCache(primaryCache);
 		cacheClient.init();
-		
-		noCacheClient = new ShardingStorageClientImpl();
-		noCacheClient.setMode(EnumMode.DISTRIBUTED);
-		noCacheClient.setScanPackage("com.pinus");
-		noCacheClient.setCreateTable(true);
-		noCacheClient.init();
-	}
-
-	@After
-	public void setDown() {
-		this.cacheClient.destroy();
-		this.noCacheClient.destroy();
 	}
 
 	String[] seeds = new String[] { "a", "b", "c", "d", "e", "f", "g", "h", "i" };
@@ -103,13 +89,13 @@ public class BaseTest {
 		return testEntity;
 	}
 
-//    @Test
-    public void genData() throws Exception {
-        TestEntity entity = null;
-        for (int i=0; i<10; i++) {
-            entity = createEntity();
-            cacheClient.save(entity);
-        }
-    }
-	
+//	@Test
+	public void genData() throws Exception {
+		TestEntity entity = null;
+		for (int i = 0; i < r.nextInt(9999); i++) {
+			entity = createEntity();
+			cacheClient.save(entity);
+		}
+	}
+
 }

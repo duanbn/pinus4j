@@ -1,35 +1,33 @@
 package com.pinus.api;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.log4j.Logger;
 
-import com.pinus.api.annotation.Table;
 import com.pinus.api.enums.EnumDB;
 import com.pinus.api.enums.EnumDBConnect;
+import com.pinus.api.enums.EnumDBMasterSlave;
 import com.pinus.api.enums.EnumDBRouteAlg;
 import com.pinus.api.enums.EnumIdGenrator;
 import com.pinus.api.enums.EnumMode;
 import com.pinus.api.query.IQuery;
 import com.pinus.api.query.QueryImpl;
 import com.pinus.cache.IPrimaryCache;
+import com.pinus.cluster.DB;
 import com.pinus.cluster.IDBCluster;
-import com.pinus.cluster.beans.DBClusterInfo;
 import com.pinus.cluster.impl.DbcpDBClusterImpl;
 import com.pinus.cluster.route.IClusterRouter;
 import com.pinus.cluster.route.impl.SimpleHashClusterRouterImpl;
-import com.pinus.datalayer.IShardingIterator;
 import com.pinus.datalayer.IShardingMasterQuery;
 import com.pinus.datalayer.IShardingSlaveQuery;
 import com.pinus.datalayer.IShardingStatistics;
 import com.pinus.datalayer.IShardingUpdate;
-import com.pinus.datalayer.beans.DBClusterIteratorInfo;
-import com.pinus.datalayer.jdbc.ShardingIteratorImpl;
+import com.pinus.datalayer.jdbc.FatDB;
 import com.pinus.datalayer.jdbc.ShardingMasterQueryImpl;
 import com.pinus.datalayer.jdbc.ShardingSlaveQueryImpl;
 import com.pinus.datalayer.jdbc.ShardingUpdateImpl;
 import com.pinus.exception.DBClusterException;
-import com.pinus.exception.DBOperationException;
 import com.pinus.generator.IDBGenerator;
 import com.pinus.generator.IIdGenerator;
 import com.pinus.generator.impl.DBMySqlGeneratorImpl;
@@ -487,52 +485,6 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 	}
 
 	@Override
-	public <E> IShardingIterator<E> getShardingIterator(Class<E> clazz) {
-		return getShardingIterator(clazz, null);
-	}
-
-	@Override
-	public <E> IShardingIterator<E> getShardingIterator(Class<E> clazz, IQuery query) {
-		return getShardingIterator(clazz, query, null);
-	}
-
-	@Override
-	public <E> IShardingIterator<E> getShardingIterator(Class<E> clazz, IQuery query, DBClusterIteratorInfo itInfo) {
-		if (clazz == null) {
-			throw new RuntimeException();
-		}
-
-		ShardingIteratorImpl<E> shardingIt = new ShardingIteratorImpl<E>(clazz);
-
-		// get cluster name
-		Table annoTable = clazz.getAnnotation(Table.class);
-		if (annoTable == null) {
-			throw new DBOperationException("被遍历的实体必须是@Table注解的实体");
-		}
-		String clusterName = annoTable.cluster();
-		int tableNum = annoTable.shardingNum();
-
-		// get db cluster info
-		DBClusterInfo dbClusterInfo = this.dbCluster.getDbClusterInfo(clusterName);
-		shardingIt.setDbClusterInfo(dbClusterInfo);
-		shardingIt.setMaxTableIndex(tableNum - 1);
-
-		// set query
-		if (query == null)
-			query = this.createQuery();
-		shardingIt.setQuery(query);
-		if (itInfo != null) {
-			shardingIt.setLatestDbIndex(itInfo.getLatestDbIndex());
-			shardingIt.setLatestId(itInfo.getLatestId());
-			shardingIt.setLatestTableIndex(itInfo.getLatestTableIndex());
-		}
-
-		shardingIt.init();
-
-		return shardingIt;
-	}
-
-	@Override
 	public IShardingStatistics getShardingStatistic() {
 		throw new UnsupportedOperationException();
 	}
@@ -565,6 +517,33 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 	@Override
 	public IIdGenerator getIdGenerator() {
 		return idGenerator;
+	}
+
+	@Override
+	public <T> List<FatDB<T>> getAllFatDB(Class<T> clazz, EnumDBMasterSlave masterSlave) {
+		List<FatDB<T>> fatDbs = new ArrayList<FatDB<T>>();
+
+		switch (masterSlave) {
+		case MASTER:
+			FatDB<T> fatDb = null;
+			for (DB db : this.dbCluster.getAllMasterShardingDB(clazz)) {
+				fatDb = new FatDB<T>();
+				fatDb.setPrimaryCache(primaryCache);
+				fatDb.setClazz(clazz);
+				fatDb.setDb(db);
+				fatDbs.add(fatDb);
+			}
+		default:
+			for (DB db : this.dbCluster.getAllSlaveShardingDB(clazz, masterSlave)) {
+				fatDb = new FatDB<T>();
+				fatDb.setPrimaryCache(primaryCache);
+				fatDb.setClazz(clazz);
+				fatDb.setDb(db);
+				fatDbs.add(fatDb);
+			}
+		}
+
+		return fatDbs;
 	}
 
 	@Override

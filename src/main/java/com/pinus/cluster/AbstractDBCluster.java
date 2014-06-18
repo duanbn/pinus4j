@@ -1,7 +1,6 @@
 package com.pinus.cluster;
 
 import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -239,16 +238,12 @@ public abstract class AbstractDBCluster implements IDBCluster {
 		if (masterConntions == null || masterConntions.isEmpty()) {
 			throw new DBClusterException("找不到数据库集群, shardingkey=" + value + ", tablename=" + tableName);
 		}
-		Connection dbConn = null;
-		try {
-			dbConn = masterConntions.get(dbIndex).getDatasource().getConnection();
-		} catch (SQLException e) {
-			throw new DBClusterException(e);
-		}
+
+		DataSource datasource = masterConntions.get(dbIndex).getDatasource();
 
 		// 返回分库分表信息
 		DB db = new DB();
-		db.setDbConn(dbConn);
+		db.setDatasource(datasource);
 		db.setTableName(tableName);
 		db.setTableIndex(tableIndex);
 		db.setClusterName(clusterName);
@@ -293,16 +288,12 @@ public abstract class AbstractDBCluster implements IDBCluster {
 			throw new DBClusterException("找不到数据库集群, shardingkey=" + value + ", tablename=" + tableName + ", slavenum="
 					+ slaveNum.getValue());
 		}
-		Connection dbConn = null;
-		try {
-			dbConn = slaveConnections.get(dbIndex).getDatasource().getConnection();
-		} catch (SQLException e) {
-			throw new DBClusterException(e);
-		}
+
+		DataSource datasource = slaveConnections.get(dbIndex).getDatasource();
 
 		// 返回分库分表信息
 		DB db = new DB();
-		db.setDbConn(dbConn);
+		db.setDatasource(datasource);
 		db.setClusterName(clusterName);
 		db.setDbIndex(dbIndex);
 		db.setTableName(tableName);
@@ -315,7 +306,7 @@ public abstract class AbstractDBCluster implements IDBCluster {
 	}
 
 	@Override
-	public List<DB> getDBAllSharding(Class<?> clazz) {
+	public List<DB> getAllMasterShardingDB(Class<?> clazz) {
 		List<DB> dbs = new ArrayList<DB>();
 
 		int tableNum = ReflectUtil.getTableNum(clazz);
@@ -334,12 +325,42 @@ public abstract class AbstractDBCluster implements IDBCluster {
 					db = new DB();
 					db.setClusterName(clusterName);
 					db.setDbCluster(this);
-					// 这个地方需要注意关闭数据库连接.
-					try {
-						db.setDbConn(connInfo.getDatasource().getConnection());
-					} catch (SQLException e) {
-						throw new DBOperationException(e);
-					}
+					db.setDatasource(connInfo.getDatasource());
+					db.setDbIndex(dbIndex);
+					db.setEnd(region.getEnd());
+					db.setStart(region.getStart());
+					db.setTableName(tableName);
+					db.setTableIndex(tableIndex);
+					dbs.add(db);
+				}
+				dbIndex++;
+			}
+		}
+
+		return dbs;
+	}
+
+	@Override
+	public List<DB> getAllSlaveShardingDB(Class<?> clazz, EnumDBMasterSlave slave) {
+		List<DB> dbs = new ArrayList<DB>();
+
+		int tableNum = ReflectUtil.getTableNum(clazz);
+		if (tableNum == 0) {
+			throw new IllegalStateException("table number is 0");
+		}
+
+		DB db = null;
+		String clusterName = ReflectUtil.getClusterName(clazz);
+		String tableName = ReflectUtil.getTableName(clazz);
+		DBClusterInfo dbClusterInfo = this.getDbClusterInfo(clusterName);
+		for (DBClusterRegionInfo region : dbClusterInfo.getDbRegions()) {
+			int dbIndex = 0;
+			for (DBConnectionInfo connInfo : region.getSlaveConnection().get(slave.getValue())) {
+				for (int tableIndex = 0; tableIndex < tableNum; tableIndex++) {
+					db = new DB();
+					db.setClusterName(clusterName);
+					db.setDbCluster(this);
+					db.setDatasource(connInfo.getDatasource());
 					db.setDbIndex(dbIndex);
 					db.setEnd(region.getEnd());
 					db.setStart(region.getStart());

@@ -173,15 +173,10 @@ public class ShardingMasterQueryImpl extends AbstractShardingQuery implements IS
 
 	@Override
 	public Number getCountFromMaster(Class<?> clazz) {
-		List<DB> dbs = this.dbCluster.getDBAllSharding(clazz);
+		List<DB> dbs = this.dbCluster.getAllMasterShardingDB(clazz);
 		long count = 0;
 		for (DB db : dbs) {
-			try {
-				count += selectCountWithCache(db, clazz).longValue();
-			} catch (DBOperationException e) {
-			} finally {
-				SQLBuilder.close(db.getDbConn());
-			}
+			count += selectCountWithCache(db, clazz).longValue();
 		}
 		return count;
 	}
@@ -190,44 +185,28 @@ public class ShardingMasterQueryImpl extends AbstractShardingQuery implements IS
 	public Number getCountFromMaster(IShardingKey<?> shardingValue, Class<?> clazz) {
 		DB db = _getDbFromMaster(clazz, shardingValue);
 
-		try {
-			return selectCountWithCache(db, clazz);
-		} finally {
-			SQLBuilder.close(db.getDbConn());
-		}
+		return selectCountWithCache(db, clazz);
 	}
 
 	@Override
 	public Number getCountFromMaster(IShardingKey<?> shardingValue, SQL<?> sql) {
 		DB db = _getDbFromMaster(sql.getClazz(), shardingValue);
 
-		try {
-			return selectCount(db, sql);
-		} finally {
-			SQLBuilder.close(db.getDbConn());
-		}
+		return selectCount(db, sql);
 	}
 
 	@Override
 	public <T> T findByPkFromMaster(Number pk, IShardingKey<?> shardingValue, Class<T> clazz) {
 		DB db = _getDbFromMaster(clazz, shardingValue);
 
-		try {
-			return selectByPkWithCache(db, pk, clazz);
-		} finally {
-			SQLBuilder.close(db.getDbConn());
-		}
+		return selectByPkWithCache(db, pk, clazz);
 	}
 
 	@Override
 	public <T> List<T> findByPksFromMaster(IShardingKey<?> shardingValue, Class<T> clazz, Number... pks) {
 		DB db = _getDbFromMaster(clazz, shardingValue);
 
-		try {
-			return selectByPksWithCache(db, clazz, pks);
-		} finally {
-			SQLBuilder.close(db.getDbConn());
-		}
+		return selectByPksWithCache(db, clazz, pks);
 	}
 
 	@Override
@@ -246,19 +225,15 @@ public class ShardingMasterQueryImpl extends AbstractShardingQuery implements IS
 		Number pk = null;
 		DB db = null;
 		T data = null;
-		try {
-			for (int i = 0; i < pks.length; i++) {
-				shardingValue = shardingValues.get(i);
-				pk = pks[i];
-				db = _getDbFromMaster(clazz, shardingValue);
+		for (int i = 0; i < pks.length; i++) {
+			shardingValue = shardingValues.get(i);
+			pk = pks[i];
+			db = _getDbFromMaster(clazz, shardingValue);
 
-				data = selectByPkWithCache(db, pk, clazz);
-				if (data != null) {
-					result.add(data);
-				}
+			data = selectByPkWithCache(db, pk, clazz);
+			if (data != null) {
+				result.add(data);
 			}
-		} finally {
-			SQLBuilder.close(db.getDbConn());
 		}
 
 		return result;
@@ -275,15 +250,11 @@ public class ShardingMasterQueryImpl extends AbstractShardingQuery implements IS
 		DB db = _getDbFromMaster(sql.getClazz(), shardingValue);
 
 		List<T> result = null;
-		try {
-			if (isCacheAvailable(sql.getClazz())) {
-				Number[] pkValues = selectPksBySql(db, sql);
-				result = selectByPksWithCache(db, sql.getClazz(), pkValues);
-			} else {
-				result = selectBySql(db, sql);
-			}
-		} finally {
-			SQLBuilder.close(db.getDbConn());
+		if (isCacheAvailable(sql.getClazz())) {
+			Number[] pkValues = selectPksBySql(db, sql);
+			result = selectByPksWithCache(db, sql.getClazz(), pkValues);
+		} else {
+			result = selectBySql(db, sql);
 		}
 
 		return result;
@@ -294,15 +265,11 @@ public class ShardingMasterQueryImpl extends AbstractShardingQuery implements IS
 		DB db = _getDbFromMaster(clazz, shardingValue);
 
 		List<T> result = null;
-		try {
-			if (isCacheAvailable(clazz)) {
-				Number[] pkValues = selectPksByQuery(db, query, clazz);
-				result = selectByPksWithCache(db, clazz, pkValues);
-			} else {
-				result = selectByQuery(db, query, clazz);
-			}
-		} finally {
-			SQLBuilder.close(db.getDbConn());
+		if (isCacheAvailable(clazz)) {
+			Number[] pkValues = selectPksByQuery(db, query, clazz);
+			result = selectByPksWithCache(db, clazz, pkValues);
+		} else {
+			result = selectByQuery(db, query, clazz);
 		}
 
 		return result;

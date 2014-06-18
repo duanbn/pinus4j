@@ -4,14 +4,14 @@ import java.util.List;
 
 import com.pinus.api.enums.EnumDB;
 import com.pinus.api.enums.EnumDBConnect;
+import com.pinus.api.enums.EnumDBMasterSlave;
 import com.pinus.api.enums.EnumDBRouteAlg;
 import com.pinus.api.enums.EnumMode;
 import com.pinus.api.query.IQuery;
 import com.pinus.cache.IPrimaryCache;
 import com.pinus.cluster.IDBCluster;
-import com.pinus.datalayer.IShardingIterator;
 import com.pinus.datalayer.IShardingStatistics;
-import com.pinus.datalayer.beans.DBClusterIteratorInfo;
+import com.pinus.datalayer.jdbc.FatDB;
 import com.pinus.exception.DBOperationException;
 import com.pinus.generator.IIdGenerator;
 
@@ -470,6 +470,15 @@ public interface IShardingStorageClient {
 	// ////////////////////////////////////////////////////////
 
 	/**
+	 * 获取某个实体对象的所有分库分表引用.
+	 * 
+	 * @param clazz
+	 *            数据对象
+	 * @return 此对象所有的分库分表下标
+	 */
+	public <T> List<FatDB<T>> getAllFatDB(Class<T> clazz, EnumDBMasterSlave masterSlave);
+
+	/**
 	 * 设置ID生成器.
 	 * 
 	 * @param idGenerator
@@ -484,39 +493,6 @@ public interface IShardingStorageClient {
 	 *            模式
 	 */
 	public void setMode(EnumMode mode);
-
-	/**
-	 * 获取数据遍历组件
-	 * 
-	 * @param clazz
-	 *            实体对象Class
-	 * @return 数据遍历组件
-	 */
-	public <E> IShardingIterator<E> getShardingIterator(Class<E> clazz);
-
-	/**
-	 * 获取数据遍历组件
-	 * 
-	 * @param clazz
-	 *            实体对象Class
-	 * @param query
-	 *            查询条件
-	 * @return 数据遍历组件
-	 */
-	public <E> IShardingIterator<E> getShardingIterator(Class<E> clazz, IQuery query);
-
-	/**
-	 * 获取数据遍历组件
-	 * 
-	 * @param clazz
-	 *            实体对象Class
-	 * @param query
-	 *            查询条件
-	 * @param iteratorInfo
-	 *            遍历器参数
-	 * @return 数据遍历组件
-	 */
-	public <E> IShardingIterator<E> getShardingIterator(Class<E> clazz, IQuery query, DBClusterIteratorInfo iteratorInfo);
 
 	/**
 	 * 获取集群统计组件.

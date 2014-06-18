@@ -4,7 +4,7 @@
 
 	<groupId>com.pinus</groupId>
 	<artifactId>pinus</artifactId>
-	<version>0.6.0</version>
+	<version>0.6.1</version>
 	<packaging>jar</packaging>
 
 	<name>pinus</name>
@@ -16,17 +16,15 @@
 			<url>http://192.168.4.51:8081/nexus/content/groups/public</url>
 		</repository>
 	</repositories>
-	
-    <distributionManagement>
-        <repository> <id>releases</id> <name>Internal Releases</name> <url>http://192.168.4.51:8081/nexus/content/repositories/releases/</url> 
-        </repository>
-        <!--
-        <repository>
-			<id>snapshot</id>
+
+	<distributionManagement>
+		<repository>
+			<id>releases</id>
 			<name>Internal Releases</name>
-			<url>http://192.168.4.51:8081/nexus/content/repositories/snapshots/</url>
+			<url>http://192.168.4.51:8081/nexus/content/repositories/releases/</url>
 		</repository>
-        -->
+		<!-- <repository> <id>snapshot</id> <name>Internal Releases</name> <url>http://192.168.4.51:8081/nexus/content/repositories/snapshots/</url> 
+			</repository> -->
 	</distributionManagement>
 
 	<dependencies>
@@ -40,7 +38,7 @@
 			<artifactId>commons-dbcp</artifactId>
 			<version>1.4</version>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>commons-lang</groupId>
 			<artifactId>commons-lang</artifactId>
@@ -51,6 +49,12 @@
 			<groupId>com.googlecode.xmemcached</groupId>
 			<artifactId>xmemcached</artifactId>
 			<version>1.4.3</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>redis.clients</groupId>
+			<artifactId>jedis</artifactId>
+			<version>2.5.1</version>
 			<scope>provided</scope>
 		</dependency>
 		<dependency>

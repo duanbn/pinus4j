@@ -11,7 +11,7 @@
 	<db.cluster.generateid.batch>5</db.cluster.generateid.batch>
 
 	<db-connection-pool>
-		<maxActive>100</maxActive>
+		<maxActive>400</maxActive>
 		<minIdle>10</minIdle>
 		<maxIdle>50</maxIdle>
 		<initialSize>1</initialSize>

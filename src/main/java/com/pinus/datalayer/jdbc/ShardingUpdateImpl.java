@@ -182,7 +182,7 @@ public class ShardingUpdateImpl implements IShardingUpdate {
 		entities.add(entity);
 		Connection conn = null;
 		try {
-			conn = db.getDbConn();
+			conn = db.getDatasource().getConnection();
 
 			_saveBatch(conn, entities, db.getTableIndex());
 		} catch (Exception e) {
@@ -222,7 +222,7 @@ public class ShardingUpdateImpl implements IShardingUpdate {
 				pks[i] = newPks[i];
 			}
 
-			conn = db.getDbConn();
+			conn = db.getDatasource().getConnection();
 
 			_saveBatch(conn, entities, db.getTableIndex());
 		} catch (Exception e) {
@@ -254,8 +254,10 @@ public class ShardingUpdateImpl implements IShardingUpdate {
 		DB db = _getDbFromMaster(talbeName, shardingKey);
 		Connection conn = null;
 		try {
-			conn = db.getDbConn();
+			conn = db.getDatasource().getConnection();
 			_updateBatch(conn, entities, db.getTableIndex());
+		} catch (SQLException e) {
+			throw new DBOperationException(e);
 		} finally {
 			SQLBuilder.close(conn);
 		}
@@ -283,8 +285,10 @@ public class ShardingUpdateImpl implements IShardingUpdate {
 
 		Connection conn = null;
 		try {
-			conn = db.getDbConn();
+			conn = db.getDatasource().getConnection();
 			_removeByPks(conn, pks, clazz, db.getTableIndex());
+		} catch (SQLException e) {
+			throw new DBOperationException(e);
 		} finally {
 			SQLBuilder.close(conn);
 		}
