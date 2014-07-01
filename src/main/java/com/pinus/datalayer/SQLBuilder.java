@@ -182,7 +182,6 @@ public class SQLBuilder {
 		s = "select " + pkName + " " + s.substring(s.indexOf("from"));
 
 		debugSQL(s);
-		debugParam(sql.getParams());
 
 		PreparedStatement ps = conn.prepareStatement(s);
 		Object[] params = sql.getParams();
@@ -207,7 +206,6 @@ public class SQLBuilder {
 		s = "select " + pkName + " " + s.substring(s.indexOf("from"));
 
 		debugSQL(s);
-		debugParam(sql.getParams());
 
 		PreparedStatement ps = conn.prepareStatement(s);
 		Object[] params = sql.getParams();
@@ -221,7 +219,6 @@ public class SQLBuilder {
 
 	public static PreparedStatement buildSelectBySqlGlobal(Connection conn, SQL<?> sql) throws SQLException {
 		debugSQL(sql.getSql());
-		debugParam(sql.getParams());
 
 		PreparedStatement ps = conn.prepareStatement(sql.getSql());
 		Object[] params = sql.getParams();
@@ -250,7 +247,6 @@ public class SQLBuilder {
 		String s = addTableIndex(sql.getSql(), tableIndex);
 
 		debugSQL(s);
-		debugParam(sql.getParams());
 
 		PreparedStatement ps = conn.prepareStatement(s);
 		Object[] params = sql.getParams();
@@ -502,7 +498,7 @@ public class SQLBuilder {
 	 * @return update sql语句
 	 */
 	private static String _buildUpdateSql(Map<String, Object> entityProperty, String pkName, String tableName) {
-		// 生成insert语句.
+		// 生成update语句.
 		Set<Map.Entry<String, Object>> propertyEntrySet = entityProperty.entrySet();
 		StringBuilder SQL = new StringBuilder("UPDATE " + tableName + " SET ");
 		for (Map.Entry<String, Object> propertyEntry : propertyEntrySet) {
@@ -545,7 +541,6 @@ public class SQLBuilder {
 		// 上层调用已经判断了entities正确性
 		entityProperty.remove(pkName);
 		String sql = _buildUpdateSql(entityProperty, pkName, tableName);
-		debugSQL(sql);
 
 		// 批量添加
 		PreparedStatement ps = conn.prepareStatement(sql);
@@ -562,11 +557,9 @@ public class SQLBuilder {
 			propertyEntrySet = entityProperty.entrySet();
 
 			int i = 1;
-			Object[] params = new Object[propertyEntrySet.size() + 1];
 			Object param = null;
 			for (Map.Entry<String, Object> propertyEntry : propertyEntrySet) {
 				param = propertyEntry.getValue();
-				params[i - 1] = param;
 				if (param instanceof Character) {
 					ps.setString(i, String.valueOf(param));
 				} else {
@@ -575,9 +568,9 @@ public class SQLBuilder {
 				i++;
 			}
 			ps.setObject(i, pkValue);
-			params[i - 1] = pkValue;
-			debugParam(params);
 			ps.addBatch();
+
+			debugUpdate(entityProperty, tableName, pkName, pkValue);
 		}
 		return ps;
 	}
@@ -606,8 +599,6 @@ public class SQLBuilder {
 		SQL.append(") VALUES (");
 		SQL.append(var.deleteCharAt(var.length() - 1).toString());
 		SQL.append(")");
-
-		debugSQL(SQL.toString());
 
 		return SQL.toString();
 	}
@@ -653,11 +644,9 @@ public class SQLBuilder {
 			propertyEntrySet = entityProperty.entrySet();
 
 			int i = 1;
-			Object[] params = new Object[propertyEntrySet.size()];
 			Object param = null;
 			for (Map.Entry<String, Object> propertyEntry : propertyEntrySet) {
 				param = propertyEntry.getValue();
-				params[i - 1] = param;
 				if (param instanceof Character) {
 					ps.setString(i, String.valueOf(param));
 				} else {
@@ -665,8 +654,9 @@ public class SQLBuilder {
 				}
 				i++;
 			}
-			debugParam(params);
 			ps.addBatch();
+
+			debugInsert(entityProperty, tableName);
 		}
 		return ps;
 	}
@@ -749,18 +739,44 @@ public class SQLBuilder {
 	}
 
 	/**
-	 * 打印参数.
+	 * 打印Insert日志
+	 * 
+	 * @param propertyEntry
+	 * @param tableName
 	 */
-	public static void debugParam(Object[] params) {
-		if (LOG.isDebugEnabled()) {
-			StringBuilder info = new StringBuilder("(");
-			for (Object param : params) {
-				if (param != null)
-					info.append(param).append(",");
-			}
-			info.deleteCharAt(info.length() - 1);
-			info.append(")");
-			LOG.debug("params: " + info.toString());
+	public static void debugInsert(Map<String, Object> propertyEntry, String tableName) {
+		StringBuilder SQL = new StringBuilder("INSERT INTO " + tableName + "(");
+		for (Map.Entry<String, Object> property : propertyEntry.entrySet()) {
+			SQL.append(property.getKey()).append(",");
 		}
+		SQL.deleteCharAt(SQL.length() - 1);
+		SQL.append(") VALUES (");
+		for (Map.Entry<String, Object> property : propertyEntry.entrySet()) {
+			SQL.append(property.getValue()).append(",");
+		}
+		SQL.deleteCharAt(SQL.length() - 1);
+		SQL.append(")");
+
+		debugSQL(SQL.toString());
 	}
+
+	/**
+	 * 打印Update日志
+	 * @param entityProperty
+	 * @param tableName
+	 * @param pkName
+	 * @param pkValue
+	 */
+	public static void debugUpdate(Map<String, Object> entityProperty, String tableName, String pkName, Object pkValue) {
+		Set<Map.Entry<String, Object>> propertyEntrySet = entityProperty.entrySet();
+		StringBuilder SQL = new StringBuilder("UPDATE " + tableName + " SET ");
+		for (Map.Entry<String, Object> propertyEntry : propertyEntrySet) {
+			SQL.append(propertyEntry.getKey()).append("=").append(propertyEntry.getValue()).append(",");
+		}
+		SQL.deleteCharAt(SQL.length() - 1);
+		SQL.append(" WHERE ").append(pkName).append("=").append(pkValue);
+
+		debugSQL(SQL.toString());
+	}
+
 }

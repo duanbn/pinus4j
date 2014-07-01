@@ -4,6 +4,8 @@
 3.添加根据实体对象获取此对象所有的分库分表引用 (Done)
 4.添加FatDB对象，此对象提供查询接口(Done)
 5.重构DB对象，不直接引用Connection而是引用DataSource对象 (Done)
+6.当使用String做Sharding时由于String做哈希之后的值做归一化(TODO)
+7.修改SQL日志格式
 
 --Version 0.6.0
 1.重构IQuery代码，支持查询某些字段
@@ -14,7 +16,7 @@
 
 --Version 0.5.0
 1.添加线性扩展特性
-  可以管理更多的集群，并对每个表设置集群容量
+  引入Region的概念，每个集群可以有一个或者多个Region用来管理数据
   
 --Version 0.4.4
 1. 去掉saveOrUpdate接口，此接口不属于基本操作，因此去掉

@@ -29,21 +29,21 @@
 				<db.username>root</db.username>
 				<db.password>root%1234</db.password>
 				<db.url>
-					jdbc:mysql://localhost:3306/klstorage?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
+					jdbc:mysql://127.0.0.1:3306/klstorage?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
 				</db.url>
 			</master>
 			<slave>
 				<db.username>root</db.username>
 				<db.password>root%1234</db.password>
 				<db.url>
-					jdbc:mysql://localhost:3306/klstorage0?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
+					jdbc:mysql://127.0.0.1:3306/klstorage0?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
 				</db.url>
 			</slave>
 			<slave>
 				<db.username>root</db.username>
 				<db.password>root%1234</db.password>
 				<db.url>
-					jdbc:mysql://localhost:3306/klstorage1?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
+					jdbc:mysql://127.0.0.1:3306/klstorage1?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
 				</db.url>
 			</slave>
 		</global>
@@ -53,14 +53,14 @@
 					<db.username>root</db.username>
 					<db.password>root%1234</db.password>
 					<db.url>
-						jdbc:mysql://localhost:3306/klstorage2?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
+						jdbc:mysql://127.0.0.1:3306/klstorage2?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
 					</db.url>
 				</sharding>
 				<sharding>
 					<db.username>root</db.username>
 					<db.password>root%1234</db.password>
 					<db.url>
-						jdbc:mysql://localhost:3306/klstorage3?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
+						jdbc:mysql://127.0.0.1:3306/klstorage3?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
 					</db.url>
 				</sharding>
 			</master>
@@ -69,14 +69,14 @@
 					<db.username>root</db.username>
 					<db.password>root%1234</db.password>
 					<db.url>
-						jdbc:mysql://localhost:3306/klstorage4?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
+						jdbc:mysql://127.0.0.1:3306/klstorage4?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
 					</db.url>
 				</sharding>
 				<sharding>
 					<db.username>root</db.username>
 					<db.password>root%1234</db.password>
 					<db.url>
-						jdbc:mysql://localhost:3306/klstorage5?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
+						jdbc:mysql://127.0.0.1:3306/klstorage5?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
 					</db.url>
 				</sharding>
 			</slave>
@@ -85,14 +85,14 @@
 					<db.username>root</db.username>
 					<db.password>root%1234</db.password>
 					<db.url>
-						jdbc:mysql://localhost:3306/klstorage6?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
+						jdbc:mysql://127.0.0.1:3306/klstorage6?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
 					</db.url>
 				</sharding>
 				<sharding>
 					<db.username>root</db.username>
 					<db.password>root%1234</db.password>
 					<db.url>
-						jdbc:mysql://localhost:3306/klstorage7?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
+						jdbc:mysql://127.0.0.1:3306/klstorage7?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
 					</db.url>
 				</sharding>
 			</slave>
@@ -103,14 +103,14 @@
 					<db.username>root</db.username>
 					<db.password>root%1234</db.password>
 					<db.url>
-						jdbc:mysql://localhost:3306/klstorage8?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
+						jdbc:mysql://127.0.0.1:3306/klstorage8?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
 					</db.url>
 				</sharding>
 				<sharding>
 					<db.username>root</db.username>
 					<db.password>root%1234</db.password>
 					<db.url>
-						jdbc:mysql://localhost:3306/klstorage9?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
+						jdbc:mysql://127.0.0.1:3306/klstorage9?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
 					</db.url>
 				</sharding>
 			</master>
@@ -119,14 +119,14 @@
 					<db.username>root</db.username>
 					<db.password>root%1234</db.password>
 					<db.url>
-						jdbc:mysql://localhost:3306/klstorage10?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
+						jdbc:mysql://127.0.0.1:3306/klstorage10?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
 					</db.url>
 				</sharding>
 				<sharding>
 					<db.username>root</db.username>
 					<db.password>root%1234</db.password>
 					<db.url>
-						jdbc:mysql://localhost:3306/klstorage11?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
+						jdbc:mysql://127.0.0.1:3306/klstorage11?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
 					</db.url>
 				</sharding>
 			</slave>
@@ -135,14 +135,14 @@
 					<db.username>root</db.username>
 					<db.password>root%1234</db.password>
 					<db.url>
-						jdbc:mysql://localhost:3306/klstorage12?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
+						jdbc:mysql://127.0.0.1:3306/klstorage12?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
 					</db.url>
 				</sharding>
 				<sharding>
 					<db.username>root</db.username>
 					<db.password>root%1234</db.password>
 					<db.url>
-						jdbc:mysql://localhost:3306/klstorage13?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
+						jdbc:mysql://127.0.0.1:3306/klstorage13?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
 					</db.url>
 				</sharding>
 			</slave>
@@ -155,21 +155,21 @@
 				<db.username>root</db.username>
 				<db.password>root%1234</db.password>
 				<db.url>
-					jdbc:mysql://localhost:3306/user?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
+					jdbc:mysql://127.0.0.1:3306/user?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
 				</db.url>
 			</master>
 			<slave>
 				<db.username>root</db.username>
 				<db.password>root%1234</db.password>
 				<db.url>
-					jdbc:mysql://localhost:3306/user0?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
+					jdbc:mysql://127.0.0.1:3306/user0?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
 				</db.url>
 			</slave>
 			<slave>
 				<db.username>root</db.username>
 				<db.password>root%1234</db.password>
 				<db.url>
-					jdbc:mysql://localhost:3306/user1?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
+					jdbc:mysql://127.0.0.1:3306/user1?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
 				</db.url>
 			</slave>
 		</global>
@@ -179,14 +179,14 @@
 					<db.username>root</db.username>
 					<db.password>root%1234</db.password>
 					<db.url>
-						jdbc:mysql://localhost:3306/user2?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
+						jdbc:mysql://127.0.0.1:3306/user2?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
 					</db.url>
 				</sharding>
 				<sharding>
 					<db.username>root</db.username>
 					<db.password>root%1234</db.password>
 					<db.url>
-						jdbc:mysql://localhost:3306/user3?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
+						jdbc:mysql://127.0.0.1:3306/user3?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
 					</db.url>
 				</sharding>
 			</master>
@@ -195,14 +195,14 @@
 					<db.username>root</db.username>
 					<db.password>root%1234</db.password>
 					<db.url>
-						jdbc:mysql://localhost:3306/user4?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
+						jdbc:mysql://127.0.0.1:3306/user4?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
 					</db.url>
 				</sharding>
 				<sharding>
 					<db.username>root</db.username>
 					<db.password>root%1234</db.password>
 					<db.url>
-						jdbc:mysql://localhost:3306/user5?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
+						jdbc:mysql://127.0.0.1:3306/user5?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
 					</db.url>
 				</sharding>
 			</slave>
@@ -211,14 +211,14 @@
 					<db.username>root</db.username>
 					<db.password>root%1234</db.password>
 					<db.url>
-						jdbc:mysql://localhost:3306/user6?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
+						jdbc:mysql://127.0.0.1:3306/user6?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
 					</db.url>
 				</sharding>
 				<sharding>
 					<db.username>root</db.username>
 					<db.password>root%1234</db.password>
 					<db.url>
-						jdbc:mysql://localhost:3306/user7?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
+						jdbc:mysql://127.0.0.1:3306/user7?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
 					</db.url>
 				</sharding>
 			</slave>
@@ -229,14 +229,14 @@
 					<db.username>root</db.username>
 					<db.password>root%1234</db.password>
 					<db.url>
-						jdbc:mysql://localhost:3306/user8?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
+						jdbc:mysql://127.0.0.1:3306/user8?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
 					</db.url>
 				</sharding>
 				<sharding>
 					<db.username>root</db.username>
 					<db.password>root%1234</db.password>
 					<db.url>
-						jdbc:mysql://localhost:3306/user9?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
+						jdbc:mysql://127.0.0.1:3306/user9?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
 					</db.url>
 				</sharding>
 			</master>
@@ -245,14 +245,14 @@
 					<db.username>root</db.username>
 					<db.password>root%1234</db.password>
 					<db.url>
-						jdbc:mysql://localhost:3306/user10?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
+						jdbc:mysql://127.0.0.1:3306/user10?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
 					</db.url>
 				</sharding>
 				<sharding>
 					<db.username>root</db.username>
 					<db.password>root%1234</db.password>
 					<db.url>
-						jdbc:mysql://localhost:3306/user11?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
+						jdbc:mysql://127.0.0.1:3306/user11?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
 					</db.url>
 				</sharding>
 			</slave>
@@ -261,14 +261,14 @@
 					<db.username>root</db.username>
 					<db.password>root%1234</db.password>
 					<db.url>
-						jdbc:mysql://localhost:3306/user12?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
+						jdbc:mysql://127.0.0.1:3306/user12?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
 					</db.url>
 				</sharding>
 				<sharding>
 					<db.username>root</db.username>
 					<db.password>root%1234</db.password>
 					<db.url>
-						jdbc:mysql://localhost:3306/user13?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
+						jdbc:mysql://127.0.0.1:3306/user13?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
 					</db.url>
 				</sharding>
 			</slave>
