@@ -250,23 +250,26 @@ public abstract class AbstractShardingQuery {
 		return -1;
 	}
 
-    /**
-     * 根据查询条件查询记录数.
-     *
-     * @param db 分库分表引用
-     * @param clazz 实体对象
-     * @param query 查询条件
-     *
-     * @return 记录数
-     */
-    protected Number selectCount(DB db, Class<?> clazz, IQuery query) {
-        Connection conn = null;
+	/**
+	 * 根据查询条件查询记录数.
+	 * 
+	 * @param db
+	 *            分库分表引用
+	 * @param clazz
+	 *            实体对象
+	 * @param query
+	 *            查询条件
+	 * 
+	 * @return 记录数
+	 */
+	protected Number selectCount(DB db, Class<?> clazz, IQuery query) {
+		Connection conn = null;
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 		try {
 			conn = db.getDatasource().getConnection();
-            String sql = SQLBuilder.buildSelectCountByQuery(clazz, db.getTableIndex(), query);
-            ps = conn.prepareStatement(sql);
+			String sql = SQLBuilder.buildSelectCountByQuery(clazz, db.getTableIndex(), query);
+			ps = conn.prepareStatement(sql);
 			long begin = System.currentTimeMillis();
 			rs = ps.executeQuery();
 			long constTime = System.currentTimeMillis() - begin;
@@ -284,7 +287,7 @@ public abstract class AbstractShardingQuery {
 		}
 
 		return -1;
-    }
+	}
 
 	// //////////////////////////////////////////////////////////////////////////////////////
 	// findByPk相关
@@ -391,10 +394,9 @@ public abstract class AbstractShardingQuery {
 			data = primaryCache.get(db, pk);
 			if (data == null) {
 				data = _selectByPk(db, pk, clazz);
-			}
-			if (data != null) {
-				primaryCache.put(db, pk, data);
-				return data;
+				if (data != null) {
+					primaryCache.put(db, pk, data);
+				}
 			}
 		} else {
 			data = _selectByPk(db, pk, clazz);
