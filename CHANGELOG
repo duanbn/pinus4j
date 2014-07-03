@@ -6,6 +6,11 @@
 5.重构DB对象，不直接引用Connection而是引用DataSource对象 (Done)
 6.当使用String做Sharding时由于String做哈希之后的值做归一化(TODO)
 7.修改SQL日志格式
+8.遗留问题
+  1.当使用字符串进行sharding时，由于哈希之后的值无法确定，因此可能超过最大的region范围!!!
+    每个hash算法都有一个最大值，一个集群需要覆盖这个hash值
+  2.当添加region时，已有的哈希算法如何处理？
+    只要已有的region的库表数量不变就行
 
 --Version 0.6.0
 1.重构IQuery代码，支持查询某些字段
