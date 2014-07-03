@@ -78,7 +78,7 @@ public class ReflectUtil {
 			String pkName = getPkName(obj.getClass());
 			setProperty(obj, pkName, pk);
 		} catch (Exception e) {
-			throw new Exception("设置全局表主键值失败", e);
+			throw new Exception("设置主键值失败", e);
 		}
 	}
 
@@ -266,7 +266,24 @@ public class ReflectUtil {
 	public static void setProperty(Object obj, String propertyName, Object value) throws Exception {
 		Field f = obj.getClass().getDeclaredField(propertyName);
 		f.setAccessible(true);
-		f.set(obj, value);
+		if (value instanceof Number) {
+			Number numValue = (Number) value;
+			if (f.getType() == Integer.TYPE || f.getType() == Integer.class) {
+				f.setInt(obj, numValue.intValue());
+			} else if (f.getType() == Long.TYPE || f.getType() == Long.class) {
+				f.setLong(obj, numValue.longValue());
+			} else if (f.getType() == Short.TYPE || f.getType() == Short.class) {
+				f.setShort(obj, numValue.shortValue());
+			} else if (f.getType() == Float.TYPE || f.getType() == Float.class) {
+				f.setFloat(obj, numValue.floatValue());
+			} else if (f.getType() == Double.TYPE || f.getType() == Double.class) {
+				f.setDouble(obj, numValue.doubleValue());
+			} else {
+				throw new IllegalArgumentException("无法识别的值类型");
+			}
+		} else {
+			f.set(obj, value);
+		}
 	}
 
 	/**

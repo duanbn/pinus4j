@@ -163,17 +163,20 @@ public class ShardingUpdateImpl implements IShardingUpdate {
 
 		long pk = this.idGenerator.genClusterUniqueLongId(dbCluster, shardingKey.getClusterName(), tableName);
 		try {
-			if (shardingKey.getValue() == null) {
-				ReflectUtil.setPkValue(entity, pk);
-				shardingKey.setValue(pk);
-			} else if (shardingKey.getValue() instanceof Number) {
-				if (((Number) shardingKey.getValue()).intValue() == 0) {
-					ReflectUtil.setPkValue(entity, pk);
-					shardingKey.setValue(pk);
-				}
-			}
+			ReflectUtil.setPkValue(entity, pk);
 		} catch (Exception e) {
 			throw new DBOperationException(e);
+		}
+		if (shardingKey.getValue() instanceof Number) {
+			if (shardingKey.getValue() == null || ((Number) shardingKey.getValue()).intValue() == 0) {
+				shardingKey.setValue(pk);
+			}
+		} else if (shardingKey.getValue() instanceof String) {
+			if (shardingKey.getValue() == null) {
+				throw new DBOperationException("使用String做Sharding时，ShardingKey的值不能为Null");
+			}
+		} else {
+			throw new DBOperationException("不支持的ShardingKey类型, 只支持Number或String");
 		}
 
 		DB db = _getDbFromMaster(tableName, shardingKey);
