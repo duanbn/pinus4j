@@ -9,10 +9,10 @@ import junit.framework.Assert;
 import org.junit.Test;
 
 import com.pinus.BaseTest;
-import com.pinus.TestEntity;
-import com.pinus.TestGlobalEntity;
 import com.pinus.api.query.Condition;
 import com.pinus.api.query.IQuery;
+import com.pinus.entity.TestEntity;
+import com.pinus.entity.TestGlobalEntity;
 
 public class CacheShardingStorageClientTest extends BaseTest {
 
@@ -358,5 +358,5 @@ public class CacheShardingStorageClientTest extends BaseTest {
 
 		cacheClient.removeByPk(pk, key, TestEntity.class);
 	}
-
+	
 }

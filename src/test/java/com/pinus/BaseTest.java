@@ -18,6 +18,8 @@ import com.pinus.api.ShardingStorageClientImpl;
 import com.pinus.api.enums.EnumMode;
 import com.pinus.cache.IPrimaryCache;
 import com.pinus.cache.impl.MemCachedPrimaryCacheImpl;
+import com.pinus.entity.TestEntity;
+import com.pinus.entity.TestGlobalEntity;
 
 public class BaseTest {
 

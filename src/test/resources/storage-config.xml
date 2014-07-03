@@ -23,6 +23,27 @@
 		<minEvictableIdleTimeMillis>10000</minEvictableIdleTimeMillis>
 	</db-connection-pool>
 
+	<cluster name="redheart" catalog="mysql">
+		<region>
+			<master>
+				<sharding>
+					<db.username>root</db.username>
+					<db.password>root%1234</db.password>
+					<db.url>
+						jdbc:mysql://127.0.0.1:3306/redheart1?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
+					</db.url>
+				</sharding>
+				<sharding>
+					<db.username>root</db.username>
+					<db.password>root%1234</db.password>
+					<db.url>
+						jdbc:mysql://127.0.0.1:3306/redheart2?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
+					</db.url>
+				</sharding>
+			</master>
+		</region>
+	</cluster>
+
 	<cluster name="klstorage" catalog="mysql">
 		<global>
 			<master>
@@ -148,7 +169,7 @@
 			</slave>
 		</region>
 	</cluster>
-	
+
 	<cluster name="user" catalog="mysql">
 		<global>
 			<master>

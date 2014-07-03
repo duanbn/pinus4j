@@ -5,10 +5,10 @@ import java.util.List;
 import org.junit.Test;
 
 import com.pinus.BaseTest;
-import com.pinus.TestEntity;
 import com.pinus.api.IShardingKey;
 import com.pinus.api.ShardingKey;
 import com.pinus.api.enums.EnumDBMasterSlave;
+import com.pinus.entity.TestEntity;
 
 public class DbcpDBClusterImplTest extends BaseTest {
 

@@ -1,4 +1,4 @@
-package com.pinus;
+package com.pinus.entity;
 
 import java.io.Serializable;
 import java.util.Date;

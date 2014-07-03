@@ -6,10 +6,10 @@ import java.util.Map;
 import org.junit.Test;
 
 import com.pinus.BaseTest;
-import com.pinus.TestEntity;
 import com.pinus.api.ShardingKey;
 import com.pinus.datalayer.IShardingStatistics;
 import com.pinus.datalayer.beans.DBClusterStatInfo;
+import com.pinus.entity.TestEntity;
 
 public class ShardingStatisticsTest extends BaseTest {
 
