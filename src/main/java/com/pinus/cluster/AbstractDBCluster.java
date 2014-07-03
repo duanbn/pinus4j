@@ -160,11 +160,15 @@ public abstract class AbstractDBCluster implements IDBCluster {
 				// 关闭全局库
 				// 主全局库
 				DBConnectionInfo masterGlobal = entry.getValue().getMasterGlobalConnection();
-				closeDataSource(masterGlobal);
+				if (masterGlobal != null)
+					closeDataSource(masterGlobal);
 
 				// 从全局库
-				for (DBConnectionInfo slaveGlobal : entry.getValue().getSlaveGlobalConnection()) {
-					closeDataSource(slaveGlobal);
+				List<DBConnectionInfo> slaveDbs = entry.getValue().getSlaveGlobalConnection();
+				if (slaveDbs != null && !slaveDbs.isEmpty()) {
+					for (DBConnectionInfo slaveGlobal : slaveDbs) {
+						closeDataSource(slaveGlobal);
+					}
 				}
 
 				// 关闭集群库
@@ -196,6 +200,9 @@ public abstract class AbstractDBCluster implements IDBCluster {
 		}
 
 		DBConnectionInfo masterConnection = dbClusterInfo.getMasterGlobalConnection();
+		if (masterConnection == null) {
+			throw new DBClusterException("此集群没有配置全局主库, clustername=" + clusterName);
+		}
 		return masterConnection;
 	}
 
@@ -206,7 +213,11 @@ public abstract class AbstractDBCluster implements IDBCluster {
 			throw new DBClusterException("没有找到集群信息, clustername=" + clusterName);
 		}
 
-		DBConnectionInfo slaveConnection = dbClusterInfo.getSlaveGlobalConnection().get(slave.getValue());
+		List<DBConnectionInfo> slaveDbs = dbClusterInfo.getSlaveGlobalConnection();
+		if (slaveDbs == null || slaveDbs.isEmpty()) {
+			throw new DBClusterException("此集群没有配置全局从库, clustername=" + clusterName);
+		}
+		DBConnectionInfo slaveConnection = slaveDbs.get(slave.getValue());
 		return slaveConnection;
 	}
 
@@ -423,20 +434,26 @@ public abstract class AbstractDBCluster implements IDBCluster {
 				for (Map.Entry<String, DBClusterInfo> entry : this.dbClusterInfo.entrySet()) {
 					// 全局主库
 					DBConnectionInfo dbConnInfo = entry.getValue().getMasterGlobalConnection();
-					DataSource globalDs = dbConnInfo.getDatasource();
-					if (globalDs != null) {
-						Connection conn = globalDs.getConnection();
-						this.dbGenerator.syncTable(conn, table);
-						conn.close();
+					if (dbConnInfo != null) {
+						DataSource globalDs = dbConnInfo.getDatasource();
+						if (globalDs != null) {
+							Connection conn = globalDs.getConnection();
+							this.dbGenerator.syncTable(conn, table);
+							conn.close();
+						}
 					}
 
 					// 全局从库
-					for (DBConnectionInfo slaveConnInfo : entry.getValue().getSlaveGlobalConnection()) {
-						Connection conn = slaveConnInfo.getDatasource().getConnection();
-						this.dbGenerator.syncTable(conn, table);
-						conn.close();
+					List<DBConnectionInfo> slaveDbs = entry.getValue().getSlaveGlobalConnection();
+					if (slaveDbs != null && !slaveDbs.isEmpty()) {
+						for (DBConnectionInfo slaveConnInfo : slaveDbs) {
+							Connection conn = slaveConnInfo.getDatasource().getConnection();
+							this.dbGenerator.syncTable(conn, table);
+							conn.close();
+						}
 					}
 				}
+
 			}
 
 		}
@@ -446,11 +463,15 @@ public abstract class AbstractDBCluster implements IDBCluster {
 		for (Map.Entry<String, DBClusterInfo> entry : dbClusterInfo.entrySet()) {
 			// 初始化全局主库
 			DBConnectionInfo masterGlobalConnection = entry.getValue().getMasterGlobalConnection();
-			buildDataSource(masterGlobalConnection);
+			if (masterGlobalConnection != null)
+				buildDataSource(masterGlobalConnection);
 
 			// 初始化全局从库
-			for (DBConnectionInfo slaveGlobalConnection : entry.getValue().getSlaveGlobalConnection()) {
-				buildDataSource(slaveGlobalConnection);
+			List<DBConnectionInfo> slaveDbs = entry.getValue().getSlaveGlobalConnection();
+			if (slaveDbs != null && !slaveDbs.isEmpty()) {
+				for (DBConnectionInfo slaveGlobalConnection : slaveDbs) {
+					buildDataSource(slaveGlobalConnection);
+				}
 			}
 
 			// 初始化集群
@@ -467,6 +488,7 @@ public abstract class AbstractDBCluster implements IDBCluster {
 					}
 				}
 			}
+
 		}
 	}
 

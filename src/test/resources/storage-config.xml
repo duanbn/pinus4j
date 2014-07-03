@@ -24,7 +24,7 @@
 	</db-connection-pool>
 
 	<cluster name="redheart" catalog="mysql">
-		<region>
+		<region capacity="1-10000000">
 			<master>
 				<sharding>
 					<db.username>root</db.username>

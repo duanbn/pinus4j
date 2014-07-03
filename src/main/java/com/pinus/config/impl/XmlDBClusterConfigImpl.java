@@ -195,21 +195,30 @@ public class XmlDBClusterConfigImpl implements IClusterConfig {
 		dbClusterInfo.setClusterName(clusterName);
 		dbClusterInfo.setCatalog(EnumClusterCatalog.MYSQL);
 
-		// 加载master global
+		//
+		// load global
+		//
 		Node global = xmlUtil.getFirstChildByName(clusterNode, "global");
-		Node masterGlobal = xmlUtil.getFirstChildByName(global, "master");
-		DBConnectionInfo masterGlobalConnection = _getDBConnInfo(clusterName, masterGlobal);
-		dbClusterInfo.setMasterGlobalConnection(masterGlobalConnection);
+		if (global != null) {
+			// load master global
+			Node masterGlobal = xmlUtil.getFirstChildByName(global, "master");
+			DBConnectionInfo masterGlobalConnection = _getDBConnInfo(clusterName, masterGlobal);
+			dbClusterInfo.setMasterGlobalConnection(masterGlobalConnection);
 
-		// 加载slave global
-		List<DBConnectionInfo> slaveGlobalConnection = new ArrayList<DBConnectionInfo>();
-		List<Node> slaveGlobalList = xmlUtil.getChildByName(global, "slave");
-		for (Node slaveGlobal : slaveGlobalList) {
-			slaveGlobalConnection.add(_getDBConnInfo(clusterName, slaveGlobal));
+			// load slave global
+			List<Node> slaveGlobalList = xmlUtil.getChildByName(global, "slave");
+			if (slaveGlobalList != null && !slaveGlobalList.isEmpty()) {
+				List<DBConnectionInfo> slaveGlobalConnection = new ArrayList<DBConnectionInfo>();
+				for (Node slaveGlobal : slaveGlobalList) {
+					slaveGlobalConnection.add(_getDBConnInfo(clusterName, slaveGlobal));
+				}
+				dbClusterInfo.setSlaveGlobalConnection(slaveGlobalConnection);
+			}
 		}
-		dbClusterInfo.setSlaveGlobalConnection(slaveGlobalConnection);
 
-		// 加载region
+		//
+		// load region
+		//
 		List<DBClusterRegionInfo> dbRegions = new ArrayList<DBClusterRegionInfo>();
 		List<Node> regionNodeList = xmlUtil.getChildByName(clusterNode, "region");
 		DBClusterRegionInfo regionInfo = null;
@@ -218,6 +227,9 @@ public class XmlDBClusterConfigImpl implements IClusterConfig {
 
 			// load cluster capacity
 			String regionCapacity = xmlUtil.getAttributeValue(regionNode, "capacity");
+			if (regionCapacity == null) {
+				throw new LoadConfigException("<region>需要配置capacity属性");
+			}
 			long[] capacity = _parseCapacity(clusterName, regionCapacity);
 			regionInfo.setStart(capacity[0]);
 			regionInfo.setEnd(capacity[1]);
@@ -236,12 +248,12 @@ public class XmlDBClusterConfigImpl implements IClusterConfig {
 			List<Node> slaveNodeList = xmlUtil.getChildByName(regionNode, "slave");
 			for (Node slaveNode : slaveNodeList) {
 				shardingNodeList = xmlUtil.getChildByName(slaveNode, "sharding");
-				
+
 				List<DBConnectionInfo> slaveConnections = new ArrayList<DBConnectionInfo>();
 				for (Node shardingNode : shardingNodeList) {
 					slaveConnections.add(_getDBConnInfo(clusterName, shardingNode));
 				}
-				
+
 				regionSlaveConnection.add(slaveConnections);
 			}
 			regionInfo.setSlaveConnection(regionSlaveConnection);
