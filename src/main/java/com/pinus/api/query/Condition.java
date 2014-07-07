@@ -1,5 +1,7 @@
 package com.pinus.api.query;
 
+import java.lang.reflect.Array;
+
 import com.pinus.util.StringUtils;
 
 /**
@@ -16,7 +18,7 @@ public class Condition {
 	/**
 	 * 条件值.
 	 */
-	private Object[] values;
+	private Object value;
 	/**
 	 * 条件枚举.
 	 */
@@ -47,16 +49,19 @@ public class Condition {
 	 * @param opt
 	 *            条件枚举
 	 */
-	private Condition(String field, Object[] values, QueryOpt opt) {
+	private Condition(String field, Object value, QueryOpt opt) {
 		if (StringUtils.isBlank(field)) {
 			throw new IllegalArgumentException("条件字段不能为空, condition field=" + field);
 		}
-		if (values == null || values.length == 0) {
-			throw new IllegalArgumentException("参数错误, condition value=" + values);
+		if (value == null) {
+			throw new IllegalArgumentException("参数错误, condition value=" + value);
+		}
+		if (value.getClass().isArray() && Array.getLength(value) == 0) {
+			throw new IllegalArgumentException("参数错误, condition value是数组并且数组长度为0");
 		}
 
 		this.field = field;
-		this.values = values;
+		this.value = value;
 		this.opt = opt;
 	}
 
@@ -80,25 +85,28 @@ public class Condition {
 			switch (opt) {
 			case IN:
 				SQL.append("(");
-				for (Object value : values) {
-					if (value instanceof String) {
-						SQL.append("'").append(value).append("'");
-					} else if (value instanceof Boolean) {
-						if ((Boolean) value) {
+				for (int i = 0; i < Array.getLength(this.value); i++) {
+					Object val = Array.get(this.value, i);
+					Class<?> clazz = val.getClass();
+					if (clazz == String.class) {
+						SQL.append("'").append(val).append("'");
+					} else if (clazz == Boolean.class || clazz == Boolean.TYPE) {
+						if ((Boolean) val) {
 							SQL.append("'").append("1").append("'");
 						} else {
 							SQL.append("'").append("0").append("'");
 						}
 					} else {
-						SQL.append(value);
+						SQL.append(val);
 					}
 					SQL.append(",");
 				}
 				SQL.deleteCharAt(SQL.length() - 1);
 				SQL.append(")");
+
 				break;
 			default:
-				Object value = values[0];
+				Object value = this.value;
 				if (value instanceof String) {
 					SQL.append("'").append(value).append("'");
 				} else if (value instanceof Boolean) {
@@ -133,7 +141,7 @@ public class Condition {
 		if (value == null) {
 			throw new IllegalArgumentException("参数错误, condition value=null");
 		}
-		Condition cond = new Condition(field, new Object[] { value }, QueryOpt.EQ);
+		Condition cond = new Condition(field, value, QueryOpt.EQ);
 		return cond;
 	}
 
@@ -149,7 +157,7 @@ public class Condition {
 		if (value == null) {
 			throw new IllegalArgumentException("参数错误, condition value=null");
 		}
-		Condition cond = new Condition(field, new Object[] { value }, QueryOpt.NOTEQ);
+		Condition cond = new Condition(field, value, QueryOpt.NOTEQ);
 		return cond;
 	}
 
@@ -165,7 +173,7 @@ public class Condition {
 		if (value == null) {
 			throw new IllegalArgumentException("参数错误, condition value=null");
 		}
-		Condition cond = new Condition(field, new Object[] { value }, QueryOpt.GT);
+		Condition cond = new Condition(field, value, QueryOpt.GT);
 		return cond;
 	}
 
@@ -181,7 +189,7 @@ public class Condition {
 		if (value == null) {
 			throw new IllegalArgumentException("参数错误, condition value=null");
 		}
-		Condition cond = new Condition(field, new Object[] { value }, QueryOpt.GTE);
+		Condition cond = new Condition(field, value, QueryOpt.GTE);
 		return cond;
 	}
 
@@ -197,7 +205,7 @@ public class Condition {
 		if (value == null) {
 			throw new IllegalArgumentException("参数错误, condition value=null");
 		}
-		Condition cond = new Condition(field, new Object[] { value }, QueryOpt.LT);
+		Condition cond = new Condition(field, value, QueryOpt.LT);
 		return cond;
 	}
 
@@ -213,7 +221,7 @@ public class Condition {
 		if (value == null) {
 			throw new IllegalArgumentException("参数错误, condition value=null");
 		}
-		Condition cond = new Condition(field, new Object[] { value }, QueryOpt.LTE);
+		Condition cond = new Condition(field, value, QueryOpt.LTE);
 		return cond;
 	}
 
@@ -235,6 +243,62 @@ public class Condition {
 		return cond;
 	}
 
+	public static Condition in(String field, byte[] values) {
+		if (values == null) {
+			throw new IllegalArgumentException("参数错误, condition value=null");
+		}
+		Condition cond = new Condition(field, values, QueryOpt.IN);
+		return cond;
+	}
+
+	public static Condition in(String field, int[] values) {
+		if (values == null) {
+			throw new IllegalArgumentException("参数错误, condition value=null");
+		}
+		Condition cond = new Condition(field, values, QueryOpt.IN);
+		return cond;
+	}
+
+	public static Condition in(String field, short[] values) {
+		if (values == null) {
+			throw new IllegalArgumentException("参数错误, condition value=null");
+		}
+		Condition cond = new Condition(field, values, QueryOpt.IN);
+		return cond;
+	}
+
+	public static Condition in(String field, long[] values) {
+		if (values == null) {
+			throw new IllegalArgumentException("参数错误, condition value=null");
+		}
+		Condition cond = new Condition(field, values, QueryOpt.IN);
+		return cond;
+	}
+
+	public static Condition in(String field, float[] values) {
+		if (values == null) {
+			throw new IllegalArgumentException("参数错误, condition value=null");
+		}
+		Condition cond = new Condition(field, values, QueryOpt.IN);
+		return cond;
+	}
+
+	public static Condition in(String field, double[] values) {
+		if (values == null) {
+			throw new IllegalArgumentException("参数错误, condition value=null");
+		}
+		Condition cond = new Condition(field, values, QueryOpt.IN);
+		return cond;
+	}
+
+	public static Condition in(String field, boolean[] values) {
+		if (values == null) {
+			throw new IllegalArgumentException("参数错误, condition value=null");
+		}
+		Condition cond = new Condition(field, values, QueryOpt.IN);
+		return cond;
+	}
+
 	/**
 	 * like查询.
 	 * 
@@ -247,7 +311,7 @@ public class Condition {
 		if (value == null) {
 			throw new IllegalArgumentException("参数错误, condition value=null");
 		}
-		Condition cond = new Condition(field, new Object[] { value }, QueryOpt.LIKE);
+		Condition cond = new Condition(field, value, QueryOpt.LIKE);
 		return cond;
 	}
 

@@ -5,6 +5,7 @@ package com.pinus.api;
  * 
  * @author duanbn
  */
+@Deprecated
 public class SQL<T> {
 
 	/**
@@ -32,15 +33,15 @@ public class SQL<T> {
 			this.sql = sql.toLowerCase();
 		this.params = params;
 	}
-	
+
 	@Override
 	public String toString() {
 		String s = null;
-		
+
 		for (Object param : params) {
 			s = sql.replaceFirst("\\?", String.valueOf(param));
 		}
-		
+
 		return s;
 	}
 

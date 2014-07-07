@@ -51,7 +51,7 @@ public class DBConnectionInfo {
 
 	@Override
 	public String toString() {
-		return "DBConnectionInfo [url=" + url + "]";
+		return "DBConnectionInfo [username=" + username + ", password=" + password + ", url=" + url + "]";
 	}
 
 	@Override

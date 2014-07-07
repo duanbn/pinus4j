@@ -32,6 +32,8 @@ public class DbcpDBClusterImpl extends AbstractDBCluster {
 
 	@Override
 	public void buildDataSource(DBConnectionInfo dbConnInfo) {
+		LOG.info(dbConnInfo);
+
 		BasicDataSource ds = new BasicDataSource();
 		ds.setDriverClassName(enumDb.getDriverClass());
 		ds.setUsername(dbConnInfo.getUsername());

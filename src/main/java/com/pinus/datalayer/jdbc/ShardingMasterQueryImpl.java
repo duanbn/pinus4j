@@ -124,6 +124,7 @@ public class ShardingMasterQueryImpl extends AbstractShardingQuery implements IS
 	}
 
 	@Override
+	@Deprecated
 	public <T> List<T> findGlobalBySqlFromMaster(SQL<T> sql, String clusterName) {
 		Connection conn = null;
 		try {
@@ -181,15 +182,15 @@ public class ShardingMasterQueryImpl extends AbstractShardingQuery implements IS
 		return count;
 	}
 
-    @Override
-    public Number getCountFromMaster(Class<?> clazz, IQuery query) {
-        List<DB> dbs = this.dbCluster.getAllMasterShardingDB(clazz);
+	@Override
+	public Number getCountFromMaster(Class<?> clazz, IQuery query) {
+		List<DB> dbs = this.dbCluster.getAllMasterShardingDB(clazz);
 		long count = 0;
 		for (DB db : dbs) {
 			count += selectCount(db, clazz, query).longValue();
 		}
 		return count;
-    }
+	}
 
 	@Override
 	public Number getCountFromMaster(IShardingKey<?> shardingValue, Class<?> clazz) {
@@ -256,6 +257,7 @@ public class ShardingMasterQueryImpl extends AbstractShardingQuery implements IS
 	}
 
 	@Override
+	@Deprecated
 	public <T> List<T> findBySqlFromMaster(SQL<T> sql, IShardingKey<?> shardingValue) {
 		DB db = _getDbFromMaster(sql.getClazz(), shardingValue);
 

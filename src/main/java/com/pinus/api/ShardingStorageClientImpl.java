@@ -382,6 +382,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 	}
 
 	@Override
+	@Deprecated
 	public <T> List<T> findGlobalBySql(SQL<T> sql, String clusterName) {
 		CheckUtil.checkSQL(sql);
 		CheckUtil.checkClusterName(clusterName);
@@ -476,6 +477,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 	}
 
 	@Override
+	@Deprecated
 	public <T> List<T> findBySql(SQL<T> sql, IShardingKey<?> shardingValue) {
 		CheckUtil.checkShardingValue(shardingValue);
 		CheckUtil.checkSQL(sql);
