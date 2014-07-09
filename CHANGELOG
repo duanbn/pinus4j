@@ -1,5 +1,6 @@
 --Version 0.6.2
 1.允许集群中不存在全局库，某些集群不需要全局信息
+2.添加IShardingStorageClient可以创建集群锁
 
 --Version 0.6.1
 1.添加对redis缓存的支持

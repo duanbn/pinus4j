@@ -2,6 +2,7 @@ package com.pinus.api;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.locks.Lock;
 
 import org.apache.log4j.Logger;
 
@@ -17,6 +18,7 @@ import com.pinus.cache.IPrimaryCache;
 import com.pinus.cluster.DB;
 import com.pinus.cluster.IDBCluster;
 import com.pinus.cluster.impl.DbcpDBClusterImpl;
+import com.pinus.cluster.lock.DistributedLock;
 import com.pinus.cluster.route.IClusterRouter;
 import com.pinus.cluster.route.impl.SimpleHashClusterRouterImpl;
 import com.pinus.datalayer.IShardingMasterQuery;
@@ -406,13 +408,13 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 		return this.masterQueryer.getCountFromMaster(clazz);
 	}
 
-    @Override
-    public Number getCount(Class<?> clazz, IQuery query) {
-        CheckUtil.checkClass(clazz);
-        CheckUtil.checkQuery(query);
+	@Override
+	public Number getCount(Class<?> clazz, IQuery query) {
+		CheckUtil.checkClass(clazz);
+		CheckUtil.checkQuery(query);
 
-        return this.masterQueryer.getCountFromMaster(clazz, query);
-    }
+		return this.masterQueryer.getCountFromMaster(clazz, query);
+	}
 
 	@Override
 	public Number getCount(IShardingKey<?> shardingValue, Class<?> clazz) {
@@ -527,6 +529,11 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 	@Override
 	public IIdGenerator getIdGenerator() {
 		return idGenerator;
+	}
+
+	@Override
+	public Lock createLock(String lockName) {
+		return new DistributedLock(lockName, true);
 	}
 
 	@Override

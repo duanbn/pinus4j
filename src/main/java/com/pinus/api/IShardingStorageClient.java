@@ -1,6 +1,7 @@
 package com.pinus.api;
 
 import java.util.List;
+import java.util.concurrent.locks.Lock;
 
 import com.pinus.api.enums.EnumDB;
 import com.pinus.api.enums.EnumDBConnect;
@@ -10,6 +11,7 @@ import com.pinus.api.enums.EnumMode;
 import com.pinus.api.query.IQuery;
 import com.pinus.cache.IPrimaryCache;
 import com.pinus.cluster.IDBCluster;
+import com.pinus.cluster.lock.DistributedLock;
 import com.pinus.datalayer.IShardingStatistics;
 import com.pinus.datalayer.jdbc.FatDB;
 import com.pinus.exception.DBOperationException;
@@ -25,7 +27,6 @@ public interface IShardingStorageClient {
 	// ////////////////////////////////////////////////////////
 	// update相关
 	// ////////////////////////////////////////////////////////
-
 	//
 	// global
 	//
@@ -181,7 +182,6 @@ public interface IShardingStorageClient {
 	// ////////////////////////////////////////////////////////
 	// query相关
 	// ////////////////////////////////////////////////////////
-
 	//
 	// global
 	//
@@ -482,6 +482,14 @@ public interface IShardingStorageClient {
 	// ////////////////////////////////////////////////////////
 	// other
 	// ////////////////////////////////////////////////////////
+	/**
+	 * 创建一个分布式锁.
+	 * 
+	 * @param lockName
+	 *            锁名称
+	 * @return
+	 */
+	public Lock createLock(String lockName);
 
 	/**
 	 * 获取某个实体对象的所有分库分表引用.
