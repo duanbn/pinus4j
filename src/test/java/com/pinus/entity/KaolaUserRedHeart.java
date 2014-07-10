@@ -6,7 +6,6 @@ import java.util.Date;
 import org.apache.commons.lang.builder.ToStringBuilder;
 import org.apache.commons.lang.builder.ToStringStyle;
 
-import com.pinus.api.IShardingEntity;
 import com.pinus.api.annotation.DateTime;
 import com.pinus.api.annotation.Field;
 import com.pinus.api.annotation.Index;
@@ -20,9 +19,9 @@ import com.pinus.api.annotation.Table;
  * @author duanbn
  * 
  */
-@Table(cluster = "redheart", name = "kaola_user_redheart", shardingNum = 25, cache = true)
+@Table(cluster = "redheart", name = "kaola_user_redheart", shardingBy = "userId", shardingNum = 25, cache = true)
 @Indexes(value = { @Index(field = "uid,classId,columnId") })
-public class KaolaUserRedHeart implements Serializable, IShardingEntity<Integer> {
+public class KaolaUserRedHeart implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 
@@ -59,16 +58,6 @@ public class KaolaUserRedHeart implements Serializable, IShardingEntity<Integer>
 	@Override
 	public String toString() {
 		return ToStringBuilder.reflectionToString(this, ToStringStyle.SHORT_PREFIX_STYLE);
-	}
-
-	@Override
-	public String getClusterName() {
-		return "redheart";
-	}
-
-	@Override
-	public Integer getShardingValue() {
-		return this.userId;
 	}
 
 	public int getUserId() {

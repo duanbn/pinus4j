@@ -31,6 +31,11 @@ public @interface Table {
 	String cluster();
 
 	/**
+	 * 基于哪个字段进行分片
+	 */
+	String shardingBy() default "";
+
+	/**
 	 * 分表数
 	 */
 	int shardingNum() default 0;

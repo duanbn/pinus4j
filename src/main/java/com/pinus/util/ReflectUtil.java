@@ -12,6 +12,7 @@ import com.pinus.api.annotation.DateTime;
 import com.pinus.api.annotation.PrimaryKey;
 import com.pinus.api.annotation.Table;
 import com.pinus.api.annotation.UpdateTime;
+import com.pinus.exception.DBOperationException;
 
 /**
  * 反射工具类. 提供了一些简单的反射功能. 方便其他操作调用.
@@ -44,6 +45,11 @@ public class ReflectUtil {
 	 * 数据表名缓存.
 	 */
 	private static final Map<Class<?>, String> _tableNameCache = new ConcurrentHashMap<Class<?>, String>();
+
+	/**
+	 * 数据分片字段缓存.
+	 */
+	private static final Map<Class<?>, String> _shardingFieldCache = new ConcurrentHashMap<Class<?>, String>();
 
 	/**
 	 * 集群表数量
@@ -115,6 +121,38 @@ public class ReflectUtil {
 	}
 
 	/**
+	 * 获取sharding值
+	 * 
+	 * @param entity
+	 * @return
+	 */
+	public static Object getShardingVAlue(Object entity) {
+		Class<?> clazz = entity.getClass();
+		String shardingField = _shardingFieldCache.get(clazz);
+		if (shardingField == null) {
+			Table annoTable = clazz.getAnnotation(Table.class);
+			if (annoTable == null) {
+				throw new IllegalArgumentException(clazz + "无法分片的数据实体，请使用@Table注解");
+			}
+			shardingField = annoTable.shardingBy();
+
+			_shardingFieldCache.put(clazz, shardingField);
+		}
+
+		Object shardingValue = null;
+		try {
+			shardingValue = getProperty(entity, shardingField);
+		} catch (Exception e) {
+			throw new DBOperationException("获取sharding value失败, clazz=" + clazz + " field=" + shardingField);
+		}
+		if (shardingValue == null) {
+			throw new IllegalStateException("shardingValue is null, clazz=" + clazz + " field=" + shardingField);
+		}
+
+		return shardingValue;
+	}
+
+	/**
 	 * 获取集群名
 	 * 
 	 * @param clazz
@@ -125,7 +163,7 @@ public class ReflectUtil {
 		if (clusterName == null) {
 			Table annoTable = clazz.getAnnotation(Table.class);
 			if (annoTable == null) {
-				throw new IllegalArgumentException(clazz + "无法转化为数据库，请使用@Table注解");
+				throw new IllegalArgumentException(clazz + "无法分片的数据实体，请使用@Table注解");
 			}
 			clusterName = annoTable.cluster();
 
@@ -146,7 +184,7 @@ public class ReflectUtil {
 		if (tableNum == null) {
 			Table annoTable = clazz.getAnnotation(Table.class);
 			if (annoTable == null) {
-				throw new IllegalArgumentException(clazz + "无法转化为数据库，请使用@Table注解");
+				throw new IllegalArgumentException(clazz + "无法分片的数据实体，请使用@Table注解");
 			}
 			tableNum = annoTable.shardingNum();
 
@@ -224,7 +262,7 @@ public class ReflectUtil {
 
 		Table annoTable = clazz.getAnnotation(Table.class);
 		if (annoTable == null) {
-			throw new IllegalArgumentException(clazz + "无法转化为数据库，请使用@Table注解");
+			throw new IllegalArgumentException(clazz + "无法分片的数据实体，请使用@Table注解");
 		}
 		tableName = StringUtils.isBlank(annoTable.name()) ? clazz.getSimpleName() : annoTable.name();
 

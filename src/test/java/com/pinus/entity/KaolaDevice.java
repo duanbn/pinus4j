@@ -7,7 +7,6 @@ import java.util.Date;
 import org.apache.commons.lang.builder.ToStringBuilder;
 import org.apache.commons.lang.builder.ToStringStyle;
 
-import com.pinus.api.IShardingEntity;
 import com.pinus.api.annotation.DateTime;
 import com.pinus.api.annotation.Field;
 import com.pinus.api.annotation.Index;
@@ -22,9 +21,9 @@ import com.pinus.api.annotation.UpdateTime;
  * @author duanbn
  * 
  */
-@Table(cluster = "user", name = "kaola_device", shardingNum = 25, cache = true)
+@Table(cluster = "user", name = "kaola_device", shardingBy="udid", shardingNum = 25, cache = true)
 @Indexes({ @Index(field = "udid", isUnique = true) })
-public class KaolaDevice implements Serializable, IShardingEntity<String> {
+public class KaolaDevice implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 

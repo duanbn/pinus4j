@@ -109,12 +109,6 @@ public class CheckUtil {
 		}
 	}
 
-	public static void checkNumberArray(Number... numbers) {
-		if (numbers == null || numbers.length == 0) {
-			throw new IllegalArgumentException("参数错误, numbers=" + numbers);
-		}
-	}
-
 	public static void checkEntityList(List<? extends Object> entityList) {
 		if (entityList == null || entityList.isEmpty()) {
 			throw new IllegalArgumentException("参数错误, entity list=" + entityList);
@@ -161,7 +155,7 @@ public class CheckUtil {
 	}
 
 	/**
-	 * 校验DBEntity.
+	 * 校验sharding entity
 	 * 
 	 * @param entity
 	 *            DBEntity
@@ -169,13 +163,44 @@ public class CheckUtil {
 	 * @throws IllegalArgumentException
 	 *             校验失败
 	 */
-	public static void checkEntity(Object entity) {
+	public static void checkShardingEntity(Object entity) {
 		if (entity == null) {
 			throw new IllegalArgumentException("参数错误, entity=" + entity);
 		}
 		Class<?> clazz = entity.getClass();
-		if (clazz.getAnnotation(Table.class) == null) {
+		Table table = clazz.getAnnotation(Table.class);
+		if (table == null) {
 			throw new IllegalArgumentException("参数错误, 实体对象需要使用@Table注解, class=" + clazz);
+		}
+		String clusterName = table.cluster();
+		String shardingField = table.shardingBy();
+		int shardingNum = table.shardingNum();
+		if (StringUtils.isBlank(clusterName) || StringUtils.isBlank(shardingField) || shardingNum <= 0) {
+			throw new IllegalArgumentException("分片数据实体类型错误, clusterName=" + clusterName + ", shardingBy="
+					+ shardingField + ", shardingNum=" + shardingNum);
+		}
+	}
+
+	/**
+	 * 校验global entity
+	 * 
+	 * @param entity
+	 */
+	public static void checkGlobalEntity(Object entity) {
+		if (entity == null) {
+			throw new IllegalArgumentException("参数错误, entity=" + entity);
+		}
+		Class<?> clazz = entity.getClass();
+		Table table = clazz.getAnnotation(Table.class);
+		if (table == null) {
+			throw new IllegalArgumentException("参数错误, 实体对象需要使用@Table注解, class=" + clazz);
+		}
+		String clusterName = table.cluster();
+		String shardingField = table.shardingBy();
+		int shardingNum = table.shardingNum();
+		if (StringUtils.isBlank(clusterName) || StringUtils.isNotBlank(shardingField) || shardingNum > 0) {
+			throw new IllegalArgumentException("全局数据实体类型错误, clusterName=" + clusterName + ", shardingBy="
+					+ shardingField + ", shardingNum=" + shardingNum);
 		}
 	}
 

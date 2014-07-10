@@ -7,15 +7,14 @@ import java.util.Date;
 import org.apache.commons.lang.builder.ToStringBuilder;
 import org.apache.commons.lang.builder.ToStringStyle;
 
-import com.pinus.api.IShardingEntity;
 import com.pinus.api.annotation.DateTime;
 import com.pinus.api.annotation.Field;
 import com.pinus.api.annotation.PrimaryKey;
 import com.pinus.api.annotation.Table;
 import com.pinus.api.annotation.UpdateTime;
 
-@Table(name = "test_entity", cluster = "klstorage", shardingNum = 25, cache = true)
-public class TestEntity implements Serializable, IShardingEntity<Long> {
+@Table(name = "test_entity", cluster = "klstorage", shardingBy = "id", shardingNum = 25, cache = true)
+public class TestEntity implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 
@@ -48,16 +47,6 @@ public class TestEntity implements Serializable, IShardingEntity<Long> {
 
 	@Field
 	private String testString;
-
-	@Override
-	public String getClusterName() {
-		return "klstorage";
-	}
-
-	@Override
-	public Long getShardingValue() {
-		return this.id;
-	}
 
 	@DateTime(comment = "日期类型")
 	private Date testDate;

@@ -39,7 +39,7 @@ public interface IShardingStorageClient {
 	 * @throws DBOperationException
 	 *             操作失败
 	 */
-	public Number globalSave(IGlobalEntity entity);
+	public Number globalSave(Object entity);
 
 	/**
 	 * 批量保存数据到全局库.
@@ -64,7 +64,7 @@ public interface IShardingStorageClient {
 	 * @throws DBOperationException
 	 *             操作失败
 	 */
-	public void globalUpdate(IGlobalEntity entity);
+	public void globalUpdate(Object entity);
 
 	/**
 	 * 批量更新全局库
@@ -109,7 +109,7 @@ public interface IShardingStorageClient {
 	 * @throws DBOperationException
 	 *             操作失败
 	 */
-	public Number save(IShardingEntity<?> entity);
+	public Number save(Object entity);
 
 	/**
 	 * 批量保存数据.
@@ -134,7 +134,7 @@ public interface IShardingStorageClient {
 	 * @throws DBOperationException
 	 *             操作失败
 	 */
-	public void update(IShardingEntity<?> entity);
+	public void update(Object entity);
 
 	/**
 	 * 单数据库多数据批量更新.

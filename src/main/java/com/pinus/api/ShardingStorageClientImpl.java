@@ -36,6 +36,7 @@ import com.pinus.generator.impl.DBMySqlGeneratorImpl;
 import com.pinus.generator.impl.DistributedSequenceIdGeneratorImpl;
 import com.pinus.generator.impl.StandaloneSequenceIdGeneratorImpl;
 import com.pinus.util.CheckUtil;
+import com.pinus.util.ReflectUtil;
 
 /**
  * 用户调用接口实现. 数据库类型、数据库连接类型、路由算法可以通过EnumDB、EnumDBConnect、EnumDBRouteAlg枚举进行设置.
@@ -223,20 +224,20 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 	}
 
 	@Override
-	public Number globalSave(IGlobalEntity entity) {
-		CheckUtil.checkEntity(entity);
+	public Number globalSave(Object entity) {
+		CheckUtil.checkGlobalEntity(entity);
 
-		String clusterName = entity.getClusterName();
+		String clusterName = ReflectUtil.getClusterName(entity.getClass());
 		CheckUtil.checkClusterName(clusterName);
 
 		return this.updater.globalSave(entity, clusterName);
 	}
 
 	@Override
-	public void globalUpdate(IGlobalEntity entity) {
-		CheckUtil.checkEntity(entity);
+	public void globalUpdate(Object entity) {
+		CheckUtil.checkGlobalEntity(entity);
 
-		String clusterName = entity.getClusterName();
+		String clusterName = ReflectUtil.getClusterName(entity.getClass());
 		CheckUtil.checkClusterName(clusterName);
 
 		this.updater.globalUpdate(entity, clusterName);
@@ -269,7 +270,9 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 
 	@Override
 	public void globalRemoveByPks(Number[] pks, Class<?> clazz, String clusterName) {
-		CheckUtil.checkNumberArray(pks);
+		if (pks == null || pks.length == 0) {
+			return;
+		}
 		CheckUtil.checkClass(clazz);
 		CheckUtil.checkClusterName(clusterName);
 
@@ -277,23 +280,27 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 	}
 
 	@Override
-	public Number save(IShardingEntity<?> entity) {
-		CheckUtil.checkEntity(entity);
+	public Number save(Object entity) {
+		CheckUtil.checkShardingEntity(entity);
 
-		IShardingKey<Object> shardingValue = new ShardingKey<Object>(entity.getClusterName(), entity.getShardingValue());
-		CheckUtil.checkShardingValue(shardingValue);
+		String clusterName = ReflectUtil.getClusterName(entity.getClass());
+		Object shardingValue = ReflectUtil.getShardingVAlue(entity);
+		IShardingKey<Object> sk = new ShardingKey<Object>(clusterName, shardingValue);
+		CheckUtil.checkShardingValue(sk);
 
-		return this.updater.save(entity, shardingValue);
+		return this.updater.save(entity, sk);
 	}
 
 	@Override
-	public void update(IShardingEntity<?> entity) {
-		CheckUtil.checkEntity(entity);
+	public void update(Object entity) {
+		CheckUtil.checkShardingEntity(entity);
 
-		IShardingKey<Object> shardingValue = new ShardingKey<Object>(entity.getClusterName(), entity.getShardingValue());
-		CheckUtil.checkShardingValue(shardingValue);
+		String clusterName = ReflectUtil.getClusterName(entity.getClass());
+		Object shardingValue = ReflectUtil.getShardingVAlue(entity);
+		IShardingKey<Object> sk = new ShardingKey<Object>(clusterName, shardingValue);
+		CheckUtil.checkShardingValue(sk);
 
-		this.updater.update(entity, shardingValue);
+		this.updater.update(entity, sk);
 	}
 
 	@Override
@@ -323,7 +330,9 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 
 	@Override
 	public void removeByPks(Number[] pks, IShardingKey<?> shardingValue, Class<?> clazz) {
-		CheckUtil.checkNumberArray(pks);
+		if (pks == null || pks.length == 0) {
+			return;
+		}
 		CheckUtil.checkShardingValue(shardingValue);
 		CheckUtil.checkClass(clazz);
 
@@ -367,9 +376,12 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 
 	@Override
 	public <T> List<T> findGlobalByPks(String clusterName, Class<T> clazz, Number... pks) {
+		if (pks == null || pks.length == 0) {
+			return new ArrayList<T>();
+		}
+
 		CheckUtil.checkClusterName(clusterName);
 		CheckUtil.checkClass(clazz);
-		CheckUtil.checkNumberArray(pks);
 
 		return this.masterQueryer.findGlobalByPksFromMaster(clusterName, clazz, pks);
 	}
@@ -443,9 +455,12 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 
 	@Override
 	public <T> List<T> findByPks(IShardingKey<?> shardingValue, Class<T> clazz, Number... pks) {
+		if (pks == null || pks.length == 0) {
+			return new ArrayList<T>();
+		}
+
 		CheckUtil.checkShardingValue(shardingValue);
 		CheckUtil.checkClass(clazz);
-		CheckUtil.checkNumberArray(pks);
 
 		return this.masterQueryer.findByPksFromMaster(shardingValue, clazz, pks);
 	}
@@ -461,9 +476,12 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 
 	@Override
 	public <T> List<T> findByShardingPair(List<IShardingKey<?>> shardingValues, Class<T> clazz, Number... pks) {
+		if (pks == null || pks.length == 0) {
+			return new ArrayList<T>();
+		}
+
 		CheckUtil.checkShardingValueList(shardingValues);
 		CheckUtil.checkClass(clazz);
-		CheckUtil.checkNumberArray(pks);
 
 		return this.masterQueryer.findByShardingPairFromMaster(shardingValues, clazz, pks);
 	}

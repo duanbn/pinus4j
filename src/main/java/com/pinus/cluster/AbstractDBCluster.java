@@ -404,6 +404,9 @@ public abstract class AbstractDBCluster implements IDBCluster {
 				// 读取分表信息
 				oneDbTables = tableCluster.get(clusterName);
 				DBClusterInfo dbClusterInfo = this.dbClusterInfo.get(clusterName);
+				if (oneDbTables == null || dbClusterInfo == null) {
+					throw new DBClusterException("找不到相关的集群信息, clusterName=" + clusterName);
+				}
 
 				for (Integer dbIndex : oneDbTables.keySet()) {
 
