@@ -30,6 +30,18 @@ public class ReflectUtilTest extends BaseTest {
 		for (Map.Entry<String, Object> entry : map.entrySet()) {
 			System.out.println(entry);
 		}
+
+		map = ReflectUtil.describe(entity, true, false);
+		map.remove("testByte");
+		for (Map.Entry<String, Object> entry : map.entrySet()) {
+			System.out.println(entry);
+		}
+		
+		map = ReflectUtil.describe(entity, true, true);
+		map.remove("testByte");
+		for (Map.Entry<String, Object> entry : map.entrySet()) {
+			System.out.println(entry);
+		}
 	}
 
 }

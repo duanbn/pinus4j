@@ -325,80 +325,17 @@ public class ReflectUtil {
 	}
 
 	/**
-	 * 获取对象的描述并过滤某些注解的属性.
+	 * 获取对象的描述并过滤@UpdateTime注解的属性.
 	 * 
 	 * @param obj
 	 *            被反射的对象
-	 * @param filteAnnos
-	 *            被过滤的注解
+	 * @param isFilteDefault
+	 *            是否过滤掉默认值
 	 * 
 	 * @return {属性名, 属性值}
 	 */
-	public static Map<String, Object> describeWithoutUpdateTime(Object obj, boolean filteNull) throws Exception {
-		if (obj == null) {
-			throw new IllegalArgumentException("参数错误, obj=null");
-		}
-
-		Class<?> objClass = obj.getClass();
-		Map<String, Object> map = new TreeMap<String, Object>();
-		Object value = null;
-		for (Field f : getFields(objClass)) {
-			f.setAccessible(true);
-
-			if (f.getAnnotation(UpdateTime.class) != null) {
-				f.set(obj, new Timestamp(System.currentTimeMillis()));
-				continue;
-			}
-
-			value = f.get(obj);
-
-			if (filteNull && value == null) {
-				continue;
-			}
-
-			map.put(f.getName(), f.get(obj));
-		}
-
-		return map;
-	}
-
-	/**
-	 * 获取对象的属性描述.
-	 * 
-	 * @param obj
-	 *            被反射的对象
-	 * @param filteNull
-	 *            是否过滤掉null值
-	 * @param filteAnnos
-	 *            被过滤的注解
-	 * 
-	 * @return {属性名, 属性值}
-	 */
-	public static Map<String, Object> describe(Object obj, boolean filteNull) throws Exception {
-		if (obj == null) {
-			throw new IllegalArgumentException("参数错误, obj=null");
-		}
-
-		Class<?> objClass = obj.getClass();
-		Map<String, Object> map = new TreeMap<String, Object>();
-		Object value = null;
-		for (Field f : getFields(objClass)) {
-			f.setAccessible(true);
-
-			if (f.getAnnotation(UpdateTime.class) != null) {
-				f.set(obj, new Timestamp(System.currentTimeMillis()));
-			}
-
-			value = f.get(obj);
-
-			if (filteNull && value == null) {
-				continue;
-			}
-
-			map.put(f.getName(), f.get(obj));
-		}
-
-		return map;
+	public static Map<String, Object> describeWithoutUpdateTime(Object obj, boolean isFilteDefault) throws Exception {
+		return describe(obj, isFilteDefault, true);
 	}
 
 	/**
@@ -409,7 +346,87 @@ public class ReflectUtil {
 	 * @return 属性名和属性值
 	 */
 	public static Map<String, Object> describe(Object obj) throws Exception {
-		return describe(obj, false);
+		return describe(obj, false, false);
+	}
+
+	/**
+	 * 获取对象的属性描述.
+	 * 
+	 * @param obj
+	 *            被反射的对象
+	 * @param isFilteDefault
+	 *            是否过滤掉默认值
+	 * @param isFilteUpdateTime
+	 *            是否过滤@UpdateTime注解
+	 * 
+	 * @return {属性名, 属性值}
+	 */
+	public static Map<String, Object> describe(Object obj, boolean isFilteDefault, boolean isFilteUpdateTime)
+			throws Exception {
+		if (obj == null) {
+			throw new IllegalArgumentException("参数错误, obj=null");
+		}
+
+		Class<?> objClass = obj.getClass();
+		Map<String, Object> map = new TreeMap<String, Object>();
+		Object value = null;
+		for (Field f : getFields(objClass)) {
+			f.setAccessible(true);
+
+			if (f.getAnnotation(UpdateTime.class) != null) {
+				if (isFilteUpdateTime)
+					continue;
+				else
+					f.set(obj, new Timestamp(System.currentTimeMillis()));
+			}
+
+			value = f.get(obj);
+
+			// 过滤默认值
+			if (isFilteDefault) {
+				if (value == null) {
+					continue;
+				}
+				Class<?> fTypeClazz = f.getType();
+				if (fTypeClazz == Boolean.TYPE || fTypeClazz == Boolean.class) {
+					if (!(Boolean) value) {
+						continue;
+					}
+				} else if (fTypeClazz == Byte.TYPE || fTypeClazz == Byte.class) {
+                    if ((Byte) value == 0) {
+                        continue;
+                    }
+				} else if (fTypeClazz == Character.TYPE || fTypeClazz == Character.class) {
+                    if ((Character) value == 0) {
+                        continue;
+                    }
+				} else if (fTypeClazz == Short.TYPE || fTypeClazz == Short.class) {
+                    if ((Short) value == 0) {
+                        continue;
+                    }
+				} else if (fTypeClazz == Integer.TYPE || fTypeClazz == Integer.class) {
+                    if ((Integer) value == 0) {
+                        continue;
+                    }
+				} else if (fTypeClazz == Long.TYPE || fTypeClazz == Long.class) {
+                    if ((Long) value == 0l) {
+                        continue;
+                    }
+				} else if (fTypeClazz == Float.TYPE || fTypeClazz == Float.class) {
+                    if ((Float) value == 0.0f) {
+                        continue;
+                    }
+				} else if (fTypeClazz == Double.TYPE || fTypeClazz == Double.class) {
+                    if ((Double) value == 0.0) {
+                        continue;
+                    }
+				}
+			}
+
+			map.put(f.getName(), value);
+		}
+
+		return map;
 	}
 
 	/**

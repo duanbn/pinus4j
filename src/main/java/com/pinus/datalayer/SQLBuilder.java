@@ -622,7 +622,7 @@ public class SQLBuilder {
 		Object entity = entities.get(0);
 		Map<String, Object> entityProperty;
 		try {
-			entityProperty = ReflectUtil.describe(entity, true);
+			entityProperty = ReflectUtil.describe(entity);
 		} catch (Exception e) {
 			throw new SQLException("解析实体对象失败", e);
 		}
@@ -637,7 +637,7 @@ public class SQLBuilder {
 		Set<Map.Entry<String, Object>> propertyEntrySet = null;
 		for (Object dbEntity : entities) {
 			try {
-				entityProperty = ReflectUtil.describe(dbEntity, true);
+				entityProperty = ReflectUtil.describe(dbEntity);
 			} catch (Exception e) {
 				throw new SQLException("解析实体对象失败", e);
 			}
@@ -762,6 +762,7 @@ public class SQLBuilder {
 
 	/**
 	 * 打印Update日志
+	 * 
 	 * @param entityProperty
 	 * @param tableName
 	 * @param pkName

@@ -128,6 +128,7 @@ public interface IShardingStorageClient {
 
 	/**
 	 * 更新分库分表数据.
+     * 会忽略更新null值和默认值
 	 * 
 	 * @param entity
 	 *            数据对象
@@ -138,6 +139,7 @@ public interface IShardingStorageClient {
 
 	/**
 	 * 单数据库多数据批量更新.
+     * 会忽略更新null值和默认值
 	 * 
 	 * @param entities
 	 *            批量更新数据

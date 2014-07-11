@@ -363,7 +363,7 @@ public class ShardingUpdateImpl implements IShardingUpdate {
 	}
 
 	private void _updateBatch(Connection conn, List<? extends Object> entities, int tableIndex) {
-		PreparedStatement ps = null;
+        PreparedStatement ps = null;
 		try {
 			conn.setAutoCommit(false);
 
