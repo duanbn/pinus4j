@@ -151,8 +151,6 @@ public class DistributedLock implements Lock, Watcher {
 			// 创建临时子节点
 			myZnode = zk.create(root + "/" + lockName + splitStr, new byte[0], ZooDefs.Ids.OPEN_ACL_UNSAFE,
 					CreateMode.EPHEMERAL_SEQUENTIAL);
-			if (LOG.isDebugEnabled())
-				LOG.debug(myZnode + " is created ");
 			// 取出所有子节点
 			List<String> subNodes = zk.getChildren(root, false);
 			// 取出所有lockName的锁
@@ -164,8 +162,6 @@ public class DistributedLock implements Lock, Watcher {
 				}
 			}
 			Collections.sort(lockObjNodes);
-			if (LOG.isDebugEnabled())
-				LOG.debug(myZnode + "==" + lockObjNodes.get(0));
 			if (myZnode.equals(root + "/" + lockObjNodes.get(0))) {
 				// 如果是最小的节点,则表示取得锁
 				return true;

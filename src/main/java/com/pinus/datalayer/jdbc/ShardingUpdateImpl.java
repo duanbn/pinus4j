@@ -265,13 +265,13 @@ public class ShardingUpdateImpl implements IShardingUpdate {
 			SQLBuilder.close(conn);
 		}
 
-		// 更新缓存
+		// 清理缓存
 		if (primaryCache != null) {
 			Number[] pks = new Number[entities.size()];
 			for (int i = 0; i < entities.size(); i++) {
 				pks[i] = (Number) ReflectUtil.getPkValue(entities.get(i));
 			}
-			primaryCache.put(db, pks, entities);
+			primaryCache.remove(db, pks);
 		}
 
 	}
@@ -363,7 +363,7 @@ public class ShardingUpdateImpl implements IShardingUpdate {
 	}
 
 	private void _updateBatch(Connection conn, List<? extends Object> entities, int tableIndex) {
-        PreparedStatement ps = null;
+		PreparedStatement ps = null;
 		try {
 			conn.setAutoCommit(false);
 
