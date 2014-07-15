@@ -1,3 +1,8 @@
+--Version 0.6.3
+1.去除了ISharingEntity和IGlobalEntity接口，改为使用注解代替
+2.优化update查询
+3.修复update时缓存脏数据的bug
+
 --Version 0.6.2
 1.允许集群中不存在全局库，某些集群不需要全局信息
 2.添加IShardingStorageClient可以创建集群锁

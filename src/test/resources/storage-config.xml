@@ -8,7 +8,7 @@
 	<!-- zookeeper connection -->
 	<db.cluster.zk>127.0.0.1:2181</db.cluster.zk>
 	<!-- id generator batch -->
-	<db.cluster.generateid.batch>5</db.cluster.generateid.batch>
+	<db.cluster.generateid.batch>10</db.cluster.generateid.batch>
 
 	<db-connection-pool>
 		<maxActive>400</maxActive>
