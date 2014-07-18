@@ -10,7 +10,6 @@ import com.pinus.api.enums.EnumDB;
 import com.pinus.api.enums.EnumDBConnect;
 import com.pinus.api.enums.EnumDBMasterSlave;
 import com.pinus.api.enums.EnumDBRouteAlg;
-import com.pinus.api.enums.EnumIdGenrator;
 import com.pinus.api.enums.EnumMode;
 import com.pinus.api.query.IQuery;
 import com.pinus.api.query.QueryImpl;
@@ -19,8 +18,6 @@ import com.pinus.cluster.DB;
 import com.pinus.cluster.IDBCluster;
 import com.pinus.cluster.impl.DbcpDBClusterImpl;
 import com.pinus.cluster.lock.DistributedLock;
-import com.pinus.cluster.route.IClusterRouter;
-import com.pinus.cluster.route.impl.SimpleHashClusterRouterImpl;
 import com.pinus.datalayer.IShardingMasterQuery;
 import com.pinus.datalayer.IShardingSlaveQuery;
 import com.pinus.datalayer.IShardingStatistics;
@@ -30,9 +27,7 @@ import com.pinus.datalayer.jdbc.ShardingMasterQueryImpl;
 import com.pinus.datalayer.jdbc.ShardingSlaveQueryImpl;
 import com.pinus.datalayer.jdbc.ShardingUpdateImpl;
 import com.pinus.exception.DBClusterException;
-import com.pinus.generator.IDBGenerator;
 import com.pinus.generator.IIdGenerator;
-import com.pinus.generator.impl.DBMySqlGeneratorImpl;
 import com.pinus.generator.impl.DistributedSequenceIdGeneratorImpl;
 import com.pinus.generator.impl.StandaloneSequenceIdGeneratorImpl;
 import com.pinus.util.CheckUtil;
@@ -71,24 +66,19 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 	private EnumMode mode = EnumMode.STANDALONE;
 
 	/**
+	 * 分片路由算法.
+	 */
+	private EnumDBRouteAlg enumDBRouteAlg = EnumDBRouteAlg.SIMPLE_HASH;
+
+	/**
 	 * 数据库类型.
 	 */
 	private EnumDB enumDb = EnumDB.MYSQL;
 
 	/**
-	 * 集群主键生成器. 默认是根据零库的global_id表来生成. 零库中必须存在global_id表
-	 */
-	private EnumIdGenrator enumIdGenrator = EnumIdGenrator.DB;
-
-	/**
 	 * 数据库连接类型. 默认使用DBCP的数据库连接池
 	 */
 	private EnumDBConnect enumDbConnect = EnumDBConnect.DBCP;
-
-	/**
-	 * 路由算法. 默认使用取模哈希算法
-	 */
-	private EnumDBRouteAlg enumDBRouteAlg = EnumDBRouteAlg.SIMPLE_HASH;
 
 	/**
 	 * 是否生成数据库表. 默认是不自动生成库表
@@ -116,11 +106,6 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 	private IIdGenerator idGenerator;
 
 	/**
-	 * 数据库表生成器.
-	 */
-	private IDBGenerator dbGenerator;
-
-	/**
 	 * 分库分表更新实现.
 	 */
 	private IShardingUpdate updater;
@@ -137,50 +122,6 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 	 * 初始化方法
 	 */
 	public void init() {
-		// 初始化ID生成器
-		if (this.mode == EnumMode.STANDALONE) {
-			switch (enumIdGenrator) {
-			case DB:
-				this.idGenerator = new StandaloneSequenceIdGeneratorImpl();
-				break;
-			default:
-				this.idGenerator = new StandaloneSequenceIdGeneratorImpl();
-				break;
-			}
-		} else if (this.mode == EnumMode.DISTRIBUTED) {
-			switch (enumIdGenrator) {
-			case DB:
-				this.idGenerator = new DistributedSequenceIdGeneratorImpl();
-				break;
-			default:
-				this.idGenerator = new DistributedSequenceIdGeneratorImpl();
-				break;
-			}
-		} else {
-			throw new IllegalStateException("运行模式设置错误, mode=" + this.mode);
-		}
-
-		// 初始化集群路由器
-		IClusterRouter dbRouter = null;
-		switch (enumDBRouteAlg) {
-		case SIMPLE_HASH:
-			dbRouter = new SimpleHashClusterRouterImpl();
-			break;
-		default:
-			dbRouter = new SimpleHashClusterRouterImpl();
-			break;
-		}
-
-		// 初始化数据库表生成器
-		switch (enumDb) {
-		case MYSQL:
-			this.dbGenerator = new DBMySqlGeneratorImpl();
-			break;
-		default:
-			this.dbGenerator = new DBMySqlGeneratorImpl();
-			break;
-		}
-
 		// 初始化集群
 		switch (enumDbConnect) {
 		case DBCP:
@@ -190,12 +131,10 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 			this.dbCluster = new DbcpDBClusterImpl(enumDb);
 			break;
 		}
-		// 设置集群路由器
-		this.dbCluster.setDbRouter(dbRouter);
+		// 设置路由算法.
+		this.dbCluster.setDbRouteAlg(this.enumDBRouteAlg);
 		// 设置是否生成数据库表
 		this.dbCluster.setCreateTable(this.isCreateTable);
-		// 设置集群数据库表生成器
-		this.dbCluster.setDbGenerator(this.dbGenerator);
 		// 设置扫描对象的包
 		this.dbCluster.setScanPackage(this.scanPackage);
 
@@ -204,6 +143,15 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 			this.dbCluster.startup();
 		} catch (DBClusterException e) {
 			throw new RuntimeException(e);
+		}
+
+		// 初始化ID生成器
+		if (this.mode == EnumMode.STANDALONE) {
+			this.idGenerator = new StandaloneSequenceIdGeneratorImpl(this.dbCluster.getClusterConfig());
+		} else if (this.mode == EnumMode.DISTRIBUTED) {
+			this.idGenerator = new DistributedSequenceIdGeneratorImpl(this.dbCluster.getClusterConfig());
+		} else {
+			throw new IllegalStateException("运行模式设置错误, mode=" + this.mode);
 		}
 
 		//
@@ -221,6 +169,9 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 		this.slaveQueryer = new ShardingSlaveQueryImpl();
 		this.slaveQueryer.setDBCluster(this.dbCluster);
 		this.slaveQueryer.setPrimaryCache(this.primaryCache);
+
+        // set instance to threadlocal.
+        storageClientHolder.set(this);
 	}
 
 	@Override
@@ -284,7 +235,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 		CheckUtil.checkShardingEntity(entity);
 
 		String clusterName = ReflectUtil.getClusterName(entity.getClass());
-		Object shardingValue = ReflectUtil.getShardingVAlue(entity);
+		Object shardingValue = ReflectUtil.getShardingValue(entity);
 		IShardingKey<Object> sk = new ShardingKey<Object>(clusterName, shardingValue);
 		CheckUtil.checkShardingValue(sk);
 
@@ -296,7 +247,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 		CheckUtil.checkShardingEntity(entity);
 
 		String clusterName = ReflectUtil.getClusterName(entity.getClass());
-		Object shardingValue = ReflectUtil.getShardingVAlue(entity);
+		Object shardingValue = ReflectUtil.getShardingValue(entity);
 		IShardingKey<Object> sk = new ShardingKey<Object>(clusterName, shardingValue);
 		CheckUtil.checkShardingValue(sk);
 
@@ -551,7 +502,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 
 	@Override
 	public Lock createLock(String lockName) {
-		return new DistributedLock(lockName, true);
+		return new DistributedLock(lockName, true, this.dbCluster.getClusterConfig());
 	}
 
 	@Override
@@ -634,11 +585,18 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 
 	@Override
 	public void destroy() {
+		// close database cluster.
 		try {
 			this.dbCluster.shutdown();
 		} catch (DBClusterException e) {
 			throw new RuntimeException(e);
 		}
+
+		// close id generator
+		this.idGenerator.close();
+
+        // remove instance from threadlocal.
+        storageClientHolder.remove();
 	}
 
 	@Override

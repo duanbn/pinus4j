@@ -1,5 +1,6 @@
 package com.pinus.cluster;
 
+import java.io.IOException;
 import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -9,16 +10,22 @@ import java.util.Map;
 import javax.sql.DataSource;
 
 import org.apache.log4j.Logger;
+import org.apache.zookeeper.CreateMode;
+import org.apache.zookeeper.ZooDefs;
+import org.apache.zookeeper.ZooKeeper;
+import org.apache.zookeeper.data.Stat;
 
 import com.pinus.api.IShardingKey;
 import com.pinus.api.enums.EnumDB;
 import com.pinus.api.enums.EnumDBMasterSlave;
+import com.pinus.api.enums.EnumDBRouteAlg;
 import com.pinus.cluster.beans.DBClusterInfo;
 import com.pinus.cluster.beans.DBClusterRegionInfo;
 import com.pinus.cluster.beans.DBConnectionInfo;
 import com.pinus.cluster.beans.DBTable;
 import com.pinus.cluster.route.DBRouteInfo;
 import com.pinus.cluster.route.IClusterRouter;
+import com.pinus.cluster.route.impl.SimpleHashClusterRouterImpl;
 import com.pinus.config.IClusterConfig;
 import com.pinus.config.impl.XmlDBClusterConfigImpl;
 import com.pinus.constant.Const;
@@ -27,11 +34,14 @@ import com.pinus.exception.DBOperationException;
 import com.pinus.exception.DBRouteException;
 import com.pinus.exception.LoadConfigException;
 import com.pinus.generator.IDBGenerator;
+import com.pinus.generator.impl.DBMySqlGeneratorImpl;
+import com.pinus.util.IOUtil;
 import com.pinus.util.ReflectUtil;
 import com.pinus.util.StringUtils;
 
 /**
- * 抽象数据库集群. 主要负责初始化数据库集群的数据源对象、分表信息.
+ * 抽象数据库集群. 主要负责初始化数据库集群的数据源对象、分表信息.<br/>
+ * need to invoke startup method before use it, invoke shutdown method at last.
  * 
  * @author duanbn
  */
@@ -55,7 +65,12 @@ public abstract class AbstractDBCluster implements IDBCluster {
 	/**
 	 * 数据库类型.
 	 */
-	protected EnumDB enumDb;
+	protected EnumDB enumDb = EnumDB.MYSQL;
+
+	/**
+	 * 路由算法. 默认使用取模哈希算法
+	 */
+	protected EnumDBRouteAlg enumDBRouteAlg = EnumDBRouteAlg.SIMPLE_HASH;
 
 	/**
 	 * 数据库表生成器.
@@ -78,6 +93,11 @@ public abstract class AbstractDBCluster implements IDBCluster {
 	Map<String, Map<Integer, Map<String, Integer>>> tableCluster = new HashMap<String, Map<Integer, Map<String, Integer>>>();
 
 	/**
+	 * 集群配置.
+	 */
+	private IClusterConfig config;
+
+	/**
 	 * 构造方法.
 	 * 
 	 * @param enumDb
@@ -85,6 +105,40 @@ public abstract class AbstractDBCluster implements IDBCluster {
 	 */
 	public AbstractDBCluster(EnumDB enumDb) {
 		this.enumDb = enumDb;
+	}
+
+	@Override
+	public List<DBTable> getDBTableFromZk() {
+		List<DBTable> tables = new ArrayList<DBTable>();
+
+		ZooKeeper zkClient = config.getZooKeeper();
+
+		try {
+			List<String> zkTableNodes = zkClient.getChildren(Const.ZK_SHARDINGINFO, false);
+			byte[] tableData = null;
+			for (String zkTableNode : zkTableNodes) {
+				tableData = zkClient.getData(Const.ZK_SHARDINGINFO + "/" + zkTableNode, false, null);
+				tables.add(IOUtil.getObject(tableData, DBTable.class));
+			}
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		} finally {
+			try {
+				zkClient.close();
+			} catch (InterruptedException e) {
+			}
+		}
+
+		return tables;
+	}
+
+	@Override
+	public List<DBTable> getDBTableFromJvm() {
+		try {
+			return this.dbGenerator.scanEntity(this.scanPackage);
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	@Override
@@ -100,12 +154,35 @@ public abstract class AbstractDBCluster implements IDBCluster {
 
 	@Override
 	public void startup() throws DBClusterException {
-		LOG.info("开始初始化数据库集群.");
+		startup(null);
+	}
 
-		// 加载数据
-		IClusterConfig config;
+	@Override
+	public void startup(String xmlFilePath) throws DBClusterException {
+		LOG.info("start init database cluster");
+
+		// init db router
+		switch (enumDBRouteAlg) {
+		case SIMPLE_HASH:
+			dbRouter = new SimpleHashClusterRouterImpl();
+			break;
+		default:
+			dbRouter = new SimpleHashClusterRouterImpl();
+			break;
+		}
+
+		// init db generator
+		switch (enumDb) {
+		case MYSQL:
+			this.dbGenerator = new DBMySqlGeneratorImpl();
+			break;
+		default:
+			this.dbGenerator = new DBMySqlGeneratorImpl();
+			break;
+		}
+
 		try {
-			config = _getConfig();
+			config = _getConfig(xmlFilePath);
 		} catch (LoadConfigException e) {
 			throw new RuntimeException(e);
 		}
@@ -127,7 +204,6 @@ public abstract class AbstractDBCluster implements IDBCluster {
 			_initDBCluster(this.dbClusterInfo);
 
 			// 初始化数据表集群信息.
-			// 优先使用shard_cluster表的信息，获取失败则使用@Table的信息
 			if (scanPackage == null || scanPackage.equals("")) {
 				throw new IllegalStateException("未设置需要扫描的实体对象包, 参考IShardingStorageClient.setScanPackage()");
 			}
@@ -135,6 +211,8 @@ public abstract class AbstractDBCluster implements IDBCluster {
 			if (tables.isEmpty()) {
 				throw new DBClusterException("找不到可以创建库表的实体对象, package=" + scanPackage);
 			}
+
+			// 初始化表集群
 			_initTableCluster(dbClusterInfo, tables);
 
 			// 创建数据库表
@@ -145,11 +223,14 @@ public abstract class AbstractDBCluster implements IDBCluster {
 				LOG.info("数据库表同步完成, 耗时:" + (System.currentTimeMillis() - start) + "ms");
 			}
 
+			// 表分片信息写入zookeeper
+			_syncToZookeeper(tables);
+
 		} catch (Exception e) {
-			throw new DBClusterException("初始化数据库集群失败", e);
+			throw new DBClusterException("init database cluster failure", e);
 		}
 
-		LOG.info("初始化数据库集群完毕.");
+		LOG.info("init database cluster done.");
 	}
 
 	@Override
@@ -189,6 +270,12 @@ public abstract class AbstractDBCluster implements IDBCluster {
 
 		} catch (Exception e) {
 			throw new DBClusterException("关闭数据库集群失败", e);
+		}
+
+		try {
+			this.config.getZooKeeper().close();
+		} catch (InterruptedException e) {
+			throw new DBClusterException("关闭zookeeper连接失败", e);
 		}
 	}
 
@@ -386,6 +473,39 @@ public abstract class AbstractDBCluster implements IDBCluster {
 		return dbs;
 	}
 
+	private void _syncToZookeeper(List<DBTable> tables) throws Exception {
+		ZooKeeper zkClient = config.getZooKeeper();
+		try {
+			Stat stat = zkClient.exists(Const.ZK_SHARDINGINFO, false);
+			if (stat == null) {
+				// 创建根节点
+				zkClient.create(Const.ZK_SHARDINGINFO, new byte[0], ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
+			}
+
+			byte[] tableData = null;
+			String tableName = null;
+			for (DBTable table : tables) {
+				tableData = IOUtil.getBytes(table);
+				tableName = table.getName();
+
+				String zkTableNode = Const.ZK_SHARDINGINFO + "/" + tableName;
+				stat = zkClient.exists(zkTableNode, false);
+				if (stat == null) {
+					zkClient.create(zkTableNode, tableData, ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
+				} else {
+					zkClient.setData(zkTableNode, tableData, -1);
+				}
+			}
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		} finally {
+			if (zkClient != null) {
+				zkClient.close();
+			}
+		}
+		LOG.info("sharding info of tables have flushed to zookeeper done.");
+	}
+
 	/**
 	 * 创建数据库表.
 	 * 
@@ -545,29 +665,33 @@ public abstract class AbstractDBCluster implements IDBCluster {
 		return tableNum;
 	}
 
+	@Override
 	public IClusterRouter getDbRouter() {
 		return dbRouter;
 	}
 
-	public void setDbRouter(IClusterRouter dbRouter) {
-		this.dbRouter = dbRouter;
+	@Override
+	public void setDbRouteAlg(EnumDBRouteAlg routeAlg) {
+		this.enumDBRouteAlg = routeAlg;
+	}
+
+	@Override
+	public EnumDBRouteAlg getDbRouteAlg() {
+		return this.enumDBRouteAlg;
 	}
 
 	/**
-	 * 读取配置. 三种配置信息获取方式，1. 从classpath根路径的storage-config.properties中获取。 2.
-	 * 从zookeeper中获取. 优先从zookeeper中加载，其次从指定的文件，默认从classpath根路径
+	 * 读取配置.
 	 * 
 	 * @return 配置信息.
 	 */
-	private IClusterConfig _getConfig() throws LoadConfigException {
+	private IClusterConfig _getConfig(String xmlFilePath) throws LoadConfigException {
 		IClusterConfig config = null;
 
-		String zkHost = System.getProperty(Const.SYSTEM_PROPERTY_ZKHOST);
-
-		if (StringUtils.isNotBlank(zkHost)) {
-			// TODO: 配置信息从zookeeper中获取.
-		} else {
+		if (StringUtils.isBlank(xmlFilePath)) {
 			config = XmlDBClusterConfigImpl.getInstance();
+		} else {
+			config = XmlDBClusterConfigImpl.getInstance(xmlFilePath);
 		}
 
 		return config;
@@ -585,14 +709,6 @@ public abstract class AbstractDBCluster implements IDBCluster {
 	 */
 	public abstract void closeDataSource(DBConnectionInfo dbConnInfo);
 
-	public IDBGenerator getDbGenerator() {
-		return dbGenerator;
-	}
-
-	public void setDbGenerator(IDBGenerator dbGenerator) {
-		this.dbGenerator = dbGenerator;
-	}
-
 	@Override
 	public void setCreateTable(boolean isCreateTable) {
 		this.isCreateTable = isCreateTable;
@@ -601,6 +717,11 @@ public abstract class AbstractDBCluster implements IDBCluster {
 	@Override
 	public boolean isCreateTable() {
 		return this.isCreateTable;
+	}
+
+	@Override
+	public IDBGenerator getDbGenerator() {
+		return this.dbGenerator;
 	}
 
 	public String getScanPackage() {
@@ -615,6 +736,11 @@ public abstract class AbstractDBCluster implements IDBCluster {
 	@Override
 	public Map<String, Map<Integer, Map<String, Integer>>> getTableCluster() {
 		return this.tableCluster;
+	}
+
+	@Override
+	public IClusterConfig getClusterConfig() {
+		return this.config;
 	}
 
 }

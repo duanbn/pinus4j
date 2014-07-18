@@ -22,14 +22,14 @@ public class CacheShardingStorageClientTest extends BaseTest {
 		System.out.println(count);
 	}
 
-    @Test
-    public void testGetCountQuery() throws Exception {
-        IQuery query = cacheClient.createQuery();
-        query.add(Condition.lt("id", 999999));
-        long count = cacheClient.getCount(TestEntity.class, query).longValue();
-        System.out.println(count);
-    }
-	
+	@Test
+	public void testGetCountQuery() throws Exception {
+		IQuery query = cacheClient.createQuery();
+		query.add(Condition.lt("id", 999999));
+		long count = cacheClient.getCount(TestEntity.class, query).longValue();
+		System.out.println(count);
+	}
+
 	@Test
 	public void testGlobalSave() {
 		TestGlobalEntity entity = createGlobalEntity();
@@ -200,6 +200,8 @@ public class CacheShardingStorageClientTest extends BaseTest {
 		Assert.assertEquals(entity, entityFromDB);
 
 		cacheClient.globalRemoveByPk(pk, TestGlobalEntity.class, CLUSTER_KLSTORAGE);
+		entity = cacheClient.findGlobalByPk(pk, CLUSTER_KLSTORAGE, TestGlobalEntity.class);
+		Assert.assertNull(entity);
 	}
 
 	@Test
@@ -224,37 +226,6 @@ public class CacheShardingStorageClientTest extends BaseTest {
 
 		Number count = cacheClient.getGlobalCount(CLUSTER_KLSTORAGE, TestGlobalEntity.class);
 		Assert.assertEquals(1, count.intValue());
-
-		cacheClient.globalRemoveByPk(pk, TestGlobalEntity.class, CLUSTER_KLSTORAGE);
-	}
-
-	@Test
-	public void testGetGlobalCountStringSQLOfQ() {
-		TestGlobalEntity entity = createGlobalEntity();
-		entity.setTestString("this methid is test global count by sql");
-		Number pk = cacheClient.globalSave(entity);
-
-		String s = "select count(*) from testglobalentity where teststring=?";
-		SQL<TestGlobalEntity> sql = new SQL<TestGlobalEntity>(TestGlobalEntity.class, s,
-				new Object[] { "this methid is test global count by sql" });
-		Number count = cacheClient.getGlobalCount(CLUSTER_KLSTORAGE, sql);
-		Assert.assertEquals(1, count.intValue());
-
-		cacheClient.globalRemoveByPk(pk, TestGlobalEntity.class, CLUSTER_KLSTORAGE);
-	}
-
-	@Test
-	public void testFindGlobalBySql() {
-		TestGlobalEntity entity = createGlobalEntity();
-		entity.setTestString("this methid is test find global by sql");
-		Number pk = cacheClient.globalSave(entity);
-
-		String s = "select * from testglobalentity where teststring=?";
-		SQL<TestGlobalEntity> sql = new SQL<TestGlobalEntity>(TestGlobalEntity.class, s);
-		sql.setParams(new Object[] { "this methid is test find global by sql" });
-		List<TestGlobalEntity> entitiesFromDB = cacheClient.findGlobalBySql(sql, CLUSTER_KLSTORAGE);
-		Assert.assertEquals(1, entitiesFromDB.size());
-		Assert.assertEquals(entity, entitiesFromDB.get(0));
 
 		cacheClient.globalRemoveByPk(pk, TestGlobalEntity.class, CLUSTER_KLSTORAGE);
 	}
@@ -288,22 +259,6 @@ public class CacheShardingStorageClientTest extends BaseTest {
 	}
 
 	@Test
-	public void testGetCountIShardingKeyOfQSQLOfQ() {
-		TestEntity entity = createEntity();
-		entity.setTestString("this method is test count by sql");
-		Number pk = cacheClient.save(entity);
-
-		IShardingKey<Number> key = new ShardingKey<Number>(CLUSTER_KLSTORAGE, pk);
-		String s = "select count(*) from test_entity where testString=?";
-		SQL<TestEntity> sql = new SQL<TestEntity>(TestEntity.class, s,
-				new Object[] { "this method is test count by sql" });
-		Number count = cacheClient.getCount(key, sql);
-		Assert.assertEquals(1, count.intValue());
-
-		cacheClient.removeByPk(pk, key, TestEntity.class);
-	}
-
-	@Test
 	public void testFindByShardingPairListOfQextendsNumberListOfIShardingKeyOfQClassOfT() {
 		List<Number> pkList = new ArrayList<Number>();
 
@@ -327,23 +282,6 @@ public class CacheShardingStorageClientTest extends BaseTest {
 	}
 
 	@Test
-	public void testFindBySql() {
-		TestEntity entity = createEntity();
-		entity.setTestString("this method is test find by sql");
-		Number pk = cacheClient.save(entity);
-
-		IShardingKey<Number> key = new ShardingKey<Number>(CLUSTER_KLSTORAGE, pk);
-		String s = "select count(*) from test_entity where testString=?";
-		SQL<TestEntity> sql = new SQL<TestEntity>(TestEntity.class, s,
-				new Object[] { "this method is test find by sql" });
-		List<TestEntity> entitiesFromDB = cacheClient.findBySql(sql, key);
-		Assert.assertEquals(1, entitiesFromDB.size());
-		Assert.assertEquals(entity, entitiesFromDB.get(0));
-
-		cacheClient.removeByPk(pk, key, TestEntity.class);
-	}
-
-	@Test
 	public void testFindByQuery() {
 		TestEntity entity = createEntity();
 		entity.setTestString("this method is test find by query");
@@ -358,5 +296,5 @@ public class CacheShardingStorageClientTest extends BaseTest {
 
 		cacheClient.removeByPk(pk, key, TestEntity.class);
 	}
-	
+
 }

@@ -24,6 +24,11 @@ import com.pinus.generator.IIdGenerator;
  */
 public interface IShardingStorageClient {
 
+    /**
+     * 全局ShardingStorageClient的线程引用.
+     */
+    public static final ThreadLocal<IShardingStorageClient> storageClientHolder = new ThreadLocal<IShardingStorageClient>();
+
 	// ////////////////////////////////////////////////////////
 	// update相关
 	// ////////////////////////////////////////////////////////
@@ -127,8 +132,7 @@ public interface IShardingStorageClient {
 	public Number[] saveBatch(List<? extends Object> entities, IShardingKey<?> shardingValue);
 
 	/**
-	 * 更新分库分表数据.
-     * 会忽略更新null值和默认值
+	 * 更新分库分表数据. 会忽略更新null值和默认值
 	 * 
 	 * @param entity
 	 *            数据对象
@@ -138,8 +142,7 @@ public interface IShardingStorageClient {
 	public void update(Object entity);
 
 	/**
-	 * 单数据库多数据批量更新.
-     * 会忽略更新null值和默认值
+	 * 单数据库多数据批量更新. 会忽略更新null值和默认值
 	 * 
 	 * @param entities
 	 *            批量更新数据
@@ -207,6 +210,7 @@ public interface IShardingStorageClient {
 	 *            查询语句
 	 * @return count数
 	 */
+	@Deprecated
 	public Number getGlobalCount(String clusterName, SQL<?> sql);
 
 	/**
@@ -339,6 +343,7 @@ public interface IShardingStorageClient {
 	 * @throws IllegalArgumentException
 	 *             输入参数错误
 	 */
+	@Deprecated
 	public Number getCount(IShardingKey<?> shardingValue, SQL<?> sql);
 
 	/**

@@ -2,6 +2,8 @@ package com.pinus.config;
 
 import java.util.Map;
 
+import org.apache.zookeeper.ZooKeeper;
+
 import com.pinus.cluster.beans.DBClusterInfo;
 import com.pinus.cluster.enums.HashAlgoEnum;
 
@@ -21,9 +23,11 @@ public interface IClusterConfig {
 	public int getIdGeneratorBatch();
 
 	/**
-	 * 获取zookeeper的连接地址
+	 * 获取zookeeper客户端
+	 * 
+	 * @return
 	 */
-	public String getZkUrl();
+	public ZooKeeper getZooKeeper();
 
 	/**
 	 * 获取配置的hash算法.

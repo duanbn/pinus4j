@@ -3,6 +3,7 @@ package com.pinus.datalayer.jdbc;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -161,12 +162,14 @@ public class ShardingUpdateImpl implements IShardingUpdate {
 	public Number save(Object entity, IShardingKey shardingKey) {
 		String tableName = ReflectUtil.getTableName(entity.getClass());
 
+        // set primary key.
 		long pk = this.idGenerator.genClusterUniqueLongId(dbCluster, shardingKey.getClusterName(), tableName);
 		try {
 			ReflectUtil.setPkValue(entity, pk);
 		} catch (Exception e) {
 			throw new DBOperationException(e);
 		}
+
 		if (shardingKey.getValue() instanceof Number) {
 			if (shardingKey.getValue() == null || ((Number) shardingKey.getValue()).intValue() == 0) {
 				shardingKey.setValue(pk);
@@ -338,12 +341,12 @@ public class ShardingUpdateImpl implements IShardingUpdate {
 	}
 
 	private void _saveBatch(Connection conn, List<? extends Object> entities, int tableIndex) {
-		PreparedStatement ps = null;
+		Statement st = null;
 		try {
 			conn.setAutoCommit(false);
 
-			ps = SQLBuilder.getInsert(conn, entities, tableIndex);
-			ps.executeBatch();
+			st = SQLBuilder.getInsert(conn, entities, tableIndex);
+			st.executeBatch();
 
 			conn.commit();
 		} catch (SQLException e) {
@@ -354,7 +357,7 @@ public class ShardingUpdateImpl implements IShardingUpdate {
 			}
 			throw new DBOperationException(e);
 		} finally {
-			SQLBuilder.close(null, ps, null);
+			SQLBuilder.close(st);
 		}
 	}
 
@@ -363,12 +366,12 @@ public class ShardingUpdateImpl implements IShardingUpdate {
 	}
 
 	private void _updateBatch(Connection conn, List<? extends Object> entities, int tableIndex) {
-		PreparedStatement ps = null;
+		Statement st = null;
 		try {
 			conn.setAutoCommit(false);
 
-			ps = SQLBuilder.getUpdate(conn, entities, tableIndex);
-			ps.executeBatch();
+			st = SQLBuilder.getUpdate(conn, entities, tableIndex);
+			st.executeBatch();
 			conn.commit();
 
 		} catch (SQLException e) {
@@ -379,7 +382,7 @@ public class ShardingUpdateImpl implements IShardingUpdate {
 			}
 			throw new DBOperationException(e);
 		} finally {
-			SQLBuilder.close(null, ps);
+			SQLBuilder.close(st);
 		}
 	}
 

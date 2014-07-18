@@ -18,6 +18,9 @@ public interface IShardingKey<T> {
 	 */
 	public T getValue();
 	
+    /**
+     * 设置分库分表因子.
+     */
 	public void setValue(T value);
 
 }

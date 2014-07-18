@@ -176,8 +176,7 @@ public class CheckUtil {
 		String shardingField = table.shardingBy();
 		int shardingNum = table.shardingNum();
 		if (StringUtils.isBlank(clusterName) || StringUtils.isBlank(shardingField) || shardingNum <= 0) {
-			throw new IllegalArgumentException("分片数据实体类型错误, clusterName=" + clusterName + ", shardingBy="
-					+ shardingField + ", shardingNum=" + shardingNum);
+            throw new IllegalArgumentException("被保存的对象不是ShardingEntity, class=" + clazz);
 		}
 	}
 
@@ -199,8 +198,7 @@ public class CheckUtil {
 		String shardingField = table.shardingBy();
 		int shardingNum = table.shardingNum();
 		if (StringUtils.isBlank(clusterName) || StringUtils.isNotBlank(shardingField) || shardingNum > 0) {
-			throw new IllegalArgumentException("全局数据实体类型错误, clusterName=" + clusterName + ", shardingBy="
-					+ shardingField + ", shardingNum=" + shardingNum);
+            throw new IllegalArgumentException("被保存的对象不是GlobalEntity class=" + clazz);
 		}
 	}
 

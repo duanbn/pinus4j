@@ -7,6 +7,7 @@ import java.util.Date;
 import org.apache.commons.lang.builder.ToStringBuilder;
 import org.apache.commons.lang.builder.ToStringStyle;
 
+import com.pinus.api.FashionEntity;
 import com.pinus.api.annotation.DateTime;
 import com.pinus.api.annotation.Field;
 import com.pinus.api.annotation.PrimaryKey;
@@ -14,7 +15,7 @@ import com.pinus.api.annotation.Table;
 import com.pinus.api.annotation.UpdateTime;
 
 @Table(name = "test_entity", cluster = "klstorage", shardingBy = "id", shardingNum = 25, cache = true)
-public class TestEntity implements Serializable {
+public class TestEntity extends FashionEntity implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 

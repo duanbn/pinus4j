@@ -137,6 +137,11 @@ public abstract class AbstractDBGenerator implements IDBGenerator {
 			throw new IllegalArgumentException("@Table的cluster不能为空");
 		}
 		table.setCluster(cluster);
+
+        // 获取分片字段
+        String shardingBy = annoTable.shardingBy();
+        table.setShardingBy(shardingBy);
+
 		// 获取分表数
 		int shardingNum = annoTable.shardingNum();
 		table.setShardingNum(shardingNum);

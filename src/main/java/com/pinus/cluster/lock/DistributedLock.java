@@ -1,6 +1,5 @@
 package com.pinus.cluster.lock;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -13,18 +12,11 @@ import java.util.concurrent.locks.ReentrantLock;
 import org.apache.log4j.Logger;
 import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.KeeperException;
-import org.apache.zookeeper.WatchedEvent;
-import org.apache.zookeeper.Watcher;
-import org.apache.zookeeper.Watcher.Event.KeeperState;
 import org.apache.zookeeper.ZooDefs;
 import org.apache.zookeeper.ZooKeeper;
-import org.apache.zookeeper.ZooKeeper.States;
 import org.apache.zookeeper.data.Stat;
 
 import com.pinus.config.IClusterConfig;
-import com.pinus.config.impl.XmlDBClusterConfigImpl;
-import com.pinus.exception.LoadConfigException;
-import com.pinus.util.StringUtils;
 
 /**
  * 基于zookeeper实现的集群锁. 集群锁用于处于在多进程环境下的同步问题. 此锁是采用公平算法
@@ -45,22 +37,20 @@ import com.pinus.util.StringUtils;
  * @author duanbn
  * 
  */
-public class DistributedLock implements Lock, Watcher {
+public class DistributedLock implements Lock {
 
 	public static final Logger LOG = Logger.getLogger(DistributedLock.class);
 
 	private static final ReentrantLock threadLock = new ReentrantLock();
 	private boolean isThreadLock;
 
-	private String zkUrl;
 	private ZooKeeper zk;
 	private String root = "/locks";// 根
 	private String lockName;// 竞争资源的标志
 	private String waitNode;// 等待前一个锁
 	private String myZnode;// 当前锁
 	private CountDownLatch latch;// 计数器
-	private CountDownLatch connectedLatch = new CountDownLatch(1);
-	private int sessionTimeout = 30000;
+	private int lockTimeout = 30000;
 	private List<Exception> exception = new ArrayList<Exception>();
 
 	/**
@@ -71,34 +61,18 @@ public class DistributedLock implements Lock, Watcher {
 	 * @param lockName
 	 *            竞争资源标志,lockName中不能包含单词lock
 	 */
-	public DistributedLock(String lockName, boolean isThreadLock) {
+	public DistributedLock(String lockName, boolean isThreadLock, IClusterConfig config) {
 		this.isThreadLock = isThreadLock;
-
-		IClusterConfig clusterConfig;
-		try {
-			clusterConfig = XmlDBClusterConfigImpl.getInstance();
-		} catch (LoadConfigException e) {
-			throw new LockException("读取zk url失败");
-		}
-
-		this.zkUrl = clusterConfig.getZkUrl();
-		if (StringUtils.isBlank(this.zkUrl)) {
-			throw new LockException("读取zk url失败");
-		}
 
 		// 创建一个与服务器的连接
 		try {
-			zk = new ZooKeeper(this.zkUrl, sessionTimeout, this);
-			if (States.CONNECTING == zk.getState()) {
-				connectedLatch.await();
-			}
+			this.zk = config.getZooKeeper();
+
 			Stat stat = zk.exists(root, false);
 			if (stat == null) {
 				// 创建根节点
 				zk.create(root, new byte[0], ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
 			}
-		} catch (IOException e) {
-			exception.add(e);
 		} catch (KeeperException e) {
 			exception.add(e);
 		} catch (InterruptedException e) {
@@ -106,19 +80,6 @@ public class DistributedLock implements Lock, Watcher {
 		}
 
 		this.lockName = lockName;
-	}
-
-	/**
-	 * zookeeper节点的监视器
-	 */
-	public void process(WatchedEvent event) {
-		if (event.getState() == KeeperState.SyncConnected) {
-			connectedLatch.countDown();
-		}
-
-		if (this.latch != null) {
-			this.latch.countDown();
-		}
 	}
 
 	public void lock() {
@@ -131,7 +92,7 @@ public class DistributedLock implements Lock, Watcher {
 					LOG.debug("Thread " + Thread.currentThread().getId() + " " + myZnode + " get lock true");
 				return;
 			} else {
-				waitForLock(waitNode, sessionTimeout);// 等待锁
+				waitForLock(waitNode, lockTimeout);// 等待锁
 			}
 		} catch (KeeperException e) {
 			throw new LockException(e);

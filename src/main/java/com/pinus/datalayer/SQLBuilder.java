@@ -7,7 +7,9 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -35,6 +37,8 @@ public class SQLBuilder {
 	 * select count语句缓存.
 	 */
 	private static final Map<String, String> _selectCountCache = new ConcurrentHashMap<String, String>();
+
+    private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
 	/**
 	 * 拼装sql. SELECT pkName FROM tableName {IQuery.getSql()}
@@ -523,28 +527,19 @@ public class SQLBuilder {
 	 * @return PreparedStatement
 	 * @throws SQLException
 	 */
-	public static PreparedStatement getUpdate(Connection conn, List<? extends Object> entities, int tableIndex)
+	public static Statement getUpdate(Connection conn, List<? extends Object> entities, int tableIndex)
 			throws SQLException {
 		Object entity = entities.get(0);
 		Class<?> entityClass = entity.getClass();
-		Map<String, Object> entityProperty;
-		try {
-			entityProperty = ReflectUtil.describeWithoutUpdateTime(entity, true);
-		} catch (Exception e) {
-			throw new SQLException("解析实体对象失败", e);
-		}
 
 		// 获取表名.
 		String tableName = ReflectUtil.getTableName(entity, tableIndex);
-		// 获取主键字段名
+		// 获取主键名.
 		String pkName = ReflectUtil.getPkName(entityClass);
-		// 上层调用已经判断了entities正确性
-		entityProperty.remove(pkName);
-		String sql = _buildUpdateSql(entityProperty, pkName, tableName);
 
 		// 批量添加
-		PreparedStatement ps = conn.prepareStatement(sql);
-		Set<Map.Entry<String, Object>> propertyEntrySet = null;
+		Statement st = conn.createStatement();
+		Map<String, Object> entityProperty = null;
 		for (Object dbEntity : entities) {
 			try {
 				entityProperty = ReflectUtil.describeWithoutUpdateTime(dbEntity, true);
@@ -554,53 +549,26 @@ public class SQLBuilder {
 			// 将主键放在最后一个参数
 			Object pkValue = entityProperty.get(pkName);
 			entityProperty.remove(pkName);
-			propertyEntrySet = entityProperty.entrySet();
 
-			int i = 1;
-			Object param = null;
+			// 生成update语句.
+			Set<Map.Entry<String, Object>> propertyEntrySet = entityProperty.entrySet();
+			StringBuilder SQL = new StringBuilder("UPDATE " + tableName + " SET ");
+			Object value = null;
 			for (Map.Entry<String, Object> propertyEntry : propertyEntrySet) {
-				param = propertyEntry.getValue();
-				if (param instanceof Character) {
-					ps.setString(i, String.valueOf(param));
-				} else {
-					ps.setObject(i, param);
-				}
-				i++;
+                value = propertyEntry.getValue();
+				SQL.append(propertyEntry.getKey()).append("=");
+                SQL.append(formatValue(value));
+				SQL.append(",");
 			}
-			ps.setObject(i, pkValue);
-			ps.addBatch();
+			SQL.deleteCharAt(SQL.length() - 1);
+			SQL.append(" WHERE ").append(pkName).append("=").append(pkValue);
 
-			debugUpdate(entityProperty, tableName, pkName, pkValue);
+			st.addBatch(SQL.toString());
+
+			debugSQL(SQL.toString());
 		}
-		return ps;
-	}
 
-	/**
-	 * 拼装insert sql.
-	 * 
-	 * @param entityProperty
-	 *            数据对象属性.
-	 * @param tableName
-	 *            表名
-	 * 
-	 * @return INSERT INTO tableName(field...) VALUES(?, ?, ?, ?)
-	 */
-	private static String _buildInsertSql(Map<String, Object> entityProperty, String tableName) {
-		// 生成insert语句.
-		Set<Map.Entry<String, Object>> propertyEntrySet = entityProperty.entrySet();
-
-		StringBuilder SQL = new StringBuilder("INSERT INTO " + tableName + "(");
-		StringBuilder var = new StringBuilder();
-		for (Map.Entry<String, Object> propertyEntry : propertyEntrySet) {
-			SQL.append(propertyEntry.getKey()).append(",");
-			var.append("?,");
-		}
-		SQL.deleteCharAt(SQL.length() - 1);
-		SQL.append(") VALUES (");
-		SQL.append(var.deleteCharAt(var.length() - 1).toString());
-		SQL.append(")");
-
-		return SQL.toString();
+		return st;
 	}
 
 	/**
@@ -617,49 +585,69 @@ public class SQLBuilder {
 	 * 
 	 * @throws 操作失败
 	 */
-	public static PreparedStatement getInsert(Connection conn, List<? extends Object> entities, int tableIndex)
+	public static Statement getInsert(Connection conn, List<? extends Object> entities, int tableIndex)
 			throws SQLException {
 		Object entity = entities.get(0);
-		Map<String, Object> entityProperty;
-		try {
-			entityProperty = ReflectUtil.describe(entity);
-		} catch (Exception e) {
-			throw new SQLException("解析实体对象失败", e);
-		}
-
 		// 获取表名.
 		String tableName = ReflectUtil.getTableName(entity, tableIndex);
-		// 上层调用已经判断了entities正确性
-		String sql = _buildInsertSql(entityProperty, tableName);
 
 		// 批量添加
-		PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
-		Set<Map.Entry<String, Object>> propertyEntrySet = null;
+		Statement st = conn.createStatement();
+		Map<String, Object> entityProperty = null;
 		for (Object dbEntity : entities) {
 			try {
-				entityProperty = ReflectUtil.describe(dbEntity);
+				// 获取需要被插入数据库的字段.
+				entityProperty = ReflectUtil.describe(dbEntity, true);
 			} catch (Exception e) {
 				throw new SQLException("解析实体对象失败", e);
 			}
-			propertyEntrySet = entityProperty.entrySet();
 
-			int i = 1;
-			Object param = null;
+			// 生成insert语句.
+			Set<Map.Entry<String, Object>> propertyEntrySet = entityProperty.entrySet();
+
+			StringBuilder SQL = new StringBuilder("INSERT INTO " + tableName + "(");
+			StringBuilder var = new StringBuilder();
+			Object value = null;
 			for (Map.Entry<String, Object> propertyEntry : propertyEntrySet) {
-				param = propertyEntry.getValue();
-				if (param instanceof Character) {
-					ps.setString(i, String.valueOf(param));
-				} else {
-					ps.setObject(i, param);
-				}
-				i++;
+                value = propertyEntry.getValue();
+				SQL.append(propertyEntry.getKey()).append(",");
+                var.append(formatValue(value));
+                var.append(",");
 			}
-			ps.addBatch();
+			SQL.deleteCharAt(SQL.length() - 1);
+			SQL.append(") VALUES (");
+			SQL.append(var.deleteCharAt(var.length() - 1).toString());
+			SQL.append(")");
 
-			debugInsert(entityProperty, tableName);
+			st.addBatch(SQL.toString());
+
+			debugSQL(SQL.toString());
 		}
-		return ps;
+		return st;
 	}
+
+    /**
+     * 格式化数据库值.
+     */
+    public static Object formatValue(Object value) {
+        Object format = null;
+
+        if (value instanceof String) {
+            format = "'" + (String) value + "'"; 
+        } else if (value instanceof Character) {
+            if (((int) (Character) value) == 39) {
+                format = "'\\" + (Character) value + "'"; 
+            } else {
+                format = "'" + (Character) value + "'"; 
+            }
+        } else if (value instanceof Date) {
+            format = "'" + sdf.format((Date) value) + "'";
+        } else {
+            format = value;
+        }
+
+        return format;
+    }
 
 	/**
 	 * 关闭数据相关资源.
@@ -681,6 +669,19 @@ public class SQLBuilder {
 	 */
 	public static void close(Connection conn, PreparedStatement ps) {
 		close(conn, ps, null);
+	}
+
+	/**
+	 * 关闭数据库Statement.
+	 */
+	public static void close(Statement st) {
+		try {
+			if (st != null) {
+				st.close();
+			}
+		} catch (SQLException e) {
+			LOG.error(e);
+		}
 	}
 
 	/**
@@ -736,48 +737,6 @@ public class SQLBuilder {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug(sql);
 		}
-	}
-
-	/**
-	 * 打印Insert日志
-	 * 
-	 * @param propertyEntry
-	 * @param tableName
-	 */
-	public static void debugInsert(Map<String, Object> propertyEntry, String tableName) {
-		StringBuilder SQL = new StringBuilder("INSERT INTO " + tableName + "(");
-		for (Map.Entry<String, Object> property : propertyEntry.entrySet()) {
-			SQL.append(property.getKey()).append(",");
-		}
-		SQL.deleteCharAt(SQL.length() - 1);
-		SQL.append(") VALUES (");
-		for (Map.Entry<String, Object> property : propertyEntry.entrySet()) {
-			SQL.append(property.getValue()).append(",");
-		}
-		SQL.deleteCharAt(SQL.length() - 1);
-		SQL.append(")");
-
-		debugSQL(SQL.toString());
-	}
-
-	/**
-	 * 打印Update日志
-	 * 
-	 * @param entityProperty
-	 * @param tableName
-	 * @param pkName
-	 * @param pkValue
-	 */
-	public static void debugUpdate(Map<String, Object> entityProperty, String tableName, String pkName, Object pkValue) {
-		Set<Map.Entry<String, Object>> propertyEntrySet = entityProperty.entrySet();
-		StringBuilder SQL = new StringBuilder("UPDATE " + tableName + " SET ");
-		for (Map.Entry<String, Object> propertyEntry : propertyEntrySet) {
-			SQL.append(propertyEntry.getKey()).append("=").append(propertyEntry.getValue()).append(",");
-		}
-		SQL.deleteCharAt(SQL.length() - 1);
-		SQL.append(" WHERE ").append(pkName).append("=").append(pkValue);
-
-		debugSQL(SQL.toString());
 	}
 
 }

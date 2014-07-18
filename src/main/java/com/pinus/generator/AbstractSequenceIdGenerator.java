@@ -4,25 +4,18 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.locks.Lock;
 
 import org.apache.log4j.Logger;
 import org.apache.zookeeper.CreateMode;
-import org.apache.zookeeper.WatchedEvent;
-import org.apache.zookeeper.Watcher;
-import org.apache.zookeeper.Watcher.Event.KeeperState;
 import org.apache.zookeeper.ZooDefs;
 import org.apache.zookeeper.ZooKeeper;
-import org.apache.zookeeper.ZooKeeper.States;
 import org.apache.zookeeper.data.Stat;
 
 import com.pinus.cluster.IDBCluster;
 import com.pinus.config.IClusterConfig;
-import com.pinus.config.impl.XmlDBClusterConfigImpl;
+import com.pinus.constant.Const;
 import com.pinus.exception.DBOperationException;
-import com.pinus.exception.LoadConfigException;
-import com.pinus.util.StringUtils;
 
 /**
  * 抽象的ID生成器.
@@ -30,7 +23,7 @@ import com.pinus.util.StringUtils;
  * @author duanbn
  * 
  */
-public abstract class AbstractSequenceIdGenerator implements IIdGenerator, Watcher {
+public abstract class AbstractSequenceIdGenerator implements IIdGenerator {
 
 	/**
 	 * 日志.
@@ -42,46 +35,18 @@ public abstract class AbstractSequenceIdGenerator implements IIdGenerator, Watch
 	 */
 	private final Map<String, Queue<Long>> longIdBuffer = new HashMap<String, Queue<Long>>();
 	private int BUFFER_SIZE;
-
-	private final String zkUrl;
 	private ZooKeeper zk;
-	private CountDownLatch connectedLatch = new CountDownLatch(1);
-	private int sessionTimeout = 30000;
-	private String root = "/primarykey";// 根
 
-	/**
-	 * zookeeper节点的监视器
-	 */
-	public void process(WatchedEvent event) {
-		if (event.getState() == KeeperState.SyncConnected) {
-			connectedLatch.countDown();
-		}
-	}
-
-	public AbstractSequenceIdGenerator() {
-		IClusterConfig config;
-		try {
-			config = XmlDBClusterConfigImpl.getInstance();
-		} catch (LoadConfigException e) {
-			throw new RuntimeException(e);
-		}
+	public AbstractSequenceIdGenerator(IClusterConfig config) {
 		BUFFER_SIZE = config.getIdGeneratorBatch();
-
-		zkUrl = config.getZkUrl();
-		if (StringUtils.isBlank(zkUrl)) {
-			throw new RuntimeException("读取zk url失败");
-		}
 
 		// 创建一个与服务器的连接
 		try {
-			zk = new ZooKeeper(this.zkUrl, sessionTimeout, this);
-			if (States.CONNECTING == zk.getState()) {
-				connectedLatch.await();
-			}
-			Stat stat = zk.exists(root, false);
+			this.zk = config.getZooKeeper();
+			Stat stat = zk.exists(Const.ZK_PRIMARYKEY, false);
 			if (stat == null) {
 				// 创建根节点
-				zk.create(root, new byte[0], ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
+				zk.create(Const.ZK_PRIMARYKEY, new byte[0], ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
 			}
 		} catch (Exception e) {
 			throw new RuntimeException(e);
@@ -91,6 +56,15 @@ public abstract class AbstractSequenceIdGenerator implements IIdGenerator, Watch
 	private String getBufferKey(String clusterName, String name) {
 		return clusterName + name;
 	}
+
+    @Override
+    public void close() {
+        try {
+            this.zk.close();
+        } catch (Exception e) {
+            LOG.warn("close zookeeper client failure");
+        }
+    }
 
 	@Override
 	public synchronized int genClusterUniqueIntId(IDBCluster dbCluster, String clusterName, String name) {
@@ -136,7 +110,7 @@ public abstract class AbstractSequenceIdGenerator implements IIdGenerator, Watch
 				}
 			}
 		}
-		
+
 		if (id == 0) {
 			throw new RuntimeException("生成id失败");
 		}
@@ -158,11 +132,11 @@ public abstract class AbstractSequenceIdGenerator implements IIdGenerator, Watch
 			longIdBuffer.put(getBufferKey(clusterName, name), buffer);
 		}
 		Long id = buffer.poll();
-		
+
 		if (id == 0) {
 			throw new RuntimeException("生成id失败");
 		}
-		
+
 		return id;
 	}
 
@@ -193,7 +167,7 @@ public abstract class AbstractSequenceIdGenerator implements IIdGenerator, Watch
 		try {
 			lock.lock();
 
-			String clusterNode = root + "/" + clusterName;
+			String clusterNode = Const.ZK_PRIMARYKEY + "/" + clusterName;
 			Stat stat = zk.exists(clusterNode, false);
 			if (stat == null) {
 				// 创建根节点

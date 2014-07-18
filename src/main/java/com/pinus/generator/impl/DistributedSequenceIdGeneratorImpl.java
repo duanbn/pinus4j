@@ -5,6 +5,7 @@ import java.util.concurrent.locks.Lock;
 import org.apache.log4j.Logger;
 
 import com.pinus.cluster.lock.DistributedLock;
+import com.pinus.config.IClusterConfig;
 import com.pinus.generator.AbstractSequenceIdGenerator;
 
 /**
@@ -19,9 +20,16 @@ public class DistributedSequenceIdGeneratorImpl extends AbstractSequenceIdGenera
 	 */
 	public static Logger LOG = Logger.getLogger(DistributedSequenceIdGeneratorImpl.class);
 
+	private IClusterConfig config;
+
+	public DistributedSequenceIdGeneratorImpl(IClusterConfig config) {
+		super(config);
+		this.config = config;
+	}
+
 	@Override
 	public Lock getLock(String lockName) {
-		return new DistributedLock(lockName, true);
+		return new DistributedLock(lockName, true, config);
 	}
 
 }

@@ -56,6 +56,33 @@ public class ReflectUtil {
 	 */
 	private static final Map<Class<?>, Integer> _tableNumCache = new ConcurrentHashMap<Class<?>, Integer>();
 
+	private static final Map<Class<?>, Boolean> _isShardingEntityCache = new ConcurrentHashMap<Class<?>, Boolean>();
+
+	/**
+	 * 判断是否是分片数据对象.
+	 */
+	public static boolean isShardingEntity(Class<?> clazz) {
+		Boolean isSharding = _isShardingEntityCache.get(clazz);
+		if (isSharding == null) {
+			Table annoTable = clazz.getAnnotation(Table.class);
+			if (annoTable == null) {
+				throw new IllegalArgumentException(clazz + "无法分片的数据实体，请使用@Table注解");
+			}
+
+			String shardingField = annoTable.shardingBy();
+			int shardingNum = annoTable.shardingNum();
+			if (StringUtils.isNotBlank(shardingField) || shardingNum > 0) {
+				isSharding = true;
+			} else {
+				isSharding = false;
+			}
+
+			_isShardingEntityCache.put(clazz, isSharding);
+		}
+
+		return isSharding;
+	}
+
 	/**
 	 * 获取主键值.
 	 * 
@@ -126,7 +153,7 @@ public class ReflectUtil {
 	 * @param entity
 	 * @return
 	 */
-	public static Object getShardingVAlue(Object entity) {
+	public static Object getShardingValue(Object entity) {
 		Class<?> clazz = entity.getClass();
 		String shardingField = _shardingFieldCache.get(clazz);
 		if (shardingField == null) {
@@ -308,6 +335,8 @@ public class ReflectUtil {
 			Number numValue = (Number) value;
 			if (f.getType() == Integer.TYPE || f.getType() == Integer.class) {
 				f.setInt(obj, numValue.intValue());
+			} else if (f.getType() == Byte.TYPE || f.getType() == Byte.class) {
+				f.setByte(obj, numValue.byteValue());
 			} else if (f.getType() == Long.TYPE || f.getType() == Long.class) {
 				f.setLong(obj, numValue.longValue());
 			} else if (f.getType() == Short.TYPE || f.getType() == Short.class) {
@@ -347,6 +376,20 @@ public class ReflectUtil {
 	 */
 	public static Map<String, Object> describe(Object obj) throws Exception {
 		return describe(obj, false, false);
+	}
+
+	/**
+	 * 获取对象的属性名及属性值. @UpdateTime不会被过滤
+	 * 
+	 * @param obj
+	 *            被反射的对象
+	 * @param isFilteDefault
+	 *            是否过滤默认值
+	 * @return
+	 * @throws Exception
+	 */
+	public static Map<String, Object> describe(Object obj, boolean isFilteDefault) throws Exception {
+		return describe(obj, isFilteDefault, false);
 	}
 
 	/**
@@ -393,33 +436,33 @@ public class ReflectUtil {
 						continue;
 					}
 				} else if (fTypeClazz == Byte.TYPE || fTypeClazz == Byte.class) {
-                    if ((Byte) value == 0) {
-                        continue;
-                    }
+					if ((Byte) value == 0) {
+						continue;
+					}
 				} else if (fTypeClazz == Character.TYPE || fTypeClazz == Character.class) {
-                    if ((Character) value == 0) {
-                        continue;
-                    }
+					if ((Character) value == 0) {
+						continue;
+					}
 				} else if (fTypeClazz == Short.TYPE || fTypeClazz == Short.class) {
-                    if ((Short) value == 0) {
-                        continue;
-                    }
+					if ((Short) value == 0) {
+						continue;
+					}
 				} else if (fTypeClazz == Integer.TYPE || fTypeClazz == Integer.class) {
-                    if ((Integer) value == 0) {
-                        continue;
-                    }
+					if ((Integer) value == 0) {
+						continue;
+					}
 				} else if (fTypeClazz == Long.TYPE || fTypeClazz == Long.class) {
-                    if ((Long) value == 0l) {
-                        continue;
-                    }
+					if ((Long) value == 0l) {
+						continue;
+					}
 				} else if (fTypeClazz == Float.TYPE || fTypeClazz == Float.class) {
-                    if ((Float) value == 0.0f) {
-                        continue;
-                    }
+					if ((Float) value == 0.0f) {
+						continue;
+					}
 				} else if (fTypeClazz == Double.TYPE || fTypeClazz == Double.class) {
-                    if ((Double) value == 0.0) {
-                        continue;
-                    }
+					if ((Double) value == 0.0) {
+						continue;
+					}
 				}
 			}
 

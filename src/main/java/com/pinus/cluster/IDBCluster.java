@@ -5,18 +5,42 @@ import java.util.Map;
 
 import com.pinus.api.IShardingKey;
 import com.pinus.api.enums.EnumDBMasterSlave;
+import com.pinus.api.enums.EnumDBRouteAlg;
 import com.pinus.cluster.beans.DBClusterInfo;
 import com.pinus.cluster.beans.DBConnectionInfo;
+import com.pinus.cluster.beans.DBTable;
 import com.pinus.cluster.route.IClusterRouter;
+import com.pinus.config.IClusterConfig;
 import com.pinus.exception.DBClusterException;
 import com.pinus.generator.IDBGenerator;
 
 /**
- * 数据库集群. 数据库集群主要类，持有所有的数据库集群信息，保存集群的数据库连接包括主库和从库。
+ * 数据库集群. 数据库集群主要类，持有所有的数据库集群信息，保存集群的数据库连接包括主库和从库。 初始化集群的方法，
+ * 已DbcpDBClusterImpl实现为例<br/>
+ * 
+ * <pre>
+ * IDBCluster dbCluster = new DbcpDBClusterImpl(); </br>
+ * dbCluster.setDbRouteAlg(EnumDBRouteAlg); // 设置分片路由算法. 可选
+ * dbCluster.setCreateTable(true | false); // 默认为false. 可选
+ * dbCluster.setScanPackage("entity full path package"); // 必填
+ * dbCluster.startup();
+ * </pre>
  * 
  * @author duanbn
  */
 public interface IDBCluster {
+
+	/**
+	 * 从zookeeper中获取分表信息.
+	 * 
+	 * @return 分表信息.
+	 */
+	public List<DBTable> getDBTableFromZk();
+
+    /**
+     * 从classpath获取分表信息.
+     */
+    public List<DBTable> getDBTableFromJvm();
 
 	/**
 	 * 获取集群信息.
@@ -34,6 +58,17 @@ public interface IDBCluster {
 	 *             初始化失败
 	 */
 	public void startup() throws DBClusterException;
+
+	/**
+	 * 启动集群. 调用数据库集群前需要调用此方法，为了初始化集群连接.
+	 * 
+	 * @param xmlFilePath
+	 *            配置文件绝对路径
+	 * 
+	 * @throws DBClusterException
+	 *             初始化失败
+	 */
+	public void startup(String xmlFilePath) throws DBClusterException;
 
 	/**
 	 * 关闭集群. 系统停止时关闭数据库集群.
@@ -94,17 +129,30 @@ public interface IDBCluster {
 	 */
 	public List<DB> getAllMasterShardingDB(Class<?> clazz);
 
-	public List<DB> getAllSlaveShardingDB(Class<?> clazz, EnumDBMasterSlave slave);
-
 	/**
-	 * 设置数据库路由器.
+	 * 获取集群从库列表.
+	 * 
+	 * @param clazz
+	 *            数据对象
+	 * @param slave
+	 *            从库号
 	 */
-	public void setDbRouter(IClusterRouter dbRouter);
+	public List<DB> getAllSlaveShardingDB(Class<?> clazz, EnumDBMasterSlave slave);
 
 	/**
 	 * 获取数据库路由器.
 	 */
 	public IClusterRouter getDbRouter();
+
+	/**
+	 * 设置路由算法.
+	 */
+	public void setDbRouteAlg(EnumDBRouteAlg routeAlg);
+
+	/**
+	 * 获取路由算法.
+	 */
+	public EnumDBRouteAlg getDbRouteAlg();
 
 	/**
 	 * 设置是否创建表.
@@ -122,12 +170,9 @@ public interface IDBCluster {
 	public boolean isCreateTable();
 
 	/**
-	 * 设置数据库表生成器.
-	 * 
-	 * @param dbGenerator
-	 *            数据库表生成器
+	 * 获取id生成器.
 	 */
-	public void setDbGenerator(IDBGenerator dbGenerator);
+	public IDBGenerator getDbGenerator();
 
 	/**
 	 * 设置需要扫描的实体对象包.
@@ -143,5 +188,12 @@ public interface IDBCluster {
 	 * @return 集群表集合
 	 */
 	public Map<String, Map<Integer, Map<String, Integer>>> getTableCluster();
+
+	/**
+	 * 获取集群配置.
+	 * 
+	 * @return
+	 */
+	public IClusterConfig getClusterConfig();
 
 }

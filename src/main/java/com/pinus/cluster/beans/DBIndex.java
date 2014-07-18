@@ -1,5 +1,7 @@
 package com.pinus.cluster.beans;
 
+import java.io.Serializable;
+
 import com.pinus.util.StringUtils;
 
 /**
@@ -8,7 +10,7 @@ import com.pinus.util.StringUtils;
  *
  * @author duanbn
  */
-public class DBIndex {
+public class DBIndex implements Serializable {
 
     /**
      * 被索引的字段名.

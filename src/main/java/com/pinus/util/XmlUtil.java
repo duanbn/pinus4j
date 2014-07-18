@@ -17,6 +17,8 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 
+import com.pinus.constant.Const;
+
 /**
  * 解析xml的辅助工具.
  * 
@@ -36,8 +38,9 @@ public class XmlUtil {
 	 * @param xmlFileName
 	 *            classpath根路径下的xml文件名
 	 */
-	private XmlUtil(String xmlFileName) {
+	private XmlUtil() {
 		InputStream is = null;
+		String xmlFileName = Const.DEFAULT_CONFIG_FILENAME;
 		try {
 			DocumentBuilder builder = factory.newDocumentBuilder();
 			is = Thread.currentThread().getContextClassLoader().getResourceAsStream(xmlFileName);
@@ -76,8 +79,8 @@ public class XmlUtil {
 		}
 	}
 
-	public static XmlUtil getInstance(String xmlFileName) {
-		return new XmlUtil(xmlFileName);
+	public static XmlUtil getInstance() {
+		return new XmlUtil();
 	}
 
 	public static XmlUtil getInstance(File xmlFile) {

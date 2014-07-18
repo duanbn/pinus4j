@@ -1,11 +1,13 @@
 package com.pinus.cluster.beans;
 
+import java.io.Serializable;
+
 /**
  * 数据库表的列的bean. 表示一个数据库表的一个列.
  * 
  * @author duanbn
  */
-public class DBTableColumn {
+public class DBTableColumn implements Serializable {
 
 	/**
 	 * 字段名

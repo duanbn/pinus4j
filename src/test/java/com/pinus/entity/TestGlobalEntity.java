@@ -1,18 +1,21 @@
 package com.pinus.entity;
 
 import java.io.Serializable;
+import java.sql.Timestamp;
 import java.util.Date;
 
+import com.pinus.api.FashionEntity;
 import com.pinus.api.annotation.DateTime;
 import com.pinus.api.annotation.Field;
 import com.pinus.api.annotation.Index;
 import com.pinus.api.annotation.Indexes;
 import com.pinus.api.annotation.PrimaryKey;
 import com.pinus.api.annotation.Table;
+import com.pinus.api.annotation.UpdateTime;
 
 @Table(cluster = "klstorage", cache = true)
 @Indexes({ @Index(field = "testInt", isUnique = true) })
-public class TestGlobalEntity implements Serializable {
+public class TestGlobalEntity extends FashionEntity implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 
@@ -48,6 +51,9 @@ public class TestGlobalEntity implements Serializable {
 
 	@DateTime
 	private Date testDate;
+
+    @UpdateTime(comment = "自动更新时间")
+	private Timestamp testTime;
 
 	@Override
 	public String toString() {
@@ -165,6 +171,14 @@ public class TestGlobalEntity implements Serializable {
 
 	public void setTestDate(Date testDate) {
 		this.testDate = testDate;
+	}
+
+    public Timestamp getTestTime() {
+		return testTime;
+	}
+
+	public void setTestTime(Timestamp testTime) {
+		this.testTime = testTime;
 	}
 
 }

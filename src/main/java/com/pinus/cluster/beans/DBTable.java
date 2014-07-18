@@ -1,5 +1,6 @@
 package com.pinus.cluster.beans;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -14,7 +15,7 @@ import com.pinus.util.StringUtils;
  * 
  * @author duanbn
  */
-public class DBTable {
+public class DBTable implements Serializable {
 
 	/**
 	 * 日志.
@@ -35,6 +36,11 @@ public class DBTable {
 	 * 表下标.
 	 */
 	private int tableIndex = -1;
+
+	/**
+	 * 分片字段.
+	 */
+	private String shardingBy;
 
 	/**
 	 * 分表数
@@ -275,6 +281,46 @@ public class DBTable {
 		return pharse.toString();
 	}
 
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((cluster == null) ? 0 : cluster.hashCode());
+		result = prime * result + ((name == null) ? 0 : name.hashCode());
+		result = prime * result + ((shardingBy == null) ? 0 : shardingBy.hashCode());
+		result = prime * result + shardingNum;
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		DBTable other = (DBTable) obj;
+		if (cluster == null) {
+			if (other.cluster != null)
+				return false;
+		} else if (!cluster.equals(other.cluster))
+			return false;
+		if (name == null) {
+			if (other.name != null)
+				return false;
+		} else if (!name.equals(other.name))
+			return false;
+		if (shardingBy == null) {
+			if (other.shardingBy != null)
+				return false;
+		} else if (!shardingBy.equals(other.shardingBy))
+			return false;
+		if (shardingNum != other.shardingNum)
+			return false;
+		return true;
+	}
+
 	public String getCluster() {
 		return cluster;
 	}
@@ -297,5 +343,13 @@ public class DBTable {
 
 	public void setShardingNum(int shardingNum) {
 		this.shardingNum = shardingNum;
+	}
+
+	public String getShardingBy() {
+		return shardingBy;
+	}
+
+	public void setShardingBy(String shardingBy) {
+		this.shardingBy = shardingBy;
 	}
 }

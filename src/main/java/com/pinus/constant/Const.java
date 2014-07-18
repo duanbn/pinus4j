@@ -7,6 +7,20 @@ package com.pinus.constant;
  */
 public class Const {
 
+    //
+    // zookeeper目录相关常量.
+    //
+    /**
+     * 每个表的分库分表信息的根目录.
+     * 每个分表信息保存在此目录下的文件.
+     */
+    public static final String ZK_SHARDINGINFO = "/shardinginfo";
+    /**
+     * id生成器根目录.
+     * 每一个表的id当前id保存在此目录下相关文件.
+     */
+    public static final String ZK_PRIMARYKEY = "/primarykey";
+
 	// SQL相关
 	/**
 	 * 查询count的慢日志时间阈值

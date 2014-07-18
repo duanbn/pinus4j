@@ -1,11 +1,18 @@
 package com.pinus.config.impl;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
 
 import org.apache.log4j.Logger;
+import org.apache.zookeeper.WatchedEvent;
+import org.apache.zookeeper.Watcher;
+import org.apache.zookeeper.Watcher.Event.KeeperState;
+import org.apache.zookeeper.ZooKeeper;
+import org.apache.zookeeper.ZooKeeper.States;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
@@ -17,9 +24,10 @@ import com.pinus.cluster.enums.HashAlgoEnum;
 import com.pinus.config.IClusterConfig;
 import com.pinus.constant.Const;
 import com.pinus.exception.LoadConfigException;
+import com.pinus.util.StringUtils;
 import com.pinus.util.XmlUtil;
 
-public class XmlDBClusterConfigImpl implements IClusterConfig {
+public class XmlDBClusterConfigImpl implements IClusterConfig, Watcher {
 
 	public static final Logger LOG = Logger.getLogger(XmlDBClusterConfigImpl.class);
 
@@ -27,11 +35,6 @@ public class XmlDBClusterConfigImpl implements IClusterConfig {
 	 * 主键批量生成数
 	 */
 	private static int idGenerateBatch;
-
-	/**
-	 * zookeeper连接地址.
-	 */
-	private static String zkUrl;
 
 	/**
 	 * hash算法.
@@ -45,8 +48,22 @@ public class XmlDBClusterConfigImpl implements IClusterConfig {
 
 	private XmlUtil xmlUtil;
 
+	/**
+	 * zookeeper连接地址.
+	 */
+	private static String zkUrl;
+	private CountDownLatch connectedLatch = new CountDownLatch(1);
+	private int sessionTimeout = 30000;
+
 	private XmlDBClusterConfigImpl() throws LoadConfigException {
-		xmlUtil = XmlUtil.getInstance(Const.DEFAULT_CONFIG_FILENAME);
+		this(null);
+	}
+
+	private XmlDBClusterConfigImpl(String xmlFilePath) throws LoadConfigException {
+		if (StringUtils.isBlank(xmlFilePath))
+			xmlUtil = XmlUtil.getInstance();
+		else
+			xmlUtil = XmlUtil.getInstance(new File(xmlFilePath));
 
 		try {
 			// 加载id生成器
@@ -61,6 +78,31 @@ public class XmlDBClusterConfigImpl implements IClusterConfig {
 			_loadDBClusterInfo();
 		} catch (Exception e) {
 			throw new LoadConfigException(e);
+		}
+		
+	}
+
+	/**
+	 * zookeeper节点的监视器
+	 */
+	public void process(WatchedEvent event) {
+		if (event.getState() == KeeperState.SyncConnected) {
+			connectedLatch.countDown();
+		}
+	}
+
+    @Override
+	public ZooKeeper getZooKeeper() {
+        // 创建zookeeper连接
+		try {
+			ZooKeeper zk = new ZooKeeper(this.zkUrl, sessionTimeout, this);
+			if (States.CONNECTING == zk.getState()) {
+				connectedLatch.await();
+			}
+
+            return zk;
+		} catch (Exception e) {
+			throw new RuntimeException(e);
 		}
 	}
 
@@ -298,14 +340,21 @@ public class XmlDBClusterConfigImpl implements IClusterConfig {
 		return instance;
 	}
 
-	@Override
-	public int getIdGeneratorBatch() {
-		return idGenerateBatch;
+	public static IClusterConfig getInstance(String xmlFilePath) throws LoadConfigException {
+		if (instance == null) {
+			synchronized (XmlDBClusterConfigImpl.class) {
+				if (instance == null) {
+					instance = new XmlDBClusterConfigImpl(xmlFilePath);
+				}
+			}
+		}
+
+		return instance;
 	}
 
 	@Override
-	public String getZkUrl() {
-		return zkUrl;
+	public int getIdGeneratorBatch() {
+		return idGenerateBatch;
 	}
 
 	@Override

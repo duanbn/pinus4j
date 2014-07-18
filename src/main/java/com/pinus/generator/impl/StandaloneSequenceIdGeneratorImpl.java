@@ -5,6 +5,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.log4j.Logger;
 
+import com.pinus.config.IClusterConfig;
 import com.pinus.generator.AbstractSequenceIdGenerator;
 
 /**
@@ -23,6 +24,10 @@ public class StandaloneSequenceIdGeneratorImpl extends AbstractSequenceIdGenerat
 	 * 单机锁. 当使用单机模式运行的时候需要防止多线程修改global_id表
 	 */
 	private static final ReentrantLock standaloneLock = new ReentrantLock();
+
+	public StandaloneSequenceIdGeneratorImpl(IClusterConfig config) {
+		super(config);
+	}
 
 	@Override
 	public Lock getLock(String lockName) {

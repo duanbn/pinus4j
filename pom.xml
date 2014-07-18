@@ -23,8 +23,11 @@
 			<name>Internal Releases</name>
 			<url>http://192.168.4.51:8081/nexus/content/repositories/releases/</url>
 		</repository>
-		<!-- <repository> <id>snapshot</id> <name>Internal Releases</name> <url>http://192.168.4.51:8081/nexus/content/repositories/snapshots/</url> 
-			</repository> -->
+		<snapshotRepository>
+			<id>snapshots</id>
+			<name>Internal Snapshots</name>
+			<url>http://192.168.4.51:8081/nexus/content/repositories/snapshots/</url>
+		</snapshotRepository>
 	</distributionManagement>
 
 	<dependencies>
@@ -103,14 +106,14 @@
 						</goals>
 					</execution>
 				</executions>
-                <configuration>
-                    <show>private</show>
-                    <nohelp>true</nohelp>
-                    <aggregate>true</aggregate>
-                    <charset>UTF-8</charset>
-                    <encoding>UTF-8</encoding>
-                    <docencoding>UTF-8</docencoding>
-                </configuration>
+				<configuration>
+					<show>private</show>
+					<nohelp>true</nohelp>
+					<aggregate>true</aggregate>
+					<charset>UTF-8</charset>
+					<encoding>UTF-8</encoding>
+					<docencoding>UTF-8</docencoding>
+				</configuration>
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
