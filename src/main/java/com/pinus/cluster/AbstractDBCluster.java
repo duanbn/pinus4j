@@ -108,40 +108,6 @@ public abstract class AbstractDBCluster implements IDBCluster {
 	}
 
 	@Override
-	public List<DBTable> getDBTableFromZk() {
-		List<DBTable> tables = new ArrayList<DBTable>();
-
-		ZooKeeper zkClient = config.getZooKeeper();
-
-		try {
-			List<String> zkTableNodes = zkClient.getChildren(Const.ZK_SHARDINGINFO, false);
-			byte[] tableData = null;
-			for (String zkTableNode : zkTableNodes) {
-				tableData = zkClient.getData(Const.ZK_SHARDINGINFO + "/" + zkTableNode, false, null);
-				tables.add(IOUtil.getObject(tableData, DBTable.class));
-			}
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		} finally {
-			try {
-				zkClient.close();
-			} catch (InterruptedException e) {
-			}
-		}
-
-		return tables;
-	}
-
-	@Override
-	public List<DBTable> getDBTableFromJvm() {
-		try {
-			return this.dbGenerator.scanEntity(this.scanPackage);
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	@Override
 	public DBClusterInfo getDbClusterInfo(String clusterName) {
 		DBClusterInfo clusterInfo = dbClusterInfo.get(clusterName);
 
@@ -204,10 +170,16 @@ public abstract class AbstractDBCluster implements IDBCluster {
 			_initDBCluster(this.dbClusterInfo);
 
 			// 初始化数据表集群信息.
-			if (scanPackage == null || scanPackage.equals("")) {
-				throw new IllegalStateException("未设置需要扫描的实体对象包, 参考IShardingStorageClient.setScanPackage()");
-			}
-			List<DBTable> tables = this.dbGenerator.scanEntity(scanPackage);
+            List<DBTable> tables = null;
+			if (scanPackage != null && !scanPackage.equals("")) {
+                // get table sharding info from jvm
+                tables = _getDBTableFromJvm();
+                // 表分片信息写入zookeeper
+                _syncToZookeeper(tables);
+            } else {
+                // get table sharding info from zookeeper
+                tables = _getDBTableFromZk();
+            }
 			if (tables.isEmpty()) {
 				throw new DBClusterException("找不到可以创建库表的实体对象, package=" + scanPackage);
 			}
@@ -222,9 +194,6 @@ public abstract class AbstractDBCluster implements IDBCluster {
 				_createTable(tables);
 				LOG.info("数据库表同步完成, 耗时:" + (System.currentTimeMillis() - start) + "ms");
 			}
-
-			// 表分片信息写入zookeeper
-			_syncToZookeeper(tables);
 
 		} catch (Exception e) {
 			throw new DBClusterException("init database cluster failure", e);
@@ -473,6 +442,41 @@ public abstract class AbstractDBCluster implements IDBCluster {
 		return dbs;
 	}
 
+    private List<DBTable> _getDBTableFromZk() {
+		List<DBTable> tables = new ArrayList<DBTable>();
+
+		ZooKeeper zkClient = config.getZooKeeper();
+
+		try {
+			List<String> zkTableNodes = zkClient.getChildren(Const.ZK_SHARDINGINFO, false);
+			byte[] tableData = null;
+			for (String zkTableNode : zkTableNodes) {
+				tableData = zkClient.getData(Const.ZK_SHARDINGINFO + "/" + zkTableNode, false, null);
+				tables.add(IOUtil.getObject(tableData, DBTable.class));
+			}
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		} finally {
+			try {
+				zkClient.close();
+			} catch (InterruptedException e) {
+			}
+		}
+
+		return tables;
+	}
+
+    private List<DBTable> _getDBTableFromJvm() {
+		try {
+			return this.dbGenerator.scanEntity(this.scanPackage);
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+    /**
+     * 将表分片信息同步到zookeeper.
+     */
 	private void _syncToZookeeper(List<DBTable> tables) throws Exception {
 		ZooKeeper zkClient = config.getZooKeeper();
 		try {
@@ -722,10 +726,6 @@ public abstract class AbstractDBCluster implements IDBCluster {
 	@Override
 	public IDBGenerator getDbGenerator() {
 		return this.dbGenerator;
-	}
-
-	public String getScanPackage() {
-		return scanPackage;
 	}
 
 	@Override

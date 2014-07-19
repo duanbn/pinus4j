@@ -9,6 +9,7 @@
 
 	<name>pinus</name>
 
+    <!--
 	<repositories>
 		<repository>
 			<id>nexus</id>
@@ -16,7 +17,6 @@
 			<url>http://192.168.4.51:8081/nexus/content/groups/public</url>
 		</repository>
 	</repositories>
-
 	<distributionManagement>
 		<repository>
 			<id>releases</id>
@@ -29,6 +29,7 @@
 			<url>http://192.168.4.51:8081/nexus/content/repositories/snapshots/</url>
 		</snapshotRepository>
 	</distributionManagement>
+    -->
 
 	<dependencies>
 		<dependency>
