@@ -16,19 +16,41 @@ import com.pinus.generator.IDBGenerator;
 
 /**
  * 数据库集群. 数据库集群主要类，持有所有的数据库集群信息，保存集群的数据库连接包括主库和从库。 初始化集群的方法，<br/>
- * 当没有设置scanpakcage时，从zookeeper中加载.
- * 已DbcpDBClusterImpl实现为例<br/>
+ * 当没有设置scanpakcage时，从zookeeper中加载. 已DbcpDBClusterImpl实现为例<br/>
+ * 
  * <pre>
  * IDBCluster dbCluster = new DbcpDBClusterImpl(); </br>
  * dbCluster.setDbRouteAlg(EnumDBRouteAlg); // 设置分片路由算法. 可选
  * dbCluster.setCreateTable(true | false); // 默认为false. 可选
  * dbCluster.setScanPackage("entity full path package"); // 可选
+ * dbCluster.setShardInfoFromZk(true | false); // 可选
  * dbCluster.startup();
  * </pre>
  * 
  * @author duanbn
  */
 public interface IDBCluster {
+
+    /**
+     * 设置此集群是否从zookeeper中加载分片信息.
+     *
+     * @param value true:是， false:否.
+     */
+    public void setShardInfoFromZk(boolean value);
+
+    /**
+     * 从Zookeeper中获取分片信息.
+     *
+     * @return 分片信息.
+     */
+	public List<DBTable> getDBTableFromZk();
+
+    /**
+     * 从Jvm中获取分片信息.
+     *
+     * @return 分片信息.
+     */
+	public List<DBTable> getDBTableFromJvm();
 
 	/**
 	 * 获取集群信息.

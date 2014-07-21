@@ -62,6 +62,11 @@ public abstract class AbstractDBCluster implements IDBCluster {
 	 */
 	private String scanPackage;
 
+    /**
+     * 数据分片信息是否从zookeeper中获取.
+     */
+    private boolean isShardInfoFromZk;
+
 	/**
 	 * 数据库类型.
 	 */
@@ -170,15 +175,19 @@ public abstract class AbstractDBCluster implements IDBCluster {
 			_initDBCluster(this.dbClusterInfo);
 
 			// 初始化数据表集群信息.
-            List<DBTable> tables = null;
-			if (scanPackage != null && !scanPackage.equals("")) {
+			List<DBTable> tables = null;
+            if (isShardInfoFromZk) {
+                // get table sharding info from zookeeper
+				tables = getDBTableFromZk();
+            } else {
+                if (StringUtils.isBlank(scanPackage)) {
+                    throw new DBClusterException("get shardinfo from jvm, but i can't find scanpackage full path, did you forget setScanPackage ?");
+                }
+
                 // get table sharding info from jvm
-                tables = _getDBTableFromJvm();
+                tables = getDBTableFromJvm();
                 // 表分片信息写入zookeeper
                 _syncToZookeeper(tables);
-            } else {
-                // get table sharding info from zookeeper
-                tables = _getDBTableFromZk();
             }
 			if (tables.isEmpty()) {
 				throw new DBClusterException("找不到可以创建库表的实体对象, package=" + scanPackage);
@@ -442,7 +451,13 @@ public abstract class AbstractDBCluster implements IDBCluster {
 		return dbs;
 	}
 
-    private List<DBTable> _getDBTableFromZk() {
+    @Override
+    public void setShardInfoFromZk(boolean value) {
+        this.isShardInfoFromZk = value;
+    }
+
+	@Override
+	public List<DBTable> getDBTableFromZk() {
 		List<DBTable> tables = new ArrayList<DBTable>();
 
 		ZooKeeper zkClient = config.getZooKeeper();
@@ -466,7 +481,8 @@ public abstract class AbstractDBCluster implements IDBCluster {
 		return tables;
 	}
 
-    private List<DBTable> _getDBTableFromJvm() {
+	@Override
+	public List<DBTable> getDBTableFromJvm() {
 		try {
 			return this.dbGenerator.scanEntity(this.scanPackage);
 		} catch (Exception e) {
@@ -474,9 +490,9 @@ public abstract class AbstractDBCluster implements IDBCluster {
 		}
 	}
 
-    /**
-     * 将表分片信息同步到zookeeper.
-     */
+	/**
+	 * 将表分片信息同步到zookeeper.
+	 */
 	private void _syncToZookeeper(List<DBTable> tables) throws Exception {
 		ZooKeeper zkClient = config.getZooKeeper();
 		try {

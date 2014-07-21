@@ -14,17 +14,8 @@ import com.pinus.entity.TestEntity;
 public class ShardingStatisticsTest extends BaseTest {
 
 	@Test
-	public void testStatEntity() {
-		IShardingStatistics shardingStatistics = this.cacheClient.getShardingStatistic();
-		DBClusterStatInfo statInfo = shardingStatistics.statEntity(CLUSTER_KLSTORAGE, TestEntity.class);
-		for (Map.Entry<DB, Integer> entry : statInfo.getShardingEntityCount().entrySet()) {
-			System.out.println(entry.getKey() + " - " + entry.getValue());
-		}
-	}
-
-	@Test
 	public void testHash() throws Exception {
-		long seed = 1000000000;
+		long seed = 1;
 		ShardingKey<String> sv = null;
 		Map<DB, Integer> counter = new HashMap<DB, Integer>();
 		for (int i = 0; i < 100000; i++) {

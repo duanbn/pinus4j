@@ -1,23 +1,58 @@
 package com.pinus.contrib.commandline;
 
-import java.io.*;
+import jline.ConsoleReader;
 
-import com.pinus.cluster.*;
-import com.pinus.cluster.impl.*;
-import com.pinus.api.enums.*;
+import com.pinus.api.enums.EnumDB;
+import com.pinus.cluster.IDBCluster;
+import com.pinus.cluster.impl.DbcpDBClusterImpl;
 
 public class App {
 
-    public static void main(String[] args) throws Exception {
-        if (args.length == 0) {
-            System.out.println("usage: java pinus-cli.jar [storage-config.xml path]");
-            System.exit(-1);
-        }
+	public final String CMD_PROMPT = "pinus-cli>";
 
-        String storageConfigFile = args[0];
-
+    public void run(String storageConfigFile) throws Exception {
         IDBCluster dbCluster = new DbcpDBClusterImpl(EnumDB.MYSQL);
-        dbCluster.startup();
+		dbCluster.setShardInfoFromZk(true);
+		dbCluster.startup(storageConfigFile);
+
+		boolean isRunning = true;
+
+		ConsoleReader creader = new ConsoleReader();
+		String cmd = null;
+		while (isRunning) {
+			//System.out.print(CMD_PROMPT);
+
+            cmd = creader.readLine(CMD_PROMPT);
+
+            if (cmd.equals("exit")) {
+                isRunning = false;
+            }
+            if (cmd.toLowerCase().startsWith("select")) {
+                _handleSelect(cmd);
+            }
+
+			try {
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
     }
+
+    private void _handleSelect(String cmd) {
+        System.out.println(cmd);
+    }
+
+	public static void main(String[] args) throws Exception {
+		if (args.length == 0) {
+			System.out.println("usage: java pinus-cli.jar [storage-config.xml path]");
+			System.exit(-1);
+		}
+		String storageConfigFile = args[0];
+
+        App app = new App();
+        app.run(storageConfigFile);
+
+        System.out.println("see you :)");
+	}
 
 }

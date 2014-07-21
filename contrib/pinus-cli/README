@@ -1,1 +1,2 @@
 Query syntax
+SELECT * FROM {TABLENAME} WHERE field=xxx shardvalue=xxx
