@@ -137,7 +137,7 @@ public class MemCachedPrimaryCacheImpl implements IPrimaryCache {
 	}
 
 	@Override
-	public void removeGlobal(String clusterName, String tableName, Number... ids) {
+	public void removeGlobal(String clusterName, String tableName, List<? extends Number> ids) {
 		List<String> keys = new ArrayList<String>();
 		for (Number id : ids) {
 			keys.add(_buildGlobalKey(clusterName, tableName, id));
@@ -235,7 +235,7 @@ public class MemCachedPrimaryCacheImpl implements IPrimaryCache {
 	}
 
 	@Override
-	public void remove(DB db, Number... ids) {
+	public void remove(DB db, List<? extends Number> ids) {
 		List<String> keys = new ArrayList<String>();
 		for (Number id : ids) {
 			keys.add(_buildKey(db, id));

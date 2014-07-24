@@ -471,7 +471,7 @@ public class SQLBuilder {
 	 * 
 	 * @return DELETE语句
 	 */
-	public static String buildDeleteByPks(Class<?> clazz, int tableIndex, Number... pks) {
+	public static String buildDeleteByPks(Class<?> clazz, int tableIndex, List<? extends Number> pks) {
 		String tableName = ReflectUtil.getTableName(clazz, tableIndex);
 		String pkName = ReflectUtil.getPkName(clazz);
 

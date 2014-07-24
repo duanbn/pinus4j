@@ -94,7 +94,7 @@ public interface IShardingUpdate {
 	 * @param shardingValue
 	 * @param clazz
 	 */
-	public void globalRemoveByPks(Number[] pks, Class<?> clazz, String clusterName);
+	public void globalRemoveByPks(List<? extends Number> pks, Class<?> clazz, String clusterName);
 
 	/**
 	 * 保存数据. 当实体对象中表示主键的字段有值时，则使用此值作为主键. 否则根据数据库设置 自动生成主键
@@ -180,7 +180,7 @@ public interface IShardingUpdate {
 	 * @throws DBOperationException
 	 *             操作失败
 	 */
-	public void removeByPks(Number[] pks, IShardingKey<?> shardingValue, Class<?> clazz);
+	public void removeByPks(List<? extends Number> pks, IShardingKey<?> shardingValue, Class<?> clazz);
 
 	/**
 	 * 设置数据库集群.

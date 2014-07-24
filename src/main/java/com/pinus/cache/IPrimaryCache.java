@@ -140,7 +140,7 @@ public interface IPrimaryCache {
 	 * @param ids
 	 *            主键
 	 */
-	public void removeGlobal(String clusterName, String tableName, Number... ids);
+	public void removeGlobal(String clusterName, String tableName, List<? extends Number> ids);
 
 	/**
 	 * 设置count数.
@@ -258,7 +258,7 @@ public interface IPrimaryCache {
 	 * @param id
 	 *            主键
 	 */
-	public void remove(DB db, Number id);
+	public void remove(DB db, Number pk);
 
 	/**
 	 * 批量删除缓存.
@@ -268,6 +268,6 @@ public interface IPrimaryCache {
 	 * @param ids
 	 *            主键
 	 */
-	public void remove(DB db, Number... ids);
+	public void remove(DB db, List<? extends Number> pks);
 
 }

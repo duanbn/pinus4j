@@ -3,6 +3,7 @@ package com.pinus.api;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.locks.Lock;
+import java.util.Arrays;
 
 import org.apache.log4j.Logger;
 
@@ -220,15 +221,20 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 	}
 
 	@Override
-	public void globalRemoveByPks(Number[] pks, Class<?> clazz, String clusterName) {
-		if (pks == null || pks.length == 0) {
-			return;
-		}
+	public void globalRemoveByPks(List<? extends Number> pks, Class<?> clazz, String clusterName) {
+        if (pks == null || pks.isEmpty()) {
+            return;
+        }
 		CheckUtil.checkClass(clazz);
 		CheckUtil.checkClusterName(clusterName);
 
 		this.updater.globalRemoveByPks(pks, clazz, clusterName);
 	}
+
+    @Override
+    public void globalRemoveByPks(String clusterName, Class<?> clazz, Number... pks) {
+        globalRemoveByPks(Arrays.asList(pks), clazz, clusterName);
+    }
 
 	@Override
 	public Number save(Object entity) {
@@ -280,15 +286,25 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 	}
 
 	@Override
-	public void removeByPks(Number[] pks, IShardingKey<?> shardingValue, Class<?> clazz) {
-		if (pks == null || pks.length == 0) {
-			return;
-		}
+	public void removeByPks(List<? extends Number> pks, IShardingKey<?> shardingValue, Class<?> clazz) {
+        if (pks == null || pks.isEmpty()) {
+            return;
+        }
 		CheckUtil.checkShardingValue(shardingValue);
 		CheckUtil.checkClass(clazz);
 
 		this.updater.removeByPks(pks, shardingValue, clazz);
 	}
+
+    @Override
+    public void removeByPks(IShardingKey<?> shardingValue, Class<?> clazz, Number... pks) {
+        if (pks == null || pks.length == 0) {
+            return;
+        }
+
+        List<Number> list = new ArrayList<Number>(pks.length);
+        removeByPks(list, shardingValue, clazz);
+    }
 
 	@Override
 	public <T> T findGlobalOneByQuery(IQuery query, String clusterName, Class<T> clazz) {
