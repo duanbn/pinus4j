@@ -171,6 +171,11 @@ public interface IShardingMasterQuery {
 	 */
 	public Number getCountFromMaster(IShardingKey<?> shardingValue, SQL<?> sql);
 
+    /**
+     * 根据查询条件获取某一个分片的记录数.
+     */
+    public Number getCountFromMaster(IQuery query, IShardingKey<?> shardingValue, Class<?> clazz);
+
 	/**
 	 * 一个主分库分表, 根据主键查询. 查询不到则返回null
 	 * 
