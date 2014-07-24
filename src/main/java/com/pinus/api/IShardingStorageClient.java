@@ -100,7 +100,7 @@ public interface IShardingStorageClient {
 	 * @param shardingValue
 	 * @param clazz
 	 */
-	public void globalRemoveByPks(List<? extends Number> pks, Class<?> clazz, String clusterName);
+	public void globalRemoveByPkList(List<? extends Number> pks, Class<?> clazz, String clusterName);
 
     /**
      * 根据主键删除全局库中的记录.
@@ -191,7 +191,7 @@ public interface IShardingStorageClient {
 	 * @throws DBOperationException
 	 *             操作失败
 	 */
-	public void removeByPks(List<? extends Number> pks, IShardingKey<?> shardingValue, Class<?> clazz);
+	public void removeByPkList(List<? extends Number> pks, IShardingKey<?> shardingValue, Class<?> clazz);
 
     /**
      * 根据主键删除数据.
