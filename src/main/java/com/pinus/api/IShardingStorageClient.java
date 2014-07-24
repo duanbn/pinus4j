@@ -341,6 +341,21 @@ public interface IShardingStorageClient {
 	 */
 	public Number getCount(IShardingKey<?> shardingValue, SQL<?> sql);
 
+    /**
+     * 根据查询条件获取某个分库分表的记录数.
+     *
+     * @param query 查询条件
+     * @param shardingValue 分片因子
+     * @param clazz 数据对象
+     *
+     * @return 记录数
+     * @throws DBOperationException
+     *             操作失败
+     * @throws IllegalArgumentException
+     *             输入参数错误
+     */
+    public Number getCount(IQuery query, IShardingKey<?> shardingValue, Class<?> clazz);
+
 	/**
 	 * 一个主分库分表, 根据主键查询. 查询不到则返回null
 	 * 

@@ -206,6 +206,13 @@ public class ShardingMasterQueryImpl extends AbstractShardingQuery implements IS
 		return selectCount(db, sql);
 	}
 
+    @Override
+    public Number getCountFromMaster(IQuery query, IShardingKey<?> shardingValue, Class<?> clazz) {
+        DB db = _getDbFromMaster(clazz, shardingValue);
+
+        return selectCount(db, clazz, query);
+    }
+
 	@Override
 	public <T> T findByPkFromMaster(Number pk, IShardingKey<?> shardingValue, Class<T> clazz) {
 		DB db = _getDbFromMaster(clazz, shardingValue);
