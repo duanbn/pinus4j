@@ -77,7 +77,7 @@ public class CacheShardingStorageClientTest extends BaseTest {
 			Assert.assertEquals(entities.get(i), entitiesFromDB.get(i));
 		}
 
-		cacheClient.globalRemoveByPks(pks, TestGlobalEntity.class, CLUSTER_KLSTORAGE);
+		cacheClient.globalRemoveByPks(CLUSTER_KLSTORAGE, TestGlobalEntity.class, pks);
 		entitiesFromDB = cacheClient.findGlobalByPks(CLUSTER_KLSTORAGE, TestGlobalEntity.class, pks);
 		Assert.assertTrue(entitiesFromDB.isEmpty());
 	}
@@ -102,7 +102,7 @@ public class CacheShardingStorageClientTest extends BaseTest {
 			Assert.assertEquals(before.get(i), after.get(i));
 		}
 
-		cacheClient.globalRemoveByPks(pks, TestGlobalEntity.class, CLUSTER_KLSTORAGE);
+		cacheClient.globalRemoveByPks(CLUSTER_KLSTORAGE, TestGlobalEntity.class, pks);
 		List<TestGlobalEntity> entitiesFromDB = cacheClient.findGlobalByPks(CLUSTER_KLSTORAGE, TestGlobalEntity.class,
 				pks);
 		Assert.assertTrue(entitiesFromDB.isEmpty());
@@ -156,7 +156,7 @@ public class CacheShardingStorageClientTest extends BaseTest {
 			Assert.assertEquals(entities.get(i), entitiesFromDB.get(i));
 		}
 
-		cacheClient.removeByPks(pks, key, TestEntity.class);
+		cacheClient.removeByPks(key, TestEntity.class, pks);
 		entitiesFromDB = cacheClient.findByPks(key, TestEntity.class, pks);
 		Assert.assertTrue(entitiesFromDB.isEmpty());
 	}
@@ -182,7 +182,7 @@ public class CacheShardingStorageClientTest extends BaseTest {
 			Assert.assertEquals(before.get(i), after.get(i));
 		}
 
-		cacheClient.removeByPks(pks, key, TestEntity.class);
+		cacheClient.removeByPks(key, TestEntity.class, pks);
 		List<TestEntity> entitiesFromDB = cacheClient.findByPks(key, TestEntity.class, pks);
 		Assert.assertTrue(entitiesFromDB.isEmpty());
 	}

@@ -1,6 +1,7 @@
 package com.pinus.cache;
 
 import java.util.List;
+import java.util.Arrays;
 
 import junit.framework.Assert;
 
@@ -61,7 +62,7 @@ public class MemCachedPrimaryCacheImplTest extends BaseTest {
 		Assert.assertNull(primaryCache.get(db, 1));
 
 		for (int i = 2; i <= 10; i++) {
-			primaryCache.remove(db, 2, 3, 4, 5, 6, 7, 8, 9, 10);
+			primaryCache.remove(db, Arrays.asList(new Number[] {2,3,4,5,6,7}));
 		}
 		for (int i = 2; i <= 10; i++) {
 			Assert.assertNull(primaryCache.get(db, i));

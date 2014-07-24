@@ -270,7 +270,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 	}
 
 	@Override
-	public void globalRemoveByPks(List<? extends Number> pks, Class<?> clazz, String clusterName) {
+	public void globalRemoveByPkList(List<? extends Number> pks, Class<?> clazz, String clusterName) {
         if (pks == null || pks.isEmpty()) {
             return;
         }
@@ -282,7 +282,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 
     @Override
     public void globalRemoveByPks(String clusterName, Class<?> clazz, Number... pks) {
-        globalRemoveByPks(Arrays.asList(pks), clazz, clusterName);
+        globalRemoveByPkList(Arrays.asList(pks), clazz, clusterName);
     }
 
 	@Override
@@ -335,7 +335,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 	}
 
 	@Override
-	public void removeByPks(List<? extends Number> pks, IShardingKey<?> shardingValue, Class<?> clazz) {
+	public void removeByPkList(List<? extends Number> pks, IShardingKey<?> shardingValue, Class<?> clazz) {
         if (pks == null || pks.isEmpty()) {
             return;
         }
@@ -352,7 +352,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
         }
 
         List<Number> list = new ArrayList<Number>(pks.length);
-        removeByPks(list, shardingValue, clazz);
+        removeByPkList(list, shardingValue, clazz);
     }
 
 	@Override
