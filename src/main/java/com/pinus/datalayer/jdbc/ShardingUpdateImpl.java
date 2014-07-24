@@ -129,11 +129,13 @@ public class ShardingUpdateImpl implements IShardingUpdate {
 
 	@Override
 	public void globalRemoveByPk(Number pk, Class<?> clazz, String clusterName) {
-		globalRemoveByPks(new Number[] { pk }, clazz, clusterName);
+        List<Number> pks = new ArrayList<Number>(1);
+        pks.add(pk);
+		globalRemoveByPks(pks, clazz, clusterName);
 	}
 
 	@Override
-	public void globalRemoveByPks(Number[] pks, Class<?> clazz, String clusterName) {
+	public void globalRemoveByPks(List<? extends Number> pks, Class<?> clazz, String clusterName) {
 
 		Connection conn = null;
 		try {
@@ -147,7 +149,7 @@ public class ShardingUpdateImpl implements IShardingUpdate {
 			if (primaryCache != null) {
 				String tableName = ReflectUtil.getTableName(clazz);
 				primaryCache.removeGlobal(clusterName, tableName, pks);
-				primaryCache.decrCountGlobal(clusterName, tableName, pks.length);
+				primaryCache.decrCountGlobal(clusterName, tableName, pks.size());
 			}
 		} catch (Exception e) {
 			throw new DBOperationException(e);
@@ -267,9 +269,9 @@ public class ShardingUpdateImpl implements IShardingUpdate {
 
 		// 清理缓存
 		if (primaryCache != null) {
-			Number[] pks = new Number[entities.size()];
-			for (int i = 0; i < entities.size(); i++) {
-				pks[i] = (Number) ReflectUtil.getPkValue(entities.get(i));
+            List pks = new ArrayList(entities.size());
+			for (Object entity : entities) {
+                pks.add((Number) ReflectUtil.getPkValue(entity));
 			}
 			primaryCache.remove(db, pks);
 		}
@@ -278,11 +280,13 @@ public class ShardingUpdateImpl implements IShardingUpdate {
 
 	@Override
 	public void removeByPk(Number pk, IShardingKey<?> shardingKey, Class<?> clazz) {
-		removeByPks(new Number[] { pk }, shardingKey, clazz);
+        List<Number> pks = new ArrayList<Number>(1);
+        pks.add(pk);
+		removeByPks(pks, shardingKey, clazz);
 	}
 
 	@Override
-	public void removeByPks(Number[] pks, IShardingKey<?> shardingKey, Class<?> clazz) {
+	public void removeByPks(List<? extends Number> pks, IShardingKey<?> shardingKey, Class<?> clazz) {
 		String talbeName = ReflectUtil.getTableName(clazz);
 		DB db = _getDbFromMaster(talbeName, shardingKey);
 
@@ -298,7 +302,7 @@ public class ShardingUpdateImpl implements IShardingUpdate {
 		// 删除缓存
 		if (primaryCache != null) {
 			primaryCache.remove(db, pks);
-			primaryCache.decrCount(db, pks.length);
+			primaryCache.decrCount(db, pks.size());
 		}
 	}
 
@@ -383,11 +387,11 @@ public class ShardingUpdateImpl implements IShardingUpdate {
 		}
 	}
 
-	private void _removeByPksGlobal(Connection conn, Number[] pks, Class<?> clazz) {
+	private void _removeByPksGlobal(Connection conn, List<? extends Number> pks, Class<?> clazz) {
 		_removeByPks(conn, pks, clazz, -1);
 	}
 
-	private void _removeByPks(Connection conn, Number[] pks, Class<?> clazz, int tableIndex) {
+	private void _removeByPks(Connection conn, List<? extends Number> pks, Class<?> clazz, int tableIndex) {
 		PreparedStatement ps = null;
 		try {
 			conn.setAutoCommit(false);

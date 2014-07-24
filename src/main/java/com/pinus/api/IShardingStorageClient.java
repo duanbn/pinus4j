@@ -95,7 +95,16 @@ public interface IShardingStorageClient {
 	 * @param shardingValue
 	 * @param clazz
 	 */
-	public void globalRemoveByPks(Number[] pks, Class<?> clazz, String clusterName);
+	public void globalRemoveByPks(List<? extends Number> pks, Class<?> clazz, String clusterName);
+
+    /**
+     * 根据主键删除全局库中的记录.
+     *
+     * @param clusterName 集群名称
+     * @param clazz 数据对象
+     * @param pks 主键
+     */
+    public void globalRemoveByPks(String clusterName, Class<?> clazz, Number... pks);
 
 	//
 	// sharding
@@ -179,7 +188,19 @@ public interface IShardingStorageClient {
 	 * @throws DBOperationException
 	 *             操作失败
 	 */
-	public void removeByPks(Number[] pks, IShardingKey<?> shardingValue, Class<?> clazz);
+	public void removeByPks(List<? extends Number> pks, IShardingKey<?> shardingValue, Class<?> clazz);
+
+    /**
+     * 根据主键删除数据.
+     *
+     * @param shardingValue 数据分片因子
+     * @param clazz 数据对象
+     * @param pks 主键
+     *
+     * @throws DBOperationException
+	 *             操作失败
+     */
+    public void removeByPks(IShardingKey<?> shardingValue, Class<?> clazz, Number... pks);
 
 	// ////////////////////////////////////////////////////////
 	// query相关
