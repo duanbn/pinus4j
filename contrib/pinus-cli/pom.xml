@@ -15,6 +15,13 @@
 			<name>Team Nexus Repository</name>
 			<url>http://192.168.4.51:8081/nexus/content/groups/public</url>
 		</repository>
+		<repository>
+			<id>jsqlparser-snapshots</id>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
+			<url>https://oss.sonatype.org/content/groups/public/</url>
+		</repository>
 	</repositories>
 
 	<distributionManagement>
@@ -31,16 +38,21 @@
 	</distributionManagement>
 
 	<dependencies>
-        <dependency>
-            <groupId>com.pinus</groupId>
-            <artifactId>pinus</artifactId>
-            <version>0.6.4</version>
-        </dependency>
-        <dependency>
-            <groupId>jline</groupId>
-            <artifactId>jline</artifactId>
-            <version>0.9.94</version>
-        </dependency>
+		<dependency>
+			<groupId>com.pinus</groupId>
+			<artifactId>pinus</artifactId>
+			<version>0.6.4</version>
+		</dependency>
+		<dependency>
+			<groupId>jline</groupId>
+			<artifactId>jline</artifactId>
+			<version>0.9.94</version>
+		</dependency>
+		<dependency>
+			<groupId>net.sf.jsqlparser</groupId>
+			<artifactId>jsqlparser</artifactId>
+			<version>0.8.0</version>
+		</dependency>
 		<dependency>
 			<groupId>log4j</groupId>
 			<artifactId>log4j</artifactId>

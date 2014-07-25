@@ -2,6 +2,7 @@ package com.pinus.cluster;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Collection;
 
 import com.pinus.api.IShardingKey;
 import com.pinus.api.enums.EnumDBMasterSlave;
@@ -51,6 +52,13 @@ public interface IDBCluster {
      * @return 分片信息.
      */
 	public List<DBTable> getDBTableFromJvm();
+
+    /**
+     * Get all info about this cluster.
+     *
+     * @return all cluster info.
+     */
+    public Collection<DBClusterInfo> getDbClusterInfo();
 
 	/**
 	 * 获取集群信息.

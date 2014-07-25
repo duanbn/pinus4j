@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Collection;
 
 import javax.sql.DataSource;
 
@@ -111,6 +112,11 @@ public abstract class AbstractDBCluster implements IDBCluster {
 	public AbstractDBCluster(EnumDB enumDb) {
 		this.enumDb = enumDb;
 	}
+
+    @Override
+    public Collection<DBClusterInfo> getDbClusterInfo() {
+        return this.dbClusterInfo.values();
+    }
 
 	@Override
 	public DBClusterInfo getDbClusterInfo(String clusterName) {

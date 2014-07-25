@@ -1,2 +1,2 @@
 Query syntax
-SELECT * FROM {TABLENAME} WHERE field=xxx shardvalue=xxx
+SELECT * FROM {TABLENAME} WHERE field=xxx sharding by xxx
