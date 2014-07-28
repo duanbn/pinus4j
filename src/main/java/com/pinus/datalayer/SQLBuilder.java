@@ -490,31 +490,6 @@ public class SQLBuilder {
 	}
 
 	/**
-	 * 构建update sql.
-	 * 
-	 * @param entityProperty
-	 *            数据对象反射
-	 * @param pkName
-	 *            主键字段名
-	 * @param tableName
-	 *            数据表名
-	 * 
-	 * @return update sql语句
-	 */
-	private static String _buildUpdateSql(Map<String, Object> entityProperty, String pkName, String tableName) {
-		// 生成update语句.
-		Set<Map.Entry<String, Object>> propertyEntrySet = entityProperty.entrySet();
-		StringBuilder SQL = new StringBuilder("UPDATE " + tableName + " SET ");
-		for (Map.Entry<String, Object> propertyEntry : propertyEntrySet) {
-			SQL.append(propertyEntry.getKey()).append("=?").append(",");
-		}
-		SQL.deleteCharAt(SQL.length() - 1);
-		SQL.append(" WHERE ").append(pkName).append("=?");
-
-		return SQL.toString();
-	}
-
-	/**
 	 * 获取update PreparedStatement.
 	 * 
 	 * @param conn
