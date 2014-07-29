@@ -1,1 +1,2 @@
-This is a java framework, Witch is help application store data in multiple mysql database.
+这个是一个使用Java开发的框架，此框架的目的是帮助应用程序轻松的将数据分片存储在多个Mysql实例中.
+同时提供了一套完整的数据库访问接口，方便的完成Java对象和数据库表的映射.
