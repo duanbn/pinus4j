@@ -55,7 +55,8 @@ public class DB implements Comparable<DB> {
 
 	@Override
 	public String toString() {
-		StringBuilder info = new StringBuilder(databaseProductName);
+		StringBuilder info = new StringBuilder();
+		info.append(databaseProductName);
 		info.append(" host=" + host);
 		info.append(" db=").append(catalog);
 		info.append(" tableName=").append(this.tableName).append(this.tableIndex);
@@ -150,6 +151,7 @@ public class DB implements Comparable<DB> {
 			this.host = url.substring(0, url.indexOf("/"));
 			this.catalog = dbConn.getCatalog();
 		} catch (SQLException e) {
+			throw new RuntimeException(e);
 		} finally {
 			SQLBuilder.close(dbConn);
 		}

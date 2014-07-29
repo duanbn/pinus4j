@@ -1,0 +1,25 @@
+<assembly>
+    <id>distribution</id>
+
+    <formats>
+        <format>dir</format>
+    </formats>
+
+    <dependencySets>
+        <dependencySet>
+            <useProjectArtifact>true</useProjectArtifact>
+            <outputDirectory>lib</outputDirectory>
+        </dependencySet>
+    </dependencySets>
+
+    <fileSets>
+        <fileSet>
+            <directory>src/main/script</directory>
+            <outputDirectory>/bin</outputDirectory>
+            <includes>
+                <include>*</include>
+            </includes>
+            <fileMode>0755</fileMode>
+        </fileSet>
+    </fileSets>
+</assembly>

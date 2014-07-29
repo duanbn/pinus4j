@@ -172,6 +172,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 		this.slaveQueryer.setPrimaryCache(this.primaryCache);
 
         // set instance to threadlocal.
+        // FashionEntity dependency this.
         storageClientHolder.set(this);
 	}
 

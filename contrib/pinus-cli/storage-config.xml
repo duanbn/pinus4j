@@ -1,0 +1,247 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<storage-config>
+
+	<!-- text hash algo -->
+	<db.cluster.hash.algo>bernstein</db.cluster.hash.algo>
+	<!-- zookeeper connection -->
+	<db.cluster.zk>192.168.4.71:2181</db.cluster.zk>
+	<!-- id generator batch -->
+	<db.cluster.generateid.batch>1
+	</db.cluster.generateid.batch>
+
+	<db-connection-pool>
+		<maxActive>30</maxActive>
+		<minIdle>1</minIdle>
+		<maxIdle>5</maxIdle>
+		<initialSize>10</initialSize>
+		<removeAbandoned>true
+		</removeAbandoned>
+		<removeAbandonedTimeout>10
+		</removeAbandonedTimeout>
+		<maxWait>1000</maxWait>
+		<timeBetweenEvictionRunsMillis>10000
+		</timeBetweenEvictionRunsMillis>
+		<numTestsPerEvictionRun>10
+		</numTestsPerEvictionRun>
+		<minEvictableIdleTimeMillis>10000
+		</minEvictableIdleTimeMillis>
+	</db-connection-pool>
+
+	<!-- user db cluster -->
+	<cluster name="user" catalog="mysql">
+		<global>
+			<master>
+				<db.username>itings</db.username>
+				<db.password>itingspwd</db.password>
+				<db.url>jdbc:mysql://192.168.4.138:3306/user?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true</db.url>
+			</master>
+		</global>
+		<region capacity="1-999999999999999">
+			<master>
+				<sharding>
+					<db.username>itings</db.username>
+					<db.password>itingspwd</db.password>
+					<db.url>jdbc:mysql://192.168.4.138:3306/user0?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true</db.url>
+				</sharding>
+				<sharding>
+					<db.username>itings</db.username>
+					<db.password>itingspwd</db.password>
+					<db.url>jdbc:mysql://192.168.4.138:3307/user1?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true</db.url>
+				</sharding>
+				<sharding>
+					<db.username>itings</db.username>
+					<db.password>itingspwd</db.password>
+					<db.url>jdbc:mysql://192.168.4.138:3308/user2?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true</db.url>
+				</sharding>
+				<sharding>
+					<db.username>itings</db.username>
+					<db.password>itingspwd</db.password>
+					<db.url>jdbc:mysql://192.168.4.138:3309/user3?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true</db.url>
+				</sharding>
+			</master>
+		</region>
+	</cluster>
+	<!-- redheart db cluster -->
+	<cluster name="redheart" catalog="mysql">
+		<region capacity="1-125000000">
+			<master>
+				<sharding>
+					<db.username>itings</db.username>
+					<db.password>itingspwd</db.password>
+					<db.url>jdbc:mysql://192.168.4.138:3306/redheart0?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true</db.url>
+				</sharding>
+				<sharding>
+					<db.username>itings</db.username>
+					<db.password>itingspwd</db.password>
+					<db.url>jdbc:mysql://192.168.4.138:3307/redheart1?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true</db.url>
+				</sharding>
+				<sharding>
+					<db.username>itings</db.username>
+					<db.password>itingspwd</db.password>
+					<db.url>jdbc:mysql://192.168.4.138:3308/redheart2?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true</db.url>
+				</sharding>
+				<sharding>
+					<db.username>itings</db.username>
+					<db.password>itingspwd</db.password>
+					<db.url>jdbc:mysql://192.168.4.138:3309/redheart3?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true</db.url>
+				</sharding>
+				<sharding>
+					<db.username>itings</db.username>
+					<db.password>itingspwd</db.password>
+					<db.url>jdbc:mysql://192.168.4.138:3306/redheart4?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true</db.url>
+				</sharding>
+			</master>
+		</region>
+		<region capacity="125000001-250000000">
+			<master>
+				<sharding>
+					<db.username>itings</db.username>
+					<db.password>itingspwd</db.password>
+					<db.url>jdbc:mysql://192.168.4.138:3307/redheart5?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true</db.url>
+				</sharding>
+				<sharding>
+					<db.username>itings</db.username>
+					<db.password>itingspwd</db.password>
+					<db.url>jdbc:mysql://192.168.4.138:3308/redheart6?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true</db.url>
+				</sharding>
+				<sharding>
+					<db.username>itings</db.username>
+					<db.password>itingspwd</db.password>
+					<db.url>jdbc:mysql://192.168.4.138:3309/redheart7?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true</db.url>
+				</sharding>
+				<sharding>
+					<db.username>itings</db.username>
+					<db.password>itingspwd</db.password>
+					<db.url>jdbc:mysql://192.168.4.138:3306/redheart8?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true</db.url>
+				</sharding>
+				<sharding>
+					<db.username>itings</db.username>
+					<db.password>itingspwd</db.password>
+					<db.url>jdbc:mysql://192.168.4.138:3307/redheart9?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true</db.url>
+				</sharding>
+			</master>
+		</region>
+	</cluster>
+    <!-- garbage db cluster -->
+	<cluster name="garbage" catalog="mysql">
+		<region capacity="1-125000000">
+			<master>
+				<sharding>
+					<db.username>itings</db.username>
+					<db.password>itingspwd</db.password>
+					<db.url>jdbc:mysql://192.168.4.138:3306/garbage0?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true</db.url>
+				</sharding>
+				<sharding>
+					<db.username>itings</db.username>
+					<db.password>itingspwd</db.password>
+					<db.url>jdbc:mysql://192.168.4.138:3307/garbage1?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true</db.url>
+				</sharding>
+				<sharding>
+					<db.username>itings</db.username>
+					<db.password>itingspwd</db.password>
+					<db.url>jdbc:mysql://192.168.4.138:3308/garbage2?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true</db.url>
+				</sharding>
+				<sharding>
+					<db.username>itings</db.username>
+					<db.password>itingspwd</db.password>
+					<db.url>jdbc:mysql://192.168.4.138:3309/garbage3?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true</db.url>
+				</sharding>
+				<sharding>
+					<db.username>itings</db.username>
+					<db.password>itingspwd</db.password>
+					<db.url>jdbc:mysql://192.168.4.138:3306/garbage4?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true</db.url>
+				</sharding>
+			</master>
+		</region>
+		<region capacity="125000001-250000000">
+			<master>
+				<sharding>
+					<db.username>itings</db.username>
+					<db.password>itingspwd</db.password>
+					<db.url>jdbc:mysql://192.168.4.138:3307/garbage5?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true</db.url>
+				</sharding>
+				<sharding>
+					<db.username>itings</db.username>
+					<db.password>itingspwd</db.password>
+					<db.url>jdbc:mysql://192.168.4.138:3308/garbage6?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true</db.url>
+				</sharding>
+				<sharding>
+					<db.username>itings</db.username>
+					<db.password>itingspwd</db.password>
+					<db.url>jdbc:mysql://192.168.4.138:3309/garbage7?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true</db.url>
+				</sharding>
+				<sharding>
+					<db.username>itings</db.username>
+					<db.password>itingspwd</db.password>
+					<db.url>jdbc:mysql://192.168.4.138:3306/garbage8?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true</db.url>
+				</sharding>
+				<sharding>
+					<db.username>itings</db.username>
+					<db.password>itingspwd</db.password>
+					<db.url>jdbc:mysql://192.168.4.138:3307/garbage9?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true</db.url>
+				</sharding>
+			</master>
+		</region>
+	</cluster>
+    <!-- radio db cluster -->
+	<cluster name="radio" catalog="mysql">
+		<region capacity="1-125000000">
+			<master>
+				<sharding>
+					<db.username>itings</db.username>
+					<db.password>itingspwd</db.password>
+					<db.url>jdbc:mysql://192.168.4.138:3306/radio0?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true</db.url>
+				</sharding>
+				<sharding>
+					<db.username>itings</db.username>
+					<db.password>itingspwd</db.password>
+					<db.url>jdbc:mysql://192.168.4.138:3307/radio1?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true</db.url>
+				</sharding>
+				<sharding>
+					<db.username>itings</db.username>
+					<db.password>itingspwd</db.password>
+					<db.url>jdbc:mysql://192.168.4.138:3308/radio2?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true</db.url>
+				</sharding>
+				<sharding>
+					<db.username>itings</db.username>
+					<db.password>itingspwd</db.password>
+					<db.url>jdbc:mysql://192.168.4.138:3309/radio3?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true</db.url>
+				</sharding>
+				<sharding>
+					<db.username>itings</db.username>
+					<db.password>itingspwd</db.password>
+					<db.url>jdbc:mysql://192.168.4.138:3306/radio4?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true</db.url>
+				</sharding>
+			</master>
+		</region>
+		<region capacity="125000001-250000000">
+			<master>
+				<sharding>
+					<db.username>itings</db.username>
+					<db.password>itingspwd</db.password>
+					<db.url>jdbc:mysql://192.168.4.138:3307/radio5?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true</db.url>
+				</sharding>
+				<sharding>
+					<db.username>itings</db.username>
+					<db.password>itingspwd</db.password>
+					<db.url>jdbc:mysql://192.168.4.138:3308/radio6?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true</db.url>
+				</sharding>
+				<sharding>
+					<db.username>itings</db.username>
+					<db.password>itingspwd</db.password>
+					<db.url>jdbc:mysql://192.168.4.138:3309/radio7?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true</db.url>
+				</sharding>
+				<sharding>
+					<db.username>itings</db.username>
+					<db.password>itingspwd</db.password>
+					<db.url>jdbc:mysql://192.168.4.138:3306/radio8?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true</db.url>
+				</sharding>
+				<sharding>
+					<db.username>itings</db.username>
+					<db.password>itingspwd</db.password>
+					<db.url>jdbc:mysql://192.168.4.138:3307/radio9?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true</db.url>
+				</sharding>
+			</master>
+		</region>
+	</cluster>
+</storage-config>

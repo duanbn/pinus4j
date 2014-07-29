@@ -1,4 +1,5 @@
 #!/bin/sh
 
-mvn clean compile
-mvn exec:java -Dexec.mainClass="com.pinus.contrib.commandline.App" -Dexec.args="/Users/Asia/workspace/sourcecode/pinus/src/test/resources/storage-config.xml"
+mvn clean package
+storageFile="./storage-config.xml"
+./target/pinus-cli-1.0.0-distribution/pinus-cli-1.0.0/bin/pinus-cli.sh $storageFile

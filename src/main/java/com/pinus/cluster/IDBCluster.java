@@ -22,9 +22,9 @@ import com.pinus.generator.IDBGenerator;
  * <pre>
  * IDBCluster dbCluster = new DbcpDBClusterImpl(); </br>
  * dbCluster.setDbRouteAlg(EnumDBRouteAlg); // 设置分片路由算法. 可选
- * dbCluster.setCreateTable(true | false); // 默认为false. 可选
+ * dbCluster.setCreateTable(true | false); // 默认为false, 可选
  * dbCluster.setScanPackage("entity full path package"); // 可选
- * dbCluster.setShardInfoFromZk(true | false); // 可选
+ * dbCluster.setShardInfoFromZk(true | false); // 默认为false, 可选
  * dbCluster.startup();
  * </pre>
  * 
