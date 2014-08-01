@@ -18,6 +18,11 @@ import com.pinus.util.StringUtils;
 public class DBTable implements Serializable {
 
 	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
+	/**
 	 * 日志.
 	 */
 	public static final Logger LOG = Logger.getLogger(DBTable.class);

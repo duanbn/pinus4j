@@ -5,6 +5,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import javax.sql.DataSource;
@@ -50,30 +52,34 @@ public class App {
 	 */
 	private List<DBTable> tables;
 
-	private DBTable _getDBTableBySql(String sql) throws JSQLParserException {
-		// parse table name from sql.
-		Statement st = CCJSqlParserUtil.parse(sql);
-		Select selectStatement = (Select) st;
-		TablesNamesFinder tablesNamesFinder = new TablesNamesFinder();
-		List<String> tableNames = tablesNamesFinder.getTableList(selectStatement);
-		if (tableNames.size() != 1) {
-			throw new CommandException("have not support multiple table operation");
-		}
-		String tableName = tableNames.get(0);
-
-		// find sharding info
-		DBTable dbTable = null;
-		for (DBTable one : this.tables) {
-			if (one.getName().equals(tableName)) {
-				dbTable = one;
-				break;
+	private DBTable _getDBTableBySql(String sql) throws CommandException {
+		try {
+			// parse table name from sql.
+			Statement st = CCJSqlParserUtil.parse(sql);
+			Select selectStatement = (Select) st;
+			TablesNamesFinder tablesNamesFinder = new TablesNamesFinder();
+			List<String> tableNames = tablesNamesFinder.getTableList(selectStatement);
+			if (tableNames.size() != 1) {
+				throw new CommandException("have not support multiple table operation");
 			}
-		}
-		if (dbTable == null) {
-			throw new CommandException("cann't find cluster info about table \"" + tableName + "\"");
+			String tableName = tableNames.get(0);
+
+			// find sharding info
+			DBTable dbTable = null;
+			for (DBTable one : this.tables) {
+				if (one.getName().equals(tableName)) {
+					dbTable = one;
+					break;
+				}
+			}
+			if (dbTable == null) {
+				throw new CommandException("cann't find cluster info about table \"" + tableName + "\"");
+			}
+			return dbTable;
+		} catch (Exception e) {
+			throw new CommandException("syntax error: " + sql);
 		}
 
-		return dbTable;
 	}
 
 	private SqlNode parseGlobalSqlNode(String cmd) throws CommandException {
@@ -97,8 +103,6 @@ public class App {
 			sqlNode.setSql(sql);
 
 			return sqlNode;
-		} catch (JSQLParserException e) {
-			throw new CommandException("syntax error: " + cmd);
 		} catch (DBClusterException e) {
 			throw new CommandException(e.getMessage());
 		}
@@ -143,8 +147,6 @@ public class App {
 			sqlNode.setSql(sql);
 
 			return sqlNode;
-		} catch (JSQLParserException e) {
-			throw new CommandException("syntax error: " + cmd);
 		} catch (IndexOutOfBoundsException e) {
 			throw new CommandException("syntax error: " + cmd);
 		}
@@ -152,8 +154,10 @@ public class App {
 
 	/**
 	 * handle select sql.
+	 * 
+	 * @throws CommandException
 	 */
-	private void _handleSelect(String cmd) throws SQLException {
+	private void _handleSelect(String cmd) throws SQLException, CommandException {
 		SqlNode sqlNode = null;
 		if (cmd.indexOf(KEY_SHARDINGBY) > -1) {
 			sqlNode = parseShardingSqlNode(cmd);
@@ -206,12 +210,14 @@ public class App {
 	 * handle update sql.
 	 */
 	private void _handleUpdate(String cmd) {
+		System.out.println("暂时不支持");
 	}
 
 	/**
 	 * handle delete sql.
 	 */
 	private void _handleDelete(String cmd) {
+		System.out.println("暂时不支持");
 	}
 
 	/**
@@ -220,6 +226,9 @@ public class App {
 	private void _handleShow() {
 		StringBuilder info = new StringBuilder();
 		boolean isSharding = false;
+        
+        System.out.printf("%-30s  |  %-8s  |  %-10s  |  %-30s  |  %-5s\n", "name", "type", "cluster", "sharding field", "sharding number");
+
 		for (DBTable table : tables) {
 
 			if (table.getShardingNum() > 0) {
@@ -238,21 +247,38 @@ public class App {
 
 			String shardingField = "";
 			if (isSharding)
-				shardingField = "sharding field:" + table.getShardingBy();
+				shardingField = table.getShardingBy();
 
 			info.setLength(0);
 
-			System.out.printf("name:%-30s  |  type:%-8s  |  cluster:%-10s  |  %-30s  |  sharding number:%-5d\n",
-					table.getName(), type, table.getCluster(), shardingField, table.getShardingNum());
+			System.out.printf("%-30s  |  %-8s  |  %-10s  |  %-30s  |  %-5d\n", table.getName(), type, table.getCluster(), shardingField, table.getShardingNum());
 		}
 	}
-	
+
+	public void _handleHelp() {
+		StringBuilder helpInfo = new StringBuilder();
+		helpInfo.append("show       - 显示数据表及每个表的分片信息\n");
+		helpInfo.append("select语法 - 分片表 stand sql + sharding by ${value}; e.g: select * from tablename where field=value sharding by 50|\"50\"\n");
+		helpInfo.append("             全局表 stand sql\n");
+		helpInfo.append("help       - 显示帮助信息\n");
+		helpInfo.append("exit       - 退出");
+		System.out.println(helpInfo.toString());
+	}
+
 	public App(String storageConfigFile) throws Exception {
 		dbCluster = new DbcpDBClusterImpl(EnumDB.MYSQL);
 		dbCluster.setShardInfoFromZk(true);
 		dbCluster.startup(storageConfigFile);
 
 		this.tables = dbCluster.getDBTableFromZk();
+
+		// sort by cluster name
+		Collections.sort(this.tables, new Comparator<DBTable>() {
+			@Override
+			public int compare(DBTable o1, DBTable o2) {
+				return o1.getCluster().compareTo(o2.getCluster());
+			}
+		});
 	}
 
 	public void run() throws Exception {
@@ -278,12 +304,12 @@ public class App {
 					_handleDelete(cmd);
 				} else if (cmd.toLowerCase().equals("show")) {
 					_handleShow();
+				} else if (cmd.trim().equals("help")) {
+					_handleHelp();
 				} else if (cmd.trim().equals("")) {
 				} else {
 					System.out.println("unknow command:\"" + cmd + "\", now support select, update, delete ");
 				}
-			} catch (CommandException e) {
-				System.out.println(e.getMessage());
 			} catch (Exception e) {
 				System.out.println(e.getMessage());
 			}
@@ -292,7 +318,7 @@ public class App {
 
 	public static void main(String[] args) throws Exception {
 		if (args.length == 0) {
-			System.out.println("usage: java pinus-cli.jar [storage-config.xml path]");
+			System.out.println("usage: pinus-cli.sh [storage-config.xml path]");
 			System.exit(-1);
 		}
 		String storageConfigFile = args[0];
@@ -303,7 +329,7 @@ public class App {
 		System.out.println("see you :)");
 	}
 
-	private class CommandException extends RuntimeException {
+	private class CommandException extends Exception {
 
 		public CommandException(String msg) {
 			super(msg);
@@ -315,22 +341,22 @@ public class App {
 
 		@Override
 		public int complete(String buffer, int cursor, List candidates) {
-            if (buffer.indexOf("from") > -1) {
-                String prefix = buffer.substring(buffer.indexOf("from") + 4).trim();
-                if (prefix.equals("")) {
-                    for (DBTable table : tables) {
-                        candidates.add(table.getName());
-                    }
-                } else {
-                    for (DBTable table : tables) {
-                        if (table.getName().startsWith(prefix)) {
-                            candidates.add(table.getName());
-                        }
-                    }
-                }
+			if (buffer.indexOf("from") > -1) {
+				String prefix = buffer.substring(buffer.indexOf("from") + 4).trim();
+				if (prefix.equals("")) {
+					for (DBTable table : tables) {
+						candidates.add(table.getName());
+					}
+				} else {
+					for (DBTable table : tables) {
+						if (table.getName().startsWith(prefix)) {
+							candidates.add(table.getName());
+						}
+					}
+				}
 
-                cursor -= prefix.length();
-            }
+				cursor -= prefix.length();
+			}
 
 			return cursor;
 		}
