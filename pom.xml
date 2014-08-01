@@ -4,32 +4,10 @@
 
 	<groupId>com.pinus</groupId>
 	<artifactId>pinus</artifactId>
-	<version>0.6.4</version>
+	<version>0.6.5</version>
 	<packaging>jar</packaging>
 
 	<name>pinus</name>
-
-    <!--
-	<repositories>
-		<repository>
-			<id>nexus</id>
-			<name>Team Nexus Repository</name>
-			<url>http://192.168.4.51:8081/nexus/content/groups/public</url>
-		</repository>
-	</repositories>
-	<distributionManagement>
-		<repository>
-			<id>releases</id>
-			<name>Internal Releases</name>
-			<url>http://192.168.4.51:8081/nexus/content/repositories/releases/</url>
-		</repository>
-		<snapshotRepository>
-			<id>snapshots</id>
-			<name>Internal Snapshots</name>
-			<url>http://192.168.4.51:8081/nexus/content/repositories/snapshots/</url>
-		</snapshotRepository>
-	</distributionManagement>
-    -->
 
 	<dependencies>
 		<dependency>
