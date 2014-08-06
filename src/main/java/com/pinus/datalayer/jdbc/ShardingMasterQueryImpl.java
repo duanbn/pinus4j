@@ -42,7 +42,14 @@ public class ShardingMasterQueryImpl extends AbstractShardingQuery implements IS
 		if (entities.isEmpty()) {
 			return null;
 		}
-		return entities.get(0);
+
+		try {
+			T obj = (T) ReflectUtil.cloneWithGivenField(entities.get(0));
+
+			return obj;
+		} catch (Exception e) {
+			throw new DBOperationException(e);
+		}
 	}
 
 	@Override
@@ -57,7 +64,13 @@ public class ShardingMasterQueryImpl extends AbstractShardingQuery implements IS
 			throw new DBOperationException("查询结果大于1条记录");
 		}
 
-		return entities.get(0);
+		try {
+			T obj = (T) ReflectUtil.cloneWithGivenField(entities.get(0));
+
+			return obj;
+		} catch (Exception e) {
+			throw new DBOperationException(e);
+		}
 	}
 
 	@Override
@@ -68,7 +81,7 @@ public class ShardingMasterQueryImpl extends AbstractShardingQuery implements IS
 		} catch (DBClusterException e) {
 			throw new DBOperationException(e);
 		}
-		long count = selectCountGlobalWithCache(globalConnection, clusterName, clazz).longValue();
+		long count = selectGlobalCountWithCache(globalConnection, clusterName, clazz).longValue();
 
 		return count;
 	}
@@ -80,7 +93,7 @@ public class ShardingMasterQueryImpl extends AbstractShardingQuery implements IS
 			DBConnectionInfo globalConnection = this.dbCluster.getMasterGlobalConn(clusterName);
 
 			conn = globalConnection.getDatasource().getConnection();
-			return selectCountGlobal(conn, sql).longValue();
+			return selectGlobalCount(conn, sql).longValue();
 		} catch (Exception e) {
 			throw new DBOperationException(e);
 		} finally {
@@ -110,7 +123,7 @@ public class ShardingMasterQueryImpl extends AbstractShardingQuery implements IS
 			DBConnectionInfo globalConnection = this.dbCluster.getMasterGlobalConn(clusterName);
 
 			conn = globalConnection.getDatasource().getConnection();
-			return selectByPksGlobalWithCache(conn, clusterName, clazz, pks);
+			return selectGlobalByPksWithCache(conn, clusterName, clazz, pks);
 		} catch (Exception e) {
 			throw new DBOperationException(e);
 		} finally {
@@ -134,10 +147,10 @@ public class ShardingMasterQueryImpl extends AbstractShardingQuery implements IS
 
 			List<T> result = null;
 			if (isCacheAvailable(sql.getClazz())) {
-				Number[] pkValues = selectPksBySqlGlobal(conn, sql);
-				result = selectByPksGlobalWithCache(conn, clusterName, sql.getClazz(), pkValues);
+				Number[] pkValues = selectGlobalPksBySqlx(conn, sql);
+				result = selectGlobalByPksWithCache(conn, clusterName, sql.getClazz(), pkValues);
 			} else {
-				result = selectBySqlGlobal(conn, sql);
+				result = selectGlobalBySql(conn, sql);
 			}
 
 			return result;
@@ -158,10 +171,19 @@ public class ShardingMasterQueryImpl extends AbstractShardingQuery implements IS
 
 			List<T> result = null;
 			if (isCacheAvailable(clazz)) {
-				Number[] pkValues = selectPksByQueryGlobal(conn, query, clazz);
-				result = selectByPksGlobalWithCache(conn, clusterName, clazz, pkValues);
+				Number[] pkValues = selectGlobalPksByQuery(conn, query, clazz);
+				result = selectGlobalByPksWithCache(conn, clusterName, clazz, pkValues);
+
+				// 过滤从缓存结果, 将没有指定的字段设置为默认值.
+				List<T> filteResult = new ArrayList<T>(result.size());
+				if (query.hasQueryFields()) {
+					for (T obj : result) {
+						filteResult.add((T) ReflectUtil.cloneWithGivenField(obj));
+					}
+					result = filteResult;
+				}
 			} else {
-				result = selectByQueryGlobal(conn, query, clazz);
+				result = selectGlobalByQuery(conn, query, clazz);
 			}
 
 			return result;
@@ -206,12 +228,12 @@ public class ShardingMasterQueryImpl extends AbstractShardingQuery implements IS
 		return selectCount(db, sql);
 	}
 
-    @Override
-    public Number getCountFromMaster(IQuery query, IShardingKey<?> shardingValue, Class<?> clazz) {
-        DB db = _getDbFromMaster(clazz, shardingValue);
+	@Override
+	public Number getCountFromMaster(IQuery query, IShardingKey<?> shardingValue, Class<?> clazz) {
+		DB db = _getDbFromMaster(clazz, shardingValue);
 
-        return selectCount(db, clazz, query);
-    }
+		return selectCount(db, clazz, query);
+	}
 
 	@Override
 	public <T> T findByPkFromMaster(Number pk, IShardingKey<?> shardingValue, Class<T> clazz) {
@@ -287,6 +309,19 @@ public class ShardingMasterQueryImpl extends AbstractShardingQuery implements IS
 		if (isCacheAvailable(clazz)) {
 			Number[] pkValues = selectPksByQuery(db, query, clazz);
 			result = selectByPksWithCache(db, clazz, pkValues);
+
+			// 过滤从缓存结果, 将没有指定的字段设置为默认值.
+			List<T> filteResult = new ArrayList<T>(result.size());
+			if (query.hasQueryFields()) {
+				for (T obj : result) {
+					try {
+						filteResult.add((T) ReflectUtil.cloneWithGivenField(obj, query.getFields()));
+					} catch (Exception e) {
+						throw new DBOperationException(e);
+					}
+				}
+				result = filteResult;
+			}
 		} else {
 			result = selectByQuery(db, query, clazz);
 		}

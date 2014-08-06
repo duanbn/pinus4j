@@ -51,7 +51,7 @@ public abstract class AbstractShardingQuery {
 	 * @param clazz
 	 * @return count数
 	 */
-	private Number _selectCountGlobal(Connection conn, Class<?> clazz) {
+	private Number _selectGlobalCount(Connection conn, Class<?> clazz) {
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 		try {
@@ -84,7 +84,7 @@ public abstract class AbstractShardingQuery {
 	 * @param clazz
 	 * @return count数
 	 */
-	protected Number selectCountGlobalWithCache(DBConnectionInfo dbConnInfo, String clusterName, Class<?> clazz) {
+	protected Number selectGlobalCountWithCache(DBConnectionInfo dbConnInfo, String clusterName, Class<?> clazz) {
 		String tableName = ReflectUtil.getTableName(clazz);
 
 		// 操作缓存
@@ -99,7 +99,7 @@ public abstract class AbstractShardingQuery {
 		Connection conn = null;
 		try {
 			conn = dbConnInfo.getDatasource().getConnection();
-			count = _selectCountGlobal(conn, clazz).longValue();
+			count = _selectGlobalCount(conn, clazz).longValue();
 		} catch (SQLException e) {
 			throw new DBOperationException(e);
 		} finally {
@@ -186,7 +186,7 @@ public abstract class AbstractShardingQuery {
 	 * @param sql
 	 * @return
 	 */
-	protected Number selectCountGlobal(Connection conn, SQL<?> sql) {
+	protected Number selectGlobalCount(Connection conn, SQL<?> sql) {
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 		try {
@@ -292,7 +292,7 @@ public abstract class AbstractShardingQuery {
 	// //////////////////////////////////////////////////////////////////////////////////////
 	// findByPk相关
 	// //////////////////////////////////////////////////////////////////////////////////////
-	private <T> T _selectByPkGlobal(Connection conn, Number pk, Class<T> clazz) {
+	private <T> T _selectGlobalByPk(Connection conn, Number pk, Class<T> clazz) {
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 		try {
@@ -325,13 +325,13 @@ public abstract class AbstractShardingQuery {
 		if (isCacheAvailable(clazz)) {
 			data = primaryCache.getGlobal(clusterName, tableName, pk);
 			if (data == null) {
-				data = _selectByPkGlobal(conn, pk, clazz);
+				data = _selectGlobalByPk(conn, pk, clazz);
 				if (data != null) {
 					primaryCache.putGlobal(clusterName, tableName, pk, data);
 				}
 			}
 		} else {
-			data = _selectByPkGlobal(conn, pk, clazz);
+			data = _selectGlobalByPk(conn, pk, clazz);
 		}
 
 		return data;
@@ -408,7 +408,7 @@ public abstract class AbstractShardingQuery {
 	// //////////////////////////////////////////////////////////////////////////////////////
 	// findByPks相关
 	// //////////////////////////////////////////////////////////////////////////////////////
-	private <T> List<T> _selectByPksGlobal(Connection conn, Class<T> clazz, Number[] pks) {
+	private <T> List<T> _selectGlobalByPks(Connection conn, Class<T> clazz, Number[] pks) {
 		List<T> result = new ArrayList<T>(1);
 
 		PreparedStatement ps = null;
@@ -432,7 +432,7 @@ public abstract class AbstractShardingQuery {
 		return result;
 	}
 
-	private <T> Map<Number, T> _selectByPksGlobalWithMap(Connection conn, Class<T> clazz, Number[] pks) {
+	private <T> Map<Number, T> _selectGlobalByPksWithMap(Connection conn, Class<T> clazz, Number[] pks) {
 		Map<Number, T> result = new HashMap<Number, T>();
 
 		PreparedStatement ps = null;
@@ -456,7 +456,7 @@ public abstract class AbstractShardingQuery {
 		return result;
 	}
 
-	protected <T> List<T> selectByPksGlobalWithCache(Connection conn, String clusterName, Class<T> clazz, Number[] pks) {
+	protected <T> List<T> selectGlobalByPksWithCache(Connection conn, String clusterName, Class<T> clazz, Number[] pks) {
 		List<T> result = new ArrayList<T>();
 
 		if (pks == null || pks.length == 0) {
@@ -482,7 +482,7 @@ public abstract class AbstractShardingQuery {
 						Number[] noHitPks = noHitPkList.toArray(new Number[noHitPkList.size()]);
 
 						// 从数据库中查询没有命中缓存的数据
-						Map<Number, T> noHitMap = _selectByPksGlobalWithMap(conn, clazz, noHitPks);
+						Map<Number, T> noHitMap = _selectGlobalByPksWithMap(conn, clazz, noHitPks);
 						if (!noHitMap.isEmpty()) {
 							primaryCache.putGlobal(clusterName, tableName, noHitMap);
 						}
@@ -496,15 +496,15 @@ public abstract class AbstractShardingQuery {
 							}
 						}
 					} catch (Exception e) {
-						result = _selectByPksGlobal(conn, clazz, pks);
+						result = _selectGlobalByPks(conn, clazz, pks);
 					}
 				}
 			} else {
-				result = _selectByPksGlobal(conn, clazz, pks);
+				result = _selectGlobalByPks(conn, clazz, pks);
 				primaryCache.putGlobal(clusterName, tableName, result);
 			}
 		} else {
-			result = _selectByPksGlobal(conn, clazz, pks);
+			result = _selectGlobalByPks(conn, clazz, pks);
 		}
 
 		return result;
@@ -645,7 +645,8 @@ public abstract class AbstractShardingQuery {
 	// //////////////////////////////////////////////////////////////////////////////////////
 	// findMore相关
 	// //////////////////////////////////////////////////////////////////////////////////////
-	protected <T> List<T> selectMoreGlobal(Connection conn, Class<T> clazz, int start, int limit) {
+	@Deprecated
+	protected <T> List<T> selectGlobalMore(Connection conn, Class<T> clazz, int start, int limit) {
 		List<T> result = new ArrayList<T>();
 		PreparedStatement ps = null;
 		ResultSet rs = null;
@@ -687,6 +688,7 @@ public abstract class AbstractShardingQuery {
 	 * @throws IllegalArgumentException
 	 *             输入参数错误
 	 */
+	@Deprecated
 	protected <T> List<T> selectMore(DB db, Class<T> clazz, int start, int limit) {
 		List<T> result = new ArrayList<T>();
 		Connection conn = null;
@@ -715,7 +717,7 @@ public abstract class AbstractShardingQuery {
 	// //////////////////////////////////////////////////////////////////////////////////////
 	// findBySql相关
 	// //////////////////////////////////////////////////////////////////////////////////////
-	protected <T> List<T> selectBySqlGlobal(Connection conn, SQL<T> sql) {
+	protected <T> List<T> selectGlobalBySql(Connection conn, SQL<T> sql) {
 		List<T> result = new ArrayList<T>();
 		PreparedStatement ps = null;
 		ResultSet rs = null;
@@ -781,7 +783,7 @@ public abstract class AbstractShardingQuery {
 	// //////////////////////////////////////////////////////////////////////////////////////
 	// findByQuery相关
 	// //////////////////////////////////////////////////////////////////////////////////////
-	protected <T> List<T> selectByQueryGlobal(Connection conn, IQuery query, Class<T> clazz) {
+	protected <T> List<T> selectGlobalByQuery(Connection conn, IQuery query, Class<T> clazz) {
 		List<T> result = new ArrayList<T>();
 
 		PreparedStatement ps = null;
@@ -789,12 +791,15 @@ public abstract class AbstractShardingQuery {
 		try {
 			String sql = SQLBuilder.buildSelectByQuery(clazz, -1, query);
 			ps = conn.prepareStatement(sql);
+
 			long begin = System.currentTimeMillis();
 			rs = ps.executeQuery();
 			long constTime = System.currentTimeMillis() - begin;
+
 			if (constTime > Const.SLOWQUERY_QUERY) {
 				SlowQueryLogger.write(conn, sql, constTime);
 			}
+
 			result = (List<T>) SQLBuilder.buildResultObject(clazz, rs);
 		} catch (SQLException e) {
 			throw new DBOperationException(e);
@@ -830,12 +835,15 @@ public abstract class AbstractShardingQuery {
 			conn = db.getDatasource().getConnection();
 			String sql = SQLBuilder.buildSelectByQuery(clazz, db.getTableIndex(), query);
 			ps = conn.prepareStatement(sql);
+
 			long begin = System.currentTimeMillis();
 			rs = ps.executeQuery();
 			long constTime = System.currentTimeMillis() - begin;
+
 			if (constTime > Const.SLOWQUERY_QUERY) {
 				SlowQueryLogger.write(db, sql, constTime);
 			}
+
 			result = (List<T>) SQLBuilder.buildResultObject(clazz, rs);
 		} catch (SQLException e) {
 			throw new DBOperationException(e);
@@ -849,7 +857,7 @@ public abstract class AbstractShardingQuery {
 	// //////////////////////////////////////////////////////////////////////////////////////
 	// getPk相关
 	// //////////////////////////////////////////////////////////////////////////////////////
-	protected Number[] selectPksMoreGlobal(Connection conn, Class<?> clazz, int start, int limit) {
+	protected Number[] selectGlobalPksMore(Connection conn, Class<?> clazz, int start, int limit) {
 		List<Number> result = new ArrayList<Number>();
 
 		PreparedStatement ps = null;
@@ -857,12 +865,15 @@ public abstract class AbstractShardingQuery {
 		try {
 			String sql = SQLBuilder.buildSelectPkWithLimit(clazz, -1, start, limit);
 			ps = conn.prepareStatement(sql);
+
 			long begin = System.currentTimeMillis();
 			rs = ps.executeQuery();
 			long constTime = System.currentTimeMillis() - begin;
+
 			if (constTime > Const.SLOWQUERY_MORE) {
 				SlowQueryLogger.write(conn, sql, constTime);
 			}
+
 			while (rs.next()) {
 				result.add(rs.getLong(1));
 			}
@@ -912,7 +923,7 @@ public abstract class AbstractShardingQuery {
 		return result.toArray(new Number[result.size()]);
 	}
 
-	protected <T> Number[] selectPksBySqlGlobal(Connection conn, SQL<T> sql) {
+	protected <T> Number[] selectGlobalPksBySqlx(Connection conn, SQL<T> sql) {
 		List<Number> result = new ArrayList<Number>();
 
 		PreparedStatement ps = null;
@@ -971,7 +982,7 @@ public abstract class AbstractShardingQuery {
 		return result.toArray(new Number[result.size()]);
 	}
 
-	protected <T> Number[] selectPksByQueryGlobal(Connection conn, IQuery query, Class<T> clazz) {
+	protected <T> Number[] selectGlobalPksByQuery(Connection conn, IQuery query, Class<T> clazz) {
 		List<Number> result = new ArrayList<Number>();
 
 		PreparedStatement ps = null;
@@ -979,12 +990,15 @@ public abstract class AbstractShardingQuery {
 		try {
 			String sql = SQLBuilder.buildSelectPkByQuery(clazz, -1, query);
 			ps = conn.prepareStatement(sql);
+
 			long begin = System.currentTimeMillis();
 			rs = ps.executeQuery();
 			long constTime = System.currentTimeMillis() - begin;
+
 			if (constTime > Const.SLOWQUERY_PKS) {
 				SlowQueryLogger.write(conn, sql, constTime);
 			}
+
 			while (rs.next()) {
 				result.add(rs.getLong(1));
 			}

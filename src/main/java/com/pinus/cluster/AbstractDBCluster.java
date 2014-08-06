@@ -204,10 +204,10 @@ public abstract class AbstractDBCluster implements IDBCluster {
 
 			// 创建数据库表
 			if (isCreateTable) {
-				LOG.info("正在同步数据库表.");
+				LOG.info("syncing table info");
 				long start = System.currentTimeMillis();
 				_createTable(tables);
-				LOG.info("数据库表同步完成, 耗时:" + (System.currentTimeMillis() - start) + "ms");
+				LOG.info("sync table info done, const time:" + (System.currentTimeMillis() - start) + "ms");
 			}
 
 		} catch (Exception e) {

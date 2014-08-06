@@ -15,7 +15,7 @@ public class QueryImpl implements IQuery, Cloneable {
 	/**
 	 * 保存取值的字段.
 	 */
-	private List<String> fieldList = new ArrayList<String>();
+	private String[] fields;
 
 	/**
 	 * 保存查询条件.
@@ -37,46 +37,40 @@ public class QueryImpl implements IQuery, Cloneable {
 	private int limit = -1;
 
     @Override
-    public IQuery clone() {
-        QueryImpl clone = new QueryImpl();
-        clone.setFieldList(new ArrayList<String>(this.fieldList));
-        clone.setCondList(new ArrayList<Condition>(this.condList));
-        clone.setOrderList(new ArrayList<OrderBy>(this.orderList));
-        clone.setStart(this.start);
-        clone.setLimit(this.limit);
-        return clone;
+    public boolean hasQueryFields() {
+        return this.fields != null && this.fields.length > 0;
     }
 
-	// @Override
-	// public IQuery addField(String... fields) {
-	// if (fields != null && fields.length > 0) {
-	// for (String field : fields) {
-	// this.fieldList.add(field);
-	// }
-	// }
-	// return this;
-	// }
+	@Override
+	public IQuery clone() {
+		QueryImpl clone = new QueryImpl();
+		clone.setFields(this.fields);
+		clone.setCondList(new ArrayList<Condition>(this.condList));
+		clone.setOrderList(new ArrayList<OrderBy>(this.orderList));
+		clone.setStart(this.start);
+		clone.setLimit(this.limit);
+		return clone;
+	}
 
-	// @Override
-	// public String getField() {
-	// if (this.fieldList.isEmpty()) {
-	// return "*";
-	// }
-	//
-	// StringBuilder fieldSql = new StringBuilder();
-	// for (String field : fieldList) {
-	// fieldSql.append(field).append(",");
-	// }
-	// fieldSql.deleteCharAt(fieldSql.length() - 1);
-	// return fieldSql.toString();
-	// }
+	@Override
+	public IQuery setFields(String... fields) {
+		if (fields != null && fields.length > 0) {
+			this.fields = fields;
+		}
+		return this;
+	}
+
+	@Override
+	public String[] getFields() {
+		return this.fields;
+	}
 
 	@Override
 	public String getWhereSql() {
 		StringBuilder SQL = new StringBuilder();
 		// 添加查询条件
 		if (!condList.isEmpty()) {
-            SQL.append(" WHERE ");
+			SQL.append(" WHERE ");
 			for (Condition cond : condList) {
 				SQL.append(cond.getSql()).append(" AND ");
 			}
@@ -151,38 +145,34 @@ public class QueryImpl implements IQuery, Cloneable {
 	@Override
 	public String toString() {
 		StringBuilder info = new StringBuilder();
-		if (!fieldList.isEmpty()) {
+		if (fields != null && fields.length > 0) {
 			info.append("fields:");
-			for (String field : fieldList) {
+			for (String field : fields) {
 				info.append(field).append(",");
 			}
 			info.deleteCharAt(info.length() - 1);
 		}
 		if (StringUtils.isNotBlank(getWhereSql())) {
-			info.append("wheresql:").append(getWhereSql());
+			info.append(" wheresql:").append(getWhereSql());
 		}
 		return info.toString();
 	}
 
-    public void setFieldList(List<String> fieldList) {
-        this.fieldList = fieldList;
-    }
+	public void setCondList(List<Condition> condList) {
+		this.condList = condList;
+	}
 
-    public void setCondList(List<Condition> condList) {
-        this.condList = condList;
-    }
+	public void setOrderList(List<OrderBy> orderList) {
+		this.orderList = orderList;
+	}
 
-    public void setOrderList(List<OrderBy> orderList) {
-        this.orderList = orderList;
-    }
+	public void setStart(int start) {
+		this.start = start;
+	}
 
-    public void setStart(int start) {
-        this.start = start;
-    }
-
-    public void setLimit(int limit) {
-        this.limit = limit;
-    }
+	public void setLimit(int limit) {
+		this.limit = limit;
+	}
 
 	/**
 	 * 排序条件.

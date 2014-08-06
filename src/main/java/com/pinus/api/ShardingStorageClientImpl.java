@@ -171,9 +171,9 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 		this.slaveQueryer.setDBCluster(this.dbCluster);
 		this.slaveQueryer.setPrimaryCache(this.primaryCache);
 
-        // set instance to threadlocal.
-        // FashionEntity dependency this.
-        storageClientHolder.set(this);
+		// set instance to threadlocal.
+		// FashionEntity dependency this.
+		storageClientHolder.set(this);
 	}
 
 	@Override
@@ -223,19 +223,19 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 
 	@Override
 	public void globalRemoveByPkList(List<? extends Number> pks, Class<?> clazz, String clusterName) {
-        if (pks == null || pks.isEmpty()) {
-            return;
-        }
+		if (pks == null || pks.isEmpty()) {
+			return;
+		}
 		CheckUtil.checkClass(clazz);
 		CheckUtil.checkClusterName(clusterName);
 
 		this.updater.globalRemoveByPks(pks, clazz, clusterName);
 	}
 
-    @Override
-    public void globalRemoveByPks(String clusterName, Class<?> clazz, Number... pks) {
-        globalRemoveByPkList(Arrays.asList(pks), clazz, clusterName);
-    }
+	@Override
+	public void globalRemoveByPks(String clusterName, Class<?> clazz, Number... pks) {
+		globalRemoveByPkList(Arrays.asList(pks), clazz, clusterName);
+	}
 
 	@Override
 	public Number save(Object entity) {
@@ -288,24 +288,23 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 
 	@Override
 	public void removeByPkList(List<? extends Number> pks, IShardingKey<?> shardingValue, Class<?> clazz) {
-        if (pks == null || pks.isEmpty()) {
-            return;
-        }
+		if (pks == null || pks.isEmpty()) {
+			return;
+		}
 		CheckUtil.checkShardingValue(shardingValue);
 		CheckUtil.checkClass(clazz);
 
 		this.updater.removeByPks(pks, shardingValue, clazz);
 	}
 
-    @Override
-    public void removeByPks(IShardingKey<?> shardingValue, Class<?> clazz, Number... pks) {
-        if (pks == null || pks.length == 0) {
-            return;
-        }
+	@Override
+	public void removeByPks(IShardingKey<?> shardingValue, Class<?> clazz, Number... pks) {
+		if (pks == null || pks.length == 0) {
+			return;
+		}
 
-        List<Number> list = new ArrayList<Number>(pks.length);
-        removeByPkList(list, shardingValue, clazz);
-    }
+		removeByPkList(Arrays.asList(pks), shardingValue, clazz);
+	}
 
 	@Override
 	public <T> T findGlobalOneByQuery(IQuery query, String clusterName, Class<T> clazz) {
@@ -412,14 +411,14 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 		return this.masterQueryer.getCountFromMaster(shardingValue, sql);
 	}
 
-    @Override
-    public Number getCount(IQuery query, IShardingKey<?> shardingValue, Class<?> clazz) {
-        CheckUtil.checkQuery(query);
-        CheckUtil.checkShardingValue(shardingValue);
-        CheckUtil.checkClass(clazz);
+	@Override
+	public Number getCount(IQuery query, IShardingKey<?> shardingValue, Class<?> clazz) {
+		CheckUtil.checkQuery(query);
+		CheckUtil.checkShardingValue(shardingValue);
+		CheckUtil.checkClass(clazz);
 
-        return this.masterQueryer.getCountFromMaster(query, shardingValue, clazz);
-    }
+		return this.masterQueryer.getCountFromMaster(query, shardingValue, clazz);
+	}
 
 	@Override
 	public <T> T findByPk(Number pk, IShardingKey<?> shardingValue, Class<T> clazz) {
@@ -621,8 +620,8 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 		// close id generator
 		this.idGenerator.close();
 
-        // remove instance from threadlocal.
-        storageClientHolder.remove();
+		// remove instance from threadlocal.
+		storageClientHolder.remove();
 	}
 
 	@Override

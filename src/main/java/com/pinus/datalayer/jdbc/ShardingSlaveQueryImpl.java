@@ -68,7 +68,7 @@ public class ShardingSlaveQueryImpl extends AbstractShardingQuery implements ISh
 		} catch (DBClusterException e) {
 			throw new DBOperationException(e);
 		}
-		long count = selectCountGlobalWithCache(dbConnInfo, clusterName, clazz).longValue();
+		long count = selectGlobalCountWithCache(dbConnInfo, clusterName, clazz).longValue();
 
 		return count;
 	}
@@ -81,7 +81,7 @@ public class ShardingSlaveQueryImpl extends AbstractShardingQuery implements ISh
 
 			conn = dbConnInfo.getDatasource().getConnection();
 
-			return selectCountGlobal(conn, sql);
+			return selectGlobalCount(conn, sql);
 		} catch (Exception e) {
 			throw new DBOperationException(e);
 		} finally {
@@ -114,7 +114,7 @@ public class ShardingSlaveQueryImpl extends AbstractShardingQuery implements ISh
 
 			conn = globalConnection.getDatasource().getConnection();
 
-			result.addAll(selectByPksGlobalWithCache(conn, clusterName, clazz, pks));
+			result.addAll(selectGlobalByPksWithCache(conn, clusterName, clazz, pks));
 		} catch (Exception e) {
 			throw new DBOperationException(e);
 		} finally {
@@ -132,6 +132,7 @@ public class ShardingSlaveQueryImpl extends AbstractShardingQuery implements ISh
 	}
 
 	@Override
+	@Deprecated
 	public <T> List<T> findGlobalBySqlFromSlave(SQL<T> sql, String clusterName, EnumDBMasterSlave slave) {
 		Connection conn = null;
 		try {
@@ -141,10 +142,10 @@ public class ShardingSlaveQueryImpl extends AbstractShardingQuery implements ISh
 
 			List<T> result = null;
 			if (isCacheAvailable(sql.getClazz())) {
-				Number[] pkValues = selectPksBySqlGlobal(conn, sql);
-				result = selectByPksGlobalWithCache(conn, clusterName, sql.getClazz(), pkValues);
+				Number[] pkValues = selectGlobalPksBySqlx(conn, sql);
+				result = selectGlobalByPksWithCache(conn, clusterName, sql.getClazz(), pkValues);
 			} else {
-				result = selectBySqlGlobal(conn, sql);
+				result = selectGlobalBySql(conn, sql);
 			}
 
 			return result;
@@ -165,10 +166,10 @@ public class ShardingSlaveQueryImpl extends AbstractShardingQuery implements ISh
 
 			List<T> result = null;
 			if (isCacheAvailable(clazz)) {
-				Number[] pkValues = selectPksByQueryGlobal(conn, query, clazz);
-				result = selectByPksGlobalWithCache(conn, clusterName, clazz, pkValues);
+				Number[] pkValues = selectGlobalPksByQuery(conn, query, clazz);
+				result = selectGlobalByPksWithCache(conn, clusterName, clazz, pkValues);
 			} else {
-				result = selectByQueryGlobal(conn, query, clazz);
+				result = selectGlobalByQuery(conn, query, clazz);
 			}
 
 			return result;

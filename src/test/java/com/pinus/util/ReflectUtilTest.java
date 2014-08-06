@@ -2,6 +2,8 @@ package com.pinus.util;
 
 import java.util.Map;
 
+import junit.framework.Assert;
+
 import org.junit.Test;
 
 import com.pinus.BaseTest;
@@ -43,5 +45,16 @@ public class ReflectUtilTest extends BaseTest {
 			System.out.println(entry);
 		}
 	}
+
+    @Test
+    public void testCloneWithGivenFieldObjectString() throws Exception {
+        TestEntity entity = createEntity();
+        TestEntity clone = (TestEntity) ReflectUtil.cloneWithGivenField(entity, "testInt", "testDouble");
+        Assert.assertEquals(entity.getTestInt(), clone.getTestInt());
+        Assert.assertEquals(entity.getTestDouble(), clone.getTestDouble());
+        Assert.assertEquals(0.0f, clone.getTestFloat());
+        Assert.assertNotNull(entity.getTestString());
+        Assert.assertNull(clone.getTestString());
+    }
 
 }

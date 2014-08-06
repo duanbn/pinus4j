@@ -31,8 +31,8 @@ public class BaseTest {
 
 	protected static IPrimaryCache primaryCache;
 
-    @BeforeClass
-	public static void before() {
+	@BeforeClass
+	public static void setup() {
 		MemcachedClientBuilder builder = new XMemcachedClientBuilder(AddrUtil.getAddresses("localhost:11211"));
 		MemcachedClient memcachedClient = null;
 		try {
@@ -49,7 +49,7 @@ public class BaseTest {
 	}
 
 	@AfterClass
-	public static void after() {
+	public static void setdown() {
 		cacheClient.destroy();
 	}
 
@@ -99,7 +99,7 @@ public class BaseTest {
 		TestEntity entity = null;
 		for (int i = 0; i < r.nextInt(9999); i++) {
 			entity = createEntity();
-			cacheClient.save(entity);
+			entity.save();
 		}
 	}
 

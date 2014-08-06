@@ -22,7 +22,7 @@ public abstract class FashionEntity {
 	/**
 	 * 保存
 	 */
-	protected Number save() {
+	public Number save() {
 		Number pk = null;
 
 		if (ReflectUtil.isShardingEntity(this.getClass())) {
@@ -37,7 +37,7 @@ public abstract class FashionEntity {
 	/**
 	 * 更新
 	 */
-	protected void update() {
+	public void update() {
 		if (ReflectUtil.isShardingEntity(this.getClass())) {
 			storageClient.update(this);
 		} else {
@@ -48,7 +48,7 @@ public abstract class FashionEntity {
 	/**
 	 * 如果存在则更新，否则保存.
 	 */
-	protected Number saveOrUpdate() {
+	public Number saveOrUpdate() {
 		Number pk = ReflectUtil.getPkValue(this);
 		if (pk.intValue() == 0) {
 			return save();
@@ -78,7 +78,7 @@ public abstract class FashionEntity {
 	/**
 	 * 删除.
 	 */
-	protected void remove() {
+	public void remove() {
 		Number pk = ReflectUtil.getPkValue(this);
 
 		if (pk.intValue() == 0) {

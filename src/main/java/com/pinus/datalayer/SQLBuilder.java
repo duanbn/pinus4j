@@ -60,13 +60,25 @@ public class SQLBuilder {
 	}
 
 	/**
-	 * 拼装sql. SELECT * FROM tableName {IQuery.getSql()}
+	 * 拼装sql. SELECT {fields} FROM tableName {IQuery.getSql()}
 	 * 
 	 * @return sql语句.
 	 */
 	public static String buildSelectByQuery(Class<?> clazz, int tableIndex, IQuery query) {
 		String tableName = ReflectUtil.getTableName(clazz, tableIndex);
-		StringBuilder SQL = new StringBuilder("SELECT * FROM ");
+
+        StringBuilder fields = new StringBuilder();
+        if (query.hasQueryFields()) {
+            for (String field : query.getFields()) {
+                fields.append(field).append(",");
+            }
+            fields.deleteCharAt(fields.length() - 1);
+        } else {
+            fields.append("*");
+        }
+
+		StringBuilder SQL = new StringBuilder("SELECT ");
+        SQL.append(fields.toString()).append(" FROM ");
 		SQL.append(tableName);
 		String whereSql = query.getWhereSql();
 		if (StringUtils.isNotBlank(whereSql))

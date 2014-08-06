@@ -52,10 +52,13 @@ public class ReflectUtil {
 	private static final Map<Class<?>, String> _shardingFieldCache = new ConcurrentHashMap<Class<?>, String>();
 
 	/**
-	 * 集群表数量
+	 * 集群表数量.
 	 */
 	private static final Map<Class<?>, Integer> _tableNumCache = new ConcurrentHashMap<Class<?>, Integer>();
 
+    /**
+     * 数据实体是否是分片实体.
+     */
 	private static final Map<Class<?>, Boolean> _isShardingEntityCache = new ConcurrentHashMap<Class<?>, Boolean>();
 
 	/**
@@ -504,5 +507,27 @@ public class ReflectUtil {
 
 		return fields;
 	}
+
+    /**
+     * 克隆一个对象，只保留给定的属性值.
+     *
+     * @param obj 被克隆的对象.
+     * @param fieldNames 需要被保留的属性名.
+     *
+     * @return 克隆对象.
+     */
+    public static Object cloneWithGivenField(Object obj, String... fieldNames) throws Exception {
+        if (fieldNames == null || fieldNames.length == 0) {
+            return obj;
+        }
+
+        Object clone = obj.getClass().newInstance();
+        Object value = null;
+        for (String fieldName : fieldNames) {
+            value = getProperty(obj, fieldName);
+            setProperty(clone, fieldName, value);
+        }
+        return clone;
+    }
 
 }

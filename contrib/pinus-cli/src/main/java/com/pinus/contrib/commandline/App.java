@@ -291,12 +291,12 @@ public class App {
 		creader.addCompletor(new JlineCompletor());
 		String cmd = null;
 		while (isRunning) {
-			cmd = creader.readLine(CMD_PROMPT);
-			if (cmd.endsWith(";")) {
-				cmd = cmd.substring(0, cmd.length() - 1);
-			}
-
 			try {
+                cmd = creader.readLine(CMD_PROMPT);
+                if (cmd.endsWith(";")) {
+                    cmd = cmd.substring(0, cmd.length() - 1);
+                }
+
 				if (cmd.equals("exit")) {
 					isRunning = false;
 				} else if (cmd.toLowerCase().startsWith("select")) {

@@ -8,6 +8,11 @@ package com.pinus.api.query;
 public interface IQuery {
 
     /**
+     * 判断是否有查询字段.
+     */
+    public boolean hasQueryFields();
+
+    /**
      * 获取此对象的复制对象.
      *
      * @return 此对象实例的复制
@@ -21,14 +26,14 @@ public interface IQuery {
 	 *            获取值的字段
 	 * @return
 	 */
-	// public IQuery addField(String... field);
+	public IQuery setFields(String... field);
 
 	/**
-	 * 获取取值字段. 使用逗号分隔
+	 * 获取取值字段. 
 	 * 
 	 * @return
 	 */
-	// public String getField();
+	public String[] getFields();
 
 	/**
 	 * 返回查询条件的sql语句.
