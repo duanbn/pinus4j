@@ -8,6 +8,7 @@ import java.sql.SQLException;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.*;
 
 import javax.sql.DataSource;
 
@@ -39,8 +40,8 @@ public class App {
 	/**
 	 * prompt of command line.
 	 */
-	public final String CMD_PROMPT = "pinus-cli>";
-	public final String KEY_SHARDINGBY = "sharding by";
+	private final String CMD_PROMPT = "pinus-cli>";
+	private final String KEY_SHARDINGBY = "sharding by";
 
 	/**
 	 * db cluster info.
@@ -179,19 +180,21 @@ public class App {
 			ResultSetMetaData rsmd = rs.getMetaData();
 			int columnCount = rsmd.getColumnCount();
 			// show table header
-			StringBuilder header = new StringBuilder();
+            StringBuilder format = new StringBuilder();
+            List<Object> info = new ArrayList<Object>();
 			for (int i = 1; i <= columnCount; i++) {
-				header.append(rsmd.getColumnName(i)).append(" ");
+                format.append("%-" + 32 + "s").append("  ");
+                info.add(rsmd.getColumnName(i));
 			}
-			System.out.println(header.toString());
+            format.append("\n");
+            System.out.printf(format.toString(), info.toArray(new Object[info.size()]));
 			// show table record
-			StringBuilder record = new StringBuilder();
 			while (rs.next()) {
+                info.clear();
 				for (int i = 1; i <= columnCount; i++) {
-					record.append(rs.getObject(i)).append(" | ");
+                    info.add(rs.getObject(i));
 				}
-				System.out.println(record.toString());
-				record.setLength(0);
+				System.out.printf(format.toString(), info.toArray(new Object[info.size()]));
 			}
 		} finally {
 			if (rs != null) {
