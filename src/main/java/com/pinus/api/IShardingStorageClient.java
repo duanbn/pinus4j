@@ -223,18 +223,6 @@ public interface IShardingStorageClient {
 	public Number getGlobalCount(String clusterName, Class<?> clazz);
 
 	/**
-	 * 根据SQL语句查询全局表的数量.
-	 * 
-	 * @param clusterName
-	 *            集群名
-	 * @param sql
-	 *            查询语句
-	 * @return count数
-	 */
-	@Deprecated
-	public Number getGlobalCount(String clusterName, SQL<?> sql);
-
-	/**
 	 * 根据pk查询全局表中的数据. 查询不到则返回null
 	 * 
 	 * @param pk
@@ -295,7 +283,6 @@ public interface IShardingStorageClient {
 	 *            集群名
 	 * @return 数据
 	 */
-	@Deprecated
 	public <T> List<T> findGlobalBySql(SQL<T> sql, String clusterName);
 
 	/**
@@ -349,23 +336,6 @@ public interface IShardingStorageClient {
 	 *             输入参数错误
 	 */
 	public Number getCount(IShardingKey<?> shardingValue, Class<?> clazz);
-
-	/**
-	 * 根据条件获取分库分表记录数.
-	 * 
-	 * @param shardingValue
-	 *            分库分表因子
-	 * @param sql
-	 *            sql语句
-	 * 
-	 * @return 记录数
-	 * @throws DBOperationException
-	 *             操作失败
-	 * @throws IllegalArgumentException
-	 *             输入参数错误
-	 */
-	@Deprecated
-	public Number getCount(IShardingKey<?> shardingValue, SQL<?> sql);
 
     /**
      * 根据查询条件获取某个分库分表的记录数.

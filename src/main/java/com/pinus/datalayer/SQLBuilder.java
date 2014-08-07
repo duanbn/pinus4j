@@ -103,59 +103,6 @@ public class SQLBuilder {
 		return SQL.toString();
 	}
 
-	public static PreparedStatement buildSelectCountGlobalBySql(Connection conn, SQL<?> sql) throws SQLException {
-		// 检查sql语句中是否包含count关键字
-		if (!sql.getSql().contains("count")) {
-			throw new SQLException("语法错误:" + sql.getSql());
-		}
-
-		debugSQL(sql.getSql());
-
-		PreparedStatement ps = conn.prepareStatement(sql.getSql());
-		Object[] params = sql.getParams();
-		if (params != null) {
-			for (int i = 1; i <= params.length; i++) {
-				ps.setObject(i, params[i - 1]);
-			}
-		}
-		return ps;
-	}
-
-	/**
-	 * 拼装sql. 根据SQL对象生成查询语句，此查询语句只能是SELECT COUNT语句.
-	 * 
-	 * @param conn
-	 *            数据库连接
-	 * @param sql
-	 *            查询对象
-	 * @param tableIndex
-	 *            分表下标
-	 * 
-	 * @return PreparedStatement
-	 * 
-	 * @throws SQLException
-	 *             创建失败
-	 */
-	public static PreparedStatement buildSelectCountBySql(Connection conn, SQL<?> sql, int tableIndex)
-			throws SQLException {
-		// 检查sql语句中是否包含count关键字
-		if (!sql.getSql().contains("count")) {
-			throw new SQLException("语法错误:" + sql.getSql());
-		}
-
-		String s = addTableIndex(sql.getSql(), tableIndex);
-		debugSQL(s);
-
-		PreparedStatement ps = conn.prepareStatement(s);
-		Object[] params = sql.getParams();
-		if (params != null) {
-			for (int i = 1; i <= params.length; i++) {
-				ps.setObject(i, params[i - 1]);
-			}
-		}
-		return ps;
-	}
-
 	/**
 	 * 拼装sql. 只查询主键的sql.
 	 * 

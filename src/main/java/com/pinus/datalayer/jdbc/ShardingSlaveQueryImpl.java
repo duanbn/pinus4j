@@ -74,22 +74,6 @@ public class ShardingSlaveQueryImpl extends AbstractShardingQuery implements ISh
 	}
 
 	@Override
-	public Number getGlobalCountFromSlave(String clusterName, SQL<?> sql, EnumDBMasterSlave slave) {
-		Connection conn = null;
-		try {
-			DBConnectionInfo dbConnInfo = this.dbCluster.getSlaveGlobalDbConn(clusterName, slave);
-
-			conn = dbConnInfo.getDatasource().getConnection();
-
-			return selectGlobalCount(conn, sql);
-		} catch (Exception e) {
-			throw new DBOperationException(e);
-		} finally {
-			SQLBuilder.close(conn);
-		}
-	}
-
-	@Override
 	public <T> T findGlobalByPkFromSlave(Number pk, String clusterName, Class<T> clazz, EnumDBMasterSlave slave) {
 		Connection conn = null;
 		try {
@@ -185,13 +169,6 @@ public class ShardingSlaveQueryImpl extends AbstractShardingQuery implements ISh
 		DB db = _getDbFromSlave(slave, clazz, shardingValue);
 
 		return selectCountWithCache(db, clazz);
-	}
-
-	@Override
-	public Number getCountFromSlave(IShardingKey<?> shardingValue, SQL<?> sql, EnumDBMasterSlave slave) {
-		DB db = _getDbFromSlave(slave, sql.getClazz(), shardingValue);
-
-		return selectCount(db, sql);
 	}
 
 	@Override

@@ -5,7 +5,6 @@ package com.pinus.api;
  * 
  * @author duanbn
  */
-@Deprecated
 public class SQL<T> {
 
 	/**
@@ -27,7 +26,7 @@ public class SQL<T> {
 		this(clazz, sql, null);
 	}
 
-	public SQL(Class<T> clazz, String sql, Object[] params) {
+	public SQL(Class<T> clazz, String sql, Object... params) {
 		this.clazz = clazz;
 		if (sql != null)
 			this.sql = sql.toLowerCase();

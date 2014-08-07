@@ -87,21 +87,6 @@ public class ShardingMasterQueryImpl extends AbstractShardingQuery implements IS
 	}
 
 	@Override
-	public Number getGlobalCountFromMaster(String clusterName, SQL<?> sql) {
-		Connection conn = null;
-		try {
-			DBConnectionInfo globalConnection = this.dbCluster.getMasterGlobalConn(clusterName);
-
-			conn = globalConnection.getDatasource().getConnection();
-			return selectGlobalCount(conn, sql).longValue();
-		} catch (Exception e) {
-			throw new DBOperationException(e);
-		} finally {
-			SQLBuilder.close(conn);
-		}
-	}
-
-	@Override
 	public <T> T findGlobalByPkFromMaster(Number pk, String clusterName, Class<T> clazz) {
 		Connection conn = null;
 		try {
@@ -219,13 +204,6 @@ public class ShardingMasterQueryImpl extends AbstractShardingQuery implements IS
 		DB db = _getDbFromMaster(clazz, shardingValue);
 
 		return selectCountWithCache(db, clazz);
-	}
-
-	@Override
-	public Number getCountFromMaster(IShardingKey<?> shardingValue, SQL<?> sql) {
-		DB db = _getDbFromMaster(sql.getClazz(), shardingValue);
-
-		return selectCount(db, sql);
 	}
 
 	@Override

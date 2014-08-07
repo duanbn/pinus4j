@@ -325,14 +325,6 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 	}
 
 	@Override
-	public Number getGlobalCount(String clusterName, SQL<?> sql) {
-		CheckUtil.checkClusterName(clusterName);
-		CheckUtil.checkSQL(sql);
-
-		return this.masterQueryer.getGlobalCountFromMaster(clusterName, sql);
-	}
-
-	@Override
 	public <T> T findGlobalByPk(Number pk, String clusterName, Class<T> clazz) {
 		CheckUtil.checkClusterName(clusterName);
 		CheckUtil.checkNumberGtZero(pk);
@@ -401,14 +393,6 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 		CheckUtil.checkClass(clazz);
 
 		return this.masterQueryer.getCountFromMaster(shardingValue, clazz);
-	}
-
-	@Override
-	public Number getCount(IShardingKey<?> shardingValue, SQL<?> sql) {
-		CheckUtil.checkShardingValue(shardingValue);
-		CheckUtil.checkSQL(sql);
-
-		return this.masterQueryer.getCountFromMaster(shardingValue, sql);
 	}
 
 	@Override
