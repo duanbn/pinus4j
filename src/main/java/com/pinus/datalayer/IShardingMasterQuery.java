@@ -28,17 +28,6 @@ public interface IShardingMasterQuery {
 	public Number getGlobalCountFromMaster(String clusterName, Class<?> clazz);
 
 	/**
-	 * 根据SQL语句查询全局表的数量.
-	 * 
-	 * @param clusterName
-	 *            集群名
-	 * @param sql
-	 *            查询语句
-	 * @return count数
-	 */
-	public Number getGlobalCountFromMaster(String clusterName, SQL<?> sql);
-
-	/**
 	 * 根据pk查询全局表中的数据. 查询不到则返回null
 	 * 
 	 * @param pk
@@ -154,22 +143,6 @@ public interface IShardingMasterQuery {
 	 *             输入参数错误
 	 */
 	public Number getCountFromMaster(IShardingKey<?> shardingValue, Class<?> clazz);
-
-	/**
-	 * 根据条件获取分库分表记录数.
-	 * 
-	 * @param shardingValue
-	 *            分库分表因子
-	 * @param sql
-	 *            sql语句
-	 * 
-	 * @return 记录数
-	 * @throws DBOperationException
-	 *             操作失败
-	 * @throws IllegalArgumentException
-	 *             输入参数错误
-	 */
-	public Number getCountFromMaster(IShardingKey<?> shardingValue, SQL<?> sql);
 
     /**
      * 根据查询条件获取某一个分片的记录数.

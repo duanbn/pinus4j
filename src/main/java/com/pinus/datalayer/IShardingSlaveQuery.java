@@ -19,8 +19,6 @@ public interface IShardingSlaveQuery {
 
 	public Number getGlobalCountFromSlave(String clusterName, Class<?> clazz, EnumDBMasterSlave slave);
 
-	public Number getGlobalCountFromSlave(String clusterName, SQL<?> sql, EnumDBMasterSlave slave);
-
 	public <T> T findGlobalByPkFromSlave(Number pk, String clusterName, Class<T> clazz, EnumDBMasterSlave slave);
 
 	public <T> T findGlobalOneByQueryFromSlave(IQuery query, String clusterName, Class<T> clazz, EnumDBMasterSlave slave);
@@ -56,22 +54,6 @@ public interface IShardingSlaveQuery {
 	 *             输入参数错误
 	 */
 	public Number getCountFromSlave(IShardingKey<?> shardingValue, Class<?> clazz, EnumDBMasterSlave slave);
-
-	/**
-	 * 根据条件获取从分库分表记录数.
-	 * 
-	 * @param shardingValue
-	 *            分库分表因子
-	 * @param sql
-	 *            sql语句
-	 * 
-	 * @return 记录数
-	 * @throws DBOperationException
-	 *             操作失败
-	 * @throws IllegalArgumentException
-	 *             输入参数错误
-	 */
-	public Number getCountFromSlave(IShardingKey<?> shardingValue, SQL<?> sql, EnumDBMasterSlave slave);
 
 	/**
 	 * 一个从分库分表, 根据主键查询.

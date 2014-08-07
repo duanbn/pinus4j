@@ -11,7 +11,6 @@ import com.pinus.api.enums.EnumMode;
 import com.pinus.api.query.IQuery;
 import com.pinus.cache.IPrimaryCache;
 import com.pinus.cluster.IDBCluster;
-import com.pinus.cluster.lock.DistributedLock;
 import com.pinus.datalayer.IShardingStatistics;
 import com.pinus.datalayer.jdbc.FatDB;
 import com.pinus.exception.DBOperationException;
