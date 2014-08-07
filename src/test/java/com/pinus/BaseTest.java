@@ -67,7 +67,7 @@ public class BaseTest {
 		TestEntity testEntity = new TestEntity();
 		testEntity.setTestBool(r.nextBoolean());
 		testEntity.setTestByte((byte) r.nextInt(255));
-		testEntity.setTestChar((char) r.nextInt(97));
+		testEntity.setTestChar('a');
 		testEntity.setTestDate(new Date());
 		testEntity.setTestDouble(r.nextDouble());
 		testEntity.setTestFloat(r.nextFloat());
@@ -83,7 +83,7 @@ public class BaseTest {
 		TestGlobalEntity testEntity = new TestGlobalEntity();
 		testEntity.setTestBool(r.nextBoolean());
 		testEntity.setTestByte((byte) r.nextInt(255));
-		testEntity.setTestChar((char) r.nextInt(97));
+		testEntity.setTestChar('b');
 		testEntity.setTestDate(new Date());
 		testEntity.setTestDouble(r.nextDouble());
 		testEntity.setTestFloat(r.nextFloat());

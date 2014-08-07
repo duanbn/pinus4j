@@ -26,10 +26,10 @@ public class ShardingStorageTest extends BaseTest {
 	public void before() {
 		// save one
 		TestEntity entity = createEntity();
-		entity.setTestString("i am pinus");
+		entity.setTestString("i am pinus1");
 		pk1 = cacheClient.save(entity);
 		entity = createEntity();
-		entity.setTestString("i am pinus");
+		entity.setTestString("i am pinus2");
 		pk2 = cacheClient.save(entity);
 		// check save one
 		IShardingKey<Number> oneKey = new ShardingKey<Number>(CLUSTER_KLSTORAGE, pk1);
@@ -47,6 +47,34 @@ public class ShardingStorageTest extends BaseTest {
 		// check save more
 		entities = cacheClient.findByPks(moreKey, TestEntity.class, pks);
 		Assert.assertEquals(5, entities.size());
+	}
+
+	@Test
+	public void testGetCountClass() {
+		int count = cacheClient.getCount(TestEntity.class).intValue();
+		Assert.assertEquals(7, count);
+	}
+
+	@Test
+	public void testGetCountClassQuery() {
+		IQuery query = cacheClient.createQuery();
+		query.add(Condition.eq("testString", "i am pinus"));
+		int count = cacheClient.getCount(TestEntity.class, query).intValue();
+		Assert.assertEquals(5, count);
+	}
+
+	@Test
+	public void testGetCountQueryShardingClass() {
+		int count = cacheClient.getCount(moreKey, TestEntity.class).intValue();
+		Assert.assertEquals(5, count);
+	}
+
+	@Test
+	public void testGetCountShardingClass() {
+		IQuery query = cacheClient.createQuery();
+		query.add(Condition.eq("testString", "i am pinus"));
+		int count = cacheClient.getCount(query, moreKey, TestEntity.class).intValue();
+		Assert.assertEquals(5, count);
 	}
 
 	@Test

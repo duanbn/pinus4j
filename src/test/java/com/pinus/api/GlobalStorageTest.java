@@ -43,6 +43,12 @@ public class GlobalStorageTest extends BaseTest {
 	}
 
 	@Test
+	public void testGetGlobalCountStringClass() {
+		int count = cacheClient.getGlobalCount(CLUSTER_KLSTORAGE, TestGlobalEntity.class).intValue();
+		Assert.assertEquals(6, count);
+	}
+
+	@Test
 	public void testFindGlobalByQueryQueryStringClass() {
 		IQuery query = cacheClient.createQuery();
 		query.add(Condition.eq("testString", "i am pinus"));
