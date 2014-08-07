@@ -354,7 +354,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 	}
 
 	@Override
-	public <T> List<T> findGlobalByPks(List<? extends Number> pks, String clusterName, Class<T> clazz) {
+	public <T> List<T> findGlobalByPkList(List<? extends Number> pks, String clusterName, Class<T> clazz) {
 		CheckUtil.checkClusterName(clusterName);
 		CheckUtil.checkClass(clazz);
 		CheckUtil.checkNumberList(pks);

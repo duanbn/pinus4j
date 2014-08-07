@@ -284,7 +284,7 @@ public interface IShardingStorageClient {
 	 *            主键
 	 * @return 数据
 	 */
-	public <T> List<T> findGlobalByPks(List<? extends Number> pks, String clusterName, Class<T> clazz);
+	public <T> List<T> findGlobalByPkList(List<? extends Number> pks, String clusterName, Class<T> clazz);
 
 	/**
 	 * 根据sql查询全局表. 当查询不到数据时返回空的List，不会返回null.
