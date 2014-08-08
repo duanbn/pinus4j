@@ -34,18 +34,13 @@
 		<dependency>
 			<groupId>com.pinus</groupId>
 			<artifactId>pinus</artifactId>
-			<version>0.6.4</version>
+			<version>0.6.5</version>
         </dependency>
 		<dependency>
 			<groupId>jline</groupId>
 			<artifactId>jline</artifactId>
 			<version>0.9.94</version>
 		</dependency>
-        <dependency>
-            <groupId>com.github.jsqlparser</groupId>
-            <artifactId>jsqlparser</artifactId>
-            <version>0.9</version>
-        </dependency>
 		<dependency>
 			<groupId>log4j</groupId>
 			<artifactId>log4j</artifactId>

@@ -1,6 +1,7 @@
 package com.pinus.datalayer;
 
 import java.util.List;
+import java.util.Map;
 
 import com.pinus.api.IShardingKey;
 import com.pinus.api.SQL;
@@ -88,7 +89,7 @@ public interface IShardingMasterQuery {
 	 *            集群名
 	 * @return 数据
 	 */
-	public <T> List<T> findGlobalBySqlFromMaster(SQL<T> sql, String clusterName);
+	public <T> List<T> findGlobalBySqlFromMaster(SQL sql, String clusterName);
 
 	/**
 	 * 根据Query查询全局表. 当查询不到数据时返回空的List，不会返回null.
@@ -144,10 +145,10 @@ public interface IShardingMasterQuery {
 	 */
 	public Number getCountFromMaster(IShardingKey<?> shardingValue, Class<?> clazz);
 
-    /**
-     * 根据查询条件获取某一个分片的记录数.
-     */
-    public Number getCountFromMaster(IQuery query, IShardingKey<?> shardingValue, Class<?> clazz);
+	/**
+	 * 根据查询条件获取某一个分片的记录数.
+	 */
+	public Number getCountFromMaster(IQuery query, IShardingKey<?> shardingValue, Class<?> clazz);
 
 	/**
 	 * 一个主分库分表, 根据主键查询. 查询不到则返回null
@@ -271,8 +272,7 @@ public interface IShardingMasterQuery {
 	 * @throws IllegalArgumentException
 	 *             输入参数错误
 	 */
-	@Deprecated
-	public <T> List<T> findBySqlFromMaster(SQL<T> sql, IShardingKey<?> shardingValue);
+	public List<Map<String, Object>> findBySqlFromMaster(SQL sql, IShardingKey<?> shardingValue);
 
 	/**
 	 * 根据查询条件对象进行查询.当查询不到数据时返回空的List，不会返回null.

@@ -62,13 +62,9 @@ public class CheckUtil {
 	 * @param sql
 	 *            SQL对象
 	 */
-	public static void checkSQL(SQL<?> sql) {
+	public static void checkSQL(SQL sql) {
 		if (sql == null) {
 			throw new IllegalArgumentException("参数错误, SQL=" + sql);
-		}
-
-		if (sql.getClazz() == null) {
-			throw new IllegalArgumentException("参数错误, SQL的class=null");
 		}
 
 		if (sql.getSql() == null || sql.getSql().equals("")) {
@@ -176,7 +172,7 @@ public class CheckUtil {
 		String shardingField = table.shardingBy();
 		int shardingNum = table.shardingNum();
 		if (StringUtils.isBlank(clusterName) || StringUtils.isBlank(shardingField) || shardingNum <= 0) {
-            throw new IllegalArgumentException("被保存的对象不是ShardingEntity, class=" + clazz);
+			throw new IllegalArgumentException("被保存的对象不是ShardingEntity, class=" + clazz);
 		}
 	}
 
@@ -198,7 +194,7 @@ public class CheckUtil {
 		String shardingField = table.shardingBy();
 		int shardingNum = table.shardingNum();
 		if (StringUtils.isBlank(clusterName) || StringUtils.isNotBlank(shardingField) || shardingNum > 0) {
-            throw new IllegalArgumentException("被保存的对象不是GlobalEntity class=" + clazz);
+			throw new IllegalArgumentException("被保存的对象不是GlobalEntity class=" + clazz);
 		}
 	}
 

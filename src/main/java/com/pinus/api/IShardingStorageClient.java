@@ -1,6 +1,7 @@
 package com.pinus.api;
 
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.locks.Lock;
 
 import com.pinus.api.enums.EnumDB;
@@ -23,10 +24,10 @@ import com.pinus.generator.IIdGenerator;
  */
 public interface IShardingStorageClient {
 
-    /**
-     * 全局ShardingStorageClient的线程引用.
-     */
-    public static final ThreadLocal<IShardingStorageClient> storageClientHolder = new ThreadLocal<IShardingStorageClient>();
+	/**
+	 * 全局ShardingStorageClient的线程引用.
+	 */
+	public static final ThreadLocal<IShardingStorageClient> storageClientHolder = new ThreadLocal<IShardingStorageClient>();
 
 	// ////////////////////////////////////////////////////////
 	// update相关
@@ -101,14 +102,17 @@ public interface IShardingStorageClient {
 	 */
 	public void globalRemoveByPkList(List<? extends Number> pks, Class<?> clazz, String clusterName);
 
-    /**
-     * 根据主键删除全局库中的记录.
-     *
-     * @param clusterName 集群名称
-     * @param clazz 数据对象
-     * @param pks 主键
-     */
-    public void globalRemoveByPks(String clusterName, Class<?> clazz, Number... pks);
+	/**
+	 * 根据主键删除全局库中的记录.
+	 * 
+	 * @param clusterName
+	 *            集群名称
+	 * @param clazz
+	 *            数据对象
+	 * @param pks
+	 *            主键
+	 */
+	public void globalRemoveByPks(String clusterName, Class<?> clazz, Number... pks);
 
 	//
 	// sharding
@@ -192,17 +196,20 @@ public interface IShardingStorageClient {
 	 */
 	public void removeByPkList(List<? extends Number> pks, IShardingKey<?> shardingValue, Class<?> clazz);
 
-    /**
-     * 根据主键删除数据.
-     *
-     * @param shardingValue 数据分片因子
-     * @param clazz 数据对象
-     * @param pks 主键
-     *
-     * @throws DBOperationException
+	/**
+	 * 根据主键删除数据.
+	 * 
+	 * @param shardingValue
+	 *            数据分片因子
+	 * @param clazz
+	 *            数据对象
+	 * @param pks
+	 *            主键
+	 * 
+	 * @throws DBOperationException
 	 *             操作失败
-     */
-    public void removeByPks(IShardingKey<?> shardingValue, Class<?> clazz, Number... pks);
+	 */
+	public void removeByPks(IShardingKey<?> shardingValue, Class<?> clazz, Number... pks);
 
 	// ////////////////////////////////////////////////////////
 	// query相关
@@ -282,7 +289,7 @@ public interface IShardingStorageClient {
 	 *            集群名
 	 * @return 数据
 	 */
-	public <T> List<T> findGlobalBySql(SQL<T> sql, String clusterName);
+	public List<Map<String, Object>> findGlobalBySql(SQL sql, String clusterName);
 
 	/**
 	 * 根据Query查询全局表. 当查询不到数据时返回空的List，不会返回null.
@@ -336,20 +343,23 @@ public interface IShardingStorageClient {
 	 */
 	public Number getCount(IShardingKey<?> shardingValue, Class<?> clazz);
 
-    /**
-     * 根据查询条件获取某个分库分表的记录数.
-     *
-     * @param query 查询条件
-     * @param shardingValue 分片因子
-     * @param clazz 数据对象
-     *
-     * @return 记录数
-     * @throws DBOperationException
-     *             操作失败
-     * @throws IllegalArgumentException
-     *             输入参数错误
-     */
-    public Number getCount(IQuery query, IShardingKey<?> shardingValue, Class<?> clazz);
+	/**
+	 * 根据查询条件获取某个分库分表的记录数.
+	 * 
+	 * @param query
+	 *            查询条件
+	 * @param shardingValue
+	 *            分片因子
+	 * @param clazz
+	 *            数据对象
+	 * 
+	 * @return 记录数
+	 * @throws DBOperationException
+	 *             操作失败
+	 * @throws IllegalArgumentException
+	 *             输入参数错误
+	 */
+	public Number getCount(IQuery query, IShardingKey<?> shardingValue, Class<?> clazz);
 
 	/**
 	 * 一个主分库分表, 根据主键查询. 查询不到则返回null
@@ -473,8 +483,7 @@ public interface IShardingStorageClient {
 	 * @throws IllegalArgumentException
 	 *             输入参数错误
 	 */
-	@Deprecated
-	public <T> List<T> findBySql(SQL<T> sql, IShardingKey<?> shardingValue);
+	public List<Map<String, Object>> findBySql(SQL sql, IShardingKey<?> shardingValue);
 
 	/**
 	 * 根据查询条件对象进行查询.当查询不到数据时返回空的List，不会返回null.

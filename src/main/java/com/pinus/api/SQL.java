@@ -1,16 +1,15 @@
 package com.pinus.api;
 
+import java.util.List;
+
+import com.pinus.datalayer.SQLParser;
+
 /**
  * SQL查询. sql语句中的变量使用"?"表示.
  * 
  * @author duanbn
  */
-public class SQL<T> {
-
-	/**
-	 * 数据对象class
-	 */
-	private Class<T> clazz;
+public class SQL {
 
 	/**
 	 * sql语句
@@ -22,15 +21,14 @@ public class SQL<T> {
 	 */
 	private Object[] params;
 
-	public SQL(Class<T> clazz, String sql) {
-		this(clazz, sql, null);
-	}
-
-	public SQL(Class<T> clazz, String sql, Object... params) {
-		this.clazz = clazz;
+	public SQL(String sql, Object... params) {
 		if (sql != null)
 			this.sql = sql.toLowerCase();
 		this.params = params;
+	}
+
+	public List<String> getTableNames() {
+		return SQLParser.parseTableName(sql);
 	}
 
 	@Override
@@ -42,14 +40,6 @@ public class SQL<T> {
 		}
 
 		return s;
-	}
-
-	public Class<T> getClazz() {
-		return clazz;
-	}
-
-	public void setClazz(Class<T> clazz) {
-		this.clazz = clazz;
 	}
 
 	public String getSql() {

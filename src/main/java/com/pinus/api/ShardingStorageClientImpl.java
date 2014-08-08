@@ -2,6 +2,7 @@ package com.pinus.api;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.locks.Lock;
 import java.util.Arrays;
 
@@ -356,7 +357,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 
 	@Override
 	@Deprecated
-	public <T> List<T> findGlobalBySql(SQL<T> sql, String clusterName) {
+	public List<Map<String, Object>> findGlobalBySql(SQL sql, String clusterName) {
 		CheckUtil.checkSQL(sql);
 		CheckUtil.checkClusterName(clusterName);
 
@@ -457,8 +458,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 	}
 
 	@Override
-	@Deprecated
-	public <T> List<T> findBySql(SQL<T> sql, IShardingKey<?> shardingValue) {
+	public List<Map<String, Object>> findBySql(SQL sql, IShardingKey<?> shardingValue) {
 		CheckUtil.checkShardingValue(shardingValue);
 		CheckUtil.checkSQL(sql);
 

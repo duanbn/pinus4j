@@ -3,6 +3,7 @@ package com.pinus.datalayer.jdbc;
 import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.log4j.Logger;
 
@@ -49,9 +50,9 @@ public class ShardingSlaveQueryImpl extends AbstractShardingQuery implements ISh
 	}
 
 	@Override
-	public <T> T findOneByQueryFromSlave(IQuery query, IShardingKey<?> shardingValue, Class<T> clazz,
+	public <T> T findOneByQueryFromSlave(IQuery query, IShardingKey<?> shardingKey, Class<T> clazz,
 			EnumDBMasterSlave slave) {
-		List<T> entities = findByQueryFromSlave(query, shardingValue, clazz, slave);
+		List<T> entities = findByQueryFromSlave(query, shardingKey, clazz, slave);
 
 		if (entities.isEmpty()) {
 			return null;
@@ -116,21 +117,14 @@ public class ShardingSlaveQueryImpl extends AbstractShardingQuery implements ISh
 	}
 
 	@Override
-	@Deprecated
-	public <T> List<T> findGlobalBySqlFromSlave(SQL<T> sql, String clusterName, EnumDBMasterSlave slave) {
+	public List<Map<String, Object>> findGlobalBySqlFromSlave(SQL sql, String clusterName, EnumDBMasterSlave slave) {
 		Connection conn = null;
 		try {
 			DBConnectionInfo slaveGlobal = this.dbCluster.getSlaveGlobalDbConn(clusterName, slave);
 
 			conn = slaveGlobal.getDatasource().getConnection();
 
-			List<T> result = null;
-			if (isCacheAvailable(sql.getClazz())) {
-				Number[] pkValues = selectGlobalPksBySqlx(conn, sql);
-				result = selectGlobalByPksWithCache(conn, clusterName, sql.getClazz(), pkValues);
-			} else {
-				result = selectGlobalBySql(conn, sql);
-			}
+			List<Map<String, Object>> result = selectGlobalBySql(conn, sql);
 
 			return result;
 		} catch (Exception e) {
@@ -165,31 +159,31 @@ public class ShardingSlaveQueryImpl extends AbstractShardingQuery implements ISh
 	}
 
 	@Override
-	public Number getCountFromSlave(IShardingKey<?> shardingValue, Class<?> clazz, EnumDBMasterSlave slave) {
-		DB db = _getDbFromSlave(slave, clazz, shardingValue);
+	public Number getCountFromSlave(IShardingKey<?> shardingKey, Class<?> clazz, EnumDBMasterSlave slave) {
+		DB db = _getDbFromSlave(slave, clazz, shardingKey);
 
 		return selectCountWithCache(db, clazz);
 	}
 
 	@Override
-	public <T> T findByPkFromSlave(Number pk, IShardingKey<?> shardingValue, Class<T> clazz, EnumDBMasterSlave slave) {
-		DB db = _getDbFromSlave(slave, clazz, shardingValue);
+	public <T> T findByPkFromSlave(Number pk, IShardingKey<?> shardingKey, Class<T> clazz, EnumDBMasterSlave slave) {
+		DB db = _getDbFromSlave(slave, clazz, shardingKey);
 
 		return selectByPkWithCache(db, pk, clazz);
 	}
 
 	@Override
-	public <T> List<T> findByPksFromSlave(IShardingKey<?> shardingValue, Class<T> clazz, EnumDBMasterSlave slave,
+	public <T> List<T> findByPksFromSlave(IShardingKey<?> shardingKey, Class<T> clazz, EnumDBMasterSlave slave,
 			Number... pks) {
-		DB db = _getDbFromSlave(slave, clazz, shardingValue);
+		DB db = _getDbFromSlave(slave, clazz, shardingKey);
 
 		return selectByPksWithCache(db, clazz, pks);
 	}
 
 	@Override
-	public <T> List<T> findByPkListFromSlave(List<? extends Number> pks, IShardingKey<?> shardingValue, Class<T> clazz,
+	public <T> List<T> findByPkListFromSlave(List<? extends Number> pks, IShardingKey<?> shardingKey, Class<T> clazz,
 			EnumDBMasterSlave slave) {
-		return findByPksFromSlave(shardingValue, clazz, slave, pks.toArray(new Number[pks.size()]));
+		return findByPksFromSlave(shardingKey, clazz, slave, pks.toArray(new Number[pks.size()]));
 	}
 
 	@Override
@@ -200,14 +194,14 @@ public class ShardingSlaveQueryImpl extends AbstractShardingQuery implements ISh
 		}
 
 		List<T> result = new ArrayList<T>(pks.length);
-		IShardingKey<?> shardingValue = null;
+		IShardingKey<?> shardingKey = null;
 		Number pk = null;
 		DB db = null;
 		T data = null;
 		for (int i = 0; i < pks.length; i++) {
-			shardingValue = shardingValues.get(i);
+			shardingKey = shardingValues.get(i);
 			pk = pks[i];
-			db = _getDbFromSlave(slave, clazz, shardingValue);
+			db = _getDbFromSlave(slave, clazz, shardingKey);
 
 			data = selectByPkWithCache(db, pk, clazz);
 			if (data != null) {
@@ -225,24 +219,25 @@ public class ShardingSlaveQueryImpl extends AbstractShardingQuery implements ISh
 	}
 
 	@Override
-	public <T> List<T> findBySqlFromSlave(SQL<T> sql, IShardingKey<?> shardingValue, EnumDBMasterSlave slave) {
-		DB db = _getDbFromSlave(slave, sql.getClazz(), shardingValue);
-
-		List<T> result = null;
-		if (isCacheAvailable(sql.getClazz())) {
-			Number[] pkValues = selectPksBySql(db, sql);
-			result = selectByPksWithCache(db, sql.getClazz(), pkValues);
-		} else {
-			result = selectBySql(db, sql);
+	public List<Map<String, Object>> findBySqlFromSlave(SQL sql, IShardingKey<?> shardingKey, EnumDBMasterSlave slave) {
+		DB next = null;
+		for (String tableName : sql.getTableNames()) {
+			DB cur = _getDbFromSlave(slave, tableName, shardingKey);
+			if (next != null && (cur != next)) {
+				throw new DBOperationException("the tables in sql maybe not at the same database");
+			}
+			next = cur;
 		}
+
+		List<Map<String, Object>> result = selectBySql(next, sql);
 
 		return result;
 	}
 
 	@Override
-	public <T> List<T> findByQueryFromSlave(IQuery query, IShardingKey<?> shardingValue, Class<T> clazz,
+	public <T> List<T> findByQueryFromSlave(IQuery query, IShardingKey<?> shardingKey, Class<T> clazz,
 			EnumDBMasterSlave slave) {
-		DB db = _getDbFromSlave(slave, clazz, shardingValue);
+		DB db = _getDbFromSlave(slave, clazz, shardingKey);
 
 		List<T> result = null;
 		if (isCacheAvailable(clazz)) {
@@ -265,14 +260,27 @@ public class ShardingSlaveQueryImpl extends AbstractShardingQuery implements ISh
 	 * 
 	 * @param clazz
 	 *            数据对象
-	 * @param shardingValue
+	 * @param shardingKey
 	 *            路由因子
 	 */
-	private DB _getDbFromSlave(EnumDBMasterSlave slave, Class<?> clazz, IShardingKey<?> shardingValue) {
+	private DB _getDbFromSlave(EnumDBMasterSlave slave, Class<?> clazz, IShardingKey<?> shardingKey) {
 		String tableName = ReflectUtil.getTableName(clazz);
 		DB db = null;
 		try {
-			db = this.dbCluster.selectDbFromSlave(slave, tableName, shardingValue);
+			db = this.dbCluster.selectDbFromSlave(slave, tableName, shardingKey);
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("[" + db + "]");
+			}
+		} catch (DBClusterException e) {
+			throw new DBOperationException(e);
+		}
+		return db;
+	}
+
+	private DB _getDbFromSlave(EnumDBMasterSlave slave, String tableName, IShardingKey<?> shardingKey) {
+		DB db = null;
+		try {
+			db = this.dbCluster.selectDbFromSlave(slave, tableName, shardingKey);
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("[" + db + "]");
 			}

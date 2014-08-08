@@ -646,8 +646,8 @@ public abstract class AbstractShardingQuery {
 	// //////////////////////////////////////////////////////////////////////////////////////
 	// findBySql相关
 	// //////////////////////////////////////////////////////////////////////////////////////
-	protected <T> List<T> selectGlobalBySql(Connection conn, SQL<T> sql) {
-		List<T> result = new ArrayList<T>();
+	protected List<Map<String, Object>> selectGlobalBySql(Connection conn, SQL sql) {
+		List<Map<String, Object>> result = new ArrayList<Map<String, Object>>();
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 		try {
@@ -658,7 +658,7 @@ public abstract class AbstractShardingQuery {
 			if (constTime > Const.SLOWQUERY_SQL) {
 				SlowQueryLogger.write(conn, sql, constTime);
 			}
-			result = (List<T>) SQLBuilder.buildResultObject(sql.getClazz(), rs);
+			result = (List<Map<String, Object>>) SQLBuilder.buildResultObject(rs);
 		} catch (SQLException e) {
 			throw new DBOperationException(e);
 		} finally {
@@ -683,8 +683,8 @@ public abstract class AbstractShardingQuery {
 	 * @throws IllegalArgumentException
 	 *             输入参数错误
 	 */
-	protected <T> List<T> selectBySql(DB db, SQL<T> sql) {
-		List<T> result = new ArrayList<T>();
+	protected List<Map<String, Object>> selectBySql(DB db, SQL sql) {
+		List<Map<String, Object>> result = new ArrayList<Map<String, Object>>();
 		Connection conn = null;
 		PreparedStatement ps = null;
 		ResultSet rs = null;
@@ -699,7 +699,7 @@ public abstract class AbstractShardingQuery {
 				SlowQueryLogger.write(db, sql, constTime);
 			}
 
-			result = (List<T>) SQLBuilder.buildResultObject(sql.getClazz(), rs);
+			result = (List<Map<String, Object>>) SQLBuilder.buildResultObject(rs);
 		} catch (SQLException e) {
 			throw new DBOperationException(e);
 		} finally {
@@ -838,65 +838,6 @@ public abstract class AbstractShardingQuery {
 			rs = ps.executeQuery();
 			long constTime = System.currentTimeMillis() - begin;
 			if (constTime > Const.SLOWQUERY_MORE) {
-				SlowQueryLogger.write(db, sql, constTime);
-			}
-			while (rs.next()) {
-				result.add(rs.getLong(1));
-			}
-		} catch (SQLException e) {
-			throw new DBOperationException(e);
-		} finally {
-			SQLBuilder.close(conn, ps, rs);
-		}
-
-		return result.toArray(new Number[result.size()]);
-	}
-
-	protected <T> Number[] selectGlobalPksBySqlx(Connection conn, SQL<T> sql) {
-		List<Number> result = new ArrayList<Number>();
-
-		PreparedStatement ps = null;
-		ResultSet rs = null;
-		try {
-			ps = SQLBuilder.buildSelectPkBySqlGlobal(conn, sql);
-			long begin = System.currentTimeMillis();
-			rs = ps.executeQuery();
-			long constTime = System.currentTimeMillis() - begin;
-			if (constTime > Const.SLOWQUERY_PKS) {
-				SlowQueryLogger.write(conn, sql, constTime);
-			}
-			while (rs.next()) {
-				result.add(rs.getLong(1));
-			}
-		} catch (SQLException e) {
-			throw new DBOperationException(e);
-		} finally {
-			SQLBuilder.close(null, ps, rs);
-		}
-
-		return result.toArray(new Number[result.size()]);
-	}
-
-	/**
-	 * 根据SQL查询主键
-	 * 
-	 * @param db
-	 * @param sql
-	 * @return pk值
-	 */
-	protected <T> Number[] selectPksBySql(DB db, SQL<T> sql) {
-		List<Number> result = new ArrayList<Number>();
-
-		Connection conn = null;
-		PreparedStatement ps = null;
-		ResultSet rs = null;
-		try {
-			conn = db.getDatasource().getConnection();
-			ps = SQLBuilder.buildSelectPkBySql(conn, sql, db.getTableIndex());
-			long begin = System.currentTimeMillis();
-			rs = ps.executeQuery();
-			long constTime = System.currentTimeMillis() - begin;
-			if (constTime > Const.SLOWQUERY_PKS) {
 				SlowQueryLogger.write(db, sql, constTime);
 			}
 			while (rs.next()) {

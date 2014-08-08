@@ -21,15 +21,15 @@ public class SlowQueryLogger {
 	 */
 	public static final Logger LOG = Logger.getLogger(SlowQueryLogger.class);
 
-	public static void write(DB db, SQL<?> sql, long constTime) {
+	public static void write(DB db, SQL sql, long constTime) {
 		LOG.warn("[" + db + "] \"" + sql.toString() + "\" const " + constTime + "ms");
 	}
 
 	public static void write(DB db, String sql, long constTime) {
 		LOG.warn("[" + db + "] \"" + sql + "\" const " + constTime + "ms");
 	}
-	
-	public static void write(Connection conn, SQL<?> sql, long constTime) {
+
+	public static void write(Connection conn, SQL sql, long constTime) {
 		String url = null;
 		String dbName = null;
 		try {
@@ -40,7 +40,7 @@ public class SlowQueryLogger {
 		String host = url.substring(0, url.indexOf("/"));
 		LOG.warn(host + " " + dbName + " " + " \"" + sql.toString() + "\"" + constTime + "ms");
 	}
-	
+
 	public static void write(Connection conn, String sql, long constTime) {
 		String url = null;
 		String dbName = null;

@@ -1,6 +1,7 @@
 package com.pinus.datalayer;
 
 import java.util.List;
+import java.util.Map;
 
 import com.pinus.api.IShardingKey;
 import com.pinus.api.SQL;
@@ -29,7 +30,7 @@ public interface IShardingSlaveQuery {
 	public <T> List<T> findGlobalByPksFromSlave(List<? extends Number> pks, String clusterName, Class<T> clazz,
 			EnumDBMasterSlave slave);
 
-	public <T> List<T> findGlobalBySqlFromSlave(SQL<T> sql, String clusterName, EnumDBMasterSlave slave);
+	public List<Map<String, Object>> findGlobalBySqlFromSlave(SQL sql, String clusterName, EnumDBMasterSlave slave);
 
 	public <T> List<T> findGlobalByQueryFromSlave(IQuery query, String clusterName, Class<T> clazz,
 			EnumDBMasterSlave slave);
@@ -193,7 +194,7 @@ public interface IShardingSlaveQuery {
 	 * @throws IllegalArgumentException
 	 *             输入参数错误
 	 */
-	public <T> List<T> findBySqlFromSlave(SQL<T> sql, IShardingKey<?> shardingValue, EnumDBMasterSlave slave);
+	public List<Map<String, Object>> findBySqlFromSlave(SQL sql, IShardingKey<?> shardingValue, EnumDBMasterSlave slave);
 
 	/**
 	 * 根据查询条件对象进行查询.

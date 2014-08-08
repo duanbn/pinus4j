@@ -38,7 +38,7 @@ public class SQLBuilder {
 	 */
 	private static final Map<String, String> _selectCountCache = new ConcurrentHashMap<String, String>();
 
-    private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+	private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
 	/**
 	 * 拼装sql. SELECT pkName FROM tableName {IQuery.getSql()}
@@ -67,18 +67,18 @@ public class SQLBuilder {
 	public static String buildSelectByQuery(Class<?> clazz, int tableIndex, IQuery query) {
 		String tableName = ReflectUtil.getTableName(clazz, tableIndex);
 
-        StringBuilder fields = new StringBuilder();
-        if (query.hasQueryFields()) {
-            for (String field : query.getFields()) {
-                fields.append(field).append(",");
-            }
-            fields.deleteCharAt(fields.length() - 1);
-        } else {
-            fields.append("*");
-        }
+		StringBuilder fields = new StringBuilder();
+		if (query.hasQueryFields()) {
+			for (String field : query.getFields()) {
+				fields.append(field).append(",");
+			}
+			fields.deleteCharAt(fields.length() - 1);
+		} else {
+			fields.append("*");
+		}
 
 		StringBuilder SQL = new StringBuilder("SELECT ");
-        SQL.append(fields.toString()).append(" FROM ");
+		SQL.append(fields.toString()).append(" FROM ");
 		SQL.append(tableName);
 		String whereSql = query.getWhereSql();
 		if (StringUtils.isNotBlank(whereSql))
@@ -138,49 +138,7 @@ public class SQLBuilder {
 		return SQL.toString();
 	}
 
-	public static PreparedStatement buildSelectPkBySqlGlobal(Connection conn, SQL<?> sql) throws SQLException {
-		String s = sql.getSql();
-		String pkName = ReflectUtil.getPkName(sql.getClazz());
-
-		s = "select " + pkName + " " + s.substring(s.indexOf("from"));
-
-		debugSQL(s);
-
-		PreparedStatement ps = conn.prepareStatement(s);
-		Object[] params = sql.getParams();
-		if (params != null) {
-			for (int i = 1; i <= params.length; i++) {
-				ps.setObject(i, params[i - 1]);
-			}
-		}
-		return ps;
-	}
-
-	/**
-	 * 拼装sql.
-	 * 
-	 * @return SELECT pkName FROM tableName WHERE {sql}.where
-	 * @throws SQLException
-	 */
-	public static PreparedStatement buildSelectPkBySql(Connection conn, SQL<?> sql, int tableIndex) throws SQLException {
-		String s = addTableIndex(sql.getSql(), tableIndex);
-		String pkName = ReflectUtil.getPkName(sql.getClazz());
-
-		s = "select " + pkName + " " + s.substring(s.indexOf("from"));
-
-		debugSQL(s);
-
-		PreparedStatement ps = conn.prepareStatement(s);
-		Object[] params = sql.getParams();
-		if (params != null) {
-			for (int i = 1; i <= params.length; i++) {
-				ps.setObject(i, params[i - 1]);
-			}
-		}
-		return ps;
-	}
-
-	public static PreparedStatement buildSelectBySqlGlobal(Connection conn, SQL<?> sql) throws SQLException {
+	public static PreparedStatement buildSelectBySqlGlobal(Connection conn, SQL sql) throws SQLException {
 		debugSQL(sql.getSql());
 
 		PreparedStatement ps = conn.prepareStatement(sql.getSql());
@@ -206,8 +164,8 @@ public class SQLBuilder {
 	 * @return PreparedStatement
 	 * @throws SQLException
 	 */
-	public static PreparedStatement buildSelectBySql(Connection conn, SQL<?> sql, int tableIndex) throws SQLException {
-		String s = addTableIndex(sql.getSql(), tableIndex);
+	public static PreparedStatement buildSelectBySql(Connection conn, SQL sql, int tableIndex) throws SQLException {
+		String s = SQLParser.addTableIndex(sql.getSql(), tableIndex);
 
 		debugSQL(s);
 
@@ -259,6 +217,38 @@ public class SQLBuilder {
 		_selectCountCache.put(clazz.getName() + tableIndex, SQL.toString());
 
 		return SQL.toString();
+	}
+
+	/**
+	 * 给定数据库查询结果集创建数据对性.
+	 * 
+	 * @param rs
+	 *            数据库查询结果集
+	 * 
+	 * @return 数据对象列表
+	 */
+	public static List<Map<String, Object>> buildResultObject(ResultSet rs) throws SQLException {
+		List<Map<String, Object>> list = new ArrayList<Map<String, Object>>();
+
+		ResultSetMetaData rsmd = rs.getMetaData();
+		Map<String, Object> one = null;
+		while (rs.next()) {
+			try {
+				one = new HashMap<String, Object>();
+				String fieldName = null;
+				Object value = null;
+				for (int i = 1; i <= rsmd.getColumnCount(); i++) {
+					fieldName = rsmd.getColumnName(i);
+					value = rs.getObject(i);
+					one.put(fieldName, value);
+				}
+				list.add(one);
+			} catch (Exception e) {
+				throw new SQLException(e);
+			}
+		}
+
+		return list;
 	}
 
 	/**
@@ -489,9 +479,9 @@ public class SQLBuilder {
 			StringBuilder SQL = new StringBuilder("UPDATE " + tableName + " SET ");
 			Object value = null;
 			for (Map.Entry<String, Object> propertyEntry : propertyEntrySet) {
-                value = propertyEntry.getValue();
+				value = propertyEntry.getValue();
 				SQL.append(propertyEntry.getKey()).append("=");
-                SQL.append(formatValue(value));
+				SQL.append(formatValue(value));
 				SQL.append(",");
 			}
 			SQL.deleteCharAt(SQL.length() - 1);
@@ -543,10 +533,10 @@ public class SQLBuilder {
 			StringBuilder var = new StringBuilder();
 			Object value = null;
 			for (Map.Entry<String, Object> propertyEntry : propertyEntrySet) {
-                value = propertyEntry.getValue();
+				value = propertyEntry.getValue();
 				SQL.append(propertyEntry.getKey()).append(",");
-                var.append(formatValue(value));
-                var.append(",");
+				var.append(formatValue(value));
+				var.append(",");
 			}
 			SQL.deleteCharAt(SQL.length() - 1);
 			SQL.append(") VALUES (");
@@ -560,28 +550,28 @@ public class SQLBuilder {
 		return st;
 	}
 
-    /**
-     * 格式化数据库值.
-     */
-    public static Object formatValue(Object value) {
-        Object format = null;
+	/**
+	 * 格式化数据库值.
+	 */
+	public static Object formatValue(Object value) {
+		Object format = null;
 
-        if (value instanceof String) {
-            format = "'" + (String) value + "'"; 
-        } else if (value instanceof Character) {
-            if (((int) (Character) value) == 39) {
-                format = "'\\" + (Character) value + "'"; 
-            } else {
-                format = "'" + (Character) value + "'"; 
-            }
-        } else if (value instanceof Date) {
-            format = "'" + sdf.format((Date) value) + "'";
-        } else {
-            format = value;
-        }
+		if (value instanceof String) {
+			format = "'" + (String) value + "'";
+		} else if (value instanceof Character) {
+			if (((int) (Character) value) == 39) {
+				format = "'\\" + (Character) value + "'";
+			} else {
+				format = "'" + (Character) value + "'";
+			}
+		} else if (value instanceof Date) {
+			format = "'" + sdf.format((Date) value) + "'";
+		} else {
+			format = value;
+		}
 
-        return format;
-    }
+		return format;
+	}
 
 	/**
 	 * 关闭数据相关资源.
@@ -642,26 +632,6 @@ public class SQLBuilder {
 		} catch (SQLException e) {
 			LOG.error(e);
 		}
-	}
-
-	/**
-	 * 解析sql的表名并增加分表下标.
-	 * 
-	 * @param sql
-	 * @param tableIndex
-	 * @return 带分表下标的表名
-	 */
-	private static String addTableIndex(String sql, int tableIndex) {
-		// 解析sql并给表名加上分表下标
-		int beginIndex = sql.indexOf("from") + 5;
-		String afterFrom = sql.substring(beginIndex);
-		String tableName = null;
-		if (afterFrom.contains(" ")) {
-			tableName = afterFrom.substring(0, afterFrom.indexOf(" "));
-		} else {
-			tableName = afterFrom;
-		}
-		return sql.replaceAll(tableName, tableName + tableIndex);
 	}
 
 	/**
