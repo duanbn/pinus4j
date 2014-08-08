@@ -470,6 +470,7 @@ public interface IShardingStorageClient {
 
 	/**
 	 * 一个主分库分表, 根据条件查询.当查询不到数据时返回空的List，不会返回null.
+     * 需要注意的是，sql语句中操作的表必须在指定的分片中存在.
 	 * 
 	 * @param sql
 	 *            查询语句
