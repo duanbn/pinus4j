@@ -88,7 +88,7 @@ public interface IShardingStorageClient {
 	 * 删除全局库
 	 * 
 	 * @param pk
-	 * @param shardingValue
+	 * @param shardingKey
 	 * @param clazz
 	 */
 	public void globalRemoveByPk(Number pk, Class<?> clazz, String clusterName);
@@ -97,7 +97,7 @@ public interface IShardingStorageClient {
 	 * 批量删除全局库
 	 * 
 	 * @param pks
-	 * @param shardingValue
+	 * @param shardingKey
 	 * @param clazz
 	 */
 	public void globalRemoveByPkList(List<? extends Number> pks, Class<?> clazz, String clusterName);
@@ -133,7 +133,7 @@ public interface IShardingStorageClient {
 	 * 
 	 * @param entities
 	 *            批量数据对象
-	 * @param shardingValue
+	 * @param shardingKey
 	 *            分库分表因子
 	 * 
 	 * @return 主键
@@ -141,7 +141,7 @@ public interface IShardingStorageClient {
 	 * @throws DBOperationException
 	 *             操作失败
 	 */
-	public Number[] saveBatch(List<? extends Object> entities, IShardingKey<?> shardingValue);
+	public Number[] saveBatch(List<? extends Object> entities, IShardingKey<?> shardingKey);
 
 	/**
 	 * 更新分库分表数据. 会忽略更新null值和默认值
@@ -158,20 +158,20 @@ public interface IShardingStorageClient {
 	 * 
 	 * @param entities
 	 *            批量更新数据
-	 * @param shardingValue
+	 * @param shardingKey
 	 *            分库分表因子
 	 * 
 	 * @throws DBOperationException
 	 *             操作失败
 	 */
-	public void updateBatch(List<? extends Object> entities, IShardingKey<?> shardingValue);
+	public void updateBatch(List<? extends Object> entities, IShardingKey<?> shardingKey);
 
 	/**
 	 * 根据主键删除数据.
 	 * 
 	 * @param pk
 	 *            主键
-	 * @param shardingValue
+	 * @param shardingKey
 	 *            分库分表因子
 	 * @param clazz
 	 *            数据对象class
@@ -179,14 +179,14 @@ public interface IShardingStorageClient {
 	 * @throws DBOperationException
 	 *             操作失败
 	 */
-	public void removeByPk(Number pk, IShardingKey<?> shardingValue, Class<?> clazz);
+	public void removeByPk(Number pk, IShardingKey<?> shardingKey, Class<?> clazz);
 
 	/**
 	 * 根据主键批量删除数据.
 	 * 
 	 * @param pks
 	 *            主键
-	 * @param shardingValue
+	 * @param shardingKey
 	 *            分库分表因子
 	 * @param clazz
 	 *            数据对象class
@@ -194,12 +194,12 @@ public interface IShardingStorageClient {
 	 * @throws DBOperationException
 	 *             操作失败
 	 */
-	public void removeByPkList(List<? extends Number> pks, IShardingKey<?> shardingValue, Class<?> clazz);
+	public void removeByPkList(List<? extends Number> pks, IShardingKey<?> shardingKey, Class<?> clazz);
 
 	/**
 	 * 根据主键删除数据.
 	 * 
-	 * @param shardingValue
+	 * @param shardingKey
 	 *            数据分片因子
 	 * @param clazz
 	 *            数据对象
@@ -209,7 +209,7 @@ public interface IShardingStorageClient {
 	 * @throws DBOperationException
 	 *             操作失败
 	 */
-	public void removeByPks(IShardingKey<?> shardingValue, Class<?> clazz, Number... pks);
+	public void removeByPks(IShardingKey<?> shardingKey, Class<?> clazz, Number... pks);
 
 	// ////////////////////////////////////////////////////////
 	// query相关
@@ -330,7 +330,7 @@ public interface IShardingStorageClient {
 	/**
 	 * 获取分库分表记录总数.
 	 * 
-	 * @param shardingValue
+	 * @param shardingKey
 	 *            分库分表因子
 	 * @param clazz
 	 *            数据对象
@@ -341,14 +341,14 @@ public interface IShardingStorageClient {
 	 * @throws IllegalArgumentException
 	 *             输入参数错误
 	 */
-	public Number getCount(IShardingKey<?> shardingValue, Class<?> clazz);
+	public Number getCount(IShardingKey<?> shardingKey, Class<?> clazz);
 
 	/**
 	 * 根据查询条件获取某个分库分表的记录数.
 	 * 
 	 * @param query
 	 *            查询条件
-	 * @param shardingValue
+	 * @param shardingKey
 	 *            分片因子
 	 * @param clazz
 	 *            数据对象
@@ -359,14 +359,14 @@ public interface IShardingStorageClient {
 	 * @throws IllegalArgumentException
 	 *             输入参数错误
 	 */
-	public Number getCount(IQuery query, IShardingKey<?> shardingValue, Class<?> clazz);
+	public Number getCount(IQuery query, IShardingKey<?> shardingKey, Class<?> clazz);
 
 	/**
 	 * 一个主分库分表, 根据主键查询. 查询不到则返回null
 	 * 
 	 * @param pk
 	 *            主键
-	 * @param shardingValue
+	 * @param shardingKey
 	 *            分库分表因子
 	 * @param clazz
 	 *            数据对象类型
@@ -378,22 +378,22 @@ public interface IShardingStorageClient {
 	 * @throws IllegalArgumentException
 	 *             输入参数错误
 	 */
-	public <T> T findByPk(Number pk, IShardingKey<?> shardingValue, Class<T> clazz);
+	public <T> T findByPk(Number pk, IShardingKey<?> shardingKey, Class<T> clazz);
 
 	/**
 	 * 根据查询条件获取一条数据. 如果查询到多条则返回第一条.当查询不到数据时返回空的List，不会返回null.
 	 * 
 	 * @param query
-	 * @param shardingValue
+	 * @param shardingKey
 	 * @param clazz
 	 * @return 查询结果，找不到返回null
 	 */
-	public <T> T findOneByQuery(IQuery query, IShardingKey<?> shardingValue, Class<T> clazz);
+	public <T> T findOneByQuery(IQuery query, IShardingKey<?> shardingKey, Class<T> clazz);
 
 	/**
 	 * 一个主分库分表, 根据多个主键查询.当查询不到数据时返回空的List，不会返回null.
 	 * 
-	 * @param shardingValue
+	 * @param shardingKey
 	 *            分库分表因子
 	 * @param clazz
 	 *            数据对象类型
@@ -407,14 +407,14 @@ public interface IShardingStorageClient {
 	 * @throws IllegalArgumentException
 	 *             输入参数错误
 	 */
-	public <T> List<T> findByPks(IShardingKey<?> shardingValue, Class<T> clazz, Number... pks);
+	public <T> List<T> findByPks(IShardingKey<?> shardingKey, Class<T> clazz, Number... pks);
 
 	/**
 	 * 一个主分库分表, 根据多个主键查询.当查询不到数据时返回空的List，不会返回null.
 	 * 
 	 * @param pks
 	 *            主键数组
-	 * @param shardingValue
+	 * @param shardingKey
 	 *            分库分表因子
 	 * @param clazz
 	 *            数据对象类型
@@ -426,13 +426,13 @@ public interface IShardingStorageClient {
 	 * @throws IllegalArgumentException
 	 *             输入参数错误
 	 */
-	public <T> List<T> findByPkList(List<? extends Number> pks, IShardingKey<?> shardingValue, Class<T> clazz);
+	public <T> List<T> findByPkList(List<? extends Number> pks, IShardingKey<?> shardingKey, Class<T> clazz);
 
 	/**
 	 * 多个主分库分表, 多个主键查询, 一个主键对应一个分库分表.
 	 * <b>主键列表和分库分表因子的列表必须是一一对应，每一个分库分表只能查出一条记录</b> 当查询不到数据时返回空的List，不会返回null.
 	 * 
-	 * @param shardingValues
+	 * @param shardingKeys
 	 *            分库分表因子列表
 	 * @param clazz
 	 *            数据对象类型
@@ -446,14 +446,14 @@ public interface IShardingStorageClient {
 	 * @throws IllegalArgumentException
 	 *             输入参数错误
 	 */
-	public <T> List<T> findByShardingPair(List<IShardingKey<?>> shardingValues, Class<T> clazz, Number... pks);
+	public <T> List<T> findByShardingPair(List<IShardingKey<?>> shardingKeys, Class<T> clazz, Number... pks);
 
 	/**
 	 * 多个主分库分表, 多个主键查询. 主键列表和分库分表因子的列表必须是一一对应, 当查询不到数据时返回空的List，不会返回null.
 	 * 
 	 * @param pks
 	 *            主键数组
-	 * @param shardingValues
+	 * @param shardingKeys
 	 *            分库分表因子列表
 	 * @param clazz
 	 *            数据对象类型
@@ -465,7 +465,7 @@ public interface IShardingStorageClient {
 	 * @throws IllegalArgumentException
 	 *             输入参数错误
 	 */
-	public <T> List<T> findByShardingPair(List<? extends Number> pks, List<IShardingKey<?>> shardingValues,
+	public <T> List<T> findByShardingPair(List<? extends Number> pks, List<IShardingKey<?>> shardingKeys,
 			Class<T> clazz);
 
 	/**
@@ -474,7 +474,7 @@ public interface IShardingStorageClient {
 	 * 
 	 * @param sql
 	 *            查询语句
-	 * @param shardingValue
+	 * @param shardingKey
 	 *            分库分表因子
 	 * 
 	 * @return 查询结果
@@ -484,14 +484,14 @@ public interface IShardingStorageClient {
 	 * @throws IllegalArgumentException
 	 *             输入参数错误
 	 */
-	public List<Map<String, Object>> findBySql(SQL sql, IShardingKey<?> shardingValue);
+	public List<Map<String, Object>> findBySql(SQL sql, IShardingKey<?> shardingKey);
 
 	/**
 	 * 根据查询条件对象进行查询.当查询不到数据时返回空的List，不会返回null.
 	 * 
 	 * @param query
 	 *            查询条件
-	 * @param shardingValue
+	 * @param shardingKey
 	 *            分库分表因子
 	 * 
 	 * @throws DBOperationException
@@ -499,7 +499,7 @@ public interface IShardingStorageClient {
 	 * @throws IllegalArgumentException
 	 *             输入参数错误
 	 */
-	public <T> List<T> findByQuery(IQuery query, IShardingKey<?> shardingValue, Class<T> clazz);
+	public <T> List<T> findByQuery(IQuery query, IShardingKey<?> shardingKey, Class<T> clazz);
 
 	// ////////////////////////////////////////////////////////
 	// other

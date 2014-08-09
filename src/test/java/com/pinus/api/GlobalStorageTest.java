@@ -2,6 +2,7 @@ package com.pinus.api;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.*;
 
 import junit.framework.Assert;
 
@@ -56,6 +57,16 @@ public class GlobalStorageTest extends BaseTest {
 				TestGlobalEntity.class);
 		Assert.assertEquals(6, entities.size());
 	}
+
+    @Test
+    public void testFindGlobalBySqlSqlString() {
+        SQL sql = SQL.valueOf("select * from testglobalentity where testString=?", "i am pinus");
+        List<Map<String, Object>> rst = cacheClient.findGlobalBySql(sql, CLUSTER_KLSTORAGE);
+        Assert.assertEquals(6, rst.size());
+        for (Map<String, Object> map : rst) {
+            Assert.assertEquals("i am pinus", map.get("testString"));
+        }
+    }
 
 	@Test
 	public void testGlobalUpdateObject() {

@@ -2,6 +2,7 @@ package com.pinus.api;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.*;
 
 import junit.framework.Assert;
 
@@ -89,6 +90,8 @@ public class ShardingStorageTest extends BaseTest {
 		for (TestEntity entity : entities) {
 			Assert.assertEquals("i am pinus", entity.getTestString());
 			Assert.assertEquals(0, entity.getTestInt());
+            Assert.assertEquals(0.0f, entity.getTestFloat());
+            Assert.assertEquals(0.0, entity.getTestDouble());
 		}
 	}
 
@@ -100,6 +103,16 @@ public class ShardingStorageTest extends BaseTest {
 		List<TestEntity> entities = cacheClient.findByShardingPair(keys, TestEntity.class, pk1, pk2);
 		Assert.assertEquals(2, entities.size());
 	}
+
+    @Test
+    public void testFindBySqlSqlShardingKey() {
+        SQL sql = SQL.valueOf("select * from test_entity where testString=?", "i am pinus");
+        List<Map<String, Object>> rst = cacheClient.findBySql(sql, moreKey);
+        Assert.assertEquals(5, rst.size());
+        for (Map<String, Object> map : rst) {
+            Assert.assertEquals("i am pinus", map.get("testString"));
+        }
+    }
 
 	@Test
 	public void testUpdateObject() {

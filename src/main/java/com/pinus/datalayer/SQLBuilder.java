@@ -139,7 +139,7 @@ public class SQLBuilder {
 	}
 
 	public static PreparedStatement buildSelectBySqlGlobal(Connection conn, SQL sql) throws SQLException {
-		debugSQL(sql.getSql());
+		debugSQL(sql.toString());
 
 		PreparedStatement ps = conn.prepareStatement(sql.getSql());
 		Object[] params = sql.getParams();
@@ -167,7 +167,7 @@ public class SQLBuilder {
 	public static PreparedStatement buildSelectBySql(Connection conn, SQL sql, int tableIndex) throws SQLException {
 		String s = SQLParser.addTableIndex(sql.getSql(), tableIndex);
 
-		debugSQL(s);
+		debugSQL(sql.toString());
 
 		PreparedStatement ps = conn.prepareStatement(s);
 		Object[] params = sql.getParams();
