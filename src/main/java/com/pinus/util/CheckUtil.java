@@ -163,14 +163,17 @@ public class CheckUtil {
 		if (entity == null) {
 			throw new IllegalArgumentException("参数错误, entity=" + entity);
 		}
+
 		Class<?> clazz = entity.getClass();
 		Table table = clazz.getAnnotation(Table.class);
 		if (table == null) {
 			throw new IllegalArgumentException("参数错误, 实体对象需要使用@Table注解, class=" + clazz);
 		}
+
 		String clusterName = table.cluster();
 		String shardingField = table.shardingBy();
 		int shardingNum = table.shardingNum();
+
 		if (StringUtils.isBlank(clusterName) || StringUtils.isBlank(shardingField) || shardingNum <= 0) {
 			throw new IllegalArgumentException("被保存的对象不是ShardingEntity, class=" + clazz);
 		}

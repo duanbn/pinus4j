@@ -3,7 +3,7 @@
 2.在IQuery中添加对某些field的查询.
 3.完善根据sql语句进行查询, 支持同一分片数据的多表查询(TODO)
   3.1.此类查询无法使用缓存.
-4.支持同一个分片库的事务操作(TODO)
+4.基于Best Efforts 1PC模式实现一阶段事务(TODO)
 
 --Version 0.6.4
 1.每个数据实体的分片信息在进程启动时写入zookeeper中(Done)

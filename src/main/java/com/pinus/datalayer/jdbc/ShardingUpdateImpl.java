@@ -344,6 +344,13 @@ public class ShardingUpdateImpl implements IShardingUpdate {
 		_saveBatch(conn, entities, -1);
 	}
 
+    /**
+     * 执行保存数据操作.
+     *
+     * @param conn 数据库连接
+     * @param entities 需要被保存的数据 
+     * @param tableIndex 分片表下标. 当-1时忽略下标
+     */
 	private void _saveBatch(Connection conn, List<? extends Object> entities, int tableIndex) {
 		Statement st = null;
 		try {
