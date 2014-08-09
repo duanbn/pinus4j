@@ -22,16 +22,6 @@ public class ShardingKey<T> implements IShardingKey<T> {
 	 * 
 	 * @param clusterName
 	 *            数据库集群名
-	 */
-	public ShardingKey(String clusterName) {
-		this(clusterName, null);
-	}
-
-	/**
-	 * 构造方法.
-	 * 
-	 * @param clusterName
-	 *            数据库集群名
 	 * @param value
 	 *            分库分表因子值
 	 */
@@ -39,6 +29,14 @@ public class ShardingKey<T> implements IShardingKey<T> {
 		this.clusterName = clusterName;
 		this.value = value;
 	}
+
+    /**
+     * 构造方法
+     */
+    public static final ShardingKey valueOf(String clusterName, Object value) {
+        ShardingKey<?> sk = new ShardingKey(clusterName, value);
+        return sk;
+    }
 	
 	@Override
 	public String getClusterName() {
