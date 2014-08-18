@@ -15,11 +15,7 @@
   5.2.update()
   5.3.saveOrUpdate()
   5.4.remove()
-<<<<<<< HEAD
-
-=======
 6.在IQuery中添加对某些field的查询，此类查询先不走缓存(Done)
->>>>>>> master
 
 --Version 0.6.3
 1.去除了ISharingEntity和IGlobalEntity接口，改为使用注解代替
