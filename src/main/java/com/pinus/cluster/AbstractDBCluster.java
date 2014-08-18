@@ -387,18 +387,15 @@ public abstract class AbstractDBCluster implements IDBCluster {
 		return db;
 	}
 
-	@Override
-	public List<DB> getAllMasterShardingDB(Class<?> clazz) {
-		List<DB> dbs = new ArrayList<DB>();
+    @Override
+    public List<DB> getAllMasterShardingDB(int tableNum, String clusterName, String tableName) {
+        List<DB> dbs = new ArrayList<DB>();
 
-		int tableNum = ReflectUtil.getTableNum(clazz);
 		if (tableNum == 0) {
 			throw new IllegalStateException("table number is 0");
 		}
 
 		DB db = null;
-		String clusterName = ReflectUtil.getClusterName(clazz);
-		String tableName = ReflectUtil.getTableName(clazz);
 		DBClusterInfo dbClusterInfo = this.getDbClusterInfo(clusterName);
 		for (DBClusterRegionInfo region : dbClusterInfo.getDbRegions()) {
 			int dbIndex = 0;
@@ -420,6 +417,19 @@ public abstract class AbstractDBCluster implements IDBCluster {
 		}
 
 		return dbs;
+    }
+
+	@Override
+	public List<DB> getAllMasterShardingDB(Class<?> clazz) {
+        int tableNum = ReflectUtil.getTableNum(clazz);
+		if (tableNum == 0) {
+			throw new IllegalStateException("table number is 0");
+		}
+
+		String clusterName = ReflectUtil.getClusterName(clazz);
+		String tableName = ReflectUtil.getTableName(clazz);
+
+        return getAllMasterShardingDB(tableNum, clusterName, tableName);
 	}
 
 	@Override
