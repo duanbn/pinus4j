@@ -53,6 +53,21 @@ public class App {
 	 */
 	private List<DBTable> tables;
 
+    private DBTable _getDBTableByName(String tableName) throws CommandException {
+        // find sharding info
+        DBTable dbTable = null;
+        for (DBTable one : this.tables) {
+            if (one.getName().equals(tableName)) {
+                dbTable = one;
+                break;
+            }
+        }
+        if (dbTable == null) {
+            throw new CommandException("cann't find cluster info about table \"" + tableName + "\"");
+        }
+        return dbTable;
+    }
+
 	private DBTable _getDBTableBySql(String sql) throws CommandException {
 		try {
 			// parse table name from sql.
@@ -65,18 +80,7 @@ public class App {
 			}
 			String tableName = tableNames.get(0);
 
-			// find sharding info
-			DBTable dbTable = null;
-			for (DBTable one : this.tables) {
-				if (one.getName().equals(tableName)) {
-					dbTable = one;
-					break;
-				}
-			}
-			if (dbTable == null) {
-				throw new CommandException("cann't find cluster info about table \"" + tableName + "\"");
-			}
-			return dbTable;
+            return _getDBTableByName(tableName);
 		} catch (Exception e) {
 			throw new CommandException("syntax error: " + sql);
 		}
@@ -152,6 +156,48 @@ public class App {
 			throw new CommandException("syntax error: " + cmd);
 		}
 	}
+
+    private void _handleTotal(String cmd) throws CommandException {
+        String tableName = cmd.substring("total ".length() - 1).trim();
+        DBTable dbTable = _getDBTableByName(tableName);
+
+        int tableNum = dbTable.getShardingNum();
+        String clusterName = dbTable.getCluster();
+        List<DB> dbs = this.dbCluster.getAllMasterShardingDB(tableNum, clusterName, tableName);
+
+        long totalCount = 0;
+        for (DB db : dbs) {
+            DataSource ds = db.getDatasource();
+            Connection conn = null;
+            PreparedStatement ps = null;
+            ResultSet rs = null;
+            try {
+                conn = ds.getConnection();
+                ps = conn.prepareStatement("select count(*) from " + db.getTableName() + db.getTableIndex());
+                rs = ps.executeQuery();
+                if (rs.next()) {
+                    totalCount += rs.getLong(1);
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            } finally {
+                try {
+                    if (rs != null) {
+                        rs.close();
+                    }
+                    if (ps != null) {
+                        ps.close();
+                    }
+                    if (conn != null) {
+                        conn.close();
+                    }
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        System.out.println("total count " + totalCount);
+    }
 
 	/**
 	 * handle select sql.
@@ -261,6 +307,7 @@ public class App {
 	public void _handleHelp() {
 		StringBuilder helpInfo = new StringBuilder();
 		helpInfo.append("show       - 显示数据表及每个表的分片信息\n");
+        helpInfo.append("total      - 显示总数\n");
 		helpInfo.append("select语法 - 分片表 stand sql + sharding by ${value}; e.g: select * from tablename where field=value sharding by 50|\"50\"\n");
 		helpInfo.append("             全局表 stand sql\n");
 		helpInfo.append("help       - 显示帮助信息\n");
@@ -305,11 +352,13 @@ public class App {
 					_handleUpdate(cmd);
 				} else if (cmd.toLowerCase().startsWith("delete")) {
 					_handleDelete(cmd);
-				} else if (cmd.toLowerCase().equals("show")) {
+				} else if (cmd.toLowerCase().startsWith("total")) {
+                    _handleTotal(cmd);
+                } else if (cmd.toLowerCase().equals("show")) {
 					_handleShow();
 				} else if (cmd.trim().equals("help")) {
 					_handleHelp();
-				} else if (cmd.trim().equals("")) {
+                } else if (cmd.trim().equals("")) {
 				} else {
 					System.out.println("unknow command:\"" + cmd + "\", now support select, update, delete ");
 				}
