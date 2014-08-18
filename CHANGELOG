@@ -1,6 +1,6 @@
 --Version 0.6.4
 1.每个数据实体的分片信息在进程启动时写入zookeeper中(Done)
-2.开发pinus-cli工具方便对数据库的查询(Doing)
+2.开发pinus-cli工具方便对数据库的查询(Done)
 3.调整项目的目录结构添加contrib目录(Done)
 4.代码重构，DBCluster支持加载指定路径的配置文件 (Done)
 5.添加FashionEntity对象, 继承此对象的Entity具备写入数据库的能力(Done)
@@ -8,7 +8,7 @@
   5.2.update()
   5.3.saveOrUpdate()
   5.4.remove()
-6.在IQuery中添加对某些field的查询，此类查询先不走缓存(TODO)
+6.在IQuery中添加对某些field的查询，此类查询先不走缓存(Done)
 
 --Version 0.6.3
 1.去除了ISharingEntity和IGlobalEntity接口，改为使用注解代替
