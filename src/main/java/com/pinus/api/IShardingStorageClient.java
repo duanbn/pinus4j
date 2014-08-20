@@ -465,12 +465,10 @@ public interface IShardingStorageClient {
 	 * @throws IllegalArgumentException
 	 *             输入参数错误
 	 */
-	public <T> List<T> findByShardingPair(List<? extends Number> pks, List<IShardingKey<?>> shardingKeys,
-			Class<T> clazz);
+	public <T> List<T> findByShardingPair(List<? extends Number> pks, List<IShardingKey<?>> shardingKeys, Class<T> clazz);
 
 	/**
-	 * 一个主分库分表, 根据条件查询.当查询不到数据时返回空的List，不会返回null.
-     * 需要注意的是，sql语句中操作的表必须在指定的分片中存在.
+	 * 一个主分库分表, 根据条件查询.当查询不到数据时返回空的List，不会返回null. 需要注意的是，sql语句中操作的表必须在指定的分片中存在.
 	 * 
 	 * @param sql
 	 *            查询语句
@@ -512,6 +510,17 @@ public interface IShardingStorageClient {
 	 * @return
 	 */
 	public Lock createLock(String lockName);
+
+	/**
+	 * 创建一个分布式锁.
+	 * 
+	 * @param lockName
+	 *            锁名称
+	 * @param isProcessLock
+	 *            是否开线程锁
+	 * @return 分布式锁
+	 */
+	public Lock createLock(String lockName, boolean isOpenThreadLock);
 
 	/**
 	 * 获取某个实体对象的所有分库分表引用.

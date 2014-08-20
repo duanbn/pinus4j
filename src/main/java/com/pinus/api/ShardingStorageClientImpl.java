@@ -511,7 +511,11 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 
 	@Override
 	public Lock createLock(String lockName) {
-		return new DistributedLock(lockName, true, this.dbCluster.getClusterConfig());
+		return createLock(lockName, true);
+	}
+
+	public Lock createLock(String lockName, boolean isOpenThreadLock) {
+		return new DistributedLock(lockName, isOpenThreadLock, this.dbCluster.getClusterConfig());
 	}
 
 	@Override

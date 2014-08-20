@@ -169,12 +169,16 @@ public class DistributedLock implements Lock {
 				LOG.debug("unlock " + myZnode);
 			zk.delete(myZnode, -1);
 			myZnode = null;
-			zk.close();
 		} catch (InterruptedException e) {
 			LOG.error(e);
 		} catch (KeeperException e) {
 			LOG.error(e);
 		} finally {
+			try {
+				zk.close();
+			} catch (InterruptedException e) {
+				LOG.error(e);
+			}
 			if (isThreadLock)
 				threadLock.unlock();
 		}
