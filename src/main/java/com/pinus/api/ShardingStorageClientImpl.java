@@ -63,6 +63,11 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 	public static final Logger LOG = Logger.getLogger(ShardingStorageClientImpl.class);
 
 	/**
+	 * reference it self;
+	 */
+	public static IShardingStorageClient instance;
+
+	/**
 	 * 运行模式. 默认是单机模式.
 	 */
 	private EnumMode mode = EnumMode.STANDALONE;
@@ -172,9 +177,8 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 		this.slaveQueryer.setDBCluster(this.dbCluster);
 		this.slaveQueryer.setPrimaryCache(this.primaryCache);
 
-		// set instance to threadlocal.
 		// FashionEntity dependency this.
-		storageClientHolder.set(this);
+		instance = this;
 	}
 
 	@Override
@@ -324,6 +328,15 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 
 		return this.masterQueryer.getGlobalCountFromMaster(clusterName, clazz);
 	}
+
+    @Override
+    public Number getGlobalCount(IQuery query, String clusterName, Class<?> clazz) {
+        CheckUtil.checkQuery(query);
+        CheckUtil.checkClusterName(clusterName);
+		CheckUtil.checkClass(clazz);
+
+        return this.masterQueryer.getGlobalCountFromMaster(query, clusterName, clazz);
+    }
 
 	@Override
 	public <T> T findGlobalByPk(Number pk, String clusterName, Class<T> clazz) {
@@ -607,9 +620,6 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 
 		// close id generator
 		this.idGenerator.close();
-
-		// remove instance from threadlocal.
-		storageClientHolder.remove();
 	}
 
 	@Override

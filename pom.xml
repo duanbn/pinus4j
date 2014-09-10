@@ -4,10 +4,23 @@
 
 	<groupId>com.pinus</groupId>
 	<artifactId>pinus</artifactId>
-	<version>0.6.5</version>
+	<version>0.6.6-SNAPSHOT</version>
 	<packaging>jar</packaging>
 
 	<name>pinus</name>
+
+    <distributionManagement>
+        <repository>
+            <id>Releases</id>
+            <name>Internal Releases</name>
+            <url>http://192.168.1.137:8081/nexus/content/repositories/releases</url>
+        </repository>
+        <snapshotRepository>
+            <id>Snapshot</id>
+            <name>Internal Snapshot</name>
+            <url>http://192.168.1.137:8081/nexus/content/repositories/snapshots</url>
+        </snapshotRepository>
+    </distributionManagement>
 
 	<dependencies>
 		<dependency>
@@ -97,6 +110,7 @@
 					<charset>UTF-8</charset>
 					<encoding>UTF-8</encoding>
 					<docencoding>UTF-8</docencoding>
+                    <additionalparam>-Xdoclint:none</additionalparam>
 				</configuration>
 			</plugin>
 			<plugin>

@@ -180,15 +180,22 @@ public class SQLBuilder {
 	}
 
 	public static String buildSelectCountGlobalSql(Class<?> clazz) {
-		String tableName = ReflectUtil.getTableName(clazz, -1);
+        return buildSelectCountGlobalSql(clazz, null);
+	}
+
+    public static String buildSelectCountGlobalSql(Class<?> clazz, IQuery query) {
+        String tableName = ReflectUtil.getTableName(clazz, -1);
 		String pkName = ReflectUtil.getPkName(clazz);
 
 		StringBuilder SQL = new StringBuilder("SELECT count(" + pkName + ") ").append("FROM ");
 		SQL.append(tableName);
+        if (query != null) {
+            SQL.append(query.getWhereSql());
+        }
 		debugSQL(SQL.toString());
 
 		return SQL.toString();
-	}
+    }
 
 	/**
 	 * 拼装sql. SELECT count(*) FROM tableName

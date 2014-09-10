@@ -28,6 +28,8 @@ public interface IShardingMasterQuery {
 	 */
 	public Number getGlobalCountFromMaster(String clusterName, Class<?> clazz);
 
+    public Number getGlobalCountFromMaster(IQuery query, String clusterName, Class<?> clazz);
+
 	/**
 	 * 根据pk查询全局表中的数据. 查询不到则返回null
 	 * 

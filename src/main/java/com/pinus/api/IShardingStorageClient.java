@@ -24,11 +24,6 @@ import com.pinus.generator.IIdGenerator;
  */
 public interface IShardingStorageClient {
 
-	/**
-	 * 全局ShardingStorageClient的线程引用.
-	 */
-	public static final ThreadLocal<IShardingStorageClient> storageClientHolder = new ThreadLocal<IShardingStorageClient>();
-
 	// ////////////////////////////////////////////////////////
 	// update相关
 	// ////////////////////////////////////////////////////////
@@ -227,6 +222,17 @@ public interface IShardingStorageClient {
 	 * @return count数
 	 */
 	public Number getGlobalCount(String clusterName, Class<?> clazz);
+
+    /**
+     * 根据条件查询全局表的数量.
+     *
+     * @param query 查询条件
+     * @param clusterName 集群名
+     * @param clazz 实体对象.
+     *
+     * @return count数
+     */
+    public Number getGlobalCount(IQuery query, String clusterName, Class<?> clazz);
 
 	/**
 	 * 根据pk查询全局表中的数据. 查询不到则返回null

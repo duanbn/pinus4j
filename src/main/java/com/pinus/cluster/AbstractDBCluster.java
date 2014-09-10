@@ -1,12 +1,11 @@
 package com.pinus.cluster;
 
-import java.io.IOException;
 import java.sql.Connection;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Collection;
 
 import javax.sql.DataSource;
 
@@ -63,10 +62,10 @@ public abstract class AbstractDBCluster implements IDBCluster {
 	 */
 	private String scanPackage;
 
-    /**
-     * 数据分片信息是否从zookeeper中获取.
-     */
-    private boolean isShardInfoFromZk;
+	/**
+	 * 数据分片信息是否从zookeeper中获取.
+	 */
+	private boolean isShardInfoFromZk;
 
 	/**
 	 * 数据库类型.
@@ -113,10 +112,10 @@ public abstract class AbstractDBCluster implements IDBCluster {
 		this.enumDb = enumDb;
 	}
 
-    @Override
-    public Collection<DBClusterInfo> getDbClusterInfo() {
-        return this.dbClusterInfo.values();
-    }
+	@Override
+	public Collection<DBClusterInfo> getDbClusterInfo() {
+		return this.dbClusterInfo.values();
+	}
 
 	@Override
 	public DBClusterInfo getDbClusterInfo(String clusterName) {
@@ -182,19 +181,20 @@ public abstract class AbstractDBCluster implements IDBCluster {
 
 			// 初始化数据表集群信息.
 			List<DBTable> tables = null;
-            if (isShardInfoFromZk) {
-                // get table sharding info from zookeeper
+			if (isShardInfoFromZk) {
+				// get table sharding info from zookeeper
 				tables = getDBTableFromZk();
-            } else {
-                if (StringUtils.isBlank(scanPackage)) {
-                    throw new DBClusterException("get shardinfo from jvm, but i can't find scanpackage full path, did you forget setScanPackage ?");
-                }
+			} else {
+				if (StringUtils.isBlank(scanPackage)) {
+					throw new DBClusterException(
+							"get shardinfo from jvm, but i can't find scanpackage full path, did you forget setScanPackage ?");
+				}
 
-                // get table sharding info from jvm
-                tables = getDBTableFromJvm();
-                // 表分片信息写入zookeeper
-                _syncToZookeeper(tables);
-            }
+				// get table sharding info from jvm
+				tables = getDBTableFromJvm();
+				// 表分片信息写入zookeeper
+				_syncToZookeeper(tables);
+			}
 			if (tables.isEmpty()) {
 				throw new DBClusterException("找不到可以创建库表的实体对象, package=" + scanPackage);
 			}
@@ -387,9 +387,9 @@ public abstract class AbstractDBCluster implements IDBCluster {
 		return db;
 	}
 
-    @Override
-    public List<DB> getAllMasterShardingDB(int tableNum, String clusterName, String tableName) {
-        List<DB> dbs = new ArrayList<DB>();
+	@Override
+	public List<DB> getAllMasterShardingDB(int tableNum, String clusterName, String tableName) {
+		List<DB> dbs = new ArrayList<DB>();
 
 		if (tableNum == 0) {
 			throw new IllegalStateException("table number is 0");
@@ -417,11 +417,11 @@ public abstract class AbstractDBCluster implements IDBCluster {
 		}
 
 		return dbs;
-    }
+	}
 
 	@Override
 	public List<DB> getAllMasterShardingDB(Class<?> clazz) {
-        int tableNum = ReflectUtil.getTableNum(clazz);
+		int tableNum = ReflectUtil.getTableNum(clazz);
 		if (tableNum == 0) {
 			throw new IllegalStateException("table number is 0");
 		}
@@ -429,7 +429,7 @@ public abstract class AbstractDBCluster implements IDBCluster {
 		String clusterName = ReflectUtil.getClusterName(clazz);
 		String tableName = ReflectUtil.getTableName(clazz);
 
-        return getAllMasterShardingDB(tableNum, clusterName, tableName);
+		return getAllMasterShardingDB(tableNum, clusterName, tableName);
 	}
 
 	@Override
@@ -467,10 +467,10 @@ public abstract class AbstractDBCluster implements IDBCluster {
 		return dbs;
 	}
 
-    @Override
-    public void setShardInfoFromZk(boolean value) {
-        this.isShardInfoFromZk = value;
-    }
+	@Override
+	public void setShardInfoFromZk(boolean value) {
+		this.isShardInfoFromZk = value;
+	}
 
 	@Override
 	public List<DBTable> getDBTableFromZk() {
@@ -589,30 +589,28 @@ public abstract class AbstractDBCluster implements IDBCluster {
 				}
 
 			} else { // 当ShardingNumber等于0时表示全局表
-
-				for (Map.Entry<String, DBClusterInfo> entry : this.dbClusterInfo.entrySet()) {
-					// 全局主库
-					DBConnectionInfo dbConnInfo = entry.getValue().getMasterGlobalConnection();
-					if (dbConnInfo != null) {
-						DataSource globalDs = dbConnInfo.getDatasource();
-						if (globalDs != null) {
-							Connection conn = globalDs.getConnection();
-							this.dbGenerator.syncTable(conn, table);
-							conn.close();
-						}
-					}
-
-					// 全局从库
-					List<DBConnectionInfo> slaveDbs = entry.getValue().getSlaveGlobalConnection();
-					if (slaveDbs != null && !slaveDbs.isEmpty()) {
-						for (DBConnectionInfo slaveConnInfo : slaveDbs) {
-							Connection conn = slaveConnInfo.getDatasource().getConnection();
-							this.dbGenerator.syncTable(conn, table);
-							conn.close();
-						}
+				DBClusterInfo dbClusterInfo = this.dbClusterInfo.get(clusterName);
+				// 全局主库
+				DBConnectionInfo dbConnInfo = dbClusterInfo.getMasterGlobalConnection();
+				if (dbConnInfo != null) {
+					DataSource globalDs = dbConnInfo.getDatasource();
+					if (globalDs != null) {
+						Connection conn = globalDs.getConnection();
+						this.dbGenerator.syncTable(conn, table);
+						conn.close();
 					}
 				}
 
+				// 全局从库
+				List<DBConnectionInfo> slaveDbs = dbClusterInfo.getSlaveGlobalConnection();
+				if (slaveDbs != null && !slaveDbs.isEmpty()) {
+					for (DBConnectionInfo slaveConnInfo : slaveDbs) {
+						Connection conn = slaveConnInfo.getDatasource().getConnection();
+						this.dbGenerator.syncTable(conn, table);
+						conn.close();
+					}
+				}
+				
 			}
 
 		}
@@ -669,7 +667,10 @@ public abstract class AbstractDBCluster implements IDBCluster {
 
 			String clusterName = entry.getKey();
 
-			int dbNum = entry.getValue().getDbRegions().get(0).getMasterConnection().size();
+			int dbNum = 0;
+			List<DBClusterRegionInfo> regions = entry.getValue().getDbRegions();
+			if (!regions.isEmpty())
+				dbNum = regions.get(0).getMasterConnection().size();
 
 			for (int i = 0; i < dbNum; i++) {
 				tableNum = _loadTableCluster(clusterName, tables);

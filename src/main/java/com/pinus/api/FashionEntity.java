@@ -10,21 +10,12 @@ import com.pinus.util.ReflectUtil;
 public abstract class FashionEntity {
 
 	/**
-	 * sharding client ref.
-	 */
-	protected transient IShardingStorageClient storageClient;
-
-	public FashionEntity() {
-		// get sharding client ref from threadlocal.
-		storageClient = IShardingStorageClient.storageClientHolder.get();
-	}
-
-	/**
 	 * 保存
 	 */
 	public Number save() {
 		Number pk = null;
 
+		IShardingStorageClient storageClient = ShardingStorageClientImpl.instance;
 		if (ReflectUtil.isShardingEntity(this.getClass())) {
 			pk = storageClient.save(this);
 		} else {
@@ -38,6 +29,7 @@ public abstract class FashionEntity {
 	 * 更新
 	 */
 	public void update() {
+		IShardingStorageClient storageClient = ShardingStorageClientImpl.instance;
 		if (ReflectUtil.isShardingEntity(this.getClass())) {
 			storageClient.update(this);
 		} else {
@@ -58,6 +50,7 @@ public abstract class FashionEntity {
 
 		Class<?> clazz = this.getClass();
 		String clusterName = ReflectUtil.getClusterName(clazz);
+		IShardingStorageClient storageClient = ShardingStorageClientImpl.instance;
 		if (ReflectUtil.isShardingEntity(clazz)) {
 			Object shardingValue = ReflectUtil.getShardingValue(this);
 			IShardingKey<Object> sk = new ShardingKey<Object>(clusterName, shardingValue);
@@ -87,6 +80,7 @@ public abstract class FashionEntity {
 
 		Class<?> clazz = this.getClass();
 		String clusterName = ReflectUtil.getClusterName(clazz);
+		IShardingStorageClient storageClient = ShardingStorageClientImpl.instance;
 		if (ReflectUtil.isShardingEntity(this.getClass())) {
 			Object shardingValue = ReflectUtil.getShardingValue(this);
 			IShardingKey<Object> sk = new ShardingKey<Object>(clusterName, shardingValue);

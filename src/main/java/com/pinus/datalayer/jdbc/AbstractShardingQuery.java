@@ -76,6 +76,33 @@ public abstract class AbstractShardingQuery {
 		}
 	}
 
+	protected Number selectGlobalCount(IQuery query, DBConnectionInfo dbConnInfo, String clusterName, Class<?> clazz) {
+		long count = 0;
+		Connection conn = null;
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+		try {
+			conn = dbConnInfo.getDatasource().getConnection();
+			String sql = SQLBuilder.buildSelectCountGlobalSql(clazz, query);
+			ps = conn.prepareStatement(sql);
+			long begin = System.currentTimeMillis();
+			rs = ps.executeQuery();
+			long constTime = System.currentTimeMillis() - begin;
+			if (constTime > Const.SLOWQUERY_COUNT) {
+				SlowQueryLogger.write(conn, sql, constTime);
+			}
+
+			if (rs.next()) {
+				count = rs.getLong(1);
+			}
+		} catch (SQLException e) {
+			throw new DBOperationException(e);
+		} finally {
+			SQLBuilder.close(conn, ps, rs);
+		}
+		return count;
+	}
+
 	/**
 	 * 带缓存的获取全局表count
 	 * 
