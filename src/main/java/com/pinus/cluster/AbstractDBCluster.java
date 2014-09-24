@@ -590,6 +590,9 @@ public abstract class AbstractDBCluster implements IDBCluster {
 
 			} else { // 当ShardingNumber等于0时表示全局表
 				DBClusterInfo dbClusterInfo = this.dbClusterInfo.get(clusterName);
+				if (dbClusterInfo == null) {
+					throw new DBClusterException("加载集群失败，未知的集群，cluster name=" + clusterName);
+				}
 				// 全局主库
 				DBConnectionInfo dbConnInfo = dbClusterInfo.getMasterGlobalConnection();
 				if (dbConnInfo != null) {
@@ -610,7 +613,7 @@ public abstract class AbstractDBCluster implements IDBCluster {
 						conn.close();
 					}
 				}
-				
+
 			}
 
 		}

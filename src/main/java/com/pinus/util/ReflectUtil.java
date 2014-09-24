@@ -12,6 +12,7 @@ import com.pinus.api.annotation.DateTime;
 import com.pinus.api.annotation.PrimaryKey;
 import com.pinus.api.annotation.Table;
 import com.pinus.api.annotation.UpdateTime;
+import com.pinus.constant.Const;
 import com.pinus.exception.DBOperationException;
 
 /**
@@ -56,9 +57,9 @@ public class ReflectUtil {
 	 */
 	private static final Map<Class<?>, Integer> _tableNumCache = new ConcurrentHashMap<Class<?>, Integer>();
 
-    /**
-     * 数据实体是否是分片实体.
-     */
+	/**
+	 * 数据实体是否是分片实体.
+	 */
 	private static final Map<Class<?>, Boolean> _isShardingEntityCache = new ConcurrentHashMap<Class<?>, Boolean>();
 
 	/**
@@ -427,13 +428,19 @@ public class ReflectUtil {
 			}
 
 			value = f.get(obj);
+			Class<?> fTypeClazz = f.getType();
+
+			com.pinus.api.annotation.Field annoField = f.getAnnotation(com.pinus.api.annotation.Field.class);
+			if (fTypeClazz == String.class && annoField != null && annoField.length() > Const.COLUMN_TEXT_LENGTH
+					&& value == null) {
+				value = "";
+			}
 
 			// 过滤默认值
 			if (isFilteDefault) {
 				if (value == null) {
 					continue;
 				}
-				Class<?> fTypeClazz = f.getType();
 				if (fTypeClazz == Boolean.TYPE || fTypeClazz == Boolean.class) {
 					if (!(Boolean) value) {
 						continue;
@@ -508,26 +515,28 @@ public class ReflectUtil {
 		return fields;
 	}
 
-    /**
-     * 克隆一个对象，只保留给定的属性值.
-     *
-     * @param obj 被克隆的对象.
-     * @param fieldNames 需要被保留的属性名.
-     *
-     * @return 克隆对象.
-     */
-    public static Object cloneWithGivenField(Object obj, String... fieldNames) throws Exception {
-        if (fieldNames == null || fieldNames.length == 0) {
-            return obj;
-        }
+	/**
+	 * 克隆一个对象，只保留给定的属性值.
+	 *
+	 * @param obj
+	 *            被克隆的对象.
+	 * @param fieldNames
+	 *            需要被保留的属性名.
+	 *
+	 * @return 克隆对象.
+	 */
+	public static Object cloneWithGivenField(Object obj, String... fieldNames) throws Exception {
+		if (fieldNames == null || fieldNames.length == 0) {
+			return obj;
+		}
 
-        Object clone = obj.getClass().newInstance();
-        Object value = null;
-        for (String fieldName : fieldNames) {
-            value = getProperty(obj, fieldName);
-            setProperty(clone, fieldName, value);
-        }
-        return clone;
-    }
+		Object clone = obj.getClass().newInstance();
+		Object value = null;
+		for (String fieldName : fieldNames) {
+			value = getProperty(obj, fieldName);
+			setProperty(clone, fieldName, value);
+		}
+		return clone;
+	}
 
 }

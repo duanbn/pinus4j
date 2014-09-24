@@ -24,6 +24,7 @@ import com.pinus.cluster.beans.DBIndex;
 import com.pinus.cluster.beans.DBTable;
 import com.pinus.cluster.beans.DBTableColumn;
 import com.pinus.cluster.beans.DataTypeBind;
+import com.pinus.constant.Const;
 import com.pinus.util.ReflectUtil;
 import com.pinus.util.StringUtils;
 
@@ -138,9 +139,9 @@ public abstract class AbstractDBGenerator implements IDBGenerator {
 		}
 		table.setCluster(cluster);
 
-        // 获取分片字段
-        String shardingBy = annoTable.shardingBy();
-        table.setShardingBy(shardingBy);
+		// 获取分片字段
+		String shardingBy = annoTable.shardingBy();
+		table.setShardingBy(shardingBy);
 
 		// 获取分表数
 		int shardingNum = annoTable.shardingNum();
@@ -207,8 +208,9 @@ public abstract class AbstractDBGenerator implements IDBGenerator {
 				if (column.isHasDefault())
 					column.setDefaultValue(DataTypeBind.getEnum(f.getType()).getDefaultValue());
 
-				// 如果字符串长度超过1000则使用text类型
-				if (column.getType().equals(DataTypeBind.STRING.getDBType()) && column.getLength() > 4000) {
+				// 如果字符串长度超过4000则使用text类型
+				if (column.getType().equals(DataTypeBind.STRING.getDBType())
+						&& column.getLength() > Const.COLUMN_TEXT_LENGTH) {
 					column.setType(DataTypeBind.TEXT.getDBType());
 					column.setLength(0);
 					column.setDefaultValue(DataTypeBind.TEXT.getDefaultValue());

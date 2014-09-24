@@ -20,7 +20,12 @@ public class Const {
      * 每一个表的id当前id保存在此目录下相关文件.
      */
     public static final String ZK_PRIMARYKEY = "/primarykey";
-
+    
+    /**
+     * 字符串超过此值则转换为Text
+     */
+    public static final int COLUMN_TEXT_LENGTH = 4000;
+    
 	// SQL相关
 	/**
 	 * 查询count的慢日志时间阈值
