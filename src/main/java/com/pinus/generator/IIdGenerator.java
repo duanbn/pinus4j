@@ -1,7 +1,5 @@
 package com.pinus.generator;
 
-import com.pinus.cluster.IDBCluster;
-import com.pinus.config.IClusterConfig;
 import com.pinus.exception.DBOperationException;
 
 /**
@@ -31,7 +29,7 @@ public interface IIdGenerator {
 	 * @throws DBOperationException
 	 *             生成id失败
 	 */
-	public int genClusterUniqueIntId(IDBCluster dbCluster, String clusterName, String name);
+	public int genClusterUniqueIntId(String clusterName, String name);
 
 	/**
 	 * 生成全局唯一的long id. 对一个数据对象的集群全局唯一id.
@@ -48,7 +46,7 @@ public interface IIdGenerator {
 	 * @throws DBOperationException
 	 *             生成id失败
 	 */
-	public long genClusterUniqueLongId(IDBCluster dbCluster, String clusterName, String name);
+	public long genClusterUniqueLongId(String clusterName, String name);
 
 	/**
 	 * 批量生成全局唯一主键.
@@ -62,7 +60,7 @@ public interface IIdGenerator {
 	 * @param batchSize
 	 *            批量数
 	 */
-	public long[] genClusterUniqueLongIdBatch(IDBCluster dbCluster, String clusterName, String name, int batchSize);
+	public long[] genClusterUniqueLongIdBatch(String clusterName, String name, int batchSize);
 
 	/**
 	 * 批量生成全局唯一主键.
@@ -76,6 +74,6 @@ public interface IIdGenerator {
 	 * @param batchSize
 	 *            批量数
 	 */
-	public int[] genClusterUniqueIntIdBatch(IDBCluster dbCluster, String clusterName, String name, int batchSize);
+	public int[] genClusterUniqueIntIdBatch(String clusterName, String name, int batchSize);
 
 }

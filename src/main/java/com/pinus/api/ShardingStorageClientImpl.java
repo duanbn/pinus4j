@@ -499,22 +499,22 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 
 	@Override
 	public int genClusterUniqueIntId(String clusterName, String name) {
-		return this.idGenerator.genClusterUniqueIntId(this.dbCluster, clusterName, name);
+		return this.idGenerator.genClusterUniqueIntId(clusterName, name);
 	}
 
 	@Override
 	public long genClusterUniqueLongId(String clusterName, String name) {
-		return this.idGenerator.genClusterUniqueLongId(this.dbCluster, clusterName, name);
+		return this.idGenerator.genClusterUniqueLongId(clusterName, name);
 	}
 
 	@Override
 	public long[] genClusterUniqueLongIdBatch(String clusterName, String name, int batchSize) {
-		return this.idGenerator.genClusterUniqueLongIdBatch(this.dbCluster, clusterName, name, batchSize);
+		return this.idGenerator.genClusterUniqueLongIdBatch(clusterName, name, batchSize);
 	}
 
 	@Override
 	public int[] genClusterUniqueIntIdBatch(String clusterName, String name, int batchSize) {
-		return this.idGenerator.genClusterUniqueIntIdBatch(this.dbCluster, clusterName, name, batchSize);
+		return this.idGenerator.genClusterUniqueIntIdBatch(clusterName, name, batchSize);
 	}
 
 	@Override

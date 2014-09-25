@@ -12,7 +12,6 @@ import org.apache.zookeeper.ZooDefs;
 import org.apache.zookeeper.ZooKeeper;
 import org.apache.zookeeper.data.Stat;
 
-import com.pinus.cluster.IDBCluster;
 import com.pinus.config.IClusterConfig;
 import com.pinus.constant.Const;
 import com.pinus.exception.DBOperationException;
@@ -57,23 +56,23 @@ public abstract class AbstractSequenceIdGenerator implements IIdGenerator {
 		return clusterName + name;
 	}
 
-    @Override
-    public void close() {
-        try {
-            this.zk.close();
-        } catch (Exception e) {
-            LOG.warn("close zookeeper client failure");
-        }
-    }
+	@Override
+	public void close() {
+		try {
+			this.zk.close();
+		} catch (Exception e) {
+			LOG.warn("close zookeeper client failure");
+		}
+	}
 
 	@Override
-	public synchronized int genClusterUniqueIntId(IDBCluster dbCluster, String clusterName, String name) {
-		long id = _genId(dbCluster, clusterName, name);
+	public synchronized int genClusterUniqueIntId(String clusterName, String name) {
+		long id = _genId(clusterName, name);
 
 		if (id == 0) {
 			int retry = 5;
 			while (retry-- == 0) {
-				id = _genId(dbCluster, clusterName, name);
+				id = _genId(clusterName, name);
 				if (id > 0) {
 					break;
 				}
@@ -93,13 +92,13 @@ public abstract class AbstractSequenceIdGenerator implements IIdGenerator {
 	}
 
 	@Override
-	public synchronized long genClusterUniqueLongId(IDBCluster dbCluster, String clusterName, String name) {
-		long id = _genId(dbCluster, clusterName, name);
+	public synchronized long genClusterUniqueLongId(String clusterName, String name) {
+		long id = _genId(clusterName, name);
 
 		if (id == 0) {
 			int retry = 5;
 			while (retry-- == 0) {
-				id = _genId(dbCluster, clusterName, name);
+				id = _genId(clusterName, name);
 				if (id > 0) {
 					break;
 				}
@@ -118,14 +117,14 @@ public abstract class AbstractSequenceIdGenerator implements IIdGenerator {
 		return id;
 	}
 
-	private long _genId(IDBCluster dbCluster, String clusterName, String name) {
+	private long _genId(String clusterName, String name) {
 		Queue<Long> buffer = longIdBuffer.get(getBufferKey(clusterName, name));
 		if (buffer != null && !buffer.isEmpty()) {
 			long id = buffer.poll();
 			return id;
 		} else if (buffer == null || buffer.isEmpty()) {
 			buffer = new ConcurrentLinkedQueue<Long>();
-			long[] newIds = genClusterUniqueLongIdBatch(dbCluster, clusterName, name, BUFFER_SIZE);
+			long[] newIds = genClusterUniqueLongIdBatch(clusterName, name, BUFFER_SIZE);
 			for (long newId : newIds) {
 				buffer.offer(newId);
 			}
@@ -141,8 +140,8 @@ public abstract class AbstractSequenceIdGenerator implements IIdGenerator {
 	}
 
 	@Override
-	public int[] genClusterUniqueIntIdBatch(IDBCluster dbCluster, String clusterName, String name, int batchSize) {
-		long[] longIds = genClusterUniqueLongIdBatch(dbCluster, clusterName, name, batchSize);
+	public int[] genClusterUniqueIntIdBatch(String clusterName, String name, int batchSize) {
+		long[] longIds = genClusterUniqueLongIdBatch(clusterName, name, batchSize);
 		int[] intIds = new int[longIds.length];
 		for (int i = 0; i < longIds.length; i++) {
 			intIds[i] = new Long(longIds[i]).intValue();
@@ -151,12 +150,12 @@ public abstract class AbstractSequenceIdGenerator implements IIdGenerator {
 	}
 
 	@Override
-	public long[] genClusterUniqueLongIdBatch(IDBCluster dbCluster, String clusterName, String name, int batchSize) {
-		long[] longIds = _genClusterUniqueLongIdBatch(dbCluster, clusterName, name, batchSize);
+	public long[] genClusterUniqueLongIdBatch(String clusterName, String name, int batchSize) {
+		long[] longIds = _genClusterUniqueLongIdBatch(clusterName, name, batchSize);
 		return longIds;
 	}
 
-	public long[] _genClusterUniqueLongIdBatch(IDBCluster dbCluster, String clusterName, String name, int batchSize) {
+	private long[] _genClusterUniqueLongIdBatch(String clusterName, String name, int batchSize) {
 		if (batchSize <= 0) {
 			throw new IllegalArgumentException("参数错误, batchSize不能小于0");
 		}

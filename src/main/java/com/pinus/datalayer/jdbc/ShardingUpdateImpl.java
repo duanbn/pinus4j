@@ -66,7 +66,7 @@ public class ShardingUpdateImpl implements IShardingUpdate {
 		String tableName = ReflectUtil.getTableName(clazz);
 
 		// 生成主键
-		int[] newPks = this.idGenerator.genClusterUniqueIntIdBatch(dbCluster, clusterName, tableName, entities.size());
+		int[] newPks = this.idGenerator.genClusterUniqueIntIdBatch(clusterName, tableName, entities.size());
 
 		Number[] pks = new Number[newPks.length];
 		for (int i = 0; i < entities.size(); i++) {
@@ -165,7 +165,7 @@ public class ShardingUpdateImpl implements IShardingUpdate {
 		String tableName = ReflectUtil.getTableName(entity.getClass());
 
         // set primary key.
-		long pk = this.idGenerator.genClusterUniqueLongId(dbCluster, shardingKey.getClusterName(), tableName);
+		long pk = this.idGenerator.genClusterUniqueLongId(shardingKey.getClusterName(), tableName);
 		try {
 			ReflectUtil.setPkValue(entity, pk);
 		} catch (Exception e) {
@@ -219,7 +219,7 @@ public class ShardingUpdateImpl implements IShardingUpdate {
 		DB db = _getDbFromMaster(tableName, shardingKey);
 
 		// 生成主键
-		int[] newPks = this.idGenerator.genClusterUniqueIntIdBatch(dbCluster, db.getClusterName(), tableName,
+		int[] newPks = this.idGenerator.genClusterUniqueIntIdBatch(db.getClusterName(), tableName,
 				entities.size());
 
 		Number[] pks = new Number[newPks.length];
