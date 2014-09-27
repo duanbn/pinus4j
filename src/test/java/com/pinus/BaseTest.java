@@ -25,7 +25,7 @@ public class BaseTest {
 
 	protected Random r = new Random();
 
-	public static final String CLUSTER_KLSTORAGE = "klstorage";
+	public static final String CLUSTER_KLSTORAGE = "pinus";
 
 	protected static IShardingStorageClient cacheClient = new ShardingStorageClientImpl();
 

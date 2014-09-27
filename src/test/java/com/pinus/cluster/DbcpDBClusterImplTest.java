@@ -18,7 +18,7 @@ import com.pinus.entity.TestEntity;
 
 public class DbcpDBClusterImplTest {
 
-	public static final String CLUSTER_KLSTORAGE = "klstorage";
+	public static final String CLUSTER_KLSTORAGE = "pinus";
 
 	private IDBCluster dbCluster;
 

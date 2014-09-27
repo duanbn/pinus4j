@@ -6,7 +6,7 @@ import java.util.Map;
 import com.pinus.cluster.DB;
 
 /**
- * 主缓存接口. 为考拉存储提供一级缓存, 一级缓存使用memcached作为存储主要是对数据库表中的数据进行缓存查询进行缓存.
+ * 主缓存接口. 为Pinus存储提供一级缓存, 一级缓存使用memcached作为存储主要是对数据库表中的数据进行缓存查询进行缓存.
  * 一级缓存的key格式：[clusterName + dbIndex].[tableName + tableIndex].id, value是数据库记录.
  * 
  * @author duanbn

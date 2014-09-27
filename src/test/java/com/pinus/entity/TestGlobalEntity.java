@@ -13,7 +13,7 @@ import com.pinus.api.annotation.PrimaryKey;
 import com.pinus.api.annotation.Table;
 import com.pinus.api.annotation.UpdateTime;
 
-@Table(cluster = "klstorage", cache = true)
+@Table(cluster = "pinus", cache = true)
 @Indexes({ @Index(field = "testInt", isUnique = true) })
 public class TestGlobalEntity extends FashionEntity implements Serializable {
 

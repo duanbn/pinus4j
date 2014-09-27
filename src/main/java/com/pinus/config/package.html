@@ -1,39 +1,5 @@
 <html>
     <body>
-        考拉存储配置信息接口.
-        默认会读取classpath根路径中的storage-config.properties文件.此文件的格式如下,并以"klstorage集群为例"<br/>
-        # 表示集群的名称，和不带下标的数据库名保持一致.<br/>
-        db.cluster.name=klstorage<br/>
-        # 表示集群中数据库的数量<br/>
-        db.cluster.klstorage.size=4<br/>
-        # 表示从库集群的数量，一个从库集群中包含和主库相同数量的数据库.<br/>
-        db.slave.klstorage.size=1<br/>
-        # 主库连接配置, 表示一个数据库连接, 第四列的值需要和{db.cluster.name}的值一致并加上下标，下标从0开始, 数据库连接配置的数量需要和db.cluster.{db.cluster.name}.size的值一致<br/>
-        db.master.mysql.klstorage0.username=<br/>
-        db.master.mysql.klstorage0.password=<br/>
-        db.master.mysql.klstorage0.url=<br/>
-        db.master.mysql.klstorage1.username=<br/>
-        db.master.mysql.klstorage1.password=<br/>
-        db.master.mysql.klstorage1.url=<br/>
-        db.master.mysql.klstorage2.username=<br/>
-        db.master.mysql.klstorage2.password=<br/>
-        db.master.mysql.klstorage2.url=<br/>
-        db.master.mysql.klstorage3.username=<br/>
-        db.master.mysql.klstorage3.password=<br/>
-        db.master.mysql.klstorage3.url=<br/>
-        # 从库连接配置, 和主库规范一样，但是主库配置的master需要替换为slave{index}，{index}表示从库集群的下标<br/>
-        db.slave0.mysql.klstorage0.username=<br/>
-        db.slave0.mysql.klstorage0.password=<br/>
-        db.slave0.mysql.klstorage0.url=<br/>
-        db.slave0.mysql.klstorage1.username=<br/>
-        db.slave0.mysql.klstorage1.password=<br/>
-        db.slave0.mysql.klstorage1.url=<br/>
-        db.slave0.mysql.klstorage2.username=<br/>
-        db.slave0.mysql.klstorage2.password=<br/>
-        db.slave0.mysql.klstorage2.url=<br/>
-        db.slave0.mysql.klstorage3.username=<br/>
-        db.slave0.mysql.klstorage3.password=<br/>
-        db.slave0.mysql.klstorage3.url=<br/>
-        ....
+        Pinus存储配置信息接口.
     </body>
 </html>

@@ -1,7 +1,7 @@
 package com.pinus.api.enums;
 
 /**
- * 考拉存储中间件支持的数据库类型.
+ * Pinus存储中间件支持的数据库类型.
  *
  * @author duanbn
  */

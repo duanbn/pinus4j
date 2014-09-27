@@ -13,7 +13,7 @@ import com.pinus.cluster.DB;
 import com.pinus.util.ReflectUtil;
 
 /**
- * memcached缓存实现. 考拉存储主缓存的实现. 缓存中的数据不设置过期时间，考拉存储负责缓存与数据库之间的数据一致性.
+ * memcached缓存实现. Pinus存储主缓存的实现. 缓存中的数据不设置过期时间，Pinus存储负责缓存与数据库之间的数据一致性.
  * 
  * @author duanbn
  */

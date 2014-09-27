@@ -45,7 +45,7 @@ public class LoadTest extends BaseTest {
 
 		while (true) {
 			Thread.sleep(1000);
-			if (count == 10000) {
+			if (count == 200) {
 				break;
 			}
 		}

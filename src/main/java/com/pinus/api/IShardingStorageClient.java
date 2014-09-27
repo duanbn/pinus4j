@@ -18,7 +18,7 @@ import com.pinus.exception.DBOperationException;
 import com.pinus.generator.IIdGenerator;
 
 /**
- * 考拉存储中间件用户调用接口. 所有分布式存储的操作都有此接口提供.
+ * Pinus存储中间件用户调用接口. 所有分布式存储的操作都有此接口提供.
  * 
  * @author duanbn
  */

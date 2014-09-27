@@ -14,7 +14,7 @@ import com.pinus.api.annotation.PrimaryKey;
 import com.pinus.api.annotation.Table;
 import com.pinus.api.annotation.UpdateTime;
 
-@Table(name = "test_entity", cluster = "klstorage", shardingBy = "id", shardingNum = 25, cache = true)
+@Table(name = "test_entity", cluster = "pinus", shardingBy = "id", shardingNum = 25, cache = true)
 public class TestEntity extends FashionEntity implements Serializable {
 
 	private static final long serialVersionUID = 1L;

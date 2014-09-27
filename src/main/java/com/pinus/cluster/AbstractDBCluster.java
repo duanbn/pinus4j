@@ -499,11 +499,17 @@ public abstract class AbstractDBCluster implements IDBCluster {
 
 	@Override
 	public List<DBTable> getDBTableFromJvm() {
+        // load entity object from mulitple package path.
+        List<DBTable> tables = new ArrayList<DBTable>();
+
 		try {
-			return this.dbGenerator.scanEntity(this.scanPackage);
+            for (String pkgPath : this.scanPackage.split(","))
+                tables.addAll(this.dbGenerator.scanEntity(pkgPath));
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
+
+        return tables;
 	}
 
 	/**
