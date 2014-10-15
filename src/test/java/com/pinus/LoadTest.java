@@ -3,8 +3,6 @@ package com.pinus;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.locks.Lock;
 
-import org.junit.Test;
-
 import com.pinus.api.IShardingKey;
 import com.pinus.api.IShardingStorageClient;
 import com.pinus.api.ShardingKey;
@@ -36,11 +34,12 @@ public class LoadTest extends BaseTest {
 		cdl.await();
 	}
 
-	@Test
+	// @Test
 	public void testDisLock() throws Exception {
 		for (int j = 0; j < 100; j++) {
 			Counter c = new Counter(this.cacheClient);
 			c.start();
+			Thread.sleep(100);
 		}
 
 		while (true) {

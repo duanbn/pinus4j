@@ -522,11 +522,13 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 		return idGenerator;
 	}
 
+	@Deprecated
 	@Override
 	public Lock createLock(String lockName) {
 		return createLock(lockName, true);
 	}
 
+	@Deprecated
 	public Lock createLock(String lockName, boolean isOpenThreadLock) {
 		return new DistributedLock(lockName, isOpenThreadLock, this.dbCluster.getClusterConfig());
 	}

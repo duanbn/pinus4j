@@ -2,6 +2,7 @@ package com.pinus.api.query;
 
 import java.lang.reflect.Array;
 
+import com.pinus.datalayer.SQLBuilder;
 import com.pinus.util.StringUtils;
 
 /**
@@ -61,7 +62,7 @@ public class Condition {
 		}
 
 		this.field = field;
-		this.value = value;
+		this.value = SQLBuilder.formatValue(value);
 		this.opt = opt;
 	}
 

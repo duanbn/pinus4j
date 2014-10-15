@@ -3,6 +3,8 @@ package com.pinus.cluster;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 
 import junit.framework.Assert;
 
@@ -31,22 +33,14 @@ public class DbcpDBClusterImplTest {
 	@Test
 	public void testGetDBTable() {
 		List<DBTable> tablesFromZk = this.dbCluster.getDBTableFromZk();
-		Collections.sort(tablesFromZk, new Comparator<DBTable>() {
-			@Override
-			public int compare(DBTable arg0, DBTable arg1) {
-				return arg0.getName().compareTo(arg1.getName());
-			}
-		});
+        Map<String, DBTable> zkDbTableMap = new HashMap<String, DBTable>();
+        for (DBTable dbTable : tablesFromZk) {
+            zkDbTableMap.put(dbTable.getName(), dbTable);
+        }
 		List<DBTable> tablesFromJvm = this.dbCluster.getDBTableFromJvm();
-		Collections.sort(tablesFromJvm, new Comparator<DBTable>() {
-			@Override
-			public int compare(DBTable arg0, DBTable arg1) {
-				return arg0.getName().compareTo(arg1.getName());
-			}
-		});
-		for (int i = 0; i < tablesFromZk.size(); i++) {
-			Assert.assertEquals(tablesFromZk.get(i), tablesFromJvm.get(i));
-		}
+        for (DBTable dbTable : tablesFromJvm) {
+            Assert.assertEquals(zkDbTableMap.get(dbTable.getName()), dbTable);
+        }
 	}
 
 	@Test

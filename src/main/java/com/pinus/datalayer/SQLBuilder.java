@@ -564,7 +564,8 @@ public class SQLBuilder {
 		Object format = null;
 
 		if (value instanceof String) {
-			format = "'" + (String) value + "'";
+            String content = (String) value;
+			format = "'" + content.replaceAll("'", "''") + "'";
 		} else if (value instanceof Character) {
 			if (((int) (Character) value) == 39) {
 				format = "'\\" + (Character) value + "'";

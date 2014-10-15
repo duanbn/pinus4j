@@ -24,27 +24,43 @@ public class TestEntity extends FashionEntity implements Serializable {
 
 	@Field(comment = "测试byte类型的字段")
 	private byte testByte;
+    @Field
+    private Byte oTestByte;
 
 	@Field
 	private boolean testBool;
+    @Field
+    private Boolean oTestBool;
 
 	@Field
 	private char testChar;
+    @Field
+    private Character oTestChar;
 
 	@Field
 	private short testShort;
+    @Field
+    private Short oTestShort;
 
 	@Field
 	private int testInt;
+    @Field
+    private Integer oTestInt;
 
 	@Field
 	private long testLong;
+    @Field
+    private Long oTestLong;
 
 	@Field
 	private float testFloat;
+    @Field
+    private Float oTestFloat;
 
 	@Field
 	private double testDouble;
+    @Field
+    private Double oTestDouble;
 
 	@Field
 	private String testString;
@@ -90,92 +106,156 @@ public class TestEntity extends FashionEntity implements Serializable {
 		this.id = id;
 	}
 
+	
 	public byte getTestByte() {
-		return testByte;
+	    return testByte;
 	}
-
+	
 	public void setTestByte(byte testByte) {
-		this.testByte = testByte;
+	    this.testByte = testByte;
 	}
-
-	public boolean isTestBool() {
-		return testBool;
+    
+    public Byte getOTestByte() {
+        return oTestByte;
+    }
+    
+    public void setOTestByte(Byte oTestByte) {
+        this.oTestByte = oTestByte;
+    }
+	
+	public boolean getTestBool() {
+	    return testBool;
 	}
-
+	
 	public void setTestBool(boolean testBool) {
-		this.testBool = testBool;
+	    this.testBool = testBool;
 	}
-
+    
+    public Boolean getOTestBool() {
+        return oTestBool;
+    }
+    
+    public void setOTestBool(Boolean oTestBool) {
+        this.oTestBool = oTestBool;
+    }
+	
 	public char getTestChar() {
-		return testChar;
+	    return testChar;
 	}
-
+	
 	public void setTestChar(char testChar) {
-		this.testChar = testChar;
+	    this.testChar = testChar;
 	}
-
+    
+    public Character getOTestChar() {
+        return oTestChar;
+    }
+    
+    public void setOTestChar(Character oTestChar) {
+        this.oTestChar = oTestChar;
+    }
+	
 	public short getTestShort() {
-		return testShort;
+	    return testShort;
 	}
-
+	
 	public void setTestShort(short testShort) {
-		this.testShort = testShort;
+	    this.testShort = testShort;
 	}
-
+    
+    public Short getOTestShort() {
+        return oTestShort;
+    }
+    
+    public void setOTestShort(Short oTestShort) {
+        this.oTestShort = oTestShort;
+    }
+	
 	public int getTestInt() {
-		return testInt;
+	    return testInt;
 	}
-
+	
 	public void setTestInt(int testInt) {
-		this.testInt = testInt;
+	    this.testInt = testInt;
 	}
-
+    
+    public Integer getOTestInt() {
+        return oTestInt;
+    }
+    
+    public void setOTestInt(Integer oTestInt) {
+        this.oTestInt = oTestInt;
+    }
+	
 	public long getTestLong() {
-		return testLong;
+	    return testLong;
 	}
-
+	
 	public void setTestLong(long testLong) {
-		this.testLong = testLong;
+	    this.testLong = testLong;
 	}
-
+    
+    public Long getOTestLong() {
+        return oTestLong;
+    }
+    
+    public void setOTestLong(Long oTestLong) {
+        this.oTestLong = oTestLong;
+    }
+	
 	public float getTestFloat() {
-		return testFloat;
+	    return testFloat;
 	}
-
+	
 	public void setTestFloat(float testFloat) {
-		this.testFloat = testFloat;
+	    this.testFloat = testFloat;
 	}
-
+    
+    public Float getOTestFloat() {
+        return oTestFloat;
+    }
+    
+    public void setOTestFloat(Float oTestFloat) {
+        this.oTestFloat = oTestFloat;
+    }
+	
 	public double getTestDouble() {
-		return testDouble;
+	    return testDouble;
 	}
-
+	
 	public void setTestDouble(double testDouble) {
-		this.testDouble = testDouble;
+	    this.testDouble = testDouble;
 	}
-
+    
+    public Double getOTestDouble() {
+        return oTestDouble;
+    }
+    
+    public void setOTestDouble(Double oTestDouble) {
+        this.oTestDouble = oTestDouble;
+    }
+	
 	public String getTestString() {
-		return testString;
+	    return testString;
 	}
-
+	
 	public void setTestString(String testString) {
-		this.testString = testString;
+	    this.testString = testString;
 	}
-
+	
 	public Date getTestDate() {
-		return testDate;
+	    return testDate;
 	}
-
+	
 	public void setTestDate(Date testDate) {
-		this.testDate = testDate;
+	    this.testDate = testDate;
 	}
-
+	
 	public Timestamp getTestTime() {
-		return testTime;
+	    return testTime;
 	}
-
+	
 	public void setTestTime(Timestamp testTime) {
-		this.testTime = testTime;
+	    this.testTime = testTime;
 	}
-
 }

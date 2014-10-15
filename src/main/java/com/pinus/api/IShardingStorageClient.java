@@ -223,16 +223,19 @@ public interface IShardingStorageClient {
 	 */
 	public Number getGlobalCount(String clusterName, Class<?> clazz);
 
-    /**
-     * 根据条件查询全局表的数量.
-     *
-     * @param query 查询条件
-     * @param clusterName 集群名
-     * @param clazz 实体对象.
-     *
-     * @return count数
-     */
-    public Number getGlobalCount(IQuery query, String clusterName, Class<?> clazz);
+	/**
+	 * 根据条件查询全局表的数量.
+	 *
+	 * @param query
+	 *            查询条件
+	 * @param clusterName
+	 *            集群名
+	 * @param clazz
+	 *            实体对象.
+	 *
+	 * @return count数
+	 */
+	public Number getGlobalCount(IQuery query, String clusterName, Class<?> clazz);
 
 	/**
 	 * 根据pk查询全局表中的数据. 查询不到则返回null
@@ -515,6 +518,7 @@ public interface IShardingStorageClient {
 	 *            锁名称
 	 * @return
 	 */
+	@Deprecated
 	public Lock createLock(String lockName);
 
 	/**
@@ -526,6 +530,7 @@ public interface IShardingStorageClient {
 	 *            是否开线程锁
 	 * @return 分布式锁
 	 */
+	@Deprecated
 	public Lock createLock(String lockName, boolean isOpenThreadLock);
 
 	/**

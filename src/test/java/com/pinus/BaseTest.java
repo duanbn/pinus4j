@@ -66,14 +66,22 @@ public class BaseTest {
 	public TestEntity createEntity() {
 		TestEntity testEntity = new TestEntity();
 		testEntity.setTestBool(r.nextBoolean());
+        testEntity.setOTestBool(r.nextBoolean());
 		testEntity.setTestByte((byte) r.nextInt(255));
+        testEntity.setOTestByte((byte) r.nextInt(255));
 		testEntity.setTestChar('a');
+        testEntity.setOTestChar('a');
 		testEntity.setTestDate(new Date());
 		testEntity.setTestDouble(r.nextDouble());
+        testEntity.setOTestDouble(r.nextDouble());
 		testEntity.setTestFloat(r.nextFloat());
+        testEntity.setOTestFloat(r.nextFloat());
 		testEntity.setTestInt(r.nextInt());
+        testEntity.setOTestInt(r.nextInt());
 		testEntity.setTestLong(r.nextLong());
+        testEntity.setOTestLong(r.nextLong());
 		testEntity.setTestShort((short) r.nextInt(30000));
+        testEntity.setOTestShort((short) r.nextInt(30000));
 		testEntity.setTestString(getContent(r.nextInt(100)));
 		testEntity.setTestTime(new Timestamp(System.currentTimeMillis()));
 		return testEntity;

@@ -335,26 +335,40 @@ public class ReflectUtil {
 	public static void setProperty(Object obj, String propertyName, Object value) throws Exception {
 		Field f = obj.getClass().getDeclaredField(propertyName);
 		f.setAccessible(true);
-		if (value instanceof Number) {
-			Number numValue = (Number) value;
-			if (f.getType() == Integer.TYPE || f.getType() == Integer.class) {
-				f.setInt(obj, numValue.intValue());
-			} else if (f.getType() == Byte.TYPE || f.getType() == Byte.class) {
-				f.setByte(obj, numValue.byteValue());
-			} else if (f.getType() == Long.TYPE || f.getType() == Long.class) {
-				f.setLong(obj, numValue.longValue());
-			} else if (f.getType() == Short.TYPE || f.getType() == Short.class) {
-				f.setShort(obj, numValue.shortValue());
-			} else if (f.getType() == Float.TYPE || f.getType() == Float.class) {
-				f.setFloat(obj, numValue.floatValue());
-			} else if (f.getType() == Double.TYPE || f.getType() == Double.class) {
-				f.setDouble(obj, numValue.doubleValue());
-			} else {
-				throw new IllegalArgumentException("无法识别的值类型");
-			}
+
+		if (f.getType() == Boolean.TYPE) {
+			f.setBoolean(obj, ((Boolean) value).booleanValue());
+		} else if (f.getType() == Integer.TYPE) {
+			f.setInt(obj, ((Number) value).intValue());
+		} else if (f.getType() == Byte.TYPE) {
+			f.setByte(obj, ((Number) value).byteValue());
+		} else if (f.getType() == Long.TYPE) {
+			f.setLong(obj, ((Number) value).longValue());
+		} else if (f.getType() == Short.TYPE) {
+			f.setShort(obj, ((Number) value).shortValue());
+		} else if (f.getType() == Float.TYPE) {
+			f.setFloat(obj, ((Number) value).floatValue());
+		} else if (f.getType() == Double.TYPE) {
+			f.setDouble(obj, ((Number) value).doubleValue());
 		} else {
 			f.set(obj, value);
 		}
+
+		/*
+		 * if (value instanceof Number) { Number numValue = (Number) value; if
+		 * (f.getType() == Integer.TYPE || f.getType() == Integer.class) {
+		 * f.setInt(obj, numValue.intValue()); } else if (f.getType() ==
+		 * Byte.TYPE || f.getType() == Byte.class) { f.setByte(obj,
+		 * numValue.byteValue()); } else if (f.getType() == Long.TYPE ||
+		 * f.getType() == Long.class) { f.setLong(obj, numValue.longValue()); }
+		 * else if (f.getType() == Short.TYPE || f.getType() == Short.class) {
+		 * f.setShort(obj, numValue.shortValue()); } else if (f.getType() ==
+		 * Float.TYPE || f.getType() == Float.class) { f.setFloat(obj,
+		 * numValue.floatValue()); } else if (f.getType() == Double.TYPE ||
+		 * f.getType() == Double.class) { f.setDouble(obj,
+		 * numValue.doubleValue()); } else { throw new
+		 * IllegalArgumentException("无法识别的值类型"); } } else { f.set(obj, value); }
+		 */
 	}
 
 	/**
