@@ -1,6 +1,8 @@
 package com.pinus.cache.impl;
 
+import java.net.InetSocketAddress;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -44,6 +46,14 @@ public class MemCachedPrimaryCacheImpl implements IPrimaryCache {
 	public MemCachedPrimaryCacheImpl(MemcachedClient memClient) {
 		this.memClient = memClient;
 	}
+
+    @Override
+    public Collection<InetSocketAddress> getAvailableServers() {
+        if (this.memClient == null) {
+            return null;
+        }
+        return this.memClient.getAvailableServers();
+    }
 
 	@Override
 	public void setCountGlobal(String clusterName, String tableName, long count) {

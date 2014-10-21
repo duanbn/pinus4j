@@ -50,7 +50,7 @@ public class SlowQueryLogger {
 		} catch (SQLException e) {
 		}
 		String host = url.substring(0, url.indexOf("/"));
-		LOG.warn(host + " " + dbName + " " + " \"" + sql + "\"" + constTime + "ms");
+		LOG.warn(host + " " + dbName + " " + " \"" + sql + "\" " + constTime + "ms");
 	}
 
 }

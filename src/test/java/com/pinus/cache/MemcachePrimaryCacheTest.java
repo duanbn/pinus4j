@@ -1,7 +1,9 @@
 package com.pinus.cache;
 
+import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
 import junit.framework.Assert;
@@ -32,6 +34,12 @@ public class MemcachePrimaryCacheTest extends BaseTest {
 			e.printStackTrace();
 		}
 	}
+
+    @Test
+    public void testGetAvailableServsers() {
+        Collection<InetSocketAddress> servers = primaryCache.getAvailableServers();
+        Assert.assertEquals(1, servers.size());
+    }
 
 	@Test
 	public void testGlobalCount() {

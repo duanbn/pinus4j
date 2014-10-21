@@ -1,5 +1,7 @@
 package com.pinus.cache;
 
+import java.net.InetSocketAddress;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -12,6 +14,11 @@ import com.pinus.cluster.DB;
  * @author duanbn
  */
 public interface IPrimaryCache {
+
+    /**
+     * 获取可以用的服务链接.
+     */
+    public Collection<InetSocketAddress> getAvailableServers();
 
 	/**
 	 * 设置count数.

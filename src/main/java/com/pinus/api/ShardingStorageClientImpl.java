@@ -1,10 +1,12 @@
 package com.pinus.api;
 
+import java.net.InetSocketAddress;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.locks.Lock;
-import java.util.Arrays;
 
 import org.apache.log4j.Logger;
 
@@ -144,12 +146,22 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 		this.dbCluster.setCreateTable(this.isCreateTable);
 		// 设置扫描对象的包
 		this.dbCluster.setScanPackage(this.scanPackage);
-
 		// 启动集群
 		try {
 			this.dbCluster.startup();
 		} catch (DBClusterException e) {
 			throw new RuntimeException(e);
+		}
+
+		// 发现可用的缓存
+		if (this.primaryCache != null) {
+			StringBuilder memcachedAddressInfo = new StringBuilder();
+			Collection<InetSocketAddress> servers = this.primaryCache.getAvailableServers();
+			for (InetSocketAddress server : servers) {
+				memcachedAddressInfo.append(server.getAddress().getHostAddress() + ":" + server.getPort());
+			}
+			memcachedAddressInfo.deleteCharAt(memcachedAddressInfo.length() - 1);
+			LOG.info("find memcached server - " + memcachedAddressInfo.toString());
 		}
 
 		// 初始化ID生成器
@@ -329,14 +341,14 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 		return this.masterQueryer.getGlobalCountFromMaster(clusterName, clazz);
 	}
 
-    @Override
-    public Number getGlobalCount(IQuery query, String clusterName, Class<?> clazz) {
-        CheckUtil.checkQuery(query);
-        CheckUtil.checkClusterName(clusterName);
+	@Override
+	public Number getGlobalCount(IQuery query, String clusterName, Class<?> clazz) {
+		CheckUtil.checkQuery(query);
+		CheckUtil.checkClusterName(clusterName);
 		CheckUtil.checkClass(clazz);
 
-        return this.masterQueryer.getGlobalCountFromMaster(query, clusterName, clazz);
-    }
+		return this.masterQueryer.getGlobalCountFromMaster(query, clusterName, clazz);
+	}
 
 	@Override
 	public <T> T findGlobalByPk(Number pk, String clusterName, Class<T> clazz) {
