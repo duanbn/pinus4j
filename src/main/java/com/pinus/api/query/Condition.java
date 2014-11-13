@@ -109,7 +109,7 @@ public class Condition {
 			default:
 				Object value = this.value;
 				if (value instanceof String) {
-					SQL.append("'").append(value).append("'");
+					SQL.append(value);
 				} else if (value instanceof Boolean) {
 					if ((Boolean) value) {
 						SQL.append("'").append("1").append("'");

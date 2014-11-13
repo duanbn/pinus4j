@@ -39,13 +39,6 @@
 					jdbc:mysql://127.0.0.1:3306/pinus0?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
 				</db.url>
 			</slave>
-			<slave>
-				<db.username>root</db.username>
-				<db.password>root%1234</db.password>
-				<db.url>
-					jdbc:mysql://127.0.0.1:3306/pinus1?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
-				</db.url>
-			</slave>
 		</global>
 		<region capacity="1-1000000">
 			<master>
@@ -53,14 +46,14 @@
 					<db.username>root</db.username>
 					<db.password>root%1234</db.password>
 					<db.url>
-						jdbc:mysql://127.0.0.1:3306/pinus2?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
+						jdbc:mysql://127.0.0.1:3306/pinus1?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
 					</db.url>
 				</sharding>
 				<sharding>
 					<db.username>root</db.username>
 					<db.password>root%1234</db.password>
 					<db.url>
-						jdbc:mysql://127.0.0.1:3306/pinus3?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
+						jdbc:mysql://127.0.0.1:3306/pinus2?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
 					</db.url>
 				</sharding>
 			</master>
@@ -69,30 +62,14 @@
 					<db.username>root</db.username>
 					<db.password>root%1234</db.password>
 					<db.url>
+						jdbc:mysql://127.0.0.1:3306/pinus3?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
+					</db.url>
+				</sharding>
+				<sharding>
+					<db.username>root</db.username>
+					<db.password>root%1234</db.password>
+					<db.url>
 						jdbc:mysql://127.0.0.1:3306/pinus4?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
-					</db.url>
-				</sharding>
-				<sharding>
-					<db.username>root</db.username>
-					<db.password>root%1234</db.password>
-					<db.url>
-						jdbc:mysql://127.0.0.1:3306/pinus5?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
-					</db.url>
-				</sharding>
-			</slave>
-			<slave>
-				<sharding>
-					<db.username>root</db.username>
-					<db.password>root%1234</db.password>
-					<db.url>
-						jdbc:mysql://127.0.0.1:3306/pinus6?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
-					</db.url>
-				</sharding>
-				<sharding>
-					<db.username>root</db.username>
-					<db.password>root%1234</db.password>
-					<db.url>
-						jdbc:mysql://127.0.0.1:3306/pinus7?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
 					</db.url>
 				</sharding>
 			</slave>
@@ -103,14 +80,14 @@
 					<db.username>root</db.username>
 					<db.password>root%1234</db.password>
 					<db.url>
-						jdbc:mysql://127.0.0.1:3306/pinus8?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
+						jdbc:mysql://127.0.0.1:3306/pinus5?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
 					</db.url>
 				</sharding>
 				<sharding>
 					<db.username>root</db.username>
 					<db.password>root%1234</db.password>
 					<db.url>
-						jdbc:mysql://127.0.0.1:3306/pinus9?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
+						jdbc:mysql://127.0.0.1:3306/pinus6?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
 					</db.url>
 				</sharding>
 			</master>
@@ -119,30 +96,14 @@
 					<db.username>root</db.username>
 					<db.password>root%1234</db.password>
 					<db.url>
-						jdbc:mysql://127.0.0.1:3306/pinus10?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
+						jdbc:mysql://127.0.0.1:3306/pinus7?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
 					</db.url>
 				</sharding>
 				<sharding>
 					<db.username>root</db.username>
 					<db.password>root%1234</db.password>
 					<db.url>
-						jdbc:mysql://127.0.0.1:3306/pinus11?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
-					</db.url>
-				</sharding>
-			</slave>
-			<slave>
-				<sharding>
-					<db.username>root</db.username>
-					<db.password>root%1234</db.password>
-					<db.url>
-						jdbc:mysql://127.0.0.1:3306/pinus12?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
-					</db.url>
-				</sharding>
-				<sharding>
-					<db.username>root</db.username>
-					<db.password>root%1234</db.password>
-					<db.url>
-						jdbc:mysql://127.0.0.1:3306/pinus13?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
+						jdbc:mysql://127.0.0.1:3306/pinus8?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
 					</db.url>
 				</sharding>
 			</slave>

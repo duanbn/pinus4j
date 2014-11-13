@@ -1,18 +1,21 @@
 package com.pinus.cache.impl;
 
 import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-import net.rubyeye.xmemcached.MemcachedClient;
+import net.spy.memcached.MemcachedClient;
+import net.spy.memcached.internal.OperationFuture;
 
 import org.apache.log4j.Logger;
 
 import com.pinus.cache.IPrimaryCache;
 import com.pinus.cluster.DB;
 import com.pinus.util.ReflectUtil;
+import com.pinus.util.StringUtils;
 
 /**
  * memcached缓存实现. Pinus存储主缓存的实现. 缓存中的数据不设置过期时间，Pinus存储负责缓存与数据库之间的数据一致性.
@@ -29,6 +32,7 @@ public class MemCachedPrimaryCacheImpl implements IPrimaryCache {
 	/**
 	 * XMemcached客户端.
 	 */
+
 	private MemcachedClient memClient;
 
 	/**
@@ -40,20 +44,32 @@ public class MemCachedPrimaryCacheImpl implements IPrimaryCache {
 	/**
 	 * 构造方法.
 	 * 
-	 * @param memClient
-	 *            memcache客户端
+	 * @param servers
+	 *            ip:port,ip:port
 	 */
-	public MemCachedPrimaryCacheImpl(MemcachedClient memClient) {
-		this.memClient = memClient;
+	public MemCachedPrimaryCacheImpl(String s) {
+		try {
+			List<InetSocketAddress> servers = new ArrayList<InetSocketAddress>();
+			String[] addresses = s.split(",");
+			InetSocketAddress socketAddress = null;
+			for (String address : addresses) {
+				String[] pair = address.split(":");
+				socketAddress = new InetSocketAddress(pair[0], Integer.parseInt(pair[1]));
+				servers.add(socketAddress);
+			}
+			this.memClient = new MemcachedClient(servers);
+		} catch (Exception e) {
+			throw new RuntimeException("连接memcached服务器失败", e);
+		}
 	}
 
-    @Override
-    public Collection<InetSocketAddress> getAvailableServers() {
-        if (this.memClient == null) {
-            return null;
-        }
-        return this.memClient.getAvailableServers();
-    }
+	@Override
+	public Collection<SocketAddress> getAvailableServers() {
+		if (this.memClient == null) {
+			return null;
+		}
+		return this.memClient.getAvailableServers();
+	}
 
 	@Override
 	public void setCountGlobal(String clusterName, String tableName, long count) {
@@ -131,7 +147,7 @@ public class MemCachedPrimaryCacheImpl implements IPrimaryCache {
 	}
 
 	@Override
-	public <T> List<T> getGlobal(String clusterName, String tableName, Number... ids) {
+	public List<Object> getGlobal(String clusterName, String tableName, Number... ids) {
 		List<String> keys = new ArrayList<String>();
 		for (Number id : ids) {
 			String key = _buildGlobalKey(clusterName, tableName, id);
@@ -213,7 +229,7 @@ public class MemCachedPrimaryCacheImpl implements IPrimaryCache {
 		if (data == null || data.isEmpty()) {
 			return;
 		}
-		
+
 		List<String> keys = new ArrayList<String>();
 		List<Object> datas = new ArrayList<Object>();
 		for (Map.Entry<Number, ? extends Object> entry : data.entrySet()) {
@@ -230,7 +246,7 @@ public class MemCachedPrimaryCacheImpl implements IPrimaryCache {
 	}
 
 	@Override
-	public <T> List<T> get(DB db, Number... ids) {
+	public List<Object> get(DB db, Number... ids) {
 		List<String> keys = new ArrayList<String>();
 		for (Number id : ids) {
 			keys.add(_buildKey(db, id));
@@ -255,6 +271,7 @@ public class MemCachedPrimaryCacheImpl implements IPrimaryCache {
 
 	private void _setCount(String key, long count) {
 		try {
+			_removeCount(key);
 			this.memClient.incr(key, 0, count);
 
 			if (LOG.isDebugEnabled()) {
@@ -310,13 +327,12 @@ public class MemCachedPrimaryCacheImpl implements IPrimaryCache {
 
 	private long _getCount(String key) {
 		try {
-			String sCount = memClient.get(key);
-			if (sCount != null) {
-				long count = Long.parseLong(sCount);
+			String count = (String) memClient.get(key);
+			if (StringUtils.isNotBlank(count)) {
 				if (LOG.isDebugEnabled()) {
 					LOG.debug("[CACHE] - get " + key + " " + count);
 				}
-				return count;
+				return Long.parseLong(count);
 			}
 		} catch (Exception e) {
 			LOG.warn("操作缓存失败:" + e.getMessage());
@@ -327,7 +343,8 @@ public class MemCachedPrimaryCacheImpl implements IPrimaryCache {
 
 	private void _put(String key, Object data) {
 		try {
-			if (!memClient.set(key, 0, data)) {
+			OperationFuture<Boolean> rst = memClient.set(key, 0, data);
+			if (!rst.get()) {
 				LOG.warn("操作缓存失败");
 			} else {
 				if (LOG.isDebugEnabled()) {
@@ -342,7 +359,7 @@ public class MemCachedPrimaryCacheImpl implements IPrimaryCache {
 	private void _put(List<String> keys, List<? extends Object> data) {
 		try {
 			for (int i = 0; i < keys.size(); i++) {
-				memClient.setWithNoReply(keys.get(i), 0, data.get(i));
+				memClient.set(keys.get(i), 0, data.get(i));
 			}
 		} catch (Exception e) {
 			LOG.warn("操作缓存失败:" + e.getMessage());
@@ -355,7 +372,7 @@ public class MemCachedPrimaryCacheImpl implements IPrimaryCache {
 
 	private <T> T _get(String key) {
 		try {
-			T obj = memClient.get(key);
+			T obj = (T) memClient.get(key);
 			if (LOG.isDebugEnabled()) {
 				int hit = 0;
 				if (obj != null) {
@@ -371,16 +388,12 @@ public class MemCachedPrimaryCacheImpl implements IPrimaryCache {
 		return null;
 	}
 
-	private <T> List<T> _get(List<String> keys) {
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("[CACHE] - get " + keys);
-		}
-
-		List<T> datas = new ArrayList<T>();
+	private List<Object> _get(List<String> keys) {
+		List<Object> datas = new ArrayList<Object>();
 		try {
-			Map<String, T> dataMap = memClient.get(keys);
+			Map<String, Object> dataMap = memClient.getBulk(keys);
 			if (dataMap != null) {
-				T data = null;
+				Object data = null;
 				for (String key : keys) {
 					data = dataMap.get(key);
 					if (data != null)
@@ -392,7 +405,7 @@ public class MemCachedPrimaryCacheImpl implements IPrimaryCache {
 		}
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("[CACHE] - hits = " + datas.size());
+			LOG.debug("[CACHE] - get" + keys + " hits = " + datas.size());
 		}
 
 		return datas;
@@ -400,12 +413,9 @@ public class MemCachedPrimaryCacheImpl implements IPrimaryCache {
 
 	private void _remove(String key) {
 		try {
-			if (!memClient.delete(key)) {
-				LOG.warn("操作缓存失败:");
-			} else {
-				if (LOG.isDebugEnabled()) {
-					LOG.debug("[CACHE] - remove " + key);
-				}
+			memClient.delete(key);
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("[CACHE] - remove " + key);
 			}
 		} catch (Exception e) {
 			LOG.warn("操作缓存失败:" + e.getMessage());
@@ -415,10 +425,7 @@ public class MemCachedPrimaryCacheImpl implements IPrimaryCache {
 	private void _remove(List<String> keys) {
 		try {
 			for (String key : keys) {
-				memClient.deleteWithNoReply(key);
-				if (LOG.isDebugEnabled()) {
-					LOG.debug("[CACHE] - remove " + key);
-				}
+				_remove(key);
 			}
 		} catch (Exception e) {
 			LOG.warn("操作缓存失败:" + e.getMessage());

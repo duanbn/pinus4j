@@ -79,7 +79,7 @@ public class XmlDBClusterConfigImpl implements IClusterConfig, Watcher {
 		} catch (Exception e) {
 			throw new LoadConfigException(e);
 		}
-		
+
 	}
 
 	/**
@@ -91,16 +91,16 @@ public class XmlDBClusterConfigImpl implements IClusterConfig, Watcher {
 		}
 	}
 
-    @Override
+	@Override
 	public ZooKeeper getZooKeeper() {
-        // 创建zookeeper连接
+		// 创建zookeeper连接
 		try {
 			ZooKeeper zk = new ZooKeeper(this.zkUrl, sessionTimeout, this);
 			if (States.CONNECTING == zk.getState()) {
 				connectedLatch.await();
 			}
 
-            return zk;
+			return zk;
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
@@ -365,6 +365,11 @@ public class XmlDBClusterConfigImpl implements IClusterConfig, Watcher {
 	@Override
 	public Map<String, DBClusterInfo> getDBClusterInfo() {
 		return dbClusterInfo;
+	}
+
+	@Override
+	public String getZookeeperUrl() {
+		return zkUrl;
 	}
 
 }

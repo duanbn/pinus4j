@@ -90,29 +90,29 @@ public class ShardingStorageTest extends BaseTest {
 		for (TestEntity entity : entities) {
 			Assert.assertEquals("i am pinus", entity.getTestString());
 			Assert.assertEquals(0, entity.getTestInt());
-            Assert.assertEquals(0.0f, entity.getTestFloat());
-            Assert.assertEquals(0.0, entity.getTestDouble());
+			Assert.assertEquals(0.0f, entity.getTestFloat());
+			Assert.assertEquals(0.0, entity.getTestDouble());
 		}
 	}
 
 	@Test
 	public void testFindByShardingPairListClassNumber() {
 		List<IShardingKey<?>> keys = new ArrayList<IShardingKey<?>>();
-		keys.add(new ShardingKey(CLUSTER_KLSTORAGE, pk1));
-		keys.add(new ShardingKey(CLUSTER_KLSTORAGE, pk2));
+		keys.add(new ShardingKey<Number>(CLUSTER_KLSTORAGE, pk1));
+		keys.add(new ShardingKey<Number>(CLUSTER_KLSTORAGE, pk2));
 		List<TestEntity> entities = cacheClient.findByShardingPair(keys, TestEntity.class, pk1, pk2);
 		Assert.assertEquals(2, entities.size());
 	}
 
-    @Test
-    public void testFindBySqlSqlShardingKey() {
-        SQL sql = SQL.valueOf("select * from test_entity where testString=?", "i am pinus");
-        List<Map<String, Object>> rst = cacheClient.findBySql(sql, moreKey);
-        Assert.assertEquals(5, rst.size());
-        for (Map<String, Object> map : rst) {
-            Assert.assertEquals("i am pinus", map.get("testString"));
-        }
-    }
+	@Test
+	public void testFindBySqlSqlShardingKey() {
+		SQL sql = SQL.valueOf("select * from test_entity where testString=?", "i am pinus");
+		List<Map<String, Object>> rst = cacheClient.findBySql(sql, moreKey);
+		Assert.assertEquals(5, rst.size());
+		for (Map<String, Object> map : rst) {
+			Assert.assertEquals("i am pinus", map.get("testString"));
+		}
+	}
 
 	@Test
 	public void testUpdateObject() {

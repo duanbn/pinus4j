@@ -1,18 +1,18 @@
 package com.pinus.generator;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 import org.junit.Test;
 
-import com.google.code.yanf4j.util.ConcurrentHashSet;
 import com.pinus.BaseTest;
 
 public class IdSequnceGeneratorImplTest extends BaseTest {
 
-	public static final Set<Integer> ids = new ConcurrentHashSet<Integer>();
-	public static final Set<Long> longIds = new ConcurrentHashSet<Long>();
+	public static final Set<Integer> ids = new HashSet<Integer>();
+	public static final Set<Long> longIds = new HashSet<Long>();
 
 	private static final String TABLE_NAME = "test_entity";
 
@@ -45,7 +45,7 @@ public class IdSequnceGeneratorImplTest extends BaseTest {
 		long start = System.currentTimeMillis();
 		Thread th = null;
 		List<Thread> ts = new ArrayList<Thread>();
-		for (int i = 0; i < 20; i++) {
+		for (int i = 0; i < 10; i++) {
 			th = new Gen(idGenerator);
 			th.start();
 			ts.add(th);

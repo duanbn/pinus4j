@@ -19,7 +19,7 @@ public class GlobalStorageTest extends BaseTest {
 
 	private Number pk1;
 	private Number[] pks;
-
+	
 	@Before
 	public void before() {
 		// save global one

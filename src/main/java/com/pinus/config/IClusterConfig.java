@@ -43,4 +43,11 @@ public interface IClusterConfig {
 	 */
 	public Map<String, DBClusterInfo> getDBClusterInfo();
 
+	/**
+	 * 获取xml中配置的zookeeper连接
+	 * 
+	 * @return
+	 */
+	public String getZookeeperUrl();
+
 }

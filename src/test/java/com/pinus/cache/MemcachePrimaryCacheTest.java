@@ -1,6 +1,6 @@
 package com.pinus.cache;
 
-import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -37,7 +37,7 @@ public class MemcachePrimaryCacheTest extends BaseTest {
 
     @Test
     public void testGetAvailableServsers() {
-        Collection<InetSocketAddress> servers = primaryCache.getAvailableServers();
+        Collection<SocketAddress> servers = primaryCache.getAvailableServers();
         Assert.assertEquals(1, servers.size());
     }
 

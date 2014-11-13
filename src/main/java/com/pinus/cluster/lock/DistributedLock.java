@@ -7,7 +7,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.log4j.Logger;
 import org.apache.zookeeper.CreateMode;
@@ -19,11 +18,11 @@ import org.apache.zookeeper.data.Stat;
 import com.pinus.config.IClusterConfig;
 
 /**
- * 基于zookeeper实现的集群锁. 集群锁用于处于在多进程环境下的同步问题. 此锁是采用公平算法
+ * 基于zookeeper实现的集群锁. 集群锁用于处于在多进程环境下的同步问题. 此锁是采用公平算法.
  * 
  * <pre>
  * try {
- * 	lock = new DistributedLock(&quot;127.0.0.1:2182&quot;, &quot;test&quot;);
+ * 	lock = IShardingStorageClient.createLock("lockname");
  * 	lock.lock();
  * 	// do something...
  * } catch (Exception e) {
@@ -37,12 +36,10 @@ import com.pinus.config.IClusterConfig;
  * @author duanbn
  * 
  */
+@Deprecated
 public class DistributedLock implements Lock {
 
 	public static final Logger LOG = Logger.getLogger(DistributedLock.class);
-
-	private static final ReentrantLock threadLock = new ReentrantLock();
-	private boolean isThreadLock;
 
 	private ZooKeeper zk;
 	private String root = "/locks";// 根
@@ -61,9 +58,7 @@ public class DistributedLock implements Lock {
 	 * @param lockName
 	 *            竞争资源标志,lockName中不能包含单词lock
 	 */
-	public DistributedLock(String lockName, boolean isThreadLock, IClusterConfig config) {
-		this.isThreadLock = isThreadLock;
-
+	public DistributedLock(String lockName, IClusterConfig config) {
 		// 创建一个与服务器的连接
 		try {
 			this.zk = config.getZooKeeper();
@@ -102,9 +97,6 @@ public class DistributedLock implements Lock {
 	}
 
 	public boolean tryLock() {
-		if (isThreadLock)
-			threadLock.lock();
-
 		try {
 			String splitStr = "_lock_";
 			if (lockName.contains(splitStr))
@@ -179,8 +171,6 @@ public class DistributedLock implements Lock {
 			} catch (InterruptedException e) {
 				LOG.error(e);
 			}
-			if (isThreadLock)
-				threadLock.unlock();
 		}
 	}
 

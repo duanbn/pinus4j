@@ -1,10 +1,8 @@
 package com.pinus.cluster;
 
-import java.util.Collections;
-import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.HashMap;
 
 import junit.framework.Assert;
 
@@ -33,14 +31,14 @@ public class DbcpDBClusterImplTest {
 	@Test
 	public void testGetDBTable() {
 		List<DBTable> tablesFromZk = this.dbCluster.getDBTableFromZk();
-        Map<String, DBTable> zkDbTableMap = new HashMap<String, DBTable>();
-        for (DBTable dbTable : tablesFromZk) {
-            zkDbTableMap.put(dbTable.getName(), dbTable);
-        }
+		Map<String, DBTable> zkDbTableMap = new HashMap<String, DBTable>();
+		for (DBTable dbTable : tablesFromZk) {
+			zkDbTableMap.put(dbTable.getName(), dbTable);
+		}
 		List<DBTable> tablesFromJvm = this.dbCluster.getDBTableFromJvm();
-        for (DBTable dbTable : tablesFromJvm) {
-            Assert.assertEquals(zkDbTableMap.get(dbTable.getName()), dbTable);
-        }
+		for (DBTable dbTable : tablesFromJvm) {
+			Assert.assertEquals(zkDbTableMap.get(dbTable.getName()), dbTable);
+		}
 	}
 
 	@Test
@@ -96,22 +94,6 @@ public class DbcpDBClusterImplTest {
 
 		sv = new ShardingKey<Long>(CLUSTER_KLSTORAGE, 50081l);
 		db = dbCluster.selectDbFromSlave(EnumDBMasterSlave.SLAVE0, "test_entity", sv);
-		System.out.println(db);
-
-		sv = new ShardingKey<Long>(CLUSTER_KLSTORAGE, 150080l);
-		db = dbCluster.selectDbFromSlave(EnumDBMasterSlave.SLAVE1, "test_entity", sv);
-		System.out.println(db);
-
-		sv = new ShardingKey<Long>(CLUSTER_KLSTORAGE, 150081l);
-		db = dbCluster.selectDbFromSlave(EnumDBMasterSlave.SLAVE1, "test_entity", sv);
-		System.out.println(db);
-
-		sv = new ShardingKey<Long>(CLUSTER_KLSTORAGE, 50080l);
-		db = dbCluster.selectDbFromSlave(EnumDBMasterSlave.SLAVE1, "test_entity", sv);
-		System.out.println(db);
-
-		sv = new ShardingKey<Long>(CLUSTER_KLSTORAGE, 50081l);
-		db = dbCluster.selectDbFromSlave(EnumDBMasterSlave.SLAVE1, "test_entity", sv);
 		System.out.println(db);
 	}
 

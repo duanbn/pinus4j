@@ -1,14 +1,8 @@
 package com.pinus;
 
-import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.Date;
 import java.util.Random;
-
-import net.rubyeye.xmemcached.MemcachedClient;
-import net.rubyeye.xmemcached.MemcachedClientBuilder;
-import net.rubyeye.xmemcached.XMemcachedClientBuilder;
-import net.rubyeye.xmemcached.utils.AddrUtil;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -33,14 +27,7 @@ public class BaseTest {
 
 	@BeforeClass
 	public static void setup() {
-		MemcachedClientBuilder builder = new XMemcachedClientBuilder(AddrUtil.getAddresses("localhost:11211"));
-		MemcachedClient memcachedClient = null;
-		try {
-			memcachedClient = builder.build();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		primaryCache = new MemCachedPrimaryCacheImpl(memcachedClient);
+		primaryCache = new MemCachedPrimaryCacheImpl("127.0.0.1:11211");
 		cacheClient.setMode(EnumMode.DISTRIBUTED);
 		cacheClient.setScanPackage("com.pinus");
 		cacheClient.setCreateTable(true);
@@ -66,22 +53,22 @@ public class BaseTest {
 	public TestEntity createEntity() {
 		TestEntity testEntity = new TestEntity();
 		testEntity.setTestBool(r.nextBoolean());
-        testEntity.setOTestBool(r.nextBoolean());
+		testEntity.setOTestBool(r.nextBoolean());
 		testEntity.setTestByte((byte) r.nextInt(255));
-        testEntity.setOTestByte((byte) r.nextInt(255));
+		testEntity.setOTestByte((byte) r.nextInt(255));
 		testEntity.setTestChar('a');
-        testEntity.setOTestChar('a');
+		testEntity.setOTestChar('a');
 		testEntity.setTestDate(new Date());
 		testEntity.setTestDouble(r.nextDouble());
-        testEntity.setOTestDouble(r.nextDouble());
+		testEntity.setOTestDouble(r.nextDouble());
 		testEntity.setTestFloat(r.nextFloat());
-        testEntity.setOTestFloat(r.nextFloat());
+		testEntity.setOTestFloat(r.nextFloat());
 		testEntity.setTestInt(r.nextInt());
-        testEntity.setOTestInt(r.nextInt());
+		testEntity.setOTestInt(r.nextInt());
 		testEntity.setTestLong(r.nextLong());
-        testEntity.setOTestLong(r.nextLong());
+		testEntity.setOTestLong(r.nextLong());
 		testEntity.setTestShort((short) r.nextInt(30000));
-        testEntity.setOTestShort((short) r.nextInt(30000));
+		testEntity.setOTestShort((short) r.nextInt(30000));
 		testEntity.setTestString(getContent(r.nextInt(100)));
 		testEntity.setTestTime(new Timestamp(System.currentTimeMillis()));
 		return testEntity;

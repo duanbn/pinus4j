@@ -1,6 +1,7 @@
 package com.pinus.api;
 
 import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -8,6 +9,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.locks.Lock;
 
+import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.framework.CuratorFrameworkFactory;
+import org.apache.curator.framework.recipes.locks.InterProcessMutex;
+import org.apache.curator.retry.RetryNTimes;
+import org.apache.curator.utils.CloseableUtils;
 import org.apache.log4j.Logger;
 
 import com.pinus.api.enums.EnumDB;
@@ -21,7 +27,7 @@ import com.pinus.cache.IPrimaryCache;
 import com.pinus.cluster.DB;
 import com.pinus.cluster.IDBCluster;
 import com.pinus.cluster.impl.DbcpDBClusterImpl;
-import com.pinus.cluster.lock.DistributedLock;
+import com.pinus.cluster.lock.CuratorDistributeedLock;
 import com.pinus.datalayer.IShardingMasterQuery;
 import com.pinus.datalayer.IShardingSlaveQuery;
 import com.pinus.datalayer.IShardingStatistics;
@@ -128,6 +134,11 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 	private IShardingSlaveQuery slaveQueryer;
 
 	/**
+	 * curator client.
+	 */
+	private CuratorFramework curatorClient;
+
+	/**
 	 * 初始化方法
 	 */
 	public void init() {
@@ -153,22 +164,32 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 			throw new RuntimeException(e);
 		}
 
+		// 初始化curator framework
+		this.curatorClient = CuratorFrameworkFactory.newClient(this.dbCluster.getClusterConfig().getZookeeperUrl(),
+				new RetryNTimes(5, 1000));
+		this.curatorClient.start();
+
 		// 发现可用的缓存
 		if (this.primaryCache != null) {
 			StringBuilder memcachedAddressInfo = new StringBuilder();
-			Collection<InetSocketAddress> servers = this.primaryCache.getAvailableServers();
-			for (InetSocketAddress server : servers) {
-				memcachedAddressInfo.append(server.getAddress().getHostAddress() + ":" + server.getPort());
+			Collection<SocketAddress> servers = this.primaryCache.getAvailableServers();
+			if (servers != null) {
+				for (SocketAddress server : servers) {
+					memcachedAddressInfo.append(((InetSocketAddress) server).getAddress().getHostAddress() + ":"
+							+ ((InetSocketAddress) server).getPort());
+					memcachedAddressInfo.append(",");
+				}
+				memcachedAddressInfo.deleteCharAt(memcachedAddressInfo.length() - 1);
+				LOG.info("find memcached server - " + memcachedAddressInfo.toString());
 			}
-			memcachedAddressInfo.deleteCharAt(memcachedAddressInfo.length() - 1);
-			LOG.info("find memcached server - " + memcachedAddressInfo.toString());
 		}
 
 		// 初始化ID生成器
 		if (this.mode == EnumMode.STANDALONE) {
 			this.idGenerator = new StandaloneSequenceIdGeneratorImpl(this.dbCluster.getClusterConfig());
 		} else if (this.mode == EnumMode.DISTRIBUTED) {
-			this.idGenerator = new DistributedSequenceIdGeneratorImpl(this.dbCluster.getClusterConfig());
+			this.idGenerator = new DistributedSequenceIdGeneratorImpl(this.dbCluster.getClusterConfig(),
+					this.curatorClient);
 		} else {
 			throw new IllegalStateException("运行模式设置错误, mode=" + this.mode);
 		}
@@ -534,15 +555,10 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 		return idGenerator;
 	}
 
-	@Deprecated
 	@Override
 	public Lock createLock(String lockName) {
-		return createLock(lockName, true);
-	}
-
-	@Deprecated
-	public Lock createLock(String lockName, boolean isOpenThreadLock) {
-		return new DistributedLock(lockName, isOpenThreadLock, this.dbCluster.getClusterConfig());
+		InterProcessMutex curatorLock = new InterProcessMutex(curatorClient, "/curatorlocks/" + lockName);
+		return new CuratorDistributeedLock(curatorLock);
 	}
 
 	@Override
@@ -634,6 +650,8 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 
 		// close id generator
 		this.idGenerator.close();
+
+		CloseableUtils.closeQuietly(this.curatorClient);
 	}
 
 	@Override

@@ -518,20 +518,7 @@ public interface IShardingStorageClient {
 	 *            锁名称
 	 * @return
 	 */
-	@Deprecated
 	public Lock createLock(String lockName);
-
-	/**
-	 * 创建一个分布式锁.
-	 * 
-	 * @param lockName
-	 *            锁名称
-	 * @param isProcessLock
-	 *            是否开线程锁
-	 * @return 分布式锁
-	 */
-	@Deprecated
-	public Lock createLock(String lockName, boolean isOpenThreadLock);
 
 	/**
 	 * 获取某个实体对象的所有分库分表引用.

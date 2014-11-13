@@ -2,8 +2,11 @@ package com.pinus.generator.impl;
 
 import java.util.concurrent.locks.Lock;
 
+import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.framework.recipes.locks.InterProcessMutex;
 import org.apache.log4j.Logger;
 
+import com.pinus.cluster.lock.CuratorDistributeedLock;
 import com.pinus.cluster.lock.DistributedLock;
 import com.pinus.config.IClusterConfig;
 import com.pinus.generator.AbstractSequenceIdGenerator;
@@ -20,16 +23,17 @@ public class DistributedSequenceIdGeneratorImpl extends AbstractSequenceIdGenera
 	 */
 	public static Logger LOG = Logger.getLogger(DistributedSequenceIdGeneratorImpl.class);
 
-	private IClusterConfig config;
+	private CuratorFramework curatorClient;
 
-	public DistributedSequenceIdGeneratorImpl(IClusterConfig config) {
+	public DistributedSequenceIdGeneratorImpl(IClusterConfig config, CuratorFramework curatorClient) {
 		super(config);
-		this.config = config;
+		this.curatorClient = curatorClient;
 	}
 
 	@Override
 	public Lock getLock(String lockName) {
-		return new DistributedLock(lockName, true, config);
+		InterProcessMutex curatorLock = new InterProcessMutex(curatorClient, "/curatorlocks/" + lockName);
+		return new CuratorDistributeedLock(curatorLock);
 	}
 
 }
