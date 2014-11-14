@@ -28,6 +28,7 @@ import com.pinus.cluster.DB;
 import com.pinus.cluster.IDBCluster;
 import com.pinus.cluster.impl.DbcpDBClusterImpl;
 import com.pinus.cluster.lock.CuratorDistributeedLock;
+import com.pinus.constant.Const;
 import com.pinus.datalayer.IShardingMasterQuery;
 import com.pinus.datalayer.IShardingSlaveQuery;
 import com.pinus.datalayer.IShardingStatistics;
@@ -557,7 +558,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 
 	@Override
 	public Lock createLock(String lockName) {
-		InterProcessMutex curatorLock = new InterProcessMutex(curatorClient, "/curatorlocks/" + lockName);
+		InterProcessMutex curatorLock = new InterProcessMutex(curatorClient, Const.ZK_LOCKS + "/" + lockName);
 		return new CuratorDistributeedLock(curatorLock);
 	}
 

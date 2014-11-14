@@ -7,8 +7,8 @@ import org.apache.curator.framework.recipes.locks.InterProcessMutex;
 import org.apache.log4j.Logger;
 
 import com.pinus.cluster.lock.CuratorDistributeedLock;
-import com.pinus.cluster.lock.DistributedLock;
 import com.pinus.config.IClusterConfig;
+import com.pinus.constant.Const;
 import com.pinus.generator.AbstractSequenceIdGenerator;
 
 /**
@@ -32,7 +32,7 @@ public class DistributedSequenceIdGeneratorImpl extends AbstractSequenceIdGenera
 
 	@Override
 	public Lock getLock(String lockName) {
-		InterProcessMutex curatorLock = new InterProcessMutex(curatorClient, "/curatorlocks/" + lockName);
+		InterProcessMutex curatorLock = new InterProcessMutex(curatorClient, Const.ZK_LOCKS + "/" + lockName);
 		return new CuratorDistributeedLock(curatorLock);
 	}
 
