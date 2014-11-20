@@ -19,16 +19,17 @@ public class GlobalStorageTest extends BaseTest {
 
 	private Number pk1;
 	private Number[] pks;
-	
+
 	@Before
 	public void before() {
 		// save global one
 		TestGlobalEntity entity = createGlobalEntity();
 		entity.setTestString("i am pinus");
 		pk1 = cacheClient.globalSave(entity);
+		entity.setId(pk1.longValue());
 		// check save one
-		entity = cacheClient.findGlobalByPk(pk1, CLUSTER_KLSTORAGE, TestGlobalEntity.class);
-		Assert.assertNotNull(entity);
+		TestGlobalEntity entity1 = cacheClient.findGlobalByPk(pk1, CLUSTER_KLSTORAGE, TestGlobalEntity.class);
+		Assert.assertEquals(entity, entity1);
 
 		// save more
 		List<TestGlobalEntity> entities = new ArrayList<TestGlobalEntity>();
@@ -38,9 +39,14 @@ public class GlobalStorageTest extends BaseTest {
 			entities.add(entity);
 		}
 		pks = cacheClient.globalSaveBatch(entities, CLUSTER_KLSTORAGE);
+		for (int i = 0; i < entities.size(); i++) {
+			entities.get(i).setId(pks[i].longValue());
+		}
 		// check save more
-		entities = cacheClient.findGlobalByPks(CLUSTER_KLSTORAGE, TestGlobalEntity.class, pks);
-		Assert.assertEquals(5, entities.size());
+		List<TestGlobalEntity> entities1 = cacheClient.findGlobalByPks(CLUSTER_KLSTORAGE, TestGlobalEntity.class, pks);
+		for (int i = 0; i < entities.size(); i++) {
+			Assert.assertEquals(entities.get(i), entities1.get(i));
+		}
 	}
 
 	@Test
@@ -58,15 +64,15 @@ public class GlobalStorageTest extends BaseTest {
 		Assert.assertEquals(6, entities.size());
 	}
 
-    @Test
-    public void testFindGlobalBySqlSqlString() {
-        SQL sql = SQL.valueOf("select * from testglobalentity where testString=?", "i am pinus");
-        List<Map<String, Object>> rst = cacheClient.findGlobalBySql(sql, CLUSTER_KLSTORAGE);
-        Assert.assertEquals(6, rst.size());
-        for (Map<String, Object> map : rst) {
-            Assert.assertEquals("i am pinus", map.get("testString"));
-        }
-    }
+	@Test
+	public void testFindGlobalBySqlSqlString() {
+		SQL sql = SQL.valueOf("select * from testglobalentity where testString=?", "i am pinus");
+		List<Map<String, Object>> rst = cacheClient.findGlobalBySql(sql, CLUSTER_KLSTORAGE);
+		Assert.assertEquals(6, rst.size());
+		for (Map<String, Object> map : rst) {
+			Assert.assertEquals("i am pinus", map.get("testString"));
+		}
+	}
 
 	@Test
 	public void testGlobalUpdateObject() {

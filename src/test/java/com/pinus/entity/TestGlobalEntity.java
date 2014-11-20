@@ -52,7 +52,7 @@ public class TestGlobalEntity extends FashionEntity implements Serializable {
 	@DateTime
 	private Date testDate;
 
-    @UpdateTime(comment = "自动更新时间")
+	@UpdateTime(comment = "自动更新时间")
 	private Timestamp testTime;
 
 	@Override
@@ -68,6 +68,19 @@ public class TestGlobalEntity extends FashionEntity implements Serializable {
 		final int prime = 31;
 		int result = 1;
 		result = prime * result + (int) (id ^ (id >>> 32));
+		result = prime * result + (testBool ? 1231 : 1237);
+		result = prime * result + testByte;
+		result = prime * result + testChar;
+		result = prime * result + ((testDate == null) ? 0 : testDate.hashCode());
+		long temp;
+		temp = Double.doubleToLongBits(testDouble);
+		result = prime * result + (int) (temp ^ (temp >>> 32));
+		result = prime * result + Float.floatToIntBits(testFloat);
+		result = prime * result + testInt;
+		result = prime * result + (int) (testLong ^ (testLong >>> 32));
+		result = prime * result + testShort;
+		result = prime * result + ((testString == null) ? 0 : testString.hashCode());
+		result = prime * result + ((testTime == null) ? 0 : testTime.hashCode());
 		return result;
 	}
 
@@ -81,6 +94,37 @@ public class TestGlobalEntity extends FashionEntity implements Serializable {
 			return false;
 		TestGlobalEntity other = (TestGlobalEntity) obj;
 		if (id != other.id)
+			return false;
+		if (testBool != other.testBool)
+			return false;
+		if (testByte != other.testByte)
+			return false;
+		if (testChar != other.testChar)
+			return false;
+		if (testDate == null) {
+			if (other.testDate != null)
+				return false;
+		} else if (!testDate.equals(other.testDate))
+			return false;
+		if (Double.doubleToLongBits(testDouble) != Double.doubleToLongBits(other.testDouble))
+			return false;
+		if (Float.floatToIntBits(testFloat) != Float.floatToIntBits(other.testFloat))
+			return false;
+		if (testInt != other.testInt)
+			return false;
+		if (testLong != other.testLong)
+			return false;
+		if (testShort != other.testShort)
+			return false;
+		if (testString == null) {
+			if (other.testString != null)
+				return false;
+		} else if (!testString.equals(other.testString))
+			return false;
+		if (testTime == null) {
+			if (other.testTime != null)
+				return false;
+		} else if (!testTime.equals(other.testTime))
 			return false;
 		return true;
 	}
@@ -173,7 +217,7 @@ public class TestGlobalEntity extends FashionEntity implements Serializable {
 		this.testDate = testDate;
 	}
 
-    public Timestamp getTestTime() {
+	public Timestamp getTestTime() {
 		return testTime;
 	}
 

@@ -13,7 +13,7 @@ import com.pinus.api.ShardingKey;
 import com.pinus.api.enums.EnumDB;
 import com.pinus.api.enums.EnumDBMasterSlave;
 import com.pinus.cluster.beans.DBTable;
-import com.pinus.cluster.impl.DbcpDBClusterImpl;
+import com.pinus.cluster.impl.AppDBClusterImpl;
 import com.pinus.entity.TestEntity;
 
 public class DbcpDBClusterImplTest {
@@ -23,7 +23,7 @@ public class DbcpDBClusterImplTest {
 	private IDBCluster dbCluster;
 
 	public DbcpDBClusterImplTest() throws Exception {
-		this.dbCluster = new DbcpDBClusterImpl(EnumDB.MYSQL);
+		this.dbCluster = new AppDBClusterImpl(EnumDB.MYSQL);
 		this.dbCluster.setScanPackage("com.pinus.entity");
 		this.dbCluster.startup();
 	}

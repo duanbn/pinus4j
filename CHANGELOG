@@ -1,6 +1,9 @@
 --Version 0.6.8
 1. 添加基于curator framework的分布式锁实现
 2. 之前版本的DistributeLock被标记为过去，不建议继续使用
+3. 数据库连接需要优化，支持Java容器连接池
+4. 对索引做cache(TODO)
+5. fix bug
 
 --Version 0.6.7
 1. fix bug

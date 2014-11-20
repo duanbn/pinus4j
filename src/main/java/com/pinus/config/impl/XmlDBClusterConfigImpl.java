@@ -16,9 +16,12 @@ import org.apache.zookeeper.ZooKeeper.States;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+import com.pinus.api.enums.EnumDbConnectionPoolCatalog;
+import com.pinus.cluster.beans.AppDBConnectionInfo;
 import com.pinus.cluster.beans.DBClusterInfo;
 import com.pinus.cluster.beans.DBClusterRegionInfo;
 import com.pinus.cluster.beans.DBConnectionInfo;
+import com.pinus.cluster.beans.EnvDBConnectionInfo;
 import com.pinus.cluster.enums.EnumClusterCatalog;
 import com.pinus.cluster.enums.HashAlgoEnum;
 import com.pinus.config.IClusterConfig;
@@ -30,6 +33,11 @@ import com.pinus.util.XmlUtil;
 public class XmlDBClusterConfigImpl implements IClusterConfig, Watcher {
 
 	public static final Logger LOG = Logger.getLogger(XmlDBClusterConfigImpl.class);
+
+	/**
+	 * 数据库连接方式. 从应用加载连接，或者从容器加载连接.
+	 */
+	private static EnumDbConnectionPoolCatalog enumCpCatalog;
 
 	/**
 	 * 主键批量生成数
@@ -140,18 +148,8 @@ public class XmlDBClusterConfigImpl implements IClusterConfig, Watcher {
 		hashAlgo = HashAlgoEnum.getEnum(hashAlgoNode.getTextContent().trim());
 	}
 
-	private Map<String, Object> _loadDbConnectInfo() throws LoadConfigException {
+	private Map<String, Object> _loadDbConnectInfo(Node connPoolNode) throws LoadConfigException {
 		Map<String, Object> map = new HashMap<String, Object>();
-
-		Node root = xmlUtil.getRoot();
-		if (root == null) {
-			throw new LoadConfigException("找不到root节点");
-		}
-
-		Node connPoolNode = xmlUtil.getFirstChildByName(root, "db-connection-pool");
-		if (connPoolNode == null) {
-			throw new LoadConfigException("找不到db-connection-pool节点");
-		}
 
 		NodeList child = connPoolNode.getChildNodes();
 		Node currentNode = null;
@@ -217,17 +215,50 @@ public class XmlDBClusterConfigImpl implements IClusterConfig, Watcher {
 	}
 
 	private DBConnectionInfo _getDBConnInfo(String clusterName, Node node) throws LoadConfigException {
-		DBConnectionInfo dbConnInfo = new DBConnectionInfo();
+		DBConnectionInfo dbConnInfo = null;
 
-		String username = xmlUtil.getFirstChildByName(node, "db.username").getTextContent().trim();
-		String password = xmlUtil.getFirstChildByName(node, "db.password").getTextContent().trim();
-		String url = xmlUtil.getFirstChildByName(node, "db.url").getTextContent().trim();
+		Node root = xmlUtil.getRoot();
+		if (root == null) {
+			throw new LoadConfigException("找不到root节点");
+		}
 
-		dbConnInfo.setClusterName(clusterName);
-		dbConnInfo.setUsername(username);
-		dbConnInfo.setPassword(password);
-		dbConnInfo.setUrl(url);
-		dbConnInfo.setConnPoolInfo(_loadDbConnectInfo());
+		Node connPoolNode = xmlUtil.getFirstChildByName(root, "db-connection-pool");
+		if (connPoolNode == null) {
+			throw new LoadConfigException("找不到db-connection-pool节点");
+		}
+
+		Node cpCatalogNode = connPoolNode.getAttributes().getNamedItem("catalog");
+		String cpCatalog = EnumDbConnectionPoolCatalog.APP.getValue();
+		if (cpCatalogNode != null) {
+			cpCatalog = cpCatalogNode.getTextContent();
+		}
+		enumCpCatalog = EnumDbConnectionPoolCatalog.getEnum(cpCatalog);
+
+		switch (enumCpCatalog) {
+		case ENV:
+			dbConnInfo = new EnvDBConnectionInfo();
+			String envDsName = node.getTextContent().trim();
+			dbConnInfo.setClusterName(clusterName);
+			((EnvDBConnectionInfo) dbConnInfo).setEnvDsName(envDsName);
+			break;
+		case APP:
+			dbConnInfo = new AppDBConnectionInfo();
+			dbConnInfo.setClusterName(clusterName);
+			String username = xmlUtil.getFirstChildByName(node, "db.username").getTextContent().trim();
+			String password = xmlUtil.getFirstChildByName(node, "db.password").getTextContent().trim();
+			String url = xmlUtil.getFirstChildByName(node, "db.url").getTextContent().trim();
+
+			((AppDBConnectionInfo) dbConnInfo).setUsername(username);
+			((AppDBConnectionInfo) dbConnInfo).setPassword(password);
+			((AppDBConnectionInfo) dbConnInfo).setUrl(url);
+			((AppDBConnectionInfo) dbConnInfo).setConnPoolInfo(_loadDbConnectInfo(connPoolNode));
+			break;
+		default:
+			throw new LoadConfigException("catalog attribute of db-connection-pool config error, catalog = "
+					+ cpCatalog + " you should be select in \"env\" or \"app\"");
+		}
+
+		dbConnInfo.check();
 
 		return dbConnInfo;
 	}
@@ -350,6 +381,11 @@ public class XmlDBClusterConfigImpl implements IClusterConfig, Watcher {
 		}
 
 		return instance;
+	}
+
+	@Override
+	public EnumDbConnectionPoolCatalog getDbConnectionPoolCatalog() {
+		return enumCpCatalog;
 	}
 
 	@Override

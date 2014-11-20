@@ -85,7 +85,6 @@ public class ShardingUpdateImpl implements IShardingUpdate {
 			_saveBatchGlobal(conn, entities);
 
 			if (primaryCache != null) {
-				primaryCache.putGlobal(clusterName, tableName, entities);
 				primaryCache.incrCountGlobal(clusterName, tableName, entities.size());
 			}
 		} catch (Exception e1) {
@@ -117,9 +116,13 @@ public class ShardingUpdateImpl implements IShardingUpdate {
 
 			_updateBatchGlobal(conn, entities);
 
-			// 更新缓存
+			// 删除缓存
 			if (primaryCache != null) {
-				primaryCache.putGlobal(clusterName, tableName, entities);
+				List pks = new ArrayList(entities.size());
+				for (Object entity : entities) {
+					pks.add((Number) ReflectUtil.getPkValue(entity));
+				}
+				primaryCache.removeGlobal(clusterName, tableName, pks);
 			}
 		} catch (Exception e) {
 			throw new DBOperationException(e);
@@ -130,8 +133,8 @@ public class ShardingUpdateImpl implements IShardingUpdate {
 
 	@Override
 	public void globalRemoveByPk(Number pk, Class<?> clazz, String clusterName) {
-        List<Number> pks = new ArrayList<Number>(1);
-        pks.add(pk);
+		List<Number> pks = new ArrayList<Number>(1);
+		pks.add(pk);
 		globalRemoveByPks(pks, clazz, clusterName);
 	}
 
@@ -164,7 +167,7 @@ public class ShardingUpdateImpl implements IShardingUpdate {
 	public Number save(Object entity, IShardingKey shardingKey) {
 		String tableName = ReflectUtil.getTableName(entity.getClass());
 
-        // set primary key.
+		// set primary key.
 		long pk = this.idGenerator.genClusterUniqueLongId(shardingKey.getClusterName(), tableName);
 		try {
 			ReflectUtil.setPkValue(entity, pk);
@@ -200,7 +203,6 @@ public class ShardingUpdateImpl implements IShardingUpdate {
 		}
 
 		if (primaryCache != null) {
-			primaryCache.put(db, pk, entity);
 			primaryCache.incrCount(db, 1);
 		}
 
@@ -219,8 +221,7 @@ public class ShardingUpdateImpl implements IShardingUpdate {
 		DB db = _getDbFromMaster(tableName, shardingKey);
 
 		// 生成主键
-		int[] newPks = this.idGenerator.genClusterUniqueIntIdBatch(db.getClusterName(), tableName,
-				entities.size());
+		int[] newPks = this.idGenerator.genClusterUniqueIntIdBatch(db.getClusterName(), tableName, entities.size());
 
 		Number[] pks = new Number[newPks.length];
 		Connection conn = null;
@@ -240,7 +241,6 @@ public class ShardingUpdateImpl implements IShardingUpdate {
 		}
 
 		if (primaryCache != null) {
-			primaryCache.put(db, pks, entities);
 			primaryCache.incrCount(db, pks.length);
 		}
 
@@ -272,9 +272,9 @@ public class ShardingUpdateImpl implements IShardingUpdate {
 
 		// 清理缓存
 		if (primaryCache != null) {
-            List pks = new ArrayList(entities.size());
+			List pks = new ArrayList(entities.size());
 			for (Object entity : entities) {
-                pks.add((Number) ReflectUtil.getPkValue(entity));
+				pks.add((Number) ReflectUtil.getPkValue(entity));
 			}
 			primaryCache.remove(db, pks);
 		}
@@ -283,8 +283,8 @@ public class ShardingUpdateImpl implements IShardingUpdate {
 
 	@Override
 	public void removeByPk(Number pk, IShardingKey<?> shardingKey, Class<?> clazz) {
-        List<Number> pks = new ArrayList<Number>(1);
-        pks.add(pk);
+		List<Number> pks = new ArrayList<Number>(1);
+		pks.add(pk);
 		removeByPks(pks, shardingKey, clazz);
 	}
 
@@ -344,13 +344,16 @@ public class ShardingUpdateImpl implements IShardingUpdate {
 		_saveBatch(conn, entities, -1);
 	}
 
-    /**
-     * 执行保存数据操作.
-     *
-     * @param conn 数据库连接
-     * @param entities 需要被保存的数据 
-     * @param tableIndex 分片表下标. 当-1时忽略下标
-     */
+	/**
+	 * 执行保存数据操作.
+	 *
+	 * @param conn
+	 *            数据库连接
+	 * @param entities
+	 *            需要被保存的数据
+	 * @param tableIndex
+	 *            分片表下标. 当-1时忽略下标
+	 */
 	private void _saveBatch(Connection conn, List<? extends Object> entities, int tableIndex) {
 		Statement st = null;
 		try {

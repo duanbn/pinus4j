@@ -10,7 +10,10 @@
 	<!-- id generator batch -->
 	<db.cluster.generateid.batch>1</db.cluster.generateid.batch>
 
-	<db-connection-pool>
+	<!-- catalog is "env" or "app" -->
+	<!-- env represent get connection pool from container -->
+	<!-- app represent get connection pool from internal application -->
+	<db-connection-pool catalog="app">
 		<maxActive>400</maxActive>
 		<minIdle>10</minIdle>
 		<maxIdle>50</maxIdle>

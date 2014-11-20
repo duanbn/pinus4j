@@ -15,6 +15,7 @@ import com.pinus.cluster.IDBCluster;
 import com.pinus.datalayer.IShardingStatistics;
 import com.pinus.datalayer.jdbc.FatDB;
 import com.pinus.exception.DBOperationException;
+import com.pinus.exception.LoadConfigException;
 import com.pinus.generator.IIdGenerator;
 
 /**
@@ -636,14 +637,6 @@ public interface IShardingStorageClient {
 	public void setEnumDb(EnumDB enumDb);
 
 	/**
-	 * 设置数据库连接池. 默认使用dbcp
-	 * 
-	 * @param enumDbConnect
-	 *            连接池类型枚举
-	 */
-	public void setEnumDbConnect(EnumDBConnect enumDbConnect);
-
-	/**
 	 * 设置路由算法. 默认使用取模哈希算法
 	 * 
 	 * @param enumDBRouteAlg
@@ -654,7 +647,7 @@ public interface IShardingStorageClient {
 	/**
 	 * 初始化集群客户端.
 	 */
-	public void init();
+	public void init() throws LoadConfigException;
 
 	/**
 	 * 关闭存储.

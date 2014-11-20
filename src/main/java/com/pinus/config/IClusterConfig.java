@@ -4,6 +4,7 @@ import java.util.Map;
 
 import org.apache.zookeeper.ZooKeeper;
 
+import com.pinus.api.enums.EnumDbConnectionPoolCatalog;
 import com.pinus.cluster.beans.DBClusterInfo;
 import com.pinus.cluster.enums.HashAlgoEnum;
 
@@ -14,6 +15,13 @@ import com.pinus.cluster.enums.HashAlgoEnum;
  * @author duanbn
  */
 public interface IClusterConfig {
+
+	/**
+	 * 获取数据库连接方式.
+	 * 
+	 * @return
+	 */
+	public EnumDbConnectionPoolCatalog getDbConnectionPoolCatalog();
 
 	/**
 	 * 获取ID生成器默认批量生成值.

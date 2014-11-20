@@ -26,7 +26,7 @@ public class BaseTest {
 	protected static IPrimaryCache primaryCache;
 
 	@BeforeClass
-	public static void setup() {
+	public static void setup() throws Exception {
 		primaryCache = new MemCachedPrimaryCacheImpl("127.0.0.1:11211");
 		cacheClient.setMode(EnumMode.DISTRIBUTED);
 		cacheClient.setScanPackage("com.pinus");

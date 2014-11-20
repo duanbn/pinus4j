@@ -45,9 +45,13 @@ public class ShardingMasterQueryImpl extends AbstractShardingQuery implements IS
 		}
 
 		try {
-			T obj = (T) ReflectUtil.cloneWithGivenField(entities.get(0));
-
-			return obj;
+			if (query.hasQueryFields()) {
+				T obj = (T) ReflectUtil.cloneWithGivenField(entities.get(0), query.getFields());
+				return obj;
+			} else {
+				T obj = entities.get(0);
+				return obj;
+			}
 		} catch (Exception e) {
 			throw new DBOperationException(e);
 		}
@@ -66,9 +70,13 @@ public class ShardingMasterQueryImpl extends AbstractShardingQuery implements IS
 		}
 
 		try {
-			T obj = (T) ReflectUtil.cloneWithGivenField(entities.get(0));
-
-			return obj;
+			if (query.hasQueryFields()) {
+				T obj = (T) ReflectUtil.cloneWithGivenField(entities.get(0), query.getFields());
+				return obj;
+			} else {
+				T obj = entities.get(0);
+				return obj;
+			}
 		} catch (Exception e) {
 			throw new DBOperationException(e);
 		}
@@ -87,9 +95,9 @@ public class ShardingMasterQueryImpl extends AbstractShardingQuery implements IS
 		return count;
 	}
 
-    @Override
-    public Number getGlobalCountFromMaster(IQuery query, String clusterName, Class<?> clazz) {
-        DBConnectionInfo globalConnection;
+	@Override
+	public Number getGlobalCountFromMaster(IQuery query, String clusterName, Class<?> clazz) {
+		DBConnectionInfo globalConnection;
 		try {
 			globalConnection = this.dbCluster.getMasterGlobalConn(clusterName);
 		} catch (DBClusterException e) {
@@ -98,7 +106,7 @@ public class ShardingMasterQueryImpl extends AbstractShardingQuery implements IS
 		long count = selectGlobalCount(query, globalConnection, clusterName, clazz).longValue();
 
 		return count;
-    }
+	}
 
 	@Override
 	public <T> T findGlobalByPkFromMaster(Number pk, String clusterName, Class<T> clazz) {
@@ -170,7 +178,7 @@ public class ShardingMasterQueryImpl extends AbstractShardingQuery implements IS
 				List<T> filteResult = new ArrayList<T>(result.size());
 				if (query.hasQueryFields()) {
 					for (T obj : result) {
-						filteResult.add((T) ReflectUtil.cloneWithGivenField(obj));
+						filteResult.add((T) ReflectUtil.cloneWithGivenField(obj, query.getFields()));
 					}
 					result = filteResult;
 				}

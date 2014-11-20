@@ -2,6 +2,7 @@ package com.pinus;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.locks.Lock;
 
@@ -42,8 +43,10 @@ public class LoadTest extends BaseTest {
 	@Test
 	public void testCuratorDistributeLock() throws Exception {
 		int threadNum = 200;
-		final int maxCount = 10;
+		final int maxCount = 5;
 		int count = threadNum * maxCount;
+
+		final Random r = new Random();
 
 		List<Thread> ts = new ArrayList<Thread>();
 		for (int i = 0; i < threadNum; i++) {
@@ -54,6 +57,8 @@ public class LoadTest extends BaseTest {
 						try {
 							lock.lock();
 							System.out.println(counter++);
+
+							Thread.sleep(r.nextInt(100));
 						} catch (Exception e) {
 							e.printStackTrace();
 						} finally {

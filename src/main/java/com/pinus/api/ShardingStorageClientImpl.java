@@ -17,17 +17,20 @@ import org.apache.curator.utils.CloseableUtils;
 import org.apache.log4j.Logger;
 
 import com.pinus.api.enums.EnumDB;
-import com.pinus.api.enums.EnumDBConnect;
 import com.pinus.api.enums.EnumDBMasterSlave;
 import com.pinus.api.enums.EnumDBRouteAlg;
+import com.pinus.api.enums.EnumDbConnectionPoolCatalog;
 import com.pinus.api.enums.EnumMode;
 import com.pinus.api.query.IQuery;
 import com.pinus.api.query.QueryImpl;
 import com.pinus.cache.IPrimaryCache;
 import com.pinus.cluster.DB;
 import com.pinus.cluster.IDBCluster;
-import com.pinus.cluster.impl.DbcpDBClusterImpl;
+import com.pinus.cluster.impl.AppDBClusterImpl;
+import com.pinus.cluster.impl.EnvDBClusterImpl;
 import com.pinus.cluster.lock.CuratorDistributeedLock;
+import com.pinus.config.IClusterConfig;
+import com.pinus.config.impl.XmlDBClusterConfigImpl;
 import com.pinus.constant.Const;
 import com.pinus.datalayer.IShardingMasterQuery;
 import com.pinus.datalayer.IShardingSlaveQuery;
@@ -38,11 +41,13 @@ import com.pinus.datalayer.jdbc.ShardingMasterQueryImpl;
 import com.pinus.datalayer.jdbc.ShardingSlaveQueryImpl;
 import com.pinus.datalayer.jdbc.ShardingUpdateImpl;
 import com.pinus.exception.DBClusterException;
+import com.pinus.exception.LoadConfigException;
 import com.pinus.generator.IIdGenerator;
 import com.pinus.generator.impl.DistributedSequenceIdGeneratorImpl;
 import com.pinus.generator.impl.StandaloneSequenceIdGeneratorImpl;
 import com.pinus.util.CheckUtil;
 import com.pinus.util.ReflectUtil;
+import com.pinus.util.StringUtils;
 
 /**
  * 用户调用接口实现. 数据库类型、数据库连接类型、路由算法可以通过EnumDB、EnumDBConnect、EnumDBRouteAlg枚举进行设置.
@@ -92,11 +97,6 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 	private EnumDB enumDb = EnumDB.MYSQL;
 
 	/**
-	 * 数据库连接类型. 默认使用DBCP的数据库连接池
-	 */
-	private EnumDBConnect enumDbConnect = EnumDBConnect.DBCP;
-
-	/**
 	 * 是否生成数据库表. 默认是不自动生成库表
 	 */
 	private boolean isCreateTable = false;
@@ -142,14 +142,21 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 	/**
 	 * 初始化方法
 	 */
-	public void init() {
+	public void init() throws LoadConfigException {
+		IClusterConfig clusterConfig = XmlDBClusterConfigImpl.getInstance();
+
+		EnumDbConnectionPoolCatalog enumDbCpCatalog = clusterConfig.getDbConnectionPoolCatalog();
+
 		// 初始化集群
-		switch (enumDbConnect) {
-		case DBCP:
-			this.dbCluster = new DbcpDBClusterImpl(enumDb);
+		switch (enumDbCpCatalog) {
+		case APP:
+			this.dbCluster = new AppDBClusterImpl(enumDb);
+			break;
+		case ENV:
+			this.dbCluster = new EnvDBClusterImpl(enumDb);
 			break;
 		default:
-			this.dbCluster = new DbcpDBClusterImpl(enumDb);
+			this.dbCluster = new AppDBClusterImpl(enumDb);
 			break;
 		}
 		// 设置路由算法.
@@ -616,18 +623,6 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 		this.enumDb = enumDb;
 	}
 
-	public EnumDBConnect getEnumDbConnect() {
-		return enumDbConnect;
-	}
-
-	@Override
-	public void setEnumDbConnect(EnumDBConnect enumDbConnect) {
-		if (enumDbConnect == null) {
-			throw new IllegalArgumentException("参数错误, 参数不能为空");
-		}
-		this.enumDbConnect = enumDbConnect;
-	}
-
 	public EnumDBRouteAlg getEnumDBRouteAlg() {
 		return enumDBRouteAlg;
 	}
@@ -677,6 +672,10 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 
 	@Override
 	public void setScanPackage(String scanPackage) {
+		if (StringUtils.isBlank(scanPackage)) {
+			throw new IllegalArgumentException("参数错误，参数不能为空");
+		}
+
 		this.scanPackage = scanPackage;
 	}
 

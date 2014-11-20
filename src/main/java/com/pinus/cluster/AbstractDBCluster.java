@@ -499,17 +499,17 @@ public abstract class AbstractDBCluster implements IDBCluster {
 
 	@Override
 	public List<DBTable> getDBTableFromJvm() {
-        // load entity object from mulitple package path.
-        List<DBTable> tables = new ArrayList<DBTable>();
+		// load entity object from mulitple package path.
+		List<DBTable> tables = new ArrayList<DBTable>();
 
 		try {
-            for (String pkgPath : this.scanPackage.split(","))
-                tables.addAll(this.dbGenerator.scanEntity(pkgPath));
+			for (String pkgPath : this.scanPackage.split(","))
+				tables.addAll(this.dbGenerator.scanEntity(pkgPath));
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
 
-        return tables;
+		return tables;
 	}
 
 	/**
@@ -625,8 +625,9 @@ public abstract class AbstractDBCluster implements IDBCluster {
 		}
 	}
 
-	private void _initDBCluster(Map<String, DBClusterInfo> dbClusterInfo) {
+	private void _initDBCluster(Map<String, DBClusterInfo> dbClusterInfo) throws LoadConfigException {
 		for (Map.Entry<String, DBClusterInfo> entry : dbClusterInfo.entrySet()) {
+
 			// 初始化全局主库
 			DBConnectionInfo masterGlobalConnection = entry.getValue().getMasterGlobalConnection();
 			if (masterGlobalConnection != null)
@@ -746,7 +747,7 @@ public abstract class AbstractDBCluster implements IDBCluster {
 	/**
 	 * 创建数据源连接.
 	 */
-	public abstract void buildDataSource(DBConnectionInfo dbConnInfo);
+	public abstract void buildDataSource(DBConnectionInfo dbConnInfo) throws LoadConfigException;
 
 	/**
 	 * 关闭数据源连接
