@@ -160,14 +160,14 @@ public class ShardingSlaveQueryImpl extends AbstractShardingQuery implements ISh
 
 	@Override
 	public Number getCountFromSlave(IShardingKey<?> shardingKey, Class<?> clazz, EnumDBMasterSlave slave) {
-		DB db = _getDbFromSlave(slave, clazz, shardingKey);
+		DB db = _getDbFromSlave(clazz, shardingKey, slave);
 
 		return selectCountWithCache(db, clazz);
 	}
 
 	@Override
 	public <T> T findByPkFromSlave(Number pk, IShardingKey<?> shardingKey, Class<T> clazz, EnumDBMasterSlave slave) {
-		DB db = _getDbFromSlave(slave, clazz, shardingKey);
+		DB db = _getDbFromSlave(clazz, shardingKey, slave);
 
 		return selectByPkWithCache(db, pk, clazz);
 	}
@@ -175,7 +175,7 @@ public class ShardingSlaveQueryImpl extends AbstractShardingQuery implements ISh
 	@Override
 	public <T> List<T> findByPksFromSlave(IShardingKey<?> shardingKey, Class<T> clazz, EnumDBMasterSlave slave,
 			Number... pks) {
-		DB db = _getDbFromSlave(slave, clazz, shardingKey);
+		DB db = _getDbFromSlave(clazz, shardingKey, slave);
 
 		return selectByPksWithCache(db, clazz, pks);
 	}
@@ -201,7 +201,7 @@ public class ShardingSlaveQueryImpl extends AbstractShardingQuery implements ISh
 		for (int i = 0; i < pks.length; i++) {
 			shardingKey = shardingValues.get(i);
 			pk = pks[i];
-			db = _getDbFromSlave(slave, clazz, shardingKey);
+			db = _getDbFromSlave(clazz, shardingKey, slave);
 
 			data = selectByPkWithCache(db, pk, clazz);
 			if (data != null) {
@@ -213,7 +213,7 @@ public class ShardingSlaveQueryImpl extends AbstractShardingQuery implements ISh
 	}
 
 	@Override
-	public <T> List<T> findByShardingPairFromSlave(List<Number> pks, List<IShardingKey<?>> shardingValues,
+	public <T> List<T> findByShardingPairFromSlave(List<? extends Number> pks, List<IShardingKey<?>> shardingValues,
 			Class<T> clazz, EnumDBMasterSlave slave) {
 		return findByShardingPairFromSlave(shardingValues, clazz, slave, pks.toArray(new Number[pks.size()]));
 	}
@@ -222,7 +222,7 @@ public class ShardingSlaveQueryImpl extends AbstractShardingQuery implements ISh
 	public List<Map<String, Object>> findBySqlFromSlave(SQL sql, IShardingKey<?> shardingKey, EnumDBMasterSlave slave) {
 		DB next = null;
 		for (String tableName : sql.getTableNames()) {
-			DB cur = _getDbFromSlave(slave, tableName, shardingKey);
+			DB cur = _getDbFromSlave(tableName, shardingKey, slave);
 			if (next != null && (cur != next)) {
 				throw new DBOperationException("the tables in sql maybe not at the same database");
 			}
@@ -237,7 +237,7 @@ public class ShardingSlaveQueryImpl extends AbstractShardingQuery implements ISh
 	@Override
 	public <T> List<T> findByQueryFromSlave(IQuery query, IShardingKey<?> shardingKey, Class<T> clazz,
 			EnumDBMasterSlave slave) {
-		DB db = _getDbFromSlave(slave, clazz, shardingKey);
+		DB db = _getDbFromSlave(clazz, shardingKey, slave);
 
 		List<T> result = null;
 		if (isCacheAvailable(clazz)) {
@@ -263,11 +263,11 @@ public class ShardingSlaveQueryImpl extends AbstractShardingQuery implements ISh
 	 * @param shardingKey
 	 *            路由因子
 	 */
-	private DB _getDbFromSlave(EnumDBMasterSlave slave, Class<?> clazz, IShardingKey<?> shardingKey) {
+	private DB _getDbFromSlave(Class<?> clazz, IShardingKey<?> shardingKey, EnumDBMasterSlave slave) {
 		String tableName = ReflectUtil.getTableName(clazz);
 		DB db = null;
 		try {
-			db = this.dbCluster.selectDbFromSlave(slave, tableName, shardingKey);
+			db = this.dbCluster.selectDbFromSlave(tableName, shardingKey, slave);
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("[" + db + "]");
 			}
@@ -277,10 +277,10 @@ public class ShardingSlaveQueryImpl extends AbstractShardingQuery implements ISh
 		return db;
 	}
 
-	private DB _getDbFromSlave(EnumDBMasterSlave slave, String tableName, IShardingKey<?> shardingKey) {
+	private DB _getDbFromSlave(String tableName, IShardingKey<?> shardingKey, EnumDBMasterSlave slave) {
 		DB db = null;
 		try {
-			db = this.dbCluster.selectDbFromSlave(slave, tableName, shardingKey);
+			db = this.dbCluster.selectDbFromSlave(tableName, shardingKey, slave);
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("[" + db + "]");
 			}

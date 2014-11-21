@@ -174,7 +174,7 @@ public interface IShardingSlaveQuery {
 	 * @throws IllegalArgumentException
 	 *             输入参数错误
 	 */
-	public <T> List<T> findByShardingPairFromSlave(List<Number> pks, List<IShardingKey<?>> shardingValues,
+	public <T> List<T> findByShardingPairFromSlave(List<? extends Number> pks, List<IShardingKey<?>> shardingValues,
 			Class<T> clazz, EnumDBMasterSlave slave);
 
 	/**

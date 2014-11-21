@@ -1,13 +1,10 @@
 package com.pinus.cluster.impl;
 
-import java.sql.SQLException;
-
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import javax.sql.DataSource;
 
-import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.log4j.Logger;
 
 import com.pinus.api.enums.EnumDB;
@@ -54,12 +51,7 @@ public class EnvDBClusterImpl extends AbstractDBCluster {
 
 	@Override
 	public void closeDataSource(DBConnectionInfo dbConnInfo) {
-		// FIXME: 是否容器会关闭
-		try {
-			((BasicDataSource) dbConnInfo.getDatasource()).close();
-		} catch (SQLException e) {
-			LOG.error(e.getMessage());
-		}
+		// 由容器负责关闭数据库连接
 	}
 
 }

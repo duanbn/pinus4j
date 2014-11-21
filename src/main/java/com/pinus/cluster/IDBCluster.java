@@ -32,33 +32,34 @@ import com.pinus.generator.IDBGenerator;
  */
 public interface IDBCluster {
 
-    /**
-     * 设置此集群是否从zookeeper中加载分片信息.
-     *
-     * @param value true:是， false:否.
-     */
-    public void setShardInfoFromZk(boolean value);
+	/**
+	 * 设置此集群是否从zookeeper中加载分片信息.
+	 *
+	 * @param value
+	 *            true:是， false:否.
+	 */
+	public void setShardInfoFromZk(boolean value);
 
-    /**
-     * 从Zookeeper中获取分片信息.
-     *
-     * @return 分片信息.
-     */
+	/**
+	 * 从Zookeeper中获取分片信息.
+	 *
+	 * @return 分片信息.
+	 */
 	public List<DBTable> getDBTableFromZk();
 
-    /**
-     * 从Jvm中获取分片信息.
-     *
-     * @return 分片信息.
-     */
+	/**
+	 * 从Jvm中获取分片信息.
+	 *
+	 * @return 分片信息.
+	 */
 	public List<DBTable> getDBTableFromJvm();
 
-    /**
-     * Get all info about this cluster.
-     *
-     * @return all cluster info.
-     */
-    public Collection<DBClusterInfo> getDbClusterInfo();
+	/**
+	 * Get all info about this cluster.
+	 *
+	 * @return all cluster info.
+	 */
+	public Collection<DBClusterInfo> getDbClusterInfo();
 
 	/**
 	 * 获取集群信息.
@@ -135,19 +136,22 @@ public interface IDBCluster {
 	 *            分库分表因子
 	 * @return 被操作的库表
 	 */
-	public DB selectDbFromSlave(EnumDBMasterSlave slave, String tableName, IShardingKey<?> value)
+	public DB selectDbFromSlave(String tableName, IShardingKey<?> value, EnumDBMasterSlave slave)
 			throws DBClusterException;
 
-    /**
-     * 获取所有的分片引用.
-     *
-     * @param tableNum 分表数
-     * @param clusterName 分片名称
-     * @param tableName 表名
-     *
-     * @return 所有分片
-     */
-    public List<DB> getAllMasterShardingDB(int tableNum, String clusterName, String tableName);
+	/**
+	 * 获取所有的分片引用.
+	 *
+	 * @param tableNum
+	 *            分表数
+	 * @param clusterName
+	 *            分片名称
+	 * @param tableName
+	 *            表名
+	 *
+	 * @return 所有分片
+	 */
+	public List<DB> getAllMasterShardingDB(int tableNum, String clusterName, String tableName);
 
 	/**
 	 * 获取此实体对象对应的所有的分库分表引用.

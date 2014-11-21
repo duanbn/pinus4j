@@ -16,13 +16,13 @@ import com.pinus.cluster.beans.DBTable;
 import com.pinus.cluster.impl.AppDBClusterImpl;
 import com.pinus.entity.TestEntity;
 
-public class DbcpDBClusterImplTest {
+public class DBClusterTest {
 
 	public static final String CLUSTER_KLSTORAGE = "pinus";
 
 	private IDBCluster dbCluster;
 
-	public DbcpDBClusterImplTest() throws Exception {
+	public DBClusterTest() throws Exception {
 		this.dbCluster = new AppDBClusterImpl(EnumDB.MYSQL);
 		this.dbCluster.setScanPackage("com.pinus.entity");
 		this.dbCluster.startup();
@@ -81,19 +81,19 @@ public class DbcpDBClusterImplTest {
 	@Test
 	public void testSlaveSelect() throws Exception {
 		IShardingKey<Long> sv = new ShardingKey<Long>(CLUSTER_KLSTORAGE, 150080l);
-		DB db = dbCluster.selectDbFromSlave(EnumDBMasterSlave.SLAVE0, "test_entity", sv);
+		DB db = dbCluster.selectDbFromSlave("test_entity", sv, EnumDBMasterSlave.SLAVE0);
 		System.out.println(db);
 
 		sv = new ShardingKey<Long>(CLUSTER_KLSTORAGE, 150081l);
-		db = dbCluster.selectDbFromSlave(EnumDBMasterSlave.SLAVE0, "test_entity", sv);
+		db = dbCluster.selectDbFromSlave("test_entity", sv, EnumDBMasterSlave.SLAVE0);
 		System.out.println(db);
 
-		sv = new ShardingKey<Long>(CLUSTER_KLSTORAGE, 50080l);
-		db = dbCluster.selectDbFromSlave(EnumDBMasterSlave.SLAVE0, "test_entity", sv);
+		sv = new ShardingKey<Long>(CLUSTER_KLSTORAGE, 1500800l);
+		db = dbCluster.selectDbFromSlave("test_entity", sv, EnumDBMasterSlave.SLAVE0);
 		System.out.println(db);
 
-		sv = new ShardingKey<Long>(CLUSTER_KLSTORAGE, 50081l);
-		db = dbCluster.selectDbFromSlave(EnumDBMasterSlave.SLAVE0, "test_entity", sv);
+		sv = new ShardingKey<Long>(CLUSTER_KLSTORAGE, 1500811l);
+		db = dbCluster.selectDbFromSlave("test_entity", sv, EnumDBMasterSlave.SLAVE0);
 		System.out.println(db);
 	}
 

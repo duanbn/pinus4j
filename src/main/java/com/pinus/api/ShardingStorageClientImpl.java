@@ -288,8 +288,8 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 		CheckUtil.checkShardingEntity(entity);
 
 		String clusterName = ReflectUtil.getClusterName(entity.getClass());
-		Object shardingValue = ReflectUtil.getShardingValue(entity);
-		IShardingKey<Object> sk = new ShardingKey<Object>(clusterName, shardingValue);
+		Object shardingKey = ReflectUtil.getShardingValue(entity);
+		IShardingKey<Object> sk = new ShardingKey<Object>(clusterName, shardingKey);
 		CheckUtil.checkShardingValue(sk);
 
 		return this.updater.save(entity, sk);
@@ -300,66 +300,56 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 		CheckUtil.checkShardingEntity(entity);
 
 		String clusterName = ReflectUtil.getClusterName(entity.getClass());
-		Object shardingValue = ReflectUtil.getShardingValue(entity);
-		IShardingKey<Object> sk = new ShardingKey<Object>(clusterName, shardingValue);
+		Object shardingKey = ReflectUtil.getShardingValue(entity);
+		IShardingKey<Object> sk = new ShardingKey<Object>(clusterName, shardingKey);
 		CheckUtil.checkShardingValue(sk);
 
 		this.updater.update(entity, sk);
 	}
 
 	@Override
-	public Number[] saveBatch(List<? extends Object> entities, IShardingKey<?> shardingValue) {
+	public Number[] saveBatch(List<? extends Object> entities, IShardingKey<?> shardingKey) {
 		CheckUtil.checkEntityList(entities);
-		CheckUtil.checkShardingValue(shardingValue);
+		CheckUtil.checkShardingValue(shardingKey);
 
-		return this.updater.saveBatch(entities, shardingValue);
+		return this.updater.saveBatch(entities, shardingKey);
 	}
 
 	@Override
-	public void updateBatch(List<? extends Object> entities, IShardingKey<?> shardingValue) {
+	public void updateBatch(List<? extends Object> entities, IShardingKey<?> shardingKey) {
 		CheckUtil.checkEntityList(entities);
-		CheckUtil.checkShardingValue(shardingValue);
+		CheckUtil.checkShardingValue(shardingKey);
 
-		this.updater.updateBatch(entities, shardingValue);
+		this.updater.updateBatch(entities, shardingKey);
 	}
 
 	@Override
-	public void removeByPk(Number pk, IShardingKey<?> shardingValue, Class<?> clazz) {
+	public void removeByPk(Number pk, IShardingKey<?> shardingKey, Class<?> clazz) {
 		CheckUtil.checkNumberGtZero(pk);
-		CheckUtil.checkShardingValue(shardingValue);
+		CheckUtil.checkShardingValue(shardingKey);
 		CheckUtil.checkClass(clazz);
 
-		this.updater.removeByPk(pk, shardingValue, clazz);
+		this.updater.removeByPk(pk, shardingKey, clazz);
 	}
 
 	@Override
-	public void removeByPkList(List<? extends Number> pks, IShardingKey<?> shardingValue, Class<?> clazz) {
+	public void removeByPkList(List<? extends Number> pks, IShardingKey<?> shardingKey, Class<?> clazz) {
 		if (pks == null || pks.isEmpty()) {
 			return;
 		}
-		CheckUtil.checkShardingValue(shardingValue);
+		CheckUtil.checkShardingValue(shardingKey);
 		CheckUtil.checkClass(clazz);
 
-		this.updater.removeByPks(pks, shardingValue, clazz);
+		this.updater.removeByPks(pks, shardingKey, clazz);
 	}
 
 	@Override
-	public void removeByPks(IShardingKey<?> shardingValue, Class<?> clazz, Number... pks) {
+	public void removeByPks(IShardingKey<?> shardingKey, Class<?> clazz, Number... pks) {
 		if (pks == null || pks.length == 0) {
 			return;
 		}
 
-		removeByPkList(Arrays.asList(pks), shardingValue, clazz);
-	}
-
-	@Override
-	public <T> T findGlobalOneByQuery(IQuery query, String clusterName, Class<T> clazz) {
-		return this.masterQueryer.findGlobalOneByQueryFromMaster(query, clusterName, clazz);
-	}
-
-	@Override
-	public <T> T findOneByQuery(IQuery query, IShardingKey<?> shardingValue, Class<T> clazz) {
-		return this.masterQueryer.findOneByQueryFromMaster(query, shardingValue, clazz);
+		removeByPkList(Arrays.asList(pks), shardingKey, clazz);
 	}
 
 	@Override
@@ -368,6 +358,23 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 		CheckUtil.checkClass(clazz);
 
 		return this.masterQueryer.getGlobalCountFromMaster(clusterName, clazz);
+	}
+
+	@Override
+	public Number getGlobalCount(String clusterName, Class<?> clazz, EnumDBMasterSlave masterSlave) {
+		CheckUtil.checkClusterName(clusterName);
+		CheckUtil.checkClass(clazz);
+
+		if (masterSlave == null) {
+			throw new IllegalArgumentException("master slave param cann't be null");
+		}
+
+		switch (masterSlave) {
+		case MASTER:
+			return this.masterQueryer.getGlobalCountFromMaster(clusterName, clazz);
+		default:
+			return this.slaveQueryer.getGlobalCountFromSlave(clusterName, clazz, masterSlave);
+		}
 	}
 
 	@Override
@@ -380,12 +387,55 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 	}
 
 	@Override
+	public Number getGlobalCount(IQuery query, String clusterName, Class<?> clazz, EnumDBMasterSlave masterSlave) {
+		CheckUtil.checkQuery(query);
+		CheckUtil.checkClusterName(clusterName);
+		CheckUtil.checkClass(clazz);
+
+		switch (masterSlave) {
+		case MASTER:
+			return this.masterQueryer.getGlobalCountFromMaster(clusterName, clazz);
+		default:
+			return this.slaveQueryer.getGlobalCountFromSlave(clusterName, clazz, masterSlave);
+		}
+	}
+
+	@Override
 	public <T> T findGlobalByPk(Number pk, String clusterName, Class<T> clazz) {
 		CheckUtil.checkClusterName(clusterName);
 		CheckUtil.checkNumberGtZero(pk);
 		CheckUtil.checkClass(clazz);
 
 		return this.masterQueryer.findGlobalByPkFromMaster(pk, clusterName, clazz);
+	}
+
+	@Override
+	public <T> T findGlobalByPk(Number pk, String clusterName, Class<T> clazz, EnumDBMasterSlave masterSlave) {
+		CheckUtil.checkClusterName(clusterName);
+		CheckUtil.checkNumberGtZero(pk);
+		CheckUtil.checkClass(clazz);
+
+		switch (masterSlave) {
+		case MASTER:
+			return this.masterQueryer.findGlobalByPkFromMaster(pk, clusterName, clazz);
+		default:
+			return this.slaveQueryer.findGlobalByPkFromSlave(pk, clusterName, clazz, masterSlave);
+		}
+	}
+
+	@Override
+	public <T> T findGlobalOneByQuery(IQuery query, String clusterName, Class<T> clazz) {
+		return this.masterQueryer.findGlobalOneByQueryFromMaster(query, clusterName, clazz);
+	}
+
+	@Override
+	public <T> T findGlobalOneByQuery(IQuery query, String clusterName, Class<T> clazz, EnumDBMasterSlave masterSlave) {
+		switch (masterSlave) {
+		case MASTER:
+			return this.masterQueryer.findGlobalOneByQueryFromMaster(query, clusterName, clazz);
+		default:
+			return this.slaveQueryer.findGlobalOneByQueryFromSlave(query, clusterName, clazz, masterSlave);
+		}
 	}
 
 	@Override
@@ -401,6 +451,23 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 	}
 
 	@Override
+	public <T> List<T> findGlobalByPks(String clusterName, Class<T> clazz, EnumDBMasterSlave masterSlave, Number... pks) {
+		if (pks == null || pks.length == 0) {
+			return new ArrayList<T>();
+		}
+
+		CheckUtil.checkClusterName(clusterName);
+		CheckUtil.checkClass(clazz);
+
+		switch (masterSlave) {
+		case MASTER:
+			return this.masterQueryer.findGlobalByPksFromMaster(clusterName, clazz, pks);
+		default:
+			return this.slaveQueryer.findGlobalByPksFromSlave(clusterName, clazz, masterSlave, pks);
+		}
+	}
+
+	@Override
 	public <T> List<T> findGlobalByPkList(List<? extends Number> pks, String clusterName, Class<T> clazz) {
 		CheckUtil.checkClusterName(clusterName);
 		CheckUtil.checkClass(clazz);
@@ -410,12 +477,39 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 	}
 
 	@Override
-	@Deprecated
+	public <T> List<T> findGlobalByPkList(List<? extends Number> pks, String clusterName, Class<T> clazz,
+			EnumDBMasterSlave masterSlave) {
+		CheckUtil.checkClusterName(clusterName);
+		CheckUtil.checkClass(clazz);
+		CheckUtil.checkNumberList(pks);
+
+		switch (masterSlave) {
+		case MASTER:
+			return this.masterQueryer.findGlobalByPksFromMaster(pks, clusterName, clazz);
+		default:
+			return this.slaveQueryer.findGlobalByPksFromSlave(pks, clusterName, clazz, masterSlave);
+		}
+	}
+
+	@Override
 	public List<Map<String, Object>> findGlobalBySql(SQL sql, String clusterName) {
 		CheckUtil.checkSQL(sql);
 		CheckUtil.checkClusterName(clusterName);
 
 		return this.masterQueryer.findGlobalBySqlFromMaster(sql, clusterName);
+	}
+
+	@Override
+	public List<Map<String, Object>> findGlobalBySql(SQL sql, String clusterName, EnumDBMasterSlave masterSlave) {
+		CheckUtil.checkSQL(sql);
+		CheckUtil.checkClusterName(clusterName);
+
+		switch (masterSlave) {
+		case MASTER:
+			return this.masterQueryer.findGlobalBySqlFromMaster(sql, clusterName);
+		default:
+			return this.slaveQueryer.findGlobalBySqlFromSlave(sql, clusterName, masterSlave);
+		}
 	}
 
 	@Override
@@ -425,6 +519,20 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 		CheckUtil.checkClass(clazz);
 
 		return this.masterQueryer.findGlobalByQueryFromMaster(query, clusterName, clazz);
+	}
+
+	@Override
+	public <T> List<T> findGlobalByQuery(IQuery query, String clusterName, Class<T> clazz, EnumDBMasterSlave masterSlave) {
+		CheckUtil.checkQuery(query);
+		CheckUtil.checkClusterName(clusterName);
+		CheckUtil.checkClass(clazz);
+
+		switch (masterSlave) {
+		case MASTER:
+			return this.masterQueryer.findGlobalByQueryFromMaster(query, clusterName, clazz);
+		default:
+			return this.slaveQueryer.findGlobalByQueryFromSlave(query, clusterName, clazz, masterSlave);
+		}
 	}
 
 	@Override
@@ -443,89 +551,211 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 	}
 
 	@Override
-	public Number getCount(IShardingKey<?> shardingValue, Class<?> clazz) {
-		CheckUtil.checkShardingValue(shardingValue);
+	public Number getCount(IShardingKey<?> shardingKey, Class<?> clazz) {
+		CheckUtil.checkShardingValue(shardingKey);
 		CheckUtil.checkClass(clazz);
 
-		return this.masterQueryer.getCountFromMaster(shardingValue, clazz);
+		return this.masterQueryer.getCountFromMaster(shardingKey, clazz);
 	}
 
 	@Override
-	public Number getCount(IQuery query, IShardingKey<?> shardingValue, Class<?> clazz) {
+	public Number getCount(IQuery query, IShardingKey<?> shardingKey, Class<?> clazz) {
 		CheckUtil.checkQuery(query);
-		CheckUtil.checkShardingValue(shardingValue);
+		CheckUtil.checkShardingValue(shardingKey);
 		CheckUtil.checkClass(clazz);
 
-		return this.masterQueryer.getCountFromMaster(query, shardingValue, clazz);
+		return this.masterQueryer.getCountFromMaster(query, shardingKey, clazz);
 	}
 
 	@Override
-	public <T> T findByPk(Number pk, IShardingKey<?> shardingValue, Class<T> clazz) {
+	public <T> T findByPk(Number pk, IShardingKey<?> shardingKey, Class<T> clazz) {
 		CheckUtil.checkNumberGtZero(pk);
-		CheckUtil.checkShardingValue(shardingValue);
+		CheckUtil.checkShardingValue(shardingKey);
 		CheckUtil.checkClass(clazz);
 
-		return this.masterQueryer.findByPkFromMaster(pk, shardingValue, clazz);
+		return this.masterQueryer.findByPkFromMaster(pk, shardingKey, clazz);
 	}
 
 	@Override
-	public <T> List<T> findByPks(IShardingKey<?> shardingValue, Class<T> clazz, Number... pks) {
+	public <T> T findByPk(Number pk, IShardingKey<?> shardingKey, Class<T> clazz, EnumDBMasterSlave masterSlave) {
+		CheckUtil.checkNumberGtZero(pk);
+		CheckUtil.checkShardingValue(shardingKey);
+		CheckUtil.checkClass(clazz);
+
+		switch (masterSlave) {
+		case MASTER:
+			return this.masterQueryer.findByPkFromMaster(pk, shardingKey, clazz);
+		default:
+			return this.slaveQueryer.findByPkFromSlave(pk, shardingKey, clazz, masterSlave);
+		}
+	}
+
+	@Override
+	public <T> T findOneByQuery(IQuery query, IShardingKey<?> shardingKey, Class<T> clazz) {
+		return this.masterQueryer.findOneByQueryFromMaster(query, shardingKey, clazz);
+	}
+
+	@Override
+	public <T> T findOneByQuery(IQuery query, IShardingKey<?> shardingKey, Class<T> clazz, EnumDBMasterSlave masterSlave) {
+		switch (masterSlave) {
+		case MASTER:
+			return this.masterQueryer.findOneByQueryFromMaster(query, shardingKey, clazz);
+		default:
+			return this.slaveQueryer.findOneByQueryFromSlave(query, shardingKey, clazz, masterSlave);
+		}
+	}
+
+	@Override
+	public <T> List<T> findByPks(IShardingKey<?> shardingKey, Class<T> clazz, Number... pks) {
 		if (pks == null || pks.length == 0) {
 			return new ArrayList<T>();
 		}
 
-		CheckUtil.checkShardingValue(shardingValue);
+		CheckUtil.checkShardingValue(shardingKey);
 		CheckUtil.checkClass(clazz);
 
-		return this.masterQueryer.findByPksFromMaster(shardingValue, clazz, pks);
+		return this.masterQueryer.findByPksFromMaster(shardingKey, clazz, pks);
 	}
 
 	@Override
-	public <T> List<T> findByPkList(List<? extends Number> pks, IShardingKey<?> shardingValue, Class<T> clazz) {
-		CheckUtil.checkNumberList(pks);
-		CheckUtil.checkShardingValue(shardingValue);
-		CheckUtil.checkClass(clazz);
-
-		return this.masterQueryer.findByPkListFromMaster(pks, shardingValue, clazz);
-	}
-
-	@Override
-	public <T> List<T> findByShardingPair(List<IShardingKey<?>> shardingValues, Class<T> clazz, Number... pks) {
+	public <T> List<T> findByPks(IShardingKey<?> shardingKey, Class<T> clazz, EnumDBMasterSlave masterSlave,
+			Number... pks) {
 		if (pks == null || pks.length == 0) {
 			return new ArrayList<T>();
 		}
 
-		CheckUtil.checkShardingValueList(shardingValues);
+		CheckUtil.checkShardingValue(shardingKey);
 		CheckUtil.checkClass(clazz);
 
-		return this.masterQueryer.findByShardingPairFromMaster(shardingValues, clazz, pks);
+		switch (masterSlave) {
+		case MASTER:
+			return this.masterQueryer.findByPksFromMaster(shardingKey, clazz, pks);
+		default:
+			return this.slaveQueryer.findByPksFromSlave(shardingKey, clazz, masterSlave, pks);
+		}
 	}
 
 	@Override
-	public <T> List<T> findByShardingPair(List<? extends Number> pks, List<IShardingKey<?>> shardingValues,
-			Class<T> clazz) {
+	public <T> List<T> findByPkList(List<? extends Number> pks, IShardingKey<?> shardingKey, Class<T> clazz) {
 		CheckUtil.checkNumberList(pks);
-		CheckUtil.checkShardingValueList(shardingValues);
+		CheckUtil.checkShardingValue(shardingKey);
 		CheckUtil.checkClass(clazz);
 
-		return this.masterQueryer.findByShardingPairFromMaster(pks, shardingValues, clazz);
+		return this.masterQueryer.findByPkListFromMaster(pks, shardingKey, clazz);
 	}
 
 	@Override
-	public List<Map<String, Object>> findBySql(SQL sql, IShardingKey<?> shardingValue) {
-		CheckUtil.checkShardingValue(shardingValue);
+	public <T> List<T> findByPkList(List<? extends Number> pks, IShardingKey<?> shardingKey, Class<T> clazz,
+			EnumDBMasterSlave masterSlave) {
+		CheckUtil.checkNumberList(pks);
+		CheckUtil.checkShardingValue(shardingKey);
+		CheckUtil.checkClass(clazz);
+
+		switch (masterSlave) {
+		case MASTER:
+			return this.masterQueryer.findByPkListFromMaster(pks, shardingKey, clazz);
+		default:
+			return this.slaveQueryer.findByPkListFromSlave(pks, shardingKey, clazz, masterSlave);
+		}
+	}
+
+	@Override
+	public <T> List<T> findByShardingPair(List<IShardingKey<?>> shardingKeys, Class<T> clazz, Number... pks) {
+		if (pks == null || pks.length == 0) {
+			return new ArrayList<T>();
+		}
+
+		CheckUtil.checkShardingValueList(shardingKeys);
+		CheckUtil.checkClass(clazz);
+
+		return this.masterQueryer.findByShardingPairFromMaster(shardingKeys, clazz, pks);
+	}
+
+	@Override
+	public <T> List<T> findByShardingPair(List<IShardingKey<?>> shardingKeys, Class<T> clazz,
+			EnumDBMasterSlave masterSlave, Number... pks) {
+		if (pks == null || pks.length == 0) {
+			return new ArrayList<T>();
+		}
+
+		CheckUtil.checkShardingValueList(shardingKeys);
+		CheckUtil.checkClass(clazz);
+
+		switch (masterSlave) {
+		case MASTER:
+			return this.masterQueryer.findByShardingPairFromMaster(shardingKeys, clazz, pks);
+		default:
+			return this.slaveQueryer.findByShardingPairFromSlave(shardingKeys, clazz, masterSlave, pks);
+		}
+	}
+
+	@Override
+	public <T> List<T> findByShardingPair(List<? extends Number> pks, List<IShardingKey<?>> shardingKeys, Class<T> clazz) {
+		CheckUtil.checkNumberList(pks);
+		CheckUtil.checkShardingValueList(shardingKeys);
+		CheckUtil.checkClass(clazz);
+
+		return this.masterQueryer.findByShardingPairFromMaster(pks, shardingKeys, clazz);
+	}
+
+	@Override
+	public <T> List<T> findByShardingPair(List<? extends Number> pks, List<IShardingKey<?>> shardingKeys,
+			Class<T> clazz, EnumDBMasterSlave masterSlave) {
+		CheckUtil.checkNumberList(pks);
+		CheckUtil.checkShardingValueList(shardingKeys);
+		CheckUtil.checkClass(clazz);
+
+		switch (masterSlave) {
+		case MASTER:
+			return this.masterQueryer.findByShardingPairFromMaster(pks, shardingKeys, clazz);
+		default:
+			return this.slaveQueryer.findByShardingPairFromSlave(pks, shardingKeys, clazz, masterSlave);
+		}
+	}
+
+	@Override
+	public List<Map<String, Object>> findBySql(SQL sql, IShardingKey<?> shardingKey) {
+		CheckUtil.checkShardingValue(shardingKey);
 		CheckUtil.checkSQL(sql);
 
-		return this.masterQueryer.findBySqlFromMaster(sql, shardingValue);
+		return this.masterQueryer.findBySqlFromMaster(sql, shardingKey);
 	}
 
 	@Override
-	public <T> List<T> findByQuery(IQuery query, IShardingKey<?> shardingValue, Class<T> clazz) {
+	public List<Map<String, Object>> findBySql(SQL sql, IShardingKey<?> shardingKey, EnumDBMasterSlave masterSlave) {
+		CheckUtil.checkShardingValue(shardingKey);
+		CheckUtil.checkSQL(sql);
+
+		switch (masterSlave) {
+		case MASTER:
+			return this.masterQueryer.findBySqlFromMaster(sql, shardingKey);
+		default:
+			return this.slaveQueryer.findBySqlFromSlave(sql, shardingKey, masterSlave);
+		}
+	}
+
+	@Override
+	public <T> List<T> findByQuery(IQuery query, IShardingKey<?> shardingKey, Class<T> clazz) {
 		CheckUtil.checkQuery(query);
-		CheckUtil.checkShardingValue(shardingValue);
+		CheckUtil.checkShardingValue(shardingKey);
 		CheckUtil.checkClass(clazz);
 
-		return this.masterQueryer.findByQueryFromMaster(query, shardingValue, clazz);
+		return this.masterQueryer.findByQueryFromMaster(query, shardingKey, clazz);
+	}
+
+	@Override
+	public <T> List<T> findByQuery(IQuery query, IShardingKey<?> shardingKey, Class<T> clazz,
+			EnumDBMasterSlave masterSlave) {
+		CheckUtil.checkQuery(query);
+		CheckUtil.checkShardingValue(shardingKey);
+		CheckUtil.checkClass(clazz);
+
+		switch (masterSlave) {
+		case MASTER:
+			return this.masterQueryer.findByQueryFromMaster(query, shardingKey, clazz);
+		default:
+			return this.slaveQueryer.findByQueryFromSlave(query, shardingKey, clazz, masterSlave);
+		}
 	}
 
 	@Override

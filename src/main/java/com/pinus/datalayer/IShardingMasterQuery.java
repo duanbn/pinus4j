@@ -5,6 +5,7 @@ import java.util.Map;
 
 import com.pinus.api.IShardingKey;
 import com.pinus.api.SQL;
+import com.pinus.api.enums.EnumDBMasterSlave;
 import com.pinus.api.query.IQuery;
 import com.pinus.cache.IPrimaryCache;
 import com.pinus.cluster.IDBCluster;
@@ -28,7 +29,7 @@ public interface IShardingMasterQuery {
 	 */
 	public Number getGlobalCountFromMaster(String clusterName, Class<?> clazz);
 
-    public Number getGlobalCountFromMaster(IQuery query, String clusterName, Class<?> clazz);
+	public Number getGlobalCountFromMaster(IQuery query, String clusterName, Class<?> clazz);
 
 	/**
 	 * 根据pk查询全局表中的数据. 查询不到则返回null

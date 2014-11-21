@@ -338,7 +338,7 @@ public abstract class AbstractDBCluster implements IDBCluster {
 	}
 
 	@Override
-	public DB selectDbFromSlave(EnumDBMasterSlave slaveNum, String tableName, IShardingKey<?> value)
+	public DB selectDbFromSlave(String tableName, IShardingKey<?> value, EnumDBMasterSlave slaveNum)
 			throws DBClusterException {
 
 		// 计算分库
