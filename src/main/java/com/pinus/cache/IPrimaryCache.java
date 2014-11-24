@@ -127,7 +127,7 @@ public interface IPrimaryCache {
 	 * 
 	 * @return 多条数据
 	 */
-	public <T> List<T> getGlobal(String clusterName, String tableName, Number... ids);
+	public <T> List<T> getGlobal(String clusterName, String tableName, Number[] ids);
 
 	/**
 	 * 删除一条记录.

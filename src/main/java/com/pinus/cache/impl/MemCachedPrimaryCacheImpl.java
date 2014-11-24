@@ -147,7 +147,7 @@ public class MemCachedPrimaryCacheImpl implements IPrimaryCache {
 	}
 
 	@Override
-	public List<Object> getGlobal(String clusterName, String tableName, Number... ids) {
+	public List<Object> getGlobal(String clusterName, String tableName, Number[] ids) {
 		List<String> keys = new ArrayList<String>();
 		for (Number id : ids) {
 			String key = _buildGlobalKey(clusterName, tableName, id);

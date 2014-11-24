@@ -14,9 +14,9 @@
 	<!-- env represent get connection pool from container -->
 	<!-- app represent get connection pool from internal application -->
 	<db-connection-pool catalog="app">
-		<maxActive>400</maxActive>
+		<maxActive>10</maxActive>
 		<minIdle>10</minIdle>
-		<maxIdle>50</maxIdle>
+		<maxIdle>10</maxIdle>
 		<initialSize>1</initialSize>
 		<removeAbandoned>true</removeAbandoned>
 		<removeAbandonedTimeout>10</removeAbandonedTimeout>
