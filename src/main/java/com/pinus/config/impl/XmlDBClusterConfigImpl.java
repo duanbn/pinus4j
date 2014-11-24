@@ -16,6 +16,7 @@ import org.apache.zookeeper.ZooKeeper.States;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+import com.pinus.api.enums.EnumDBMasterSlave;
 import com.pinus.api.enums.EnumDbConnectionPoolCatalog;
 import com.pinus.cluster.beans.AppDBConnectionInfo;
 import com.pinus.cluster.beans.DBClusterInfo;
@@ -214,7 +215,8 @@ public class XmlDBClusterConfigImpl implements IClusterConfig, Watcher {
 		return capacity;
 	}
 
-	private DBConnectionInfo _getDBConnInfo(String clusterName, Node node) throws LoadConfigException {
+	private DBConnectionInfo _getDBConnInfo(String clusterName, Node node, EnumDBMasterSlave masterSlave)
+			throws LoadConfigException {
 		DBConnectionInfo dbConnInfo = null;
 
 		Node root = xmlUtil.getRoot();
@@ -237,17 +239,20 @@ public class XmlDBClusterConfigImpl implements IClusterConfig, Watcher {
 		switch (enumCpCatalog) {
 		case ENV:
 			dbConnInfo = new EnvDBConnectionInfo();
-			String envDsName = node.getTextContent().trim();
 			dbConnInfo.setClusterName(clusterName);
+			dbConnInfo.setMasterSlave(masterSlave);
+
+			String envDsName = node.getTextContent().trim();
 			((EnvDBConnectionInfo) dbConnInfo).setEnvDsName(envDsName);
 			break;
 		case APP:
 			dbConnInfo = new AppDBConnectionInfo();
 			dbConnInfo.setClusterName(clusterName);
+			dbConnInfo.setMasterSlave(masterSlave);
+
 			String username = xmlUtil.getFirstChildByName(node, "db.username").getTextContent().trim();
 			String password = xmlUtil.getFirstChildByName(node, "db.password").getTextContent().trim();
 			String url = xmlUtil.getFirstChildByName(node, "db.url").getTextContent().trim();
-
 			((AppDBConnectionInfo) dbConnInfo).setUsername(username);
 			((AppDBConnectionInfo) dbConnInfo).setPassword(password);
 			((AppDBConnectionInfo) dbConnInfo).setUrl(url);
@@ -275,16 +280,21 @@ public class XmlDBClusterConfigImpl implements IClusterConfig, Watcher {
 		if (global != null) {
 			// load master global
 			Node masterGlobal = xmlUtil.getFirstChildByName(global, "master");
-			DBConnectionInfo masterGlobalConnection = _getDBConnInfo(clusterName, masterGlobal);
+			DBConnectionInfo masterGlobalConnection = _getDBConnInfo(clusterName, masterGlobal,
+					EnumDBMasterSlave.MASTER);
 			dbClusterInfo.setMasterGlobalConnection(masterGlobalConnection);
 
 			// load slave global
 			List<Node> slaveGlobalList = xmlUtil.getChildByName(global, "slave");
 			if (slaveGlobalList != null && !slaveGlobalList.isEmpty()) {
 				List<DBConnectionInfo> slaveGlobalConnection = new ArrayList<DBConnectionInfo>();
+
+				int slaveIndex = 0;
 				for (Node slaveGlobal : slaveGlobalList) {
-					slaveGlobalConnection.add(_getDBConnInfo(clusterName, slaveGlobal));
+					slaveGlobalConnection.add(_getDBConnInfo(clusterName, slaveGlobal,
+							EnumDBMasterSlave.getSlaveEnum(slaveIndex++)));
 				}
+
 				dbClusterInfo.setSlaveGlobalConnection(slaveGlobalConnection);
 			}
 		}
@@ -312,19 +322,21 @@ public class XmlDBClusterConfigImpl implements IClusterConfig, Watcher {
 			Node master = xmlUtil.getFirstChildByName(regionNode, "master");
 			List<Node> shardingNodeList = xmlUtil.getChildByName(master, "sharding");
 			for (Node shardingNode : shardingNodeList) {
-				regionMasterConnection.add(_getDBConnInfo(clusterName, shardingNode));
+				regionMasterConnection.add(_getDBConnInfo(clusterName, shardingNode, EnumDBMasterSlave.MASTER));
 			}
 			regionInfo.setMasterConnection(regionMasterConnection);
 
 			// load region slave
 			List<List<DBConnectionInfo>> regionSlaveConnection = new ArrayList<List<DBConnectionInfo>>();
 			List<Node> slaveNodeList = xmlUtil.getChildByName(regionNode, "slave");
+			int slaveIndex = 0;
 			for (Node slaveNode : slaveNodeList) {
 				shardingNodeList = xmlUtil.getChildByName(slaveNode, "sharding");
 
 				List<DBConnectionInfo> slaveConnections = new ArrayList<DBConnectionInfo>();
 				for (Node shardingNode : shardingNodeList) {
-					slaveConnections.add(_getDBConnInfo(clusterName, shardingNode));
+					slaveConnections.add(_getDBConnInfo(clusterName, shardingNode,
+							EnumDBMasterSlave.getSlaveEnum(slaveIndex)));
 				}
 
 				regionSlaveConnection.add(slaveConnections);

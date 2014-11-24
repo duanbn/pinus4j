@@ -2,8 +2,7 @@ package com.pinus.cluster.beans;
 
 import java.util.Map;
 
-import javax.sql.DataSource;
-
+import com.pinus.api.enums.EnumDBMasterSlave;
 import com.pinus.exception.LoadConfigException;
 import com.pinus.util.StringUtils;
 
@@ -45,14 +44,15 @@ public class AppDBConnectionInfo extends DBConnectionInfo {
 
 	@Override
 	public String toString() {
-		return "DBConnectionInfo [username=" + username + ", password=" + password + ", url=" + url + "]";
+		return "DBConnectionInfo [username=" + username + ", replication=" + masterSlave.name() + ", url=" + url + "]";
 	}
 
 	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + ((clusterName == null) ? 0 : clusterName.hashCode());
+		result = prime * result + ((connPoolInfo == null) ? 0 : connPoolInfo.hashCode());
+		result = prime * result + ((masterSlave == null) ? 0 : masterSlave.hashCode());
 		result = prime * result + ((password == null) ? 0 : password.hashCode());
 		result = prime * result + ((url == null) ? 0 : url.hashCode());
 		result = prime * result + ((username == null) ? 0 : username.hashCode());
@@ -68,10 +68,12 @@ public class AppDBConnectionInfo extends DBConnectionInfo {
 		if (getClass() != obj.getClass())
 			return false;
 		AppDBConnectionInfo other = (AppDBConnectionInfo) obj;
-		if (clusterName == null) {
-			if (other.clusterName != null)
+		if (connPoolInfo == null) {
+			if (other.connPoolInfo != null)
 				return false;
-		} else if (!clusterName.equals(other.clusterName))
+		} else if (!connPoolInfo.equals(other.connPoolInfo))
+			return false;
+		if (masterSlave != other.masterSlave)
 			return false;
 		if (password == null) {
 			if (other.password != null)
@@ -115,12 +117,12 @@ public class AppDBConnectionInfo extends DBConnectionInfo {
 		this.url = url;
 	}
 
-	public String getClusterName() {
-		return clusterName;
+	public EnumDBMasterSlave getMasterSlave() {
+		return masterSlave;
 	}
 
-	public void setClusterName(String clusterName) {
-		this.clusterName = clusterName;
+	public void setMasterSlave(EnumDBMasterSlave masterSlave) {
+		this.masterSlave = masterSlave;
 	}
 
 	public void setConnPoolInfo(Map<String, Object> connPoolInfo) {
@@ -129,13 +131,5 @@ public class AppDBConnectionInfo extends DBConnectionInfo {
 
 	public Map<String, Object> getConnPoolInfo() {
 		return this.connPoolInfo;
-	}
-
-	public DataSource getDatasource() {
-		return datasource;
-	}
-
-	public void setDatasource(DataSource datasource) {
-		this.datasource = datasource;
 	}
 }

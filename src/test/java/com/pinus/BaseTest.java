@@ -61,8 +61,8 @@ public class BaseTest {
 		testEntity.setTestDate(new Date());
 		testEntity.setTestDouble(r.nextDouble());
 		testEntity.setOTestDouble(r.nextDouble());
-		testEntity.setTestFloat(r.nextFloat());
-		testEntity.setOTestFloat(r.nextFloat());
+		testEntity.setTestFloat(0.15f);
+		testEntity.setOTestFloat(0.15f);
 		testEntity.setTestInt(r.nextInt());
 		testEntity.setOTestInt(r.nextInt());
 		testEntity.setTestLong(r.nextLong());
@@ -77,14 +77,22 @@ public class BaseTest {
 	public TestGlobalEntity createGlobalEntity() {
 		TestGlobalEntity testEntity = new TestGlobalEntity();
 		testEntity.setTestBool(r.nextBoolean());
+		testEntity.setoTestBool(r.nextBoolean());
 		testEntity.setTestByte((byte) r.nextInt(255));
+		testEntity.setoTestByte((byte) r.nextInt(255));
 		testEntity.setTestChar('b');
+		testEntity.setoTestChar('b');
 		testEntity.setTestDate(new Date());
 		testEntity.setTestDouble(r.nextDouble());
-		testEntity.setTestFloat(r.nextFloat());
+		testEntity.setoTestDouble(r.nextDouble());
+		testEntity.setTestFloat(0.15f);
+		testEntity.setoTestFloat(0.15f);
 		testEntity.setTestInt(r.nextInt());
+		testEntity.setoTestInt(r.nextInt());
 		testEntity.setTestLong(r.nextLong());
+		testEntity.setoTestLong(r.nextLong());
 		testEntity.setTestShort((short) r.nextInt(30000));
+		testEntity.setoTestShort((short) r.nextInt(30000));
 		testEntity.setTestString(getContent(r.nextInt(100)));
 		return testEntity;
 	}
