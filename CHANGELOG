@@ -4,7 +4,6 @@
 3. 数据库连接需要优化，支持Java容器连接池
 4. fix bug
 5. 实现0.6.0版本之后的从库实现
-6. 优化sharding info在zk中的存储，清理无用的sharding info
 
 --Version 0.6.7
 1. fix bug
