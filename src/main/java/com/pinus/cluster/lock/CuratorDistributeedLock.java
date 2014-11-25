@@ -47,6 +47,7 @@ public class CuratorDistributeedLock implements Lock {
 		try {
 			this.curatorLock.release();
 		} catch (Exception e) {
+			e.printStackTrace();
 			throw new RuntimeException();
 		}
 	}

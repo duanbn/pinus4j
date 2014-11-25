@@ -44,7 +44,8 @@ public class AppDBConnectionInfo extends DBConnectionInfo {
 
 	@Override
 	public String toString() {
-		return "DBConnectionInfo [username=" + username + ", replication=" + masterSlave.name() + ", url=" + url + "]";
+		return "AppDBConnectionInfo [username=" + username + ", clusterName=" + clusterName + ", masterSlave="
+				+ masterSlave + ", url=" + url + "]";
 	}
 
 	@Override

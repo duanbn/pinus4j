@@ -17,7 +17,8 @@ public class EnvDBConnectionInfo extends DBConnectionInfo {
 
 	@Override
 	public String toString() {
-		return "EnvDBConnectionInfo [envDsName=" + envDsName + "]";
+		return "EnvDBConnectionInfo [envDsName=" + envDsName + ", clusterName=" + clusterName + ", masterSlave="
+				+ masterSlave + "]";
 	}
 
 	public String getEnvDsName() {

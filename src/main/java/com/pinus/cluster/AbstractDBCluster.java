@@ -524,11 +524,15 @@ public abstract class AbstractDBCluster implements IDBCluster {
 				zkClient.create(Const.ZK_SHARDINGINFO, new byte[0], ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
 			}
 
+//			List<String> toBeCleanInfo = zkClient.getChildren(Const.ZK_SHARDINGINFO, false);
+
 			byte[] tableData = null;
 			String tableName = null;
 			for (DBTable table : tables) {
 				tableData = IOUtil.getBytes(table);
 				tableName = table.getName();
+
+//				toBeCleanInfo.remove(tableName);
 
 				String zkTableNode = Const.ZK_SHARDINGINFO + "/" + tableName;
 				stat = zkClient.exists(zkTableNode, false);
@@ -538,6 +542,15 @@ public abstract class AbstractDBCluster implements IDBCluster {
 					zkClient.setData(zkTableNode, tableData, -1);
 				}
 			}
+
+//			if (toBeCleanInfo != null && !toBeCleanInfo.isEmpty()) {
+//				for (String toBeCleanTableName : toBeCleanInfo) {
+//					zkClient.delete(Const.ZK_SHARDINGINFO + "/" + toBeCleanTableName, -1);
+//					if (LOG.isDebugEnabled()) {
+//						LOG.debug("clean expire sharding info " + toBeCleanTableName);
+//					}
+//				}
+//			}
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		} finally {

@@ -145,6 +145,36 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 	public void init() throws LoadConfigException {
 		IClusterConfig clusterConfig = XmlDBClusterConfigImpl.getInstance();
 
+		// 发现可用的缓存
+		if (this.primaryCache != null) {
+			StringBuilder memcachedAddressInfo = new StringBuilder();
+			Collection<SocketAddress> servers = this.primaryCache.getAvailableServers();
+			if (servers != null) {
+				for (SocketAddress server : servers) {
+					memcachedAddressInfo.append(((InetSocketAddress) server).getAddress().getHostAddress() + ":"
+							+ ((InetSocketAddress) server).getPort());
+					memcachedAddressInfo.append(",");
+				}
+				memcachedAddressInfo.deleteCharAt(memcachedAddressInfo.length() - 1);
+				LOG.info("find memcached server - " + memcachedAddressInfo.toString());
+			}
+		}
+
+		// 初始化curator framework
+		this.curatorClient = CuratorFrameworkFactory.newClient(clusterConfig.getZookeeperUrl(),
+				new RetryNTimes(5, 1000));
+		this.curatorClient.start();
+
+		// 初始化ID生成器
+		if (this.mode == EnumMode.STANDALONE) {
+			this.idGenerator = new StandaloneSequenceIdGeneratorImpl(clusterConfig);
+		} else if (this.mode == EnumMode.DISTRIBUTED) {
+			this.idGenerator = new DistributedSequenceIdGeneratorImpl(clusterConfig, this.curatorClient);
+		} else {
+			throw new IllegalStateException("运行模式设置错误, mode=" + this.mode);
+		}
+		LOG.info("init primary key generator done");
+
 		EnumDbConnectionPoolCatalog enumDbCpCatalog = clusterConfig.getDbConnectionPoolCatalog();
 
 		// 初始化集群
@@ -170,36 +200,6 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 			this.dbCluster.startup();
 		} catch (DBClusterException e) {
 			throw new RuntimeException(e);
-		}
-
-		// 初始化curator framework
-		this.curatorClient = CuratorFrameworkFactory.newClient(this.dbCluster.getClusterConfig().getZookeeperUrl(),
-				new RetryNTimes(5, 1000));
-		this.curatorClient.start();
-
-		// 发现可用的缓存
-		if (this.primaryCache != null) {
-			StringBuilder memcachedAddressInfo = new StringBuilder();
-			Collection<SocketAddress> servers = this.primaryCache.getAvailableServers();
-			if (servers != null) {
-				for (SocketAddress server : servers) {
-					memcachedAddressInfo.append(((InetSocketAddress) server).getAddress().getHostAddress() + ":"
-							+ ((InetSocketAddress) server).getPort());
-					memcachedAddressInfo.append(",");
-				}
-				memcachedAddressInfo.deleteCharAt(memcachedAddressInfo.length() - 1);
-				LOG.info("find memcached server - " + memcachedAddressInfo.toString());
-			}
-		}
-
-		// 初始化ID生成器
-		if (this.mode == EnumMode.STANDALONE) {
-			this.idGenerator = new StandaloneSequenceIdGeneratorImpl(this.dbCluster.getClusterConfig());
-		} else if (this.mode == EnumMode.DISTRIBUTED) {
-			this.idGenerator = new DistributedSequenceIdGeneratorImpl(this.dbCluster.getClusterConfig(),
-					this.curatorClient);
-		} else {
-			throw new IllegalStateException("运行模式设置错误, mode=" + this.mode);
 		}
 
 		//
