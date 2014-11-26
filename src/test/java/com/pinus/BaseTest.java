@@ -11,7 +11,9 @@ import com.pinus.api.IShardingStorageClient;
 import com.pinus.api.ShardingStorageClientImpl;
 import com.pinus.api.enums.EnumMode;
 import com.pinus.cache.IPrimaryCache;
+import com.pinus.cache.ISecondCache;
 import com.pinus.cache.impl.MemCachedPrimaryCacheImpl;
+import com.pinus.cache.impl.MemCachedSecondCacheImpl;
 import com.pinus.entity.TestEntity;
 import com.pinus.entity.TestGlobalEntity;
 
@@ -21,23 +23,32 @@ public class BaseTest {
 
 	public static final String CLUSTER_KLSTORAGE = "pinus";
 
+	public static final String CACHE_HOST = "127.0.0.1:11211";
+
 	protected static IShardingStorageClient cacheClient = new ShardingStorageClientImpl();
 
 	protected static IPrimaryCache primaryCache;
 
+	protected static ISecondCache secondCache;
+
 	@BeforeClass
 	public static void setup() throws Exception {
-		primaryCache = new MemCachedPrimaryCacheImpl("127.0.0.1:11211");
+		primaryCache = new MemCachedPrimaryCacheImpl(CACHE_HOST, 0);
+		secondCache = new MemCachedSecondCacheImpl(CACHE_HOST, 0);
+
 		cacheClient.setMode(EnumMode.DISTRIBUTED);
 		cacheClient.setScanPackage("com.pinus");
 		cacheClient.setCreateTable(true);
 		cacheClient.setPrimaryCache(primaryCache);
+		cacheClient.setSecondCache(secondCache);
 		cacheClient.init();
 	}
 
 	@AfterClass
 	public static void setdown() {
 		cacheClient.destroy();
+		primaryCache.destroy();
+		secondCache.destroy();
 	}
 
 	String[] seeds = new String[] { "a", "b", "c", "d", "e", "f", "g", "h", "i" };

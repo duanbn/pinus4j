@@ -24,6 +24,7 @@ import com.pinus.api.enums.EnumMode;
 import com.pinus.api.query.IQuery;
 import com.pinus.api.query.QueryImpl;
 import com.pinus.cache.IPrimaryCache;
+import com.pinus.cache.ISecondCache;
 import com.pinus.cluster.DB;
 import com.pinus.cluster.IDBCluster;
 import com.pinus.cluster.impl.AppDBClusterImpl;
@@ -112,9 +113,14 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 	private IDBCluster dbCluster;
 
 	/**
-	 * 主缓存.
+	 * 一级缓存.
 	 */
 	private IPrimaryCache primaryCache;
+
+	/**
+	 * 二级缓存.
+	 */
+	private ISecondCache secondCache;
 
 	/**
 	 * 主键生成器. 默认使用SimpleIdGeneratorImpl生成器.
@@ -145,7 +151,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 	public void init() throws LoadConfigException {
 		IClusterConfig clusterConfig = XmlDBClusterConfigImpl.getInstance();
 
-		// 发现可用的缓存
+		// 发现可用的一级缓存
 		if (this.primaryCache != null) {
 			StringBuilder memcachedAddressInfo = new StringBuilder();
 			Collection<SocketAddress> servers = this.primaryCache.getAvailableServers();
@@ -156,7 +162,23 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 					memcachedAddressInfo.append(",");
 				}
 				memcachedAddressInfo.deleteCharAt(memcachedAddressInfo.length() - 1);
-				LOG.info("find memcached server - " + memcachedAddressInfo.toString());
+				LOG.info("find primary cache, expire " + this.primaryCache.getExpire() + ", memcached server - "
+						+ memcachedAddressInfo.toString());
+			}
+		}
+		// 发现可用的二级缓存
+		if (this.secondCache != null) {
+			StringBuilder memcachedAddressInfo = new StringBuilder();
+			Collection<SocketAddress> servers = this.secondCache.getAvailableServers();
+			if (servers != null) {
+				for (SocketAddress server : servers) {
+					memcachedAddressInfo.append(((InetSocketAddress) server).getAddress().getHostAddress() + ":"
+							+ ((InetSocketAddress) server).getPort());
+					memcachedAddressInfo.append(",");
+				}
+				memcachedAddressInfo.deleteCharAt(memcachedAddressInfo.length() - 1);
+				LOG.info("find second cache, expire " + this.secondCache.getExpire() + ", memcached server - "
+						+ memcachedAddressInfo.toString());
 			}
 		}
 
@@ -209,14 +231,17 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 		this.updater.setDBCluster(this.dbCluster);
 		this.updater.setPrimaryCache(this.primaryCache);
 		this.updater.setIdGenerator(this.idGenerator);
+		this.updater.setSecondCache(secondCache);
 
 		this.masterQueryer = new ShardingMasterQueryImpl();
 		this.masterQueryer.setDBCluster(this.dbCluster);
 		this.masterQueryer.setPrimaryCache(this.primaryCache);
+		this.masterQueryer.setSecondCache(secondCache);
 
 		this.slaveQueryer = new ShardingSlaveQueryImpl();
 		this.slaveQueryer.setDBCluster(this.dbCluster);
 		this.slaveQueryer.setPrimaryCache(this.primaryCache);
+		this.slaveQueryer.setSecondCache(secondCache);
 
 		// FashionEntity dependency this.
 		instance = this;
@@ -912,6 +937,11 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 	@Override
 	public void setPrimaryCache(IPrimaryCache primaryCache) {
 		this.primaryCache = primaryCache;
+	}
+
+	@Override
+	public void setSecondCache(ISecondCache secondCache) {
+		this.secondCache = secondCache;
 	}
 
 }

@@ -16,6 +16,18 @@ import com.pinus.cluster.DB;
 public interface IPrimaryCache {
 
 	/**
+	 * 获取过期时间
+	 * 
+	 * @return
+	 */
+	public int getExpire();
+	
+	/**
+	 * 销毁对象
+	 */
+	public void destroy();
+	
+	/**
 	 * 获取可以用的服务链接.
 	 */
 	public Collection<SocketAddress> getAvailableServers();

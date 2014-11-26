@@ -5,9 +5,9 @@ import java.util.Map;
 
 import com.pinus.api.IShardingKey;
 import com.pinus.api.SQL;
-import com.pinus.api.enums.EnumDBMasterSlave;
 import com.pinus.api.query.IQuery;
 import com.pinus.cache.IPrimaryCache;
+import com.pinus.cache.ISecondCache;
 import com.pinus.cluster.IDBCluster;
 import com.pinus.exception.DBOperationException;
 
@@ -296,5 +296,12 @@ public interface IShardingMasterQuery {
 	 * 设置缓存. 当不设置时则不适用缓存
 	 */
 	public void setPrimaryCache(IPrimaryCache primaryCache);
+
+	/**
+	 * 设置二级缓存.
+	 * 
+	 * @param secondCache
+	 */
+	public void setSecondCache(ISecondCache secondCache);
 
 }

@@ -11,6 +11,7 @@ import org.apache.log4j.Logger;
 
 import com.pinus.api.IShardingKey;
 import com.pinus.cache.IPrimaryCache;
+import com.pinus.cache.ISecondCache;
 import com.pinus.cluster.DB;
 import com.pinus.cluster.IDBCluster;
 import com.pinus.cluster.beans.DBConnectionInfo;
@@ -44,9 +45,14 @@ public class ShardingUpdateImpl implements IShardingUpdate {
 	private IIdGenerator idGenerator;
 
 	/**
-	 * 主缓存引用.
+	 * 一级缓存引用.
 	 */
 	private IPrimaryCache primaryCache;
+
+	/**
+	 * 二级缓存引用.
+	 */
+	private ISecondCache secondCache;
 
 	@Override
 	public void setIdGenerator(IIdGenerator idGenerator) {
@@ -87,6 +93,9 @@ public class ShardingUpdateImpl implements IShardingUpdate {
 			if (primaryCache != null) {
 				primaryCache.incrCountGlobal(clusterName, tableName, entities.size());
 			}
+			if (secondCache != null) {
+				secondCache.removeGlobal(clusterName, tableName);
+			}
 		} catch (Exception e1) {
 			throw new DBOperationException(e1);
 		} finally {
@@ -124,6 +133,9 @@ public class ShardingUpdateImpl implements IShardingUpdate {
 				}
 				primaryCache.removeGlobal(clusterName, tableName, pks);
 			}
+			if (secondCache != null) {
+				secondCache.removeGlobal(clusterName, tableName);
+			}
 		} catch (Exception e) {
 			throw new DBOperationException(e);
 		} finally {
@@ -150,10 +162,13 @@ public class ShardingUpdateImpl implements IShardingUpdate {
 			_removeByPksGlobal(conn, pks, clazz);
 
 			// 删除缓存
+			String tableName = ReflectUtil.getTableName(clazz);
 			if (primaryCache != null) {
-				String tableName = ReflectUtil.getTableName(clazz);
 				primaryCache.removeGlobal(clusterName, tableName, pks);
 				primaryCache.decrCountGlobal(clusterName, tableName, pks.size());
+			}
+			if (secondCache != null) {
+				secondCache.removeGlobal(clusterName, tableName);
 			}
 		} catch (Exception e) {
 			throw new DBOperationException(e);
@@ -205,6 +220,9 @@ public class ShardingUpdateImpl implements IShardingUpdate {
 		if (primaryCache != null) {
 			primaryCache.incrCount(db, 1);
 		}
+		if (secondCache != null) {
+			secondCache.remove(db);
+		}
 
 		return pk;
 	}
@@ -243,6 +261,9 @@ public class ShardingUpdateImpl implements IShardingUpdate {
 		if (primaryCache != null) {
 			primaryCache.incrCount(db, pks.length);
 		}
+		if (secondCache != null) {
+			secondCache.remove(db);
+		}
 
 		return pks;
 	}
@@ -278,6 +299,9 @@ public class ShardingUpdateImpl implements IShardingUpdate {
 			}
 			primaryCache.remove(db, pks);
 		}
+		if (secondCache != null) {
+			secondCache.remove(db);
+		}
 
 	}
 
@@ -307,6 +331,9 @@ public class ShardingUpdateImpl implements IShardingUpdate {
 			primaryCache.remove(db, pks);
 			primaryCache.decrCount(db, pks.size());
 		}
+		if (secondCache != null) {
+			secondCache.remove(db);
+		}
 	}
 
 	@Override
@@ -317,6 +344,11 @@ public class ShardingUpdateImpl implements IShardingUpdate {
 	@Override
 	public void setPrimaryCache(IPrimaryCache primaryCache) {
 		this.primaryCache = primaryCache;
+	}
+
+	@Override
+	public void setSecondCache(ISecondCache secondCache) {
+		this.secondCache = secondCache;
 	}
 
 	/**

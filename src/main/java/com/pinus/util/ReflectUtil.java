@@ -259,25 +259,6 @@ public class ReflectUtil {
 	}
 
 	/**
-	 * 判断实体是否需要被缓存
-	 * 
-	 * @param clazz
-	 *            实体对象
-	 * @return true:是, false:否
-	 */
-	public static boolean isCache(Class<?> clazz) {
-		Boolean isCache = _tableCachedCache.get(clazz);
-		if (isCache != null) {
-			return isCache;
-		}
-
-		isCache = clazz.getAnnotation(Table.class).cache();
-		_tableCachedCache.put(clazz, isCache);
-
-		return isCache;
-	}
-
-	/**
 	 * 获取表名不带分表下标.
 	 * 
 	 * @param clazz
@@ -301,6 +282,25 @@ public class ReflectUtil {
 		_tableNameCache.put(clazz, tableName);
 
 		return tableName;
+	}
+
+	/**
+	 * 判断实体是否需要被缓存
+	 * 
+	 * @param clazz
+	 *            实体对象
+	 * @return true:是, false:否
+	 */
+	public static boolean isCache(Class<?> clazz) {
+		Boolean isCache = _tableCachedCache.get(clazz);
+		if (isCache != null) {
+			return isCache;
+		}
+
+		isCache = clazz.getAnnotation(Table.class).cache();
+		_tableCachedCache.put(clazz, isCache);
+
+		return isCache;
 	}
 
 	/**
@@ -455,39 +455,47 @@ public class ReflectUtil {
 				if (value == null) {
 					continue;
 				}
-//				if (fTypeClazz == Boolean.TYPE || fTypeClazz == Boolean.class) {
-//					if (!(Boolean) value) {
-//						continue;
-//					}
-//				} else if (fTypeClazz == Byte.TYPE || fTypeClazz == Byte.class) {
-//					if ((Byte) value == 0) {
-//						continue;
-//					}
-//				} else if (fTypeClazz == Character.TYPE || fTypeClazz == Character.class) {
-//					if ((Character) value == 0) {
-//						continue;
-//					}
-//				} else if (fTypeClazz == Short.TYPE || fTypeClazz == Short.class) {
-//					if ((Short) value == 0) {
-//						continue;
-//					}
-//				} else if (fTypeClazz == Integer.TYPE || fTypeClazz == Integer.class) {
-//					if ((Integer) value == 0) {
-//						continue;
-//					}
-//				} else if (fTypeClazz == Long.TYPE || fTypeClazz == Long.class) {
-//					if ((Long) value == 0l) {
-//						continue;
-//					}
-//				} else if (fTypeClazz == Float.TYPE || fTypeClazz == Float.class) {
-//					if ((Float) value == 0.0f) {
-//						continue;
-//					}
-//				} else if (fTypeClazz == Double.TYPE || fTypeClazz == Double.class) {
-//					if ((Double) value == 0.0) {
-//						continue;
-//					}
-//				}
+				// if (fTypeClazz == Boolean.TYPE || fTypeClazz ==
+				// Boolean.class) {
+				// if (!(Boolean) value) {
+				// continue;
+				// }
+				// } else if (fTypeClazz == Byte.TYPE || fTypeClazz ==
+				// Byte.class) {
+				// if ((Byte) value == 0) {
+				// continue;
+				// }
+				// } else if (fTypeClazz == Character.TYPE || fTypeClazz ==
+				// Character.class) {
+				// if ((Character) value == 0) {
+				// continue;
+				// }
+				// } else if (fTypeClazz == Short.TYPE || fTypeClazz ==
+				// Short.class) {
+				// if ((Short) value == 0) {
+				// continue;
+				// }
+				// } else if (fTypeClazz == Integer.TYPE || fTypeClazz ==
+				// Integer.class) {
+				// if ((Integer) value == 0) {
+				// continue;
+				// }
+				// } else if (fTypeClazz == Long.TYPE || fTypeClazz ==
+				// Long.class) {
+				// if ((Long) value == 0l) {
+				// continue;
+				// }
+				// } else if (fTypeClazz == Float.TYPE || fTypeClazz ==
+				// Float.class) {
+				// if ((Float) value == 0.0f) {
+				// continue;
+				// }
+				// } else if (fTypeClazz == Double.TYPE || fTypeClazz ==
+				// Double.class) {
+				// if ((Double) value == 0.0) {
+				// continue;
+				// }
+				// }
 			}
 
 			map.put(f.getName(), value);

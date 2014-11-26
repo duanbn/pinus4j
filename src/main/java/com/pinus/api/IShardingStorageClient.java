@@ -10,6 +10,7 @@ import com.pinus.api.enums.EnumDBRouteAlg;
 import com.pinus.api.enums.EnumMode;
 import com.pinus.api.query.IQuery;
 import com.pinus.cache.IPrimaryCache;
+import com.pinus.cache.ISecondCache;
 import com.pinus.cluster.IDBCluster;
 import com.pinus.datalayer.IShardingStatistics;
 import com.pinus.datalayer.jdbc.FatDB;
@@ -945,8 +946,13 @@ public interface IShardingStorageClient {
 	public void setScanPackage(String scanPackage);
 
 	/**
-	 * 设置缓存.
+	 * 设置一级缓存.
 	 */
 	public void setPrimaryCache(IPrimaryCache primaryCache);
+
+	/**
+	 * 设置二级缓存.
+	 */
+	public void setSecondCache(ISecondCache secondCache);
 
 }

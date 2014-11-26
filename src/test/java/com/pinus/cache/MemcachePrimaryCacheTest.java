@@ -29,17 +29,17 @@ public class MemcachePrimaryCacheTest extends BaseTest {
 	public void before() {
 		IShardingKey<?> shardingValue = new ShardingKey<Integer>(CLUSTER_KLSTORAGE, 1);
 		try {
-			db = cacheClient.getDbCluster().selectDbFromMaster("test_entity", shardingValue);
+			db = cacheClient.getDbCluster().selectDbFromMaster(tableName, shardingValue);
 		} catch (DBClusterException e) {
 			e.printStackTrace();
 		}
 	}
 
-    @Test
-    public void testGetAvailableServsers() {
-        Collection<SocketAddress> servers = primaryCache.getAvailableServers();
-        Assert.assertEquals(1, servers.size());
-    }
+	@Test
+	public void testGetAvailableServsers() {
+		Collection<SocketAddress> servers = primaryCache.getAvailableServers();
+		Assert.assertEquals(1, servers.size());
+	}
 
 	@Test
 	public void testGlobalCount() {
@@ -130,7 +130,7 @@ public class MemcachePrimaryCacheTest extends BaseTest {
 		for (int i = 0; i < 5; i++) {
 			Assert.assertEquals(entities.get(i), entities1.get(i));
 		}
-		
+
 		primaryCache.remove(db, Arrays.asList(ids));
 		entities1 = primaryCache.get(db, ids);
 		Assert.assertEquals(0, entities1.size());

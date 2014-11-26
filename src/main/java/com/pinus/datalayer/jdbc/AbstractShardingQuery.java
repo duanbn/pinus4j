@@ -12,6 +12,7 @@ import java.util.Map;
 import com.pinus.api.SQL;
 import com.pinus.api.query.IQuery;
 import com.pinus.cache.IPrimaryCache;
+import com.pinus.cache.ISecondCache;
 import com.pinus.cluster.DB;
 import com.pinus.cluster.beans.DBConnectionInfo;
 import com.pinus.constant.Const;
@@ -28,17 +29,31 @@ import com.pinus.util.ReflectUtil;
 public abstract class AbstractShardingQuery {
 
 	/**
-	 * 主缓存.
+	 * 一级缓存.
 	 */
 	protected IPrimaryCache primaryCache;
 
 	/**
-	 * 判断缓存是否可用
+	 * 二级缓存.
+	 */
+	protected ISecondCache secondCache;
+
+	/**
+	 * 判断一级缓存是否可用
 	 * 
 	 * @return true:启用cache, false:不启用
 	 */
 	protected boolean isCacheAvailable(Class<?> clazz) {
 		return primaryCache != null && ReflectUtil.isCache(clazz);
+	}
+
+	/**
+	 * 判断二级缓存是否可用
+	 * 
+	 * @return true:启用cache, false:不启用
+	 */
+	protected boolean isSecondCacheAvailable() {
+		return secondCache != null;
 	}
 
 	// //////////////////////////////////////////////////////////////////////////////////////
@@ -947,6 +962,10 @@ public abstract class AbstractShardingQuery {
 
 	public void setPrimaryCache(IPrimaryCache primaryCache) {
 		this.primaryCache = primaryCache;
+	}
+
+	public void setSecondCache(ISecondCache secondCache) {
+		this.secondCache = secondCache;
 	}
 
 	/**

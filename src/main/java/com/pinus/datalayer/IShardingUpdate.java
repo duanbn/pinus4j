@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.pinus.api.IShardingKey;
 import com.pinus.cache.IPrimaryCache;
+import com.pinus.cache.ISecondCache;
 import com.pinus.cluster.IDBCluster;
 import com.pinus.exception.DBOperationException;
 import com.pinus.generator.IIdGenerator;
@@ -188,7 +189,14 @@ public interface IShardingUpdate {
 	public void setDBCluster(IDBCluster dbCluster);
 
 	/**
-	 * 设置缓存.
+	 * 设置一级缓存.
 	 */
 	public void setPrimaryCache(IPrimaryCache primaryCache);
+
+	/**
+	 * 设置二级缓存.
+	 * 
+	 * @param secondCache
+	 */
+	public void setSecondCache(ISecondCache secondCache);
 }

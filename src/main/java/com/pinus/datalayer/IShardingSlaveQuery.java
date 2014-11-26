@@ -8,6 +8,7 @@ import com.pinus.api.SQL;
 import com.pinus.api.enums.EnumDBMasterSlave;
 import com.pinus.api.query.IQuery;
 import com.pinus.cache.IPrimaryCache;
+import com.pinus.cache.ISecondCache;
 import com.pinus.cluster.IDBCluster;
 import com.pinus.exception.DBOperationException;
 
@@ -218,5 +219,12 @@ public interface IShardingSlaveQuery {
 	 * 设置缓存.
 	 */
 	public void setPrimaryCache(IPrimaryCache primaryCache);
+	
+	/**
+	 * 设置二级缓存.
+	 * 
+	 * @param secondCache
+	 */
+	public void setSecondCache(ISecondCache secondCache);
 
 }

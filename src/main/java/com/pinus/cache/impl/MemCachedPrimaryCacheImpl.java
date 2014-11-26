@@ -30,15 +30,25 @@ public class MemCachedPrimaryCacheImpl implements IPrimaryCache {
 	public static final Logger LOG = Logger.getLogger(MemCachedPrimaryCacheImpl.class);
 
 	/**
-	 * XMemcached客户端.
+	 * Spy client
 	 */
-
 	private MemcachedClient memClient;
+
+	/**
+	 * 过期秒数.
+	 * 
+	 * 默认30秒
+	 */
+	private int expire = 30;
 
 	/**
 	 * 默认构造方法.
 	 */
 	public MemCachedPrimaryCacheImpl() {
+	}
+
+	public MemCachedPrimaryCacheImpl(String s) {
+		this(s, 0);
 	}
 
 	/**
@@ -47,7 +57,7 @@ public class MemCachedPrimaryCacheImpl implements IPrimaryCache {
 	 * @param servers
 	 *            ip:port,ip:port
 	 */
-	public MemCachedPrimaryCacheImpl(String s) {
+	public MemCachedPrimaryCacheImpl(String s, int expire) {
 		try {
 			List<InetSocketAddress> servers = new ArrayList<InetSocketAddress>();
 			String[] addresses = s.split(",");
@@ -61,6 +71,20 @@ public class MemCachedPrimaryCacheImpl implements IPrimaryCache {
 		} catch (Exception e) {
 			throw new RuntimeException("连接memcached服务器失败", e);
 		}
+
+		if (expire > 0) {
+			this.expire = expire;
+		}
+	}
+
+	@Override
+	public int getExpire() {
+		return expire;
+	}
+
+	@Override
+	public void destroy() {
+		this.memClient.shutdown();
 	}
 
 	@Override
@@ -275,7 +299,7 @@ public class MemCachedPrimaryCacheImpl implements IPrimaryCache {
 			this.memClient.incr(key, 0, count);
 
 			if (LOG.isDebugEnabled()) {
-				LOG.debug("[CACHE] - " + key + " set count=" + count);
+				LOG.debug("[PRIMARY CACHE] - " + key + " set count=" + count);
 			}
 		} catch (Exception e) {
 			LOG.warn("操作缓存失败:" + e.getMessage());
@@ -286,7 +310,7 @@ public class MemCachedPrimaryCacheImpl implements IPrimaryCache {
 		try {
 			this.memClient.delete(key);
 			if (LOG.isDebugEnabled()) {
-				LOG.debug("[CACHE] - delete " + key);
+				LOG.debug("[PRIMARY CACHE] - delete " + key);
 			}
 		} catch (Exception e) {
 			LOG.warn("操作缓存失败:" + e.getMessage());
@@ -298,7 +322,7 @@ public class MemCachedPrimaryCacheImpl implements IPrimaryCache {
 			if (memClient.get(key) != null) {
 				long count = memClient.decr(key, delta);
 				if (LOG.isDebugEnabled()) {
-					LOG.debug("[CACHE] - decr " + key + " " + delta);
+					LOG.debug("[PRIMARY CACHE] - decr " + key + " " + delta);
 				}
 				return count;
 			}
@@ -314,7 +338,7 @@ public class MemCachedPrimaryCacheImpl implements IPrimaryCache {
 			if (memClient.get(key) != null) {
 				long count = memClient.incr(key, delta);
 				if (LOG.isDebugEnabled()) {
-					LOG.debug("[CACHE] - incr " + key + " " + delta);
+					LOG.debug("[PRIMARY CACHE] - incr " + key + " " + delta);
 				}
 				return count;
 			}
@@ -330,7 +354,7 @@ public class MemCachedPrimaryCacheImpl implements IPrimaryCache {
 			String count = (String) memClient.get(key);
 			if (StringUtils.isNotBlank(count)) {
 				if (LOG.isDebugEnabled()) {
-					LOG.debug("[CACHE] - get " + key + " " + count);
+					LOG.debug("[PRIMARY CACHE] - get " + key + " " + count);
 				}
 				return Long.parseLong(count);
 			}
@@ -343,12 +367,12 @@ public class MemCachedPrimaryCacheImpl implements IPrimaryCache {
 
 	private void _put(String key, Object data) {
 		try {
-			OperationFuture<Boolean> rst = memClient.set(key, 0, data);
+			OperationFuture<Boolean> rst = memClient.set(key, expire, data);
 			if (!rst.get()) {
 				LOG.warn("操作缓存失败");
 			} else {
 				if (LOG.isDebugEnabled()) {
-					LOG.debug("[CACHE] - put " + key + " value=" + data);
+					LOG.debug("[PRIMARY CACHE] - put " + key + " value=" + data);
 				}
 			}
 		} catch (Exception e) {
@@ -359,14 +383,14 @@ public class MemCachedPrimaryCacheImpl implements IPrimaryCache {
 	private void _put(List<String> keys, List<? extends Object> data) {
 		try {
 			for (int i = 0; i < keys.size(); i++) {
-				memClient.set(keys.get(i), 0, data.get(i));
+				memClient.set(keys.get(i), expire, data.get(i));
 			}
 		} catch (Exception e) {
 			LOG.warn("操作缓存失败:" + e.getMessage());
 		}
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("[CACHE] - put (" + keys.size() + ") to cache " + keys);
+			LOG.debug("[PRIMARY CACHE] - put (" + keys.size() + ") to cache " + keys);
 		}
 	}
 
@@ -378,7 +402,7 @@ public class MemCachedPrimaryCacheImpl implements IPrimaryCache {
 				if (obj != null) {
 					hit = 1;
 				}
-				LOG.debug("[CACHE] - get " + key + " hit=" + hit);
+				LOG.debug("[PRIMARY CACHE] - get " + key + " hit=" + hit);
 			}
 			return obj;
 		} catch (Exception e) {
@@ -405,7 +429,7 @@ public class MemCachedPrimaryCacheImpl implements IPrimaryCache {
 		}
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("[CACHE] - get" + keys + " hits = " + datas.size());
+			LOG.debug("[PRIMARY CACHE] - get" + keys + " hits = " + datas.size());
 		}
 
 		return datas;
@@ -415,7 +439,7 @@ public class MemCachedPrimaryCacheImpl implements IPrimaryCache {
 		try {
 			memClient.delete(key);
 			if (LOG.isDebugEnabled()) {
-				LOG.debug("[CACHE] - remove " + key);
+				LOG.debug("[PRIMARY CACHE] - remove " + key);
 			}
 		} catch (Exception e) {
 			LOG.warn("操作缓存失败:" + e.getMessage());

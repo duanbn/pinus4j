@@ -170,20 +170,32 @@ public class ShardingMasterQueryImpl extends AbstractShardingQuery implements IS
 			conn = globalConnection.getDatasource().getConnection();
 
 			List<T> result = null;
-			if (isCacheAvailable(clazz)) {
-				Number[] pkValues = selectGlobalPksByQuery(conn, query, clazz);
-				result = selectGlobalByPksWithCache(conn, clusterName, clazz, pkValues);
 
-				// 过滤从缓存结果, 将没有指定的字段设置为默认值.
-				List<T> filteResult = new ArrayList<T>(result.size());
-				if (query.hasQueryFields()) {
-					for (T obj : result) {
-						filteResult.add((T) ReflectUtil.cloneWithGivenField(obj, query.getFields()));
-					}
-					result = filteResult;
+			String tableName = ReflectUtil.getTableName(clazz);
+			if (isSecondCacheAvailable()) {
+				result = (List<T>) secondCache.getGlobal(query, clusterName, tableName);
+			}
+
+			if (result == null || result.isEmpty()) {
+				if (isCacheAvailable(clazz)) {
+					Number[] pkValues = selectGlobalPksByQuery(conn, query, clazz);
+					result = selectGlobalByPksWithCache(conn, clusterName, clazz, pkValues);
+				} else {
+					result = selectGlobalByQuery(conn, query, clazz);
 				}
-			} else {
-				result = selectGlobalByQuery(conn, query, clazz);
+
+				if (isSecondCacheAvailable()) {
+					secondCache.putGlobal(query, clusterName, tableName, result);
+				}
+			}
+
+			// 过滤从缓存结果, 将没有指定的字段设置为默认值.
+			List<T> filteResult = new ArrayList<T>(result.size());
+			if (query.hasQueryFields()) {
+				for (T obj : result) {
+					filteResult.add((T) ReflectUtil.cloneWithGivenField(obj, query.getFields()));
+				}
+				result = filteResult;
 			}
 
 			return result;
@@ -299,24 +311,35 @@ public class ShardingMasterQueryImpl extends AbstractShardingQuery implements IS
 		DB db = _getDbFromMaster(clazz, shardingKey);
 
 		List<T> result = null;
-		if (isCacheAvailable(clazz)) {
-			Number[] pkValues = selectPksByQuery(db, query, clazz);
-			result = selectByPksWithCache(db, clazz, pkValues);
 
-			// 过滤从缓存结果, 将没有指定的字段设置为默认值.
-			List<T> filteResult = new ArrayList<T>(result.size());
-			if (query.hasQueryFields()) {
-				for (T obj : result) {
-					try {
-						filteResult.add((T) ReflectUtil.cloneWithGivenField(obj, query.getFields()));
-					} catch (Exception e) {
-						throw new DBOperationException(e);
-					}
-				}
-				result = filteResult;
+		if (isSecondCacheAvailable()) {
+			result = (List<T>) secondCache.get(query, db);
+		}
+
+		if (result == null || result.isEmpty()) {
+			if (isCacheAvailable(clazz)) {
+				Number[] pkValues = selectPksByQuery(db, query, clazz);
+				result = selectByPksWithCache(db, clazz, pkValues);
+			} else {
+				result = selectByQuery(db, query, clazz);
 			}
-		} else {
-			result = selectByQuery(db, query, clazz);
+
+			if (isSecondCacheAvailable()) {
+				secondCache.put(query, db, result);
+			}
+		}
+
+		// 过滤从缓存结果, 将没有指定的字段设置为默认值.
+		List<T> filteResult = new ArrayList<T>(result.size());
+		if (query.hasQueryFields()) {
+			for (T obj : result) {
+				try {
+					filteResult.add((T) ReflectUtil.cloneWithGivenField(obj, query.getFields()));
+				} catch (Exception e) {
+					throw new DBOperationException(e);
+				}
+			}
+			result = filteResult;
 		}
 
 		return result;

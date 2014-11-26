@@ -7,17 +7,17 @@ package com.pinus.api.query;
  */
 public interface IQuery {
 
-    /**
-     * 判断是否有查询字段.
-     */
-    public boolean hasQueryFields();
+	/**
+	 * 判断是否有查询字段.
+	 */
+	public boolean hasQueryFields();
 
-    /**
-     * 获取此对象的复制对象.
-     *
-     * @return 此对象实例的复制
-     */
-    public IQuery clone();
+	/**
+	 * 获取此对象的复制对象.
+	 *
+	 * @return 此对象实例的复制
+	 */
+	public IQuery clone();
 
 	/**
 	 * 添加取值字段.
@@ -29,7 +29,7 @@ public interface IQuery {
 	public IQuery setFields(String... field);
 
 	/**
-	 * 获取取值字段. 
+	 * 获取取值字段.
 	 * 
 	 * @return
 	 */

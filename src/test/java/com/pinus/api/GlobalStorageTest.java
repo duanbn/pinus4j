@@ -1,7 +1,5 @@
 package com.pinus.api;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.*;
 
 import junit.framework.Assert;
@@ -13,6 +11,7 @@ import org.junit.Test;
 import com.pinus.BaseTest;
 import com.pinus.api.query.Condition;
 import com.pinus.api.query.IQuery;
+import com.pinus.entity.TestEntity;
 import com.pinus.entity.TestGlobalEntity;
 
 public class GlobalStorageTest extends BaseTest {
@@ -62,6 +61,15 @@ public class GlobalStorageTest extends BaseTest {
 		List<TestGlobalEntity> entities = cacheClient.findGlobalByQuery(query, CLUSTER_KLSTORAGE,
 				TestGlobalEntity.class);
 		Assert.assertEquals(6, entities.size());
+
+		query.setFields("testString");
+		entities = cacheClient.findGlobalByQuery(query, CLUSTER_KLSTORAGE, TestGlobalEntity.class);
+		for (TestGlobalEntity entity : entities) {
+			Assert.assertEquals("i am pinus", entity.getTestString());
+			Assert.assertEquals(0, entity.getTestInt());
+			Assert.assertEquals(0.0f, entity.getTestFloat());
+			Assert.assertEquals(0.0, entity.getTestDouble());
+		}
 	}
 
 	@Test
