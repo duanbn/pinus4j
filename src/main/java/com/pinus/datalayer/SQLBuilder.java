@@ -103,41 +103,6 @@ public class SQLBuilder {
 		return SQL.toString();
 	}
 
-	/**
-	 * 拼装sql. 只查询主键的sql.
-	 * 
-	 * @return SELECT pkName from tableName LIMIT start, limit
-	 */
-	public static String buildSelectPkWithLimit(Class<?> clazz, int tableIndex, int start, int limit) {
-		String pkName = ReflectUtil.getPkName(clazz);
-		String tableName = ReflectUtil.getTableName(clazz, tableIndex);
-
-		StringBuilder SQL = new StringBuilder("SELECT " + pkName + " FROM ");
-		SQL.append(tableName).append(" LIMIT ").append(start);
-		SQL.append(",").append(limit);
-
-		debugSQL(SQL.toString());
-
-		return SQL.toString();
-	}
-
-	/**
-	 * 拼装sql. SELECT * FROM tableName LIMIT start,limit
-	 * 
-	 * @return sql语句.
-	 */
-	public static String buildSelectWithLimit(Class<?> clazz, int tableIndex, int start, int limit) {
-		String tableName = ReflectUtil.getTableName(clazz, tableIndex);
-
-		StringBuilder SQL = new StringBuilder("SELECT * FROM ");
-		SQL.append(tableName).append(" LIMIT ").append(start);
-		SQL.append(",").append(limit);
-
-		debugSQL(SQL.toString());
-
-		return SQL.toString();
-	}
-
 	public static PreparedStatement buildSelectBySqlGlobal(Connection conn, SQL sql) throws SQLException {
 		debugSQL(sql.toString());
 
