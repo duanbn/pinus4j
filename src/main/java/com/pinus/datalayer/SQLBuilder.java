@@ -180,22 +180,22 @@ public class SQLBuilder {
 	}
 
 	public static String buildSelectCountGlobalSql(Class<?> clazz) {
-        return buildSelectCountGlobalSql(clazz, null);
+		return buildSelectCountGlobalSql(clazz, null);
 	}
 
-    public static String buildSelectCountGlobalSql(Class<?> clazz, IQuery query) {
-        String tableName = ReflectUtil.getTableName(clazz, -1);
+	public static String buildSelectCountGlobalSql(Class<?> clazz, IQuery query) {
+		String tableName = ReflectUtil.getTableName(clazz, -1);
 		String pkName = ReflectUtil.getPkName(clazz);
 
 		StringBuilder SQL = new StringBuilder("SELECT count(" + pkName + ") ").append("FROM ");
 		SQL.append(tableName);
-        if (query != null) {
-            SQL.append(query.getWhereSql());
-        }
+		if (query != null) {
+			SQL.append(query.getWhereSql());
+		}
 		debugSQL(SQL.toString());
 
 		return SQL.toString();
-    }
+	}
 
 	/**
 	 * 拼装sql. SELECT count(*) FROM tableName
@@ -366,6 +366,8 @@ public class SQLBuilder {
 	 *            表下标
 	 * @param pks
 	 *            主键
+	 * @param query
+	 *            保证in顺序
 	 * 
 	 * @return sql语句
 	 */
@@ -374,6 +376,12 @@ public class SQLBuilder {
 		String tableName = ReflectUtil.getTableName(clazz, tableIndex);
 		String pkName = ReflectUtil.getPkName(clazz);
 
+		StringBuilder sqlInValue = new StringBuilder();
+		for (Number pk : pks) {
+			sqlInValue.append(pk).append(",");
+		}
+		sqlInValue.deleteCharAt(sqlInValue.length() - 1);
+
 		StringBuilder SQL = new StringBuilder("SELECT ");
 		for (Field field : fields) {
 			SQL.append(field.getName()).append(",");
@@ -381,10 +389,9 @@ public class SQLBuilder {
 		SQL.deleteCharAt(SQL.length() - 1);
 		SQL.append(" FROM ").append(tableName);
 		SQL.append(" WHERE ").append(pkName).append(" in (");
-		for (Number pk : pks) {
-			SQL.append(pk).append(",");
-		}
-		SQL.deleteCharAt(SQL.length() - 1);
+		SQL.append(sqlInValue.toString());
+		SQL.append(") order by field(");
+		SQL.append(pkName).append(",").append(sqlInValue.toString());
 		SQL.append(")");
 
 		debugSQL(SQL.toString());
@@ -564,7 +571,7 @@ public class SQLBuilder {
 		Object format = null;
 
 		if (value instanceof String) {
-            String content = (String) value;
+			String content = (String) value;
 			format = "'" + content.replaceAll("'", "''") + "'";
 		} else if (value instanceof Character) {
 			if (((int) (Character) value) == 39) {

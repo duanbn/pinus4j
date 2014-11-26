@@ -88,13 +88,13 @@ public class MemCachedSecondCacheImpl implements ISecondCache {
 	}
 
 	@Override
-	public void putGlobal(IQuery query, String clusterName, String tableName, List<? extends Object> data) {
+	public void putGlobal(IQuery query, String clusterName, String tableName, List data) {
 		try {
 			String cacheKey = _buildGlobalCacheKey(query, clusterName, tableName);
 			this.memClient.set(cacheKey, expire, data);
 
 			if (LOG.isDebugEnabled()) {
-				LOG.debug("[SECOND CACHE] - put to second cache done, key:" + cacheKey);
+				LOG.debug("[SECOND CACHE] - put to cache done, key:" + cacheKey);
 			}
 		} catch (Exception e) {
 			LOG.warn("operate second cache failure");
@@ -102,13 +102,13 @@ public class MemCachedSecondCacheImpl implements ISecondCache {
 	}
 
 	@Override
-	public List<? extends Object> getGlobal(IQuery query, String clusterName, String tableName) {
+	public List getGlobal(IQuery query, String clusterName, String tableName) {
 		try {
 			String cacheKey = _buildGlobalCacheKey(query, clusterName, tableName);
-			List<? extends Object> data = (List<? extends Object>) this.memClient.get(cacheKey);
+			List data = (List) this.memClient.get(cacheKey);
 
 			if (LOG.isDebugEnabled()) {
-				LOG.debug("[SECOND CACHE] - second cache key " + cacheKey + " hit");
+				LOG.debug("[SECOND CACHE] -  key " + cacheKey + " hit");
 			}
 
 			return data;
@@ -126,13 +126,13 @@ public class MemCachedSecondCacheImpl implements ISecondCache {
 	}
 
 	@Override
-	public void put(IQuery query, DB db, List<? extends Object> data) {
+	public void put(IQuery query, DB db, List	 data) {
 		try {
 			String cacheKey = _buildShardingCacheKey(query, db);
 			this.memClient.set(cacheKey, expire, data);
 
 			if (LOG.isDebugEnabled()) {
-				LOG.debug("[SECOND CACHE] - put to second cache done, key:" + cacheKey);
+				LOG.debug("[SECOND CACHE] - put to  done, key:" + cacheKey);
 			}
 		} catch (Exception e) {
 			LOG.warn("operate second cache failure");
@@ -140,13 +140,13 @@ public class MemCachedSecondCacheImpl implements ISecondCache {
 	}
 
 	@Override
-	public List<? extends Object> get(IQuery query, DB db) {
+	public List get(IQuery query, DB db) {
 		try {
 			String cacheKey = _buildShardingCacheKey(query, db);
-			List<? extends Object> data = (List<? extends Object>) this.memClient.get(cacheKey);
+			List data = (List) this.memClient.get(cacheKey);
 
 			if (LOG.isDebugEnabled()) {
-				LOG.debug("[SECOND CACHE] - second cache key " + cacheKey + " hit");
+				LOG.debug("[SECOND CACHE] -  key " + cacheKey + " hit");
 			}
 
 			return data;

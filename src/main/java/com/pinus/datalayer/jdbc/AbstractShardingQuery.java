@@ -846,7 +846,7 @@ public abstract class AbstractShardingQuery {
 			}
 
 			while (rs.next()) {
-				result.add(rs.getLong(1));
+				result.add((Number) rs.getObject(1));
 			}
 		} catch (SQLException e) {
 			throw new DBOperationException(e);
@@ -883,7 +883,7 @@ public abstract class AbstractShardingQuery {
 				SlowQueryLogger.write(db, sql, constTime);
 			}
 			while (rs.next()) {
-				result.add(rs.getLong(1));
+				result.add((Number) rs.getObject(1));
 			}
 		} catch (SQLException e) {
 			throw new DBOperationException(e);
@@ -912,7 +912,7 @@ public abstract class AbstractShardingQuery {
 			}
 
 			while (rs.next()) {
-				result.add(rs.getLong(1));
+				result.add((Number) rs.getObject(1));
 			}
 		} catch (SQLException e) {
 			throw new DBOperationException(e);
@@ -949,7 +949,7 @@ public abstract class AbstractShardingQuery {
 				SlowQueryLogger.write(db, sql, constTime);
 			}
 			while (rs.next()) {
-				result.add(rs.getLong(1));
+				result.add((Number) rs.getObject(1));
 			}
 		} catch (SQLException e) {
 			throw new DBOperationException(e);

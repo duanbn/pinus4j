@@ -42,7 +42,7 @@ public interface ISecondCache {
 	 * @param clazz
 	 *            对象class
 	 */
-	public void putGlobal(IQuery query, String clusterName, String tableName, List<? extends Object> data);
+	public void putGlobal(IQuery query, String clusterName, String tableName, List data);
 
 	/**
 	 * 读取全局缓存
@@ -56,7 +56,7 @@ public interface ISecondCache {
 	 *
 	 * @return 结果集
 	 */
-	public List<? extends Object> getGlobal(IQuery query, String clusterName, String tableName);
+	public List getGlobal(IQuery query, String clusterName, String tableName);
 
 	/**
 	 * 清除全局缓存.
@@ -71,7 +71,7 @@ public interface ISecondCache {
 	 * @param data
 	 *            结果集
 	 */
-	public void put(IQuery query, DB db, List<? extends Object> data);
+	public void put(IQuery query, DB db, List data);
 
 	/**
 	 * 读取分片缓存.
@@ -81,7 +81,7 @@ public interface ISecondCache {
 	 *
 	 * @return 结果集.
 	 */
-	public List<? extends Object> get(IQuery query, DB db);
+	public List get(IQuery query, DB db);
 
 	/**
 	 * 清除分片缓存.
