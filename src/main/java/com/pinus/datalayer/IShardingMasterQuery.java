@@ -27,8 +27,15 @@ public interface IShardingMasterQuery {
 	 *            表示全局表的实体对象
 	 * @return count数
 	 */
-	public Number getGlobalCountFromMaster(String clusterName, Class<?> clazz);
+	public Number getGlobalCountFromMaster(String clusterName, Class<?> clazz, boolean useCache);
 
+	/**
+	 * 
+	 * @param query
+	 * @param clusterName
+	 * @param clazz
+	 * @return
+	 */
 	public Number getGlobalCountFromMaster(IQuery query, String clusterName, Class<?> clazz);
 
 	/**
@@ -44,6 +51,8 @@ public interface IShardingMasterQuery {
 	 */
 	public <T> T findGlobalByPkFromMaster(Number pk, String clusterName, Class<T> clazz);
 
+	public <T> T findGlobalByPkFromMaster(Number pk, String clusterName, Class<T> clazz, boolean useCache);
+
 	/**
 	 * 根据Query对象查询全局表数据. 查询不到则返回null
 	 * 
@@ -55,7 +64,7 @@ public interface IShardingMasterQuery {
 	 *            实体对象
 	 * @return 数据
 	 */
-	public <T> T findGlobalOneByQueryFromMaster(IQuery query, String clusterName, Class<T> clazz);
+	public <T> T findGlobalOneByQueryFromMaster(IQuery query, String clusterName, Class<T> clazz, boolean useCache);
 
 	/**
 	 * 根据主键查询全局表数据. 当查询不到数据时返回空的List，不会返回null.
@@ -68,6 +77,7 @@ public interface IShardingMasterQuery {
 	 *            主键
 	 * @return 数据
 	 */
+	@Deprecated
 	public <T> List<T> findGlobalByPksFromMaster(String clusterName, Class<T> clazz, Number... pks);
 
 	/**
@@ -81,7 +91,8 @@ public interface IShardingMasterQuery {
 	 *            主键
 	 * @return 数据
 	 */
-	public <T> List<T> findGlobalByPksFromMaster(List<? extends Number> pks, String clusterName, Class<T> clazz);
+	public <T> List<T> findGlobalByPkListFromMaster(List<? extends Number> pks, String clusterName, Class<T> clazz,
+			boolean useCache);
 
 	/**
 	 * 根据sql查询全局表. 当查询不到数据时返回空的List，不会返回null.
@@ -105,7 +116,7 @@ public interface IShardingMasterQuery {
 	 *            实体对象
 	 * @return 数据
 	 */
-	public <T> List<T> findGlobalByQueryFromMaster(IQuery query, String clusterName, Class<T> clazz);
+	public <T> List<T> findGlobalByQueryFromMaster(IQuery query, String clusterName, Class<T> clazz, boolean useCache);
 
 	/**
 	 * 设置数据库集群.
@@ -118,7 +129,7 @@ public interface IShardingMasterQuery {
 	 * @param clazz
 	 * @return
 	 */
-	public Number getCountFromMaster(Class<?> clazz);
+	public Number getCountFromMaster(Class<?> clazz, boolean useCache);
 
 	/**
 	 * 根据查询条件获取集群记录数.
@@ -146,7 +157,7 @@ public interface IShardingMasterQuery {
 	 * @throws IllegalArgumentException
 	 *             输入参数错误
 	 */
-	public Number getCountFromMaster(IShardingKey<?> shardingValue, Class<?> clazz);
+	public Number getCountFromMaster(IShardingKey<?> shardingValue, Class<?> clazz, boolean useCache);
 
 	/**
 	 * 根据查询条件获取某一个分片的记录数.
@@ -170,7 +181,7 @@ public interface IShardingMasterQuery {
 	 * @throws IllegalArgumentException
 	 *             输入参数错误
 	 */
-	public <T> T findByPkFromMaster(Number pk, IShardingKey<?> shardingValue, Class<T> clazz);
+	public <T> T findByPkFromMaster(Number pk, IShardingKey<?> shardingValue, Class<T> clazz, boolean useCache);
 
 	/**
 	 * 根据查询条件获取一条数据. 如果查询到多条则返回第一条.当查询不到数据时返回空的List，不会返回null.
@@ -180,7 +191,7 @@ public interface IShardingMasterQuery {
 	 * @param clazz
 	 * @return 查询结果，找不到返回null
 	 */
-	public <T> T findOneByQueryFromMaster(IQuery query, IShardingKey<?> shardingValue, Class<T> clazz);
+	public <T> T findOneByQueryFromMaster(IQuery query, IShardingKey<?> shardingValue, Class<T> clazz, boolean useCache);
 
 	/**
 	 * 一个主分库分表, 根据多个主键查询.当查询不到数据时返回空的List，不会返回null.
@@ -199,6 +210,7 @@ public interface IShardingMasterQuery {
 	 * @throws IllegalArgumentException
 	 *             输入参数错误
 	 */
+	@Deprecated
 	public <T> List<T> findByPksFromMaster(IShardingKey<?> shardingValue, Class<T> clazz, Number... pks);
 
 	/**
@@ -218,7 +230,8 @@ public interface IShardingMasterQuery {
 	 * @throws IllegalArgumentException
 	 *             输入参数错误
 	 */
-	public <T> List<T> findByPkListFromMaster(List<? extends Number> pks, IShardingKey<?> shardingValue, Class<T> clazz);
+	public <T> List<T> findByPkListFromMaster(List<? extends Number> pks, IShardingKey<?> shardingValue,
+			Class<T> clazz, boolean useCache);
 
 	/**
 	 * 多个主分库分表, 多个主键查询, 一个主键对应一个分库分表.
@@ -238,6 +251,7 @@ public interface IShardingMasterQuery {
 	 * @throws IllegalArgumentException
 	 *             输入参数错误
 	 */
+	@Deprecated
 	public <T> List<T> findByShardingPairFromMaster(List<IShardingKey<?>> shardingValues, Class<T> clazz, Number... pks);
 
 	/**
@@ -258,7 +272,7 @@ public interface IShardingMasterQuery {
 	 *             输入参数错误
 	 */
 	public <T> List<T> findByShardingPairFromMaster(List<? extends Number> pks, List<IShardingKey<?>> shardingValues,
-			Class<T> clazz);
+			Class<T> clazz, boolean useCache);
 
 	/**
 	 * 一个主分库分表, 根据条件查询.当查询不到数据时返回空的List，不会返回null.
@@ -290,7 +304,8 @@ public interface IShardingMasterQuery {
 	 * @throws IllegalArgumentException
 	 *             输入参数错误
 	 */
-	public <T> List<T> findByQueryFromMaster(IQuery query, IShardingKey<?> shardingValue, Class<T> clazz);
+	public <T> List<T> findByQueryFromMaster(IQuery query, IShardingKey<?> shardingValue, Class<T> clazz,
+			boolean useCache);
 
 	/**
 	 * 设置缓存. 当不设置时则不适用缓存

@@ -108,6 +108,7 @@ public interface IShardingStorageClient {
 	 * @param pks
 	 *            主键
 	 */
+	@Deprecated
 	public void globalRemoveByPks(String clusterName, Class<?> clazz, Number... pks);
 
 	//
@@ -205,6 +206,7 @@ public interface IShardingStorageClient {
 	 * @throws DBOperationException
 	 *             操作失败
 	 */
+	@Deprecated
 	public void removeByPks(IShardingKey<?> shardingKey, Class<?> clazz, Number... pks);
 
 	// ////////////////////////////////////////////////////////
@@ -224,6 +226,8 @@ public interface IShardingStorageClient {
 	 */
 	public Number getGlobalCount(String clusterName, Class<?> clazz);
 
+	public Number getGlobalCount(String clusterName, Class<?> clazz, boolean useCache);
+
 	/**
 	 * 查询全局库表的数量.
 	 * 
@@ -236,6 +240,8 @@ public interface IShardingStorageClient {
 	 * @return count数
 	 */
 	public Number getGlobalCount(String clusterName, Class<?> clazz, EnumDBMasterSlave masterSlave);
+
+	public Number getGlobalCount(String clusterName, Class<?> clazz, boolean useCache, EnumDBMasterSlave masterSlave);
 
 	/**
 	 * 根据条件查询全局表的数量.
@@ -250,6 +256,9 @@ public interface IShardingStorageClient {
 	 * @return count数
 	 */
 	public Number getGlobalCount(IQuery query, String clusterName, Class<?> clazz);
+
+	public Number getGlobalCount(IQuery query, String clusterName, Class<?> clazz, boolean useCache,
+			EnumDBMasterSlave masterSlave);
 
 	/**
 	 * 根据条件查询全局表的数量.
@@ -280,6 +289,8 @@ public interface IShardingStorageClient {
 	 */
 	public <T> T findGlobalByPk(Number pk, String clusterName, Class<T> clazz);
 
+	public <T> T findGlobalByPk(Number pk, String clusterName, Class<T> clazz, boolean useCache);
+
 	/**
 	 * 根据pk查询全局表中的数据. 查询不到则返回null
 	 * 
@@ -295,6 +306,9 @@ public interface IShardingStorageClient {
 	 */
 	public <T> T findGlobalByPk(Number pk, String clusterName, Class<T> clazz, EnumDBMasterSlave masterSlave);
 
+	public <T> T findGlobalByPk(Number pk, String clusterName, Class<T> clazz, boolean useCache,
+			EnumDBMasterSlave masterSlave);
+
 	/**
 	 * 根据Query对象查询全局表数据. 查询不到则返回null
 	 * 
@@ -307,6 +321,8 @@ public interface IShardingStorageClient {
 	 * @return 数据
 	 */
 	public <T> T findGlobalOneByQuery(IQuery query, String clusterName, Class<T> clazz);
+
+	public <T> T findGlobalOneByQuery(IQuery query, String clusterName, Class<T> clazz, boolean useCache);
 
 	/**
 	 * 根据Query对象查询全局表数据. 查询不到则返回null
@@ -323,6 +339,9 @@ public interface IShardingStorageClient {
 	 */
 	public <T> T findGlobalOneByQuery(IQuery query, String clusterName, Class<T> clazz, EnumDBMasterSlave masterSlave);
 
+	public <T> T findGlobalOneByQuery(IQuery query, String clusterName, Class<T> clazz, boolean useCache,
+			EnumDBMasterSlave masterSlave);
+
 	/**
 	 * 根据主键查询全局表数据. 当查询不到数据时返回空的List，不会返回null.
 	 * 
@@ -334,6 +353,7 @@ public interface IShardingStorageClient {
 	 *            主键
 	 * @return 数据
 	 */
+	@Deprecated
 	public <T> List<T> findGlobalByPks(String clusterName, Class<T> clazz, Number... pks);
 
 	/**
@@ -349,6 +369,7 @@ public interface IShardingStorageClient {
 	 *            主键
 	 * @return 数据
 	 */
+	@Deprecated
 	public <T> List<T> findGlobalByPks(String clusterName, Class<T> clazz, EnumDBMasterSlave masterSlave, Number... pks);
 
 	/**
@@ -363,6 +384,9 @@ public interface IShardingStorageClient {
 	 * @return 数据
 	 */
 	public <T> List<T> findGlobalByPkList(List<? extends Number> pks, String clusterName, Class<T> clazz);
+
+	public <T> List<T> findGlobalByPkList(List<? extends Number> pks, String clusterName, Class<T> clazz,
+			boolean useCache);
 
 	/**
 	 * 根据主键查询全局表数据. 当查询不到数据时返回空的List，不会返回null.
@@ -379,6 +403,9 @@ public interface IShardingStorageClient {
 	 */
 	public <T> List<T> findGlobalByPkList(List<? extends Number> pks, String clusterName, Class<T> clazz,
 			EnumDBMasterSlave masterSlave);
+
+	public <T> List<T> findGlobalByPkList(List<? extends Number> pks, String clusterName, Class<T> clazz,
+			boolean useCache, EnumDBMasterSlave masterSlave);
 
 	/**
 	 * 根据sql查询全局表. 当查询不到数据时返回空的List，不会返回null.
@@ -417,6 +444,8 @@ public interface IShardingStorageClient {
 	 */
 	public <T> List<T> findGlobalByQuery(IQuery query, String clusterName, Class<T> clazz);
 
+	public <T> List<T> findGlobalByQuery(IQuery query, String clusterName, Class<T> clazz, boolean useCache);
+
 	/**
 	 * 根据Query查询全局表. 当查询不到数据时返回空的List，不会返回null.
 	 * 
@@ -432,6 +461,9 @@ public interface IShardingStorageClient {
 	 */
 	public <T> List<T> findGlobalByQuery(IQuery query, String clusterName, Class<T> clazz, EnumDBMasterSlave masterSlave);
 
+	public <T> List<T> findGlobalByQuery(IQuery query, String clusterName, Class<T> clazz, boolean useCache,
+			EnumDBMasterSlave masterSlave);
+
 	//
 	// sharding
 	//
@@ -442,6 +474,8 @@ public interface IShardingStorageClient {
 	 * @return
 	 */
 	public Number getCount(Class<?> clazz);
+
+	public Number getCount(Class<?> clazz, boolean useCache);
 
 	/**
 	 * 根据查询条件获取记录.
@@ -470,6 +504,8 @@ public interface IShardingStorageClient {
 	 *             输入参数错误
 	 */
 	public Number getCount(IShardingKey<?> shardingKey, Class<?> clazz);
+
+	public Number getCount(IShardingKey<?> shardingKey, Class<?> clazz, boolean useCache);
 
 	/**
 	 * 根据查询条件获取某个分库分表的记录数.
@@ -508,6 +544,8 @@ public interface IShardingStorageClient {
 	 */
 	public <T> T findByPk(Number pk, IShardingKey<?> shardingKey, Class<T> clazz);
 
+	public <T> T findByPk(Number pk, IShardingKey<?> shardingKey, Class<T> clazz, boolean useCache);
+
 	/**
 	 * 一个主分库分表, 根据主键查询. 查询不到则返回null
 	 * 
@@ -528,6 +566,9 @@ public interface IShardingStorageClient {
 	 *             输入参数错误
 	 */
 	public <T> T findByPk(Number pk, IShardingKey<?> shardingKey, Class<T> clazz, EnumDBMasterSlave masterSlave);
+	
+	public <T> T findByPk(Number pk, IShardingKey<?> shardingKey, Class<T> clazz, boolean useCache,
+			EnumDBMasterSlave masterSlave);
 
 	/**
 	 * 根据查询条件获取一条数据. 如果查询到多条则返回第一条.当查询不到数据时返回空的List，不会返回null.
@@ -538,6 +579,8 @@ public interface IShardingStorageClient {
 	 * @return 查询结果，找不到返回null
 	 */
 	public <T> T findOneByQuery(IQuery query, IShardingKey<?> shardingKey, Class<T> clazz);
+
+	public <T> T findOneByQuery(IQuery query, IShardingKey<?> shardingKey, Class<T> clazz, boolean useCache);
 
 	/**
 	 * 根据查询条件获取一条数据. 如果查询到多条则返回第一条.当查询不到数据时返回空的List，不会返回null.
@@ -550,6 +593,9 @@ public interface IShardingStorageClient {
 	 * @return 查询结果，找不到返回null
 	 */
 	public <T> T findOneByQuery(IQuery query, IShardingKey<?> shardingKey, Class<T> clazz, EnumDBMasterSlave masterSlave);
+
+	public <T> T findOneByQuery(IQuery query, IShardingKey<?> shardingKey, Class<T> clazz, boolean useCache,
+			EnumDBMasterSlave masterSlave);
 
 	/**
 	 * 一个主分库分表, 根据多个主键查询.当查询不到数据时返回空的List，不会返回null.
@@ -568,6 +614,7 @@ public interface IShardingStorageClient {
 	 * @throws IllegalArgumentException
 	 *             输入参数错误
 	 */
+	@Deprecated
 	public <T> List<T> findByPks(IShardingKey<?> shardingKey, Class<T> clazz, Number... pks);
 
 	/**
@@ -589,6 +636,7 @@ public interface IShardingStorageClient {
 	 * @throws IllegalArgumentException
 	 *             输入参数错误
 	 */
+	@Deprecated
 	public <T> List<T> findByPks(IShardingKey<?> shardingKey, Class<T> clazz, EnumDBMasterSlave masterSlave,
 			Number... pks);
 
@@ -610,6 +658,9 @@ public interface IShardingStorageClient {
 	 *             输入参数错误
 	 */
 	public <T> List<T> findByPkList(List<? extends Number> pks, IShardingKey<?> shardingKey, Class<T> clazz);
+
+	public <T> List<T> findByPkList(List<? extends Number> pks, IShardingKey<?> shardingKey, Class<T> clazz,
+			boolean useCache);
 
 	/**
 	 * 一个主分库分表, 根据多个主键查询.当查询不到数据时返回空的List，不会返回null.
@@ -633,6 +684,9 @@ public interface IShardingStorageClient {
 	public <T> List<T> findByPkList(List<? extends Number> pks, IShardingKey<?> shardingKey, Class<T> clazz,
 			EnumDBMasterSlave masterSlave);
 
+	public <T> List<T> findByPkList(List<? extends Number> pks, IShardingKey<?> shardingKey, Class<T> clazz,
+			boolean useCache, EnumDBMasterSlave masterSlave);
+
 	/**
 	 * 多个主分库分表, 多个主键查询, 一个主键对应一个分库分表.
 	 * <b>主键列表和分库分表因子的列表必须是一一对应，每一个分库分表只能查出一条记录</b> 当查询不到数据时返回空的List，不会返回null.
@@ -651,7 +705,7 @@ public interface IShardingStorageClient {
 	 * @throws IllegalArgumentException
 	 *             输入参数错误
 	 */
-	public <T> List<T> findByShardingPair(List<IShardingKey<?>> shardingKeys, Class<T> clazz, Number... pks);
+//	public <T> List<T> findByShardingPair(List<IShardingKey<?>> shardingKeys, Class<T> clazz, Number... pks);
 
 	/**
 	 * 多个主分库分表, 多个主键查询, 一个主键对应一个分库分表.
@@ -673,8 +727,9 @@ public interface IShardingStorageClient {
 	 * @throws IllegalArgumentException
 	 *             输入参数错误
 	 */
-	public <T> List<T> findByShardingPair(List<IShardingKey<?>> shardingKeys, Class<T> clazz,
-			EnumDBMasterSlave masterSlave, Number... pks);
+	// public <T> List<T> findByShardingPair(List<IShardingKey<?>> shardingKeys,
+	// Class<T> clazz,
+	// EnumDBMasterSlave masterSlave, Number... pks);
 
 	/**
 	 * 多个主分库分表, 多个主键查询. 主键列表和分库分表因子的列表必须是一一对应, 当查询不到数据时返回空的List，不会返回null.
@@ -693,7 +748,7 @@ public interface IShardingStorageClient {
 	 * @throws IllegalArgumentException
 	 *             输入参数错误
 	 */
-	public <T> List<T> findByShardingPair(List<? extends Number> pks, List<IShardingKey<?>> shardingKeys, Class<T> clazz);
+//	public <T> List<T> findByShardingPair(List<? extends Number> pks, List<IShardingKey<?>> shardingKeys, Class<T> clazz);
 
 	/**
 	 * 多个主分库分表, 多个主键查询. 主键列表和分库分表因子的列表必须是一一对应, 当查询不到数据时返回空的List，不会返回null.
@@ -714,8 +769,9 @@ public interface IShardingStorageClient {
 	 * @throws IllegalArgumentException
 	 *             输入参数错误
 	 */
-	public <T> List<T> findByShardingPair(List<? extends Number> pks, List<IShardingKey<?>> shardingKeys,
-			Class<T> clazz, EnumDBMasterSlave masterSlave);
+	// public <T> List<T> findByShardingPair(List<? extends Number> pks,
+	// List<IShardingKey<?>> shardingKeys,
+	// Class<T> clazz, EnumDBMasterSlave masterSlave);
 
 	/**
 	 * 一个主分库分表, 根据条件查询.当查询不到数据时返回空的List，不会返回null. 需要注意的是，sql语句中操作的表必须在指定的分片中存在.
@@ -768,6 +824,8 @@ public interface IShardingStorageClient {
 	 */
 	public <T> List<T> findByQuery(IQuery query, IShardingKey<?> shardingKey, Class<T> clazz);
 
+	public <T> List<T> findByQuery(IQuery query, IShardingKey<?> shardingKey, Class<T> clazz, boolean useCache);
+
 	/**
 	 * 根据查询条件对象进行查询.当查询不到数据时返回空的List，不会返回null.
 	 * 
@@ -784,6 +842,9 @@ public interface IShardingStorageClient {
 	 *             输入参数错误
 	 */
 	public <T> List<T> findByQuery(IQuery query, IShardingKey<?> shardingKey, Class<T> clazz,
+			EnumDBMasterSlave masterSlave);
+
+	public <T> List<T> findByQuery(IQuery query, IShardingKey<?> shardingKey, Class<T> clazz, boolean useCache,
 			EnumDBMasterSlave masterSlave);
 
 	// ////////////////////////////////////////////////////////

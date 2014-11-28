@@ -17,12 +17,12 @@ public class FatDB<T> extends AbstractShardingQuery {
 
 	private DB db;
 
-	public List<T> loadByQuery(IQuery query) {
+	public List<T> loadByQuery(IQuery query, boolean useCache) {
 		List<T> result = null;
 
-		if (isCacheAvailable(clazz)) {
+		if (isCacheAvailable(clazz, useCache)) {
 			Number[] pkValues = selectPksByQuery(db, query, clazz);
-			result = selectByPksWithCache(db, clazz, pkValues);
+			result = selectByPksWithCache(db, clazz, pkValues, useCache);
 		} else {
 			result = selectByQuery(db, query, clazz);
 		}

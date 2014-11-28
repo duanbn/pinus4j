@@ -39,20 +39,9 @@ public class ShardingSlaveQueryImpl extends AbstractShardingQuery implements ISh
 	private IDBCluster dbCluster;
 
 	@Override
-	public <T> T findGlobalOneByQueryFromSlave(IQuery query, String clusterName, Class<T> clazz, EnumDBMasterSlave slave) {
-		List<T> entities = findGlobalByQueryFromSlave(query, clusterName, clazz, slave);
-
-		if (entities.isEmpty()) {
-			return null;
-		}
-
-		return entities.get(0);
-	}
-
-	@Override
-	public <T> T findOneByQueryFromSlave(IQuery query, IShardingKey<?> shardingKey, Class<T> clazz,
+	public <T> T findGlobalOneByQueryFromSlave(IQuery query, String clusterName, Class<T> clazz, boolean useCache,
 			EnumDBMasterSlave slave) {
-		List<T> entities = findByQueryFromSlave(query, shardingKey, clazz, slave);
+		List<T> entities = findGlobalByQueryFromSlave(query, clusterName, clazz, useCache, slave);
 
 		if (entities.isEmpty()) {
 			return null;
@@ -62,24 +51,38 @@ public class ShardingSlaveQueryImpl extends AbstractShardingQuery implements ISh
 	}
 
 	@Override
-	public Number getGlobalCountFromSlave(String clusterName, Class<?> clazz, EnumDBMasterSlave slave) {
+	public Number getGlobalCountFromSlave(String clusterName, Class<?> clazz, boolean useCache, EnumDBMasterSlave slave) {
 		DBConnectionInfo dbConnInfo = null;
 		try {
 			dbConnInfo = this.dbCluster.getSlaveGlobalDbConn(clusterName, slave);
 		} catch (DBClusterException e) {
 			throw new DBOperationException(e);
 		}
-		long count = selectGlobalCountWithCache(dbConnInfo, clusterName, clazz).longValue();
+		long count = selectGlobalCountWithCache(dbConnInfo, clusterName, clazz, useCache).longValue();
 
 		return count;
 	}
 
 	@Override
-	public <T> T findGlobalByPkFromSlave(Number pk, String clusterName, Class<T> clazz, EnumDBMasterSlave slave) {
+	public Number getGlobalCountFromSlave(IQuery query, String clusterName, Class<?> clazz, EnumDBMasterSlave slave) {
+		DBConnectionInfo globalConnection;
+		try {
+			globalConnection = this.dbCluster.getSlaveGlobalDbConn(clusterName, slave);
+		} catch (DBClusterException e) {
+			throw new DBOperationException(e);
+		}
+		long count = selectGlobalCount(query, globalConnection, clusterName, clazz).longValue();
+
+		return count;
+	}
+
+	@Override
+	public <T> T findGlobalByPkFromSlave(Number pk, String clusterName, Class<T> clazz, boolean useCache,
+			EnumDBMasterSlave slave) {
 		Connection conn = null;
 		try {
 			conn = this.dbCluster.getSlaveGlobalDbConn(clusterName, slave).getDatasource().getConnection();
-			return selectByPkWithCache(conn, clusterName, pk, clazz);
+			return selectByPkWithCache(conn, clusterName, pk, clazz, useCache);
 		} catch (Exception e) {
 			throw new DBOperationException(e);
 		} finally {
@@ -87,6 +90,7 @@ public class ShardingSlaveQueryImpl extends AbstractShardingQuery implements ISh
 		}
 	}
 
+	@Deprecated
 	@Override
 	public <T> List<T> findGlobalByPksFromSlave(String clusterName, Class<T> clazz, EnumDBMasterSlave slave,
 			Number... pks) {
@@ -99,7 +103,7 @@ public class ShardingSlaveQueryImpl extends AbstractShardingQuery implements ISh
 
 			conn = globalConnection.getDatasource().getConnection();
 
-			result.addAll(selectGlobalByPksWithCache(conn, clusterName, clazz, pks));
+			result.addAll(selectGlobalByPksWithCache(conn, clusterName, clazz, pks, true));
 		} catch (Exception e) {
 			throw new DBOperationException(e);
 		} finally {
@@ -111,9 +115,25 @@ public class ShardingSlaveQueryImpl extends AbstractShardingQuery implements ISh
 	}
 
 	@Override
-	public <T> List<T> findGlobalByPksFromSlave(List<? extends Number> pks, String clusterName, Class<T> clazz,
-			EnumDBMasterSlave slave) {
-		return findGlobalByPksFromSlave(clusterName, clazz, slave, pks.toArray(new Number[pks.size()]));
+	public <T> List<T> findGlobalByPkListFromSlave(List<? extends Number> pks, String clusterName, Class<T> clazz,
+			boolean useCache, EnumDBMasterSlave slave) {
+		List<T> result = new ArrayList<T>();
+
+		Connection conn = null;
+		try {
+			DBConnectionInfo globalConnection = this.dbCluster.getSlaveGlobalDbConn(clusterName, slave);
+
+			conn = globalConnection.getDatasource().getConnection();
+
+			result.addAll(selectGlobalByPksWithCache(conn, clusterName, clazz, pks.toArray(new Number[pks.size()]),
+					useCache));
+		} catch (Exception e) {
+			throw new DBOperationException(e);
+		} finally {
+			SQLBuilder.close(conn);
+		}
+
+		return result;
 	}
 
 	@Override
@@ -135,7 +155,7 @@ public class ShardingSlaveQueryImpl extends AbstractShardingQuery implements ISh
 	}
 
 	@Override
-	public <T> List<T> findGlobalByQueryFromSlave(IQuery query, String clusterName, Class<T> clazz,
+	public <T> List<T> findGlobalByQueryFromSlave(IQuery query, String clusterName, Class<T> clazz, boolean useCache,
 			EnumDBMasterSlave slave) {
 		Connection conn = null;
 		try {
@@ -145,19 +165,19 @@ public class ShardingSlaveQueryImpl extends AbstractShardingQuery implements ISh
 			List<T> result = null;
 
 			String tableName = ReflectUtil.getTableName(clazz);
-			if (isSecondCacheAvailable()) {
+			if (isSecondCacheAvailable(clazz, useCache)) {
 				result = (List<T>) secondCache.getGlobal(query, clusterName, tableName);
 			}
 
 			if (result == null || result.isEmpty()) {
-				if (isCacheAvailable(clazz)) {
+				if (isCacheAvailable(clazz, useCache)) {
 					Number[] pkValues = selectGlobalPksByQuery(conn, query, clazz);
-					result = selectGlobalByPksWithCache(conn, clusterName, clazz, pkValues);
+					result = selectGlobalByPksWithCache(conn, clusterName, clazz, pkValues, useCache);
 				} else {
 					result = selectGlobalByQuery(conn, query, clazz);
 				}
 
-				if (isSecondCacheAvailable()) {
+				if (isSecondCacheAvailable(clazz, useCache)) {
 					secondCache.putGlobal(query, clusterName, tableName, result);
 				}
 			}
@@ -180,33 +200,51 @@ public class ShardingSlaveQueryImpl extends AbstractShardingQuery implements ISh
 	}
 
 	@Override
-	public Number getCountFromSlave(IShardingKey<?> shardingKey, Class<?> clazz, EnumDBMasterSlave slave) {
+	public Number getCountFromSlave(IShardingKey<?> shardingKey, Class<?> clazz, boolean useCache,
+			EnumDBMasterSlave slave) {
 		DB db = _getDbFromSlave(clazz, shardingKey, slave);
 
-		return selectCountWithCache(db, clazz);
+		return selectCountWithCache(db, clazz, useCache);
 	}
 
 	@Override
-	public <T> T findByPkFromSlave(Number pk, IShardingKey<?> shardingKey, Class<T> clazz, EnumDBMasterSlave slave) {
+	public <T> T findByPkFromSlave(Number pk, IShardingKey<?> shardingKey, Class<T> clazz, boolean useCache,
+			EnumDBMasterSlave slave) {
 		DB db = _getDbFromSlave(clazz, shardingKey, slave);
 
-		return selectByPkWithCache(db, pk, clazz);
+		return selectByPkWithCache(db, pk, clazz, useCache);
 	}
 
+	@Override
+	public <T> T findOneByQueryFromSlave(IQuery query, IShardingKey<?> shardingKey, Class<T> clazz, boolean useCache,
+			EnumDBMasterSlave slave) {
+		List<T> entities = findByQueryFromSlave(query, shardingKey, clazz, useCache, slave);
+
+		if (entities.isEmpty()) {
+			return null;
+		}
+
+		return entities.get(0);
+	}
+
+	@Deprecated
 	@Override
 	public <T> List<T> findByPksFromSlave(IShardingKey<?> shardingKey, Class<T> clazz, EnumDBMasterSlave slave,
 			Number... pks) {
 		DB db = _getDbFromSlave(clazz, shardingKey, slave);
 
-		return selectByPksWithCache(db, clazz, pks);
+		return selectByPksWithCache(db, clazz, pks, true);
 	}
 
 	@Override
 	public <T> List<T> findByPkListFromSlave(List<? extends Number> pks, IShardingKey<?> shardingKey, Class<T> clazz,
-			EnumDBMasterSlave slave) {
-		return findByPksFromSlave(shardingKey, clazz, slave, pks.toArray(new Number[pks.size()]));
+			boolean useCache, EnumDBMasterSlave slave) {
+		DB db = _getDbFromSlave(clazz, shardingKey, slave);
+
+		return selectByPksWithCache(db, clazz, pks.toArray(new Number[pks.size()]), useCache);
 	}
 
+	@Deprecated
 	@Override
 	public <T> List<T> findByShardingPairFromSlave(List<IShardingKey<?>> shardingValues, Class<T> clazz,
 			EnumDBMasterSlave slave, Number... pks) {
@@ -224,7 +262,7 @@ public class ShardingSlaveQueryImpl extends AbstractShardingQuery implements ISh
 			pk = pks[i];
 			db = _getDbFromSlave(clazz, shardingKey, slave);
 
-			data = selectByPkWithCache(db, pk, clazz);
+			data = selectByPkWithCache(db, pk, clazz, true);
 			if (data != null) {
 				result.add(data);
 			}
@@ -235,8 +273,28 @@ public class ShardingSlaveQueryImpl extends AbstractShardingQuery implements ISh
 
 	@Override
 	public <T> List<T> findByShardingPairFromSlave(List<? extends Number> pks, List<IShardingKey<?>> shardingValues,
-			Class<T> clazz, EnumDBMasterSlave slave) {
-		return findByShardingPairFromSlave(shardingValues, clazz, slave, pks.toArray(new Number[pks.size()]));
+			Class<T> clazz, boolean useCache, EnumDBMasterSlave slave) {
+		if (shardingValues.size() != pks.size()) {
+			throw new DBOperationException("分库分表列表和主键数量不等");
+		}
+
+		List<T> result = new ArrayList<T>(pks.size());
+		IShardingKey<?> shardingKey = null;
+		Number pk = null;
+		DB db = null;
+		T data = null;
+		for (int i = 0; i < pks.size(); i++) {
+			shardingKey = shardingValues.get(i);
+			pk = pks.get(i);
+			db = _getDbFromSlave(clazz, shardingKey, slave);
+
+			data = selectByPkWithCache(db, pk, clazz, useCache);
+			if (data != null) {
+				result.add(data);
+			}
+		}
+
+		return result;
 	}
 
 	@Override
@@ -257,24 +315,24 @@ public class ShardingSlaveQueryImpl extends AbstractShardingQuery implements ISh
 
 	@Override
 	public <T> List<T> findByQueryFromSlave(IQuery query, IShardingKey<?> shardingKey, Class<T> clazz,
-			EnumDBMasterSlave slave) {
+			boolean useCache, EnumDBMasterSlave slave) {
 		DB db = _getDbFromSlave(clazz, shardingKey, slave);
 
 		List<T> result = null;
 
-		if (isSecondCacheAvailable()) {
+		if (isSecondCacheAvailable(clazz, useCache)) {
 			result = (List<T>) secondCache.get(query, db);
 		}
 
 		if (result == null || result.isEmpty()) {
-			if (isCacheAvailable(clazz)) {
+			if (isCacheAvailable(clazz, useCache)) {
 				Number[] pkValues = selectPksByQuery(db, query, clazz);
-				result = selectByPksWithCache(db, clazz, pkValues);
+				result = selectByPksWithCache(db, clazz, pkValues, useCache);
 			} else {
 				result = selectByQuery(db, query, clazz);
 			}
 
-			if (isSecondCacheAvailable()) {
+			if (isSecondCacheAvailable(clazz, useCache)) {
 				secondCache.put(query, db, result);
 			}
 		}

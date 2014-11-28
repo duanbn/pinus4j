@@ -211,17 +211,17 @@ public class ShardingUpdateImpl implements IShardingUpdate {
 			conn = db.getDatasource().getConnection();
 
 			_saveBatch(conn, entities, db.getTableIndex());
+
+			if (primaryCache != null) {
+				primaryCache.incrCount(db, 1);
+			}
+			if (secondCache != null) {
+				secondCache.remove(db);
+			}
 		} catch (Exception e) {
 			throw new DBOperationException(e);
 		} finally {
 			SQLBuilder.close(conn);
-		}
-
-		if (primaryCache != null) {
-			primaryCache.incrCount(db, 1);
-		}
-		if (secondCache != null) {
-			secondCache.remove(db);
 		}
 
 		return pk;
@@ -252,17 +252,17 @@ public class ShardingUpdateImpl implements IShardingUpdate {
 			conn = db.getDatasource().getConnection();
 
 			_saveBatch(conn, entities, db.getTableIndex());
+
+			if (primaryCache != null) {
+				primaryCache.incrCount(db, pks.length);
+			}
+			if (secondCache != null) {
+				secondCache.remove(db);
+			}
 		} catch (Exception e) {
 			throw new DBOperationException(e);
 		} finally {
 			SQLBuilder.close(conn);
-		}
-
-		if (primaryCache != null) {
-			primaryCache.incrCount(db, pks.length);
-		}
-		if (secondCache != null) {
-			secondCache.remove(db);
 		}
 
 		return pks;
@@ -284,23 +284,24 @@ public class ShardingUpdateImpl implements IShardingUpdate {
 		Connection conn = null;
 		try {
 			conn = db.getDatasource().getConnection();
+
 			_updateBatch(conn, entities, db.getTableIndex());
+
+			// 清理缓存
+			if (primaryCache != null) {
+				List pks = new ArrayList(entities.size());
+				for (Object entity : entities) {
+					pks.add((Number) ReflectUtil.getPkValue(entity));
+				}
+				primaryCache.remove(db, pks);
+			}
+			if (secondCache != null) {
+				secondCache.remove(db);
+			}
 		} catch (SQLException e) {
 			throw new DBOperationException(e);
 		} finally {
 			SQLBuilder.close(conn);
-		}
-
-		// 清理缓存
-		if (primaryCache != null) {
-			List pks = new ArrayList(entities.size());
-			for (Object entity : entities) {
-				pks.add((Number) ReflectUtil.getPkValue(entity));
-			}
-			primaryCache.remove(db, pks);
-		}
-		if (secondCache != null) {
-			secondCache.remove(db);
 		}
 
 	}
@@ -320,20 +321,23 @@ public class ShardingUpdateImpl implements IShardingUpdate {
 		Connection conn = null;
 		try {
 			conn = db.getDatasource().getConnection();
+
 			_removeByPks(conn, pks, clazz, db.getTableIndex());
+
+			// 删除缓存
+			if (primaryCache != null) {
+				primaryCache.remove(db, pks);
+				primaryCache.decrCount(db, pks.size());
+			}
+			if (secondCache != null) {
+				secondCache.remove(db);
+			}
 		} catch (SQLException e) {
 			throw new DBOperationException(e);
 		} finally {
 			SQLBuilder.close(conn);
 		}
-		// 删除缓存
-		if (primaryCache != null) {
-			primaryCache.remove(db, pks);
-			primaryCache.decrCount(db, pks.size());
-		}
-		if (secondCache != null) {
-			secondCache.remove(db);
-		}
+
 	}
 
 	@Override

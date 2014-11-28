@@ -11,6 +11,8 @@ import com.pinus.cluster.DB;
  * 主缓存接口. 为Pinus存储提供一级缓存, 一级缓存使用memcached作为存储主要是对数据库表中的数据进行缓存查询进行缓存.
  * 一级缓存的key格式：[clusterName + dbIndex].[tableName + tableIndex].id, value是数据库记录.
  * 
+ * 删除、修改操作会清除被操作数据的缓存
+ * 
  * @author duanbn
  */
 public interface IPrimaryCache {
@@ -21,12 +23,12 @@ public interface IPrimaryCache {
 	 * @return
 	 */
 	public int getExpire();
-	
+
 	/**
 	 * 销毁对象
 	 */
 	public void destroy();
-	
+
 	/**
 	 * 获取可以用的服务链接.
 	 */

@@ -19,21 +19,75 @@ import com.pinus.exception.DBOperationException;
  */
 public interface IShardingSlaveQuery {
 
-	public Number getGlobalCountFromSlave(String clusterName, Class<?> clazz, EnumDBMasterSlave slave);
+	/**
+	 * 从从库中获取全局数量.
+	 * 
+	 * @param clusterName
+	 * @param clazz
+	 * @param slave
+	 * @return
+	 */
+	public Number getGlobalCountFromSlave(String clusterName, Class<?> clazz, boolean useCache, EnumDBMasterSlave slave);
 
-	public <T> T findGlobalByPkFromSlave(Number pk, String clusterName, Class<T> clazz, EnumDBMasterSlave slave);
+	public Number getGlobalCountFromSlave(IQuery query, String clusterName, Class<?> clazz, EnumDBMasterSlave slave);
 
-	public <T> T findGlobalOneByQueryFromSlave(IQuery query, String clusterName, Class<T> clazz, EnumDBMasterSlave slave);
+	/**
+	 * 根据pk从从库中查询
+	 * 
+	 * @param pk
+	 * @param clusterName
+	 * @param clazz
+	 * @param slave
+	 * @return
+	 */
+	public <T> T findGlobalByPkFromSlave(Number pk, String clusterName, Class<T> clazz, boolean useCache,
+			EnumDBMasterSlave slave);
 
+	/**
+	 * 根据查询条件查询单条数据
+	 * 
+	 * @param query
+	 * @param clusterName
+	 * @param clazz
+	 * @param slave
+	 * @return
+	 */
+	public <T> T findGlobalOneByQueryFromSlave(IQuery query, String clusterName, Class<T> clazz, boolean useCache,
+			EnumDBMasterSlave slave);
+
+	@Deprecated
 	public <T> List<T> findGlobalByPksFromSlave(String clusterName, Class<T> clazz, EnumDBMasterSlave slave,
 			Number... pks);
 
-	public <T> List<T> findGlobalByPksFromSlave(List<? extends Number> pks, String clusterName, Class<T> clazz,
-			EnumDBMasterSlave slave);
+	/**
+	 * 
+	 * @param pks
+	 * @param clusterName
+	 * @param clazz
+	 * @param slave
+	 * @return
+	 */
+	public <T> List<T> findGlobalByPkListFromSlave(List<? extends Number> pks, String clusterName, Class<T> clazz,
+			boolean useCache, EnumDBMasterSlave slave);
 
+	/**
+	 * 
+	 * @param sql
+	 * @param clusterName
+	 * @param slave
+	 * @return
+	 */
 	public List<Map<String, Object>> findGlobalBySqlFromSlave(SQL sql, String clusterName, EnumDBMasterSlave slave);
 
-	public <T> List<T> findGlobalByQueryFromSlave(IQuery query, String clusterName, Class<T> clazz,
+	/**
+	 * 
+	 * @param query
+	 * @param clusterName
+	 * @param clazz
+	 * @param slave
+	 * @return
+	 */
+	public <T> List<T> findGlobalByQueryFromSlave(IQuery query, String clusterName, Class<T> clazz, boolean useCache,
 			EnumDBMasterSlave slave);
 
 	/**
@@ -55,7 +109,8 @@ public interface IShardingSlaveQuery {
 	 * @throws IllegalArgumentException
 	 *             输入参数错误
 	 */
-	public Number getCountFromSlave(IShardingKey<?> shardingValue, Class<?> clazz, EnumDBMasterSlave slave);
+	public Number getCountFromSlave(IShardingKey<?> shardingValue, Class<?> clazz, boolean useCache,
+			EnumDBMasterSlave slave);
 
 	/**
 	 * 一个从分库分表, 根据主键查询.
@@ -76,7 +131,8 @@ public interface IShardingSlaveQuery {
 	 * @throws IllegalArgumentException
 	 *             输入参数错误
 	 */
-	public <T> T findByPkFromSlave(Number pk, IShardingKey<?> shardingValue, Class<T> clazz, EnumDBMasterSlave slave);
+	public <T> T findByPkFromSlave(Number pk, IShardingKey<?> shardingValue, Class<T> clazz, boolean useCache,
+			EnumDBMasterSlave slave);
 
 	/**
 	 * 根据查询条件获取一条数据. 如果查询到多条则返回第一条.
@@ -87,7 +143,7 @@ public interface IShardingSlaveQuery {
 	 * @param slave
 	 * @return 查询结果，找不到返回null
 	 */
-	public <T> T findOneByQueryFromSlave(IQuery query, IShardingKey<?> shardingValue, Class<T> clazz,
+	public <T> T findOneByQueryFromSlave(IQuery query, IShardingKey<?> shardingValue, Class<T> clazz, boolean useCache,
 			EnumDBMasterSlave slave);
 
 	/**
@@ -109,6 +165,7 @@ public interface IShardingSlaveQuery {
 	 * @throws IllegalArgumentException
 	 *             输入参数错误
 	 */
+	@Deprecated
 	public <T> List<T> findByPksFromSlave(IShardingKey<?> shardingValue, Class<T> clazz, EnumDBMasterSlave slave,
 			Number... pks);
 
@@ -132,7 +189,7 @@ public interface IShardingSlaveQuery {
 	 *             输入参数错误
 	 */
 	public <T> List<T> findByPkListFromSlave(List<? extends Number> pks, IShardingKey<?> shardingValue, Class<T> clazz,
-			EnumDBMasterSlave slave);
+			boolean useCache, EnumDBMasterSlave slave);
 
 	/**
 	 * 多个从分库分表, 根据多个主键查询.
@@ -153,6 +210,7 @@ public interface IShardingSlaveQuery {
 	 * @throws IllegalArgumentException
 	 *             输入参数错误
 	 */
+	@Deprecated
 	public <T> List<T> findByShardingPairFromSlave(List<IShardingKey<?>> shardingValues, Class<T> clazz,
 			EnumDBMasterSlave slave, Number... pks);
 
@@ -176,7 +234,7 @@ public interface IShardingSlaveQuery {
 	 *             输入参数错误
 	 */
 	public <T> List<T> findByShardingPairFromSlave(List<? extends Number> pks, List<IShardingKey<?>> shardingValues,
-			Class<T> clazz, EnumDBMasterSlave slave);
+			Class<T> clazz, boolean useCache, EnumDBMasterSlave slave);
 
 	/**
 	 * 一个从分库分表, 根据条件查询.
@@ -213,13 +271,13 @@ public interface IShardingSlaveQuery {
 	 *             输入参数错误
 	 */
 	public <T> List<T> findByQueryFromSlave(IQuery query, IShardingKey<?> shardingValue, Class<T> clazz,
-			EnumDBMasterSlave slave);
+			boolean useCache, EnumDBMasterSlave slave);
 
 	/**
 	 * 设置缓存.
 	 */
 	public void setPrimaryCache(IPrimaryCache primaryCache);
-	
+
 	/**
 	 * 设置二级缓存.
 	 * 

@@ -530,7 +530,7 @@ public class SQLBuilder {
 	}
 
 	/**
-	 * 格式化数据库值.
+	 * 格式化数据库值. 过滤特殊字符
 	 */
 	public static Object formatValue(Object value) {
 		Object format = null;

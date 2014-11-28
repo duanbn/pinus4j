@@ -46,6 +46,7 @@ public class XmlUtil {
 			is = Thread.currentThread().getContextClassLoader().getResourceAsStream(xmlFileName);
 			xmlDoc = builder.parse(new InputSource(is));
 		} catch (Exception e) {
+			e.printStackTrace();
 			throw new RuntimeException("读取classpath根路径的xml失败, file name " + xmlFileName);
 		} finally {
 			try {

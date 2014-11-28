@@ -43,8 +43,8 @@ public abstract class AbstractShardingQuery {
 	 * 
 	 * @return true:启用cache, false:不启用
 	 */
-	protected boolean isCacheAvailable(Class<?> clazz) {
-		return primaryCache != null && ReflectUtil.isCache(clazz);
+	protected boolean isCacheAvailable(Class<?> clazz, boolean useCache) {
+		return primaryCache != null && ReflectUtil.isCache(clazz) && useCache;
 	}
 
 	/**
@@ -52,8 +52,8 @@ public abstract class AbstractShardingQuery {
 	 * 
 	 * @return true:启用cache, false:不启用
 	 */
-	protected boolean isSecondCacheAvailable() {
-		return secondCache != null;
+	protected boolean isSecondCacheAvailable(Class<?> clazz, boolean useCache) {
+		return secondCache != null && ReflectUtil.isCache(clazz) && useCache;
 	}
 
 	// //////////////////////////////////////////////////////////////////////////////////////
@@ -126,11 +126,12 @@ public abstract class AbstractShardingQuery {
 	 * @param clazz
 	 * @return count数
 	 */
-	protected Number selectGlobalCountWithCache(DBConnectionInfo dbConnInfo, String clusterName, Class<?> clazz) {
+	protected Number selectGlobalCountWithCache(DBConnectionInfo dbConnInfo, String clusterName, Class<?> clazz,
+			boolean useCache) {
 		String tableName = ReflectUtil.getTableName(clazz);
 
 		// 操作缓存
-		if (isCacheAvailable(clazz)) {
+		if (isCacheAvailable(clazz, useCache)) {
 			long count = primaryCache.getCountGlobal(clusterName, tableName);
 			if (count > 0) {
 				return count;
@@ -149,7 +150,7 @@ public abstract class AbstractShardingQuery {
 		}
 
 		// 操作缓存
-		if (isCacheAvailable(clazz) && count > 0)
+		if (isCacheAvailable(clazz, useCache) && count > 0)
 			primaryCache.setCountGlobal(clusterName, tableName, count);
 
 		return count;
@@ -203,9 +204,9 @@ public abstract class AbstractShardingQuery {
 	 * @param clazz
 	 * @return count数
 	 */
-	protected Number selectCountWithCache(DB db, Class<?> clazz) {
+	protected Number selectCountWithCache(DB db, Class<?> clazz, boolean useCache) {
 		// 操作缓存
-		if (isCacheAvailable(clazz)) {
+		if (isCacheAvailable(clazz, useCache)) {
 			long count = primaryCache.getCount(db);
 			if (count > 0) {
 				return count;
@@ -215,7 +216,7 @@ public abstract class AbstractShardingQuery {
 		long count = _selectCount(db, clazz).longValue();
 
 		// 操作缓存
-		if (isCacheAvailable(clazz) && count > 0)
+		if (isCacheAvailable(clazz, useCache) && count > 0)
 			primaryCache.setCount(db, count);
 
 		return count;
@@ -289,11 +290,11 @@ public abstract class AbstractShardingQuery {
 		return null;
 	}
 
-	protected <T> T selectByPkWithCache(Connection conn, String clusterName, Number pk, Class<T> clazz) {
+	protected <T> T selectByPkWithCache(Connection conn, String clusterName, Number pk, Class<T> clazz, boolean useCache) {
 		String tableName = ReflectUtil.getTableName(clazz);
 
 		T data = null;
-		if (isCacheAvailable(clazz)) {
+		if (isCacheAvailable(clazz, useCache)) {
 			data = primaryCache.getGlobal(clusterName, tableName, pk);
 			if (data == null) {
 				data = _selectGlobalByPk(conn, pk, clazz);
@@ -359,9 +360,9 @@ public abstract class AbstractShardingQuery {
 	 * @param clazz
 	 * @return 查询结果
 	 */
-	protected <T> T selectByPkWithCache(DB db, Number pk, Class<T> clazz) {
+	protected <T> T selectByPkWithCache(DB db, Number pk, Class<T> clazz, boolean useCache) {
 		T data = null;
-		if (isCacheAvailable(clazz)) {
+		if (isCacheAvailable(clazz, useCache)) {
 			data = primaryCache.get(db, pk);
 			if (data == null) {
 				data = _selectByPk(db, pk, clazz);
@@ -427,14 +428,15 @@ public abstract class AbstractShardingQuery {
 		return result;
 	}
 
-	protected <T> List<T> selectGlobalByPksWithCache(Connection conn, String clusterName, Class<T> clazz, Number[] pks) {
+	protected <T> List<T> selectGlobalByPksWithCache(Connection conn, String clusterName, Class<T> clazz, Number[] pks,
+			boolean useCache) {
 		List<T> result = new ArrayList<T>();
 
 		if (pks == null || pks.length == 0) {
 			return result;
 		}
 
-		if (isCacheAvailable(clazz)) { // 缓存可用
+		if (isCacheAvailable(clazz, useCache)) { // 缓存可用
 			String tableName = ReflectUtil.getTableName(clazz);
 			List<T> hitResult = primaryCache.getGlobal(clusterName, tableName, pks);
 			if (hitResult != null && !hitResult.isEmpty()) {
@@ -561,13 +563,13 @@ public abstract class AbstractShardingQuery {
 	 * @param pks
 	 * @return 查询结果
 	 */
-	protected <T> List<T> selectByPksWithCache(DB db, Class<T> clazz, Number[] pks) {
+	protected <T> List<T> selectByPksWithCache(DB db, Class<T> clazz, Number[] pks, boolean useCache) {
 		List<T> result = new ArrayList<T>();
 		if (pks.length == 0 || pks == null) {
 			return result;
 		}
 
-		if (isCacheAvailable(clazz)) { // 缓存可用
+		if (isCacheAvailable(clazz, useCache)) { // 缓存可用
 			List<T> hitResult = primaryCache.get(db, pks);
 			if (hitResult != null && !hitResult.isEmpty()) {
 				if (hitResult.size() == pks.length) {

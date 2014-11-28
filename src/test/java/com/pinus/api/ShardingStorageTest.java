@@ -2,7 +2,7 @@ package com.pinus.api;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.*;
+import java.util.Map;
 
 import junit.framework.Assert;
 
@@ -95,14 +95,14 @@ public class ShardingStorageTest extends BaseTest {
 		}
 	}
 
-	@Test
-	public void testFindByShardingPairListClassNumber() {
-		List<IShardingKey<?>> keys = new ArrayList<IShardingKey<?>>();
-		keys.add(new ShardingKey<Number>(CLUSTER_KLSTORAGE, pk1));
-		keys.add(new ShardingKey<Number>(CLUSTER_KLSTORAGE, pk2));
-		List<TestEntity> entities = cacheClient.findByShardingPair(keys, TestEntity.class, pk1, pk2);
-		Assert.assertEquals(2, entities.size());
-	}
+//	@Test
+//	public void testFindByShardingPairListClassNumber() {
+//		List<IShardingKey<?>> keys = new ArrayList<IShardingKey<?>>();
+//		keys.add(new ShardingKey<Number>(CLUSTER_KLSTORAGE, pk1));
+//		keys.add(new ShardingKey<Number>(CLUSTER_KLSTORAGE, pk2));
+//		List<TestEntity> entities = cacheClient.findByShardingPair(keys, TestEntity.class, pk1, pk2);
+//		Assert.assertEquals(2, entities.size());
+//	}
 
 	@Test
 	public void testFindBySqlSqlShardingKey() {
