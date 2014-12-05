@@ -18,7 +18,6 @@ import com.pinus.exception.DBClusterException;
 
 public class MemCachedSecondCacheTest extends BaseTest {
 
-	private String tableName = "test_entity";
 	private IQuery query;
 	private DB db;
 
@@ -32,7 +31,7 @@ public class MemCachedSecondCacheTest extends BaseTest {
 	public void before() {
 		IShardingKey<?> shardingValue = new ShardingKey<Integer>(CLUSTER_KLSTORAGE, 1);
 		try {
-			db = cacheClient.getDbCluster().selectDbFromMaster(tableName, shardingValue);
+			db = cacheClient.getDbCluster().selectDbFromMaster("test_entity", shardingValue);
 		} catch (DBClusterException e) {
 			e.printStackTrace();
 		}
@@ -40,8 +39,7 @@ public class MemCachedSecondCacheTest extends BaseTest {
 		List<String> data = new ArrayList<String>();
 		data.add("aaa");
 		data.add("bbb");
-
-		secondCache.putGlobal(query, CLUSTER_KLSTORAGE, tableName, data);
+		secondCache.putGlobal(query, CLUSTER_KLSTORAGE, "testglobalentity", data);
 
 		data = new ArrayList<String>();
 		data.add("ccc");
@@ -51,13 +49,13 @@ public class MemCachedSecondCacheTest extends BaseTest {
 
 	@After
 	public void after() {
-		secondCache.removeGlobal(CLUSTER_KLSTORAGE, tableName);
+		secondCache.removeGlobal(CLUSTER_KLSTORAGE, "testglobalentity");
 		secondCache.remove(db);
 	}
 
 	@Test
 	public void testGetGlobal() {
-		List<String> data = (List<String>) secondCache.getGlobal(query, CLUSTER_KLSTORAGE, tableName);
+		List<String> data = (List<String>) secondCache.getGlobal(query, CLUSTER_KLSTORAGE, "testglobalentity");
 		Assert.assertEquals("aaa", data.get(0));
 		Assert.assertEquals("bbb", data.get(1));
 	}

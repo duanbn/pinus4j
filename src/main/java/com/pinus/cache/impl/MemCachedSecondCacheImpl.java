@@ -5,6 +5,7 @@ import java.net.SocketAddress;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Random;
 
 import net.spy.memcached.MemcachedClient;
 
@@ -32,6 +33,8 @@ public class MemCachedSecondCacheImpl implements ISecondCache {
 	 * 默认30秒
 	 */
 	private int expire = 30;
+
+	private static final Random r = new Random();
 
 	/**
 	 * 默认构造方法.
@@ -90,11 +93,19 @@ public class MemCachedSecondCacheImpl implements ISecondCache {
 	@Override
 	public void putGlobal(IQuery query, String clusterName, String tableName, List data) {
 		try {
-			String cacheKey = _buildGlobalCacheKey(query, clusterName, tableName);
+			String versionKey = _buildGlobalVersion(clusterName, tableName);
+			int version = r.nextInt(10000);
+			if (!_exists(versionKey)) {
+				this.memClient.incr(versionKey, 0, version);
+			} else {
+				version = Integer.parseInt((String) this.memClient.get(versionKey));
+			}
+
+			String cacheKey = _buildGlobalCacheKey(query, clusterName, tableName, version);
 			this.memClient.set(cacheKey, expire, data);
 
 			if (LOG.isDebugEnabled()) {
-				LOG.debug("[SECOND CACHE] - put to cache done, key:" + cacheKey);
+				LOG.debug("[SECOND CACHE] - put to cache done, key: " + cacheKey);
 			}
 		} catch (Exception e) {
 			LOG.warn("operate second cache failure");
@@ -104,14 +115,19 @@ public class MemCachedSecondCacheImpl implements ISecondCache {
 	@Override
 	public List getGlobal(IQuery query, String clusterName, String tableName) {
 		try {
-			String cacheKey = _buildGlobalCacheKey(query, clusterName, tableName);
-			List data = (List) this.memClient.get(cacheKey);
+			String versionKey = _buildGlobalVersion(clusterName, tableName);
+			if (_exists(versionKey)) {
+				int version = Integer.parseInt((String) this.memClient.get(versionKey));
 
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("[SECOND CACHE] -  key " + cacheKey + " hit");
+				String cacheKey = _buildGlobalCacheKey(query, clusterName, tableName, version);
+				List data = (List) this.memClient.get(cacheKey);
+
+				if (LOG.isDebugEnabled() && data != null) {
+					LOG.debug("[SECOND CACHE] -  key " + cacheKey + " hit");
+				}
+
+				return data;
 			}
-
-			return data;
 		} catch (Exception e) {
 			LOG.warn("operate second cache failure");
 		}
@@ -121,18 +137,31 @@ public class MemCachedSecondCacheImpl implements ISecondCache {
 
 	@Override
 	public void removeGlobal(String clusterName, String tableName) {
-		// memcached实现不支持根据前缀删除
-		// FIXME:此方法暂不实现，只能等待缓存过期
+		String versionKey = _buildGlobalVersion(clusterName, tableName);
+		if (_exists(versionKey)) {
+			this.memClient.incr(versionKey, 1);
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("[SECOND CACHE] - " + versionKey + " clean");
+			}
+		}
 	}
 
 	@Override
-	public void put(IQuery query, DB db, List	 data) {
+	public void put(IQuery query, DB db, List data) {
 		try {
-			String cacheKey = _buildShardingCacheKey(query, db);
+			String versionKey = _buildShardingVersion(db);
+			int version = r.nextInt(10000);
+			if (!_exists(versionKey)) {
+				this.memClient.incr(versionKey, 0, version);
+			} else {
+				version = Integer.parseInt((String) this.memClient.get(versionKey));
+			}
+
+			String cacheKey = _buildShardingCacheKey(query, db, version);
 			this.memClient.set(cacheKey, expire, data);
 
 			if (LOG.isDebugEnabled()) {
-				LOG.debug("[SECOND CACHE] - put to  done, key:" + cacheKey);
+				LOG.debug("[SECOND CACHE] - put to cache done, key: " + cacheKey);
 			}
 		} catch (Exception e) {
 			LOG.warn("operate second cache failure");
@@ -142,14 +171,20 @@ public class MemCachedSecondCacheImpl implements ISecondCache {
 	@Override
 	public List get(IQuery query, DB db) {
 		try {
-			String cacheKey = _buildShardingCacheKey(query, db);
-			List data = (List) this.memClient.get(cacheKey);
+			String versionKey = _buildShardingVersion(db);
 
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("[SECOND CACHE] -  key " + cacheKey + " hit");
+			if (_exists(versionKey)) {
+				int version = Integer.parseInt((String) this.memClient.get(versionKey));
+
+				String cacheKey = _buildShardingCacheKey(query, db, version);
+				List data = (List) this.memClient.get(cacheKey);
+
+				if (LOG.isDebugEnabled() && data != null) {
+					LOG.debug("[SECOND CACHE] -  key " + cacheKey + " hit");
+				}
+
+				return data;
 			}
-
-			return data;
 		} catch (Exception e) {
 			LOG.warn("operate second cache failure");
 		}
@@ -159,19 +194,53 @@ public class MemCachedSecondCacheImpl implements ISecondCache {
 
 	@Override
 	public void remove(DB db) {
-		// memcached实现不支持根据前缀删除
-		// FIXME:此方法暂不实现，只能等待缓存过期
+		String versionKey = _buildShardingVersion(db);
+		if (_exists(versionKey)) {
+			this.memClient.incr(versionKey, 1);
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("[SECOND CACHE] - " + versionKey + " clean");
+			}
+		}
 	}
 
-	private String _buildGlobalCacheKey(IQuery query, String clusterName, String tableName) {
+	private boolean _exists(String key) {
+		return this.memClient.get(key) != null;
+	}
+
+	private String _buildGlobalVersion(String clusterName, String tableName) {
+		StringBuilder versionKey = new StringBuilder("sec.version.");
+		versionKey.append(clusterName).append(".");
+		versionKey.append(tableName);
+		return versionKey.toString();
+	}
+
+	public String _buildShardingVersion(DB db) {
+		StringBuilder versionKey = new StringBuilder("sec.version.");
+		versionKey.append(db.getClusterName()).append(db.getDbIndex());
+		versionKey.append(".");
+		versionKey.append(db.getStart()).append(db.getEnd());
+		versionKey.append(".");
+		versionKey.append(db.getTableName()).append(db.getTableIndex());
+		return versionKey.toString();
+	}
+
+	/**
+	 * global second cache key. sec.[clustername].[tablename].[version].hashCode
+	 */
+	private String _buildGlobalCacheKey(IQuery query, String clusterName, String tableName, int version) {
 		StringBuilder cacheKey = new StringBuilder("sec.");
 		cacheKey.append(clusterName).append(".");
 		cacheKey.append(tableName).append(".");
+		cacheKey.append(version).append(".");
 		cacheKey.append(query.getWhereSql().hashCode());
 		return cacheKey.toString();
 	}
 
-	private String _buildShardingCacheKey(IQuery query, DB db) {
+	/**
+	 * sharding second cache key. sec.[clustername].[startend].[tablename +
+	 * tableIndex].[version].hashCode
+	 */
+	private String _buildShardingCacheKey(IQuery query, DB db, int version) {
 		StringBuilder cacheKey = new StringBuilder("sec.");
 		cacheKey.append(db.getClusterName()).append(db.getDbIndex());
 		cacheKey.append(".");
@@ -179,6 +248,7 @@ public class MemCachedSecondCacheImpl implements ISecondCache {
 		cacheKey.append(".");
 		cacheKey.append(db.getTableName()).append(db.getTableIndex());
 		cacheKey.append(".");
+		cacheKey.append(version).append(".");
 		cacheKey.append(query.getWhereSql().hashCode());
 		return cacheKey.toString();
 	}

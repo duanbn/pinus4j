@@ -90,10 +90,10 @@ public class ShardingUpdateImpl implements IShardingUpdate {
 			conn = globalConnection.getDatasource().getConnection();
 			_saveBatchGlobal(conn, entities);
 
-			if (primaryCache != null) {
+			if (isCacheAvailable(clazz)) {
 				primaryCache.incrCountGlobal(clusterName, tableName, entities.size());
 			}
-			if (secondCache != null) {
+			if (isSecondCacheAvailable(clazz)) {
 				secondCache.removeGlobal(clusterName, tableName);
 			}
 		} catch (Exception e1) {
@@ -126,14 +126,14 @@ public class ShardingUpdateImpl implements IShardingUpdate {
 			_updateBatchGlobal(conn, entities);
 
 			// 删除缓存
-			if (primaryCache != null) {
+			if (isCacheAvailable(clazz)) {
 				List pks = new ArrayList(entities.size());
 				for (Object entity : entities) {
 					pks.add((Number) ReflectUtil.getPkValue(entity));
 				}
 				primaryCache.removeGlobal(clusterName, tableName, pks);
 			}
-			if (secondCache != null) {
+			if (isSecondCacheAvailable(clazz)) {
 				secondCache.removeGlobal(clusterName, tableName);
 			}
 		} catch (Exception e) {
@@ -163,11 +163,11 @@ public class ShardingUpdateImpl implements IShardingUpdate {
 
 			// 删除缓存
 			String tableName = ReflectUtil.getTableName(clazz);
-			if (primaryCache != null) {
+			if (isCacheAvailable(clazz)) {
 				primaryCache.removeGlobal(clusterName, tableName, pks);
 				primaryCache.decrCountGlobal(clusterName, tableName, pks.size());
 			}
-			if (secondCache != null) {
+			if (isSecondCacheAvailable(clazz)) {
 				secondCache.removeGlobal(clusterName, tableName);
 			}
 		} catch (Exception e) {
@@ -180,7 +180,8 @@ public class ShardingUpdateImpl implements IShardingUpdate {
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Override
 	public Number save(Object entity, IShardingKey shardingKey) {
-		String tableName = ReflectUtil.getTableName(entity.getClass());
+        Class clazz = entity.getClass();
+		String tableName = ReflectUtil.getTableName(clazz);
 
 		// set primary key.
 		long pk = this.idGenerator.genClusterUniqueLongId(shardingKey.getClusterName(), tableName);
@@ -212,10 +213,10 @@ public class ShardingUpdateImpl implements IShardingUpdate {
 
 			_saveBatch(conn, entities, db.getTableIndex());
 
-			if (primaryCache != null) {
+			if (isCacheAvailable(clazz)) {
 				primaryCache.incrCount(db, 1);
 			}
-			if (secondCache != null) {
+			if (isSecondCacheAvailable(clazz)) {
 				secondCache.remove(db);
 			}
 		} catch (Exception e) {
@@ -253,10 +254,10 @@ public class ShardingUpdateImpl implements IShardingUpdate {
 
 			_saveBatch(conn, entities, db.getTableIndex());
 
-			if (primaryCache != null) {
+			if (isCacheAvailable(clazz)) {
 				primaryCache.incrCount(db, pks.length);
 			}
-			if (secondCache != null) {
+			if (isSecondCacheAvailable(clazz)) {
 				secondCache.remove(db);
 			}
 		} catch (Exception e) {
@@ -288,14 +289,14 @@ public class ShardingUpdateImpl implements IShardingUpdate {
 			_updateBatch(conn, entities, db.getTableIndex());
 
 			// 清理缓存
-			if (primaryCache != null) {
+			if (isCacheAvailable(clazz)) {
 				List pks = new ArrayList(entities.size());
 				for (Object entity : entities) {
 					pks.add((Number) ReflectUtil.getPkValue(entity));
 				}
 				primaryCache.remove(db, pks);
 			}
-			if (secondCache != null) {
+			if (isSecondCacheAvailable(clazz)) {
 				secondCache.remove(db);
 			}
 		} catch (SQLException e) {
@@ -325,11 +326,11 @@ public class ShardingUpdateImpl implements IShardingUpdate {
 			_removeByPks(conn, pks, clazz, db.getTableIndex());
 
 			// 删除缓存
-			if (primaryCache != null) {
+			if (isCacheAvailable(clazz)) {
 				primaryCache.remove(db, pks);
 				primaryCache.decrCount(db, pks.size());
 			}
-			if (secondCache != null) {
+			if (isSecondCacheAvailable(clazz)) {
 				secondCache.remove(db);
 			}
 		} catch (SQLException e) {
@@ -456,6 +457,24 @@ public class ShardingUpdateImpl implements IShardingUpdate {
 		} finally {
 			SQLBuilder.close(null, ps);
 		}
+	}
+
+    /**
+	 * 判断一级缓存是否可用
+	 * 
+	 * @return true:启用cache, false:不启用
+	 */
+	protected boolean isCacheAvailable(Class<?> clazz) {
+		return primaryCache != null && ReflectUtil.isCache(clazz);
+	}
+
+	/**
+	 * 判断二级缓存是否可用
+	 * 
+	 * @return true:启用cache, false:不启用
+	 */
+	protected boolean isSecondCacheAvailable(Class<?> clazz) {
+		return secondCache != null && ReflectUtil.isCache(clazz);
 	}
 
 }

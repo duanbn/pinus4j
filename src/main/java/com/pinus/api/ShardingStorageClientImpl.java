@@ -155,7 +155,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 		if (this.primaryCache != null) {
 			StringBuilder memcachedAddressInfo = new StringBuilder();
 			Collection<SocketAddress> servers = this.primaryCache.getAvailableServers();
-			if (servers != null) {
+			if (servers != null && !servers.isEmpty()) {
 				for (SocketAddress server : servers) {
 					memcachedAddressInfo.append(((InetSocketAddress) server).getAddress().getHostAddress() + ":"
 							+ ((InetSocketAddress) server).getPort());
@@ -170,7 +170,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 		if (this.secondCache != null) {
 			StringBuilder memcachedAddressInfo = new StringBuilder();
 			Collection<SocketAddress> servers = this.secondCache.getAvailableServers();
-			if (servers != null) {
+			if (servers != null && !servers.isEmpty()) {
 				for (SocketAddress server : servers) {
 					memcachedAddressInfo.append(((InetSocketAddress) server).getAddress().getHostAddress() + ":"
 							+ ((InetSocketAddress) server).getPort());
