@@ -21,20 +21,19 @@ public class SQL {
 	 */
 	private Object[] params;
 
-    private SQL() {
-    }
+	private SQL() {
+	}
 
 	private SQL(String sql, Object... params) {
-		if (sql != null)
-			this.sql = sql.toLowerCase();
+		this.sql = sql;
 		this.params = params;
 	}
 
-    public static final SQL valueOf(String sql, Object... params) {
-        SQL obj = new SQL(sql, params);
+	public static final SQL valueOf(String sql, Object... params) {
+		SQL obj = new SQL(sql, params);
 
-        return obj;
-    }
+		return obj;
+	}
 
 	public List<String> getTableNames() {
 		return SQLParser.parseTableName(sql);
@@ -45,10 +44,10 @@ public class SQL {
 		String s = null;
 
 		for (Object param : params) {
-            if (param instanceof String)
-                s = sql.replaceFirst("\\?", "'" + String.valueOf(param) + "'");
-            else
-                s = sql.replaceFirst("\\?", String.valueOf(param));
+			if (param instanceof String)
+				s = sql.replaceFirst("\\?", "'" + String.valueOf(param) + "'");
+			else
+				s = sql.replaceFirst("\\?", String.valueOf(param));
 		}
 
 		return s;
