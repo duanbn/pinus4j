@@ -21,6 +21,7 @@ import com.pinus.api.enums.EnumDBMasterSlave;
 import com.pinus.api.enums.EnumDBRouteAlg;
 import com.pinus.api.enums.EnumDbConnectionPoolCatalog;
 import com.pinus.api.enums.EnumMode;
+import com.pinus.api.enums.EnumSyncAction;
 import com.pinus.api.query.IQuery;
 import com.pinus.api.query.QueryImpl;
 import com.pinus.cache.IPrimaryCache;
@@ -101,6 +102,11 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 	 * 是否生成数据库表. 默认是不自动生成库表
 	 */
 	private boolean isCreateTable = false;
+
+	/**
+	 * 同步数据表操作.
+	 */
+	private EnumSyncAction syncAction = EnumSyncAction.CREATE;
 
 	/**
 	 * 扫描数据对象的包. 数据对象是使用了@Table注解的javabean.
@@ -215,6 +221,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 		this.dbCluster.setDbRouteAlg(this.enumDBRouteAlg);
 		// 设置是否生成数据库表
 		this.dbCluster.setCreateTable(this.isCreateTable);
+		this.dbCluster.setSyncAction(syncAction);
 		// 设置扫描对象的包
 		this.dbCluster.setScanPackage(this.scanPackage);
 		// 启动集群
@@ -1044,6 +1051,15 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 
 	public boolean isCreateTable() {
 		return isCreateTable;
+	}
+
+	public EnumSyncAction getSyncAction() {
+		return syncAction;
+	}
+
+	@Override
+	public void setSyncAction(EnumSyncAction syncAction) {
+		this.syncAction = syncAction;
 	}
 
 	@Override

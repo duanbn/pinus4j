@@ -153,21 +153,20 @@ public class DBTable implements Serializable {
 	/**
 	 * 获取修改的sql语句.
 	 * 
-	 * @param table
+	 * @param existTable
 	 *            已经存在的表结构
 	 * @param isDelete
 	 *            多余的列是否删除.
 	 * @return
 	 */
-	@Deprecated
-	public String[] getAlterSQL(DBTable table, boolean isDelete) {
-		if (!table.getNameWithIndex().equals(getNameWithIndex())) {
+	public String[] getAlterSQL(DBTable existTable, boolean isDelete) {
+		if (!existTable.getNameWithIndex().equals(getNameWithIndex())) {
 			return new String[0];
 		}
 
 		List<String> sqls = new ArrayList<String>();
 		// 同步字段
-		Map<String, DBTableColumn> dbColumnMap = table.getColumnMap();
+		Map<String, DBTableColumn> dbColumnMap = existTable.getColumnMap();
 		DBTableColumn dbColumn = null;
 		for (DBTableColumn entityColumn : this.columns) {
 			dbColumn = dbColumnMap.get(entityColumn.getField());
@@ -179,10 +178,6 @@ public class DBTable implements Serializable {
 						+ _sqlFieldPhrase(entityColumn) + ";";
 				sqls.add(addSql);
 			} else if (!entityColumn.equals(dbColumn)) {
-				if (LOG.isDebugEnabled()) {
-					LOG.debug("db - " + dbColumn);
-					LOG.debug("entity - " + entityColumn);
-				}
 				String modifySql = "ALTER TABLE " + this.getNameWithIndex() + " MODIFY "
 						+ _sqlFieldPhrase(entityColumn) + ";";
 				sqls.add(modifySql);
@@ -190,7 +185,7 @@ public class DBTable implements Serializable {
 		}
 
 		// 同步索引
-		Map<String, DBIndex> dbIndexMap = table.getIndexMap();
+		Map<String, DBIndex> dbIndexMap = existTable.getIndexMap();
 		DBIndex dbIndex = null;
 		for (DBIndex entityIndex : this.indexes) {
 			dbIndex = dbIndexMap.get(entityIndex.getIndexName());
@@ -287,13 +282,22 @@ public class DBTable implements Serializable {
 	}
 
 	@Override
+	public String toString() {
+		return "DBTable [cluster=" + cluster + ", name=" + name + ", tableIndex=" + tableIndex + ", shardingBy="
+				+ shardingBy + ", shardingNum=" + shardingNum + ", columns=" + columns + ", indexes=" + indexes + "]";
+	}
+
+	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
 		result = prime * result + ((cluster == null) ? 0 : cluster.hashCode());
+		result = prime * result + ((columns == null) ? 0 : columns.hashCode());
+		result = prime * result + ((indexes == null) ? 0 : indexes.hashCode());
 		result = prime * result + ((name == null) ? 0 : name.hashCode());
 		result = prime * result + ((shardingBy == null) ? 0 : shardingBy.hashCode());
 		result = prime * result + shardingNum;
+		result = prime * result + tableIndex;
 		return result;
 	}
 
@@ -311,6 +315,16 @@ public class DBTable implements Serializable {
 				return false;
 		} else if (!cluster.equals(other.cluster))
 			return false;
+		if (columns == null) {
+			if (other.columns != null)
+				return false;
+		} else if (!columns.equals(other.columns))
+			return false;
+		if (indexes == null) {
+			if (other.indexes != null)
+				return false;
+		} else if (!indexes.equals(other.indexes))
+			return false;
 		if (name == null) {
 			if (other.name != null)
 				return false;
@@ -322,6 +336,8 @@ public class DBTable implements Serializable {
 		} else if (!shardingBy.equals(other.shardingBy))
 			return false;
 		if (shardingNum != other.shardingNum)
+			return false;
+		if (tableIndex != other.tableIndex)
 			return false;
 		return true;
 	}

@@ -48,6 +48,11 @@ public class DBIndex implements Serializable {
     }
 
     @Override
+	public String toString() {
+		return "DBIndex [field=" + field + ", isUnique=" + isUnique + "]";
+	}
+
+	@Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;

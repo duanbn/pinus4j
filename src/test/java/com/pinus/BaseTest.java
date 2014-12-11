@@ -10,6 +10,7 @@ import org.junit.BeforeClass;
 import com.pinus.api.IShardingStorageClient;
 import com.pinus.api.ShardingStorageClientImpl;
 import com.pinus.api.enums.EnumMode;
+import com.pinus.api.enums.EnumSyncAction;
 import com.pinus.cache.IPrimaryCache;
 import com.pinus.cache.ISecondCache;
 import com.pinus.cache.impl.MemCachedPrimaryCacheImpl;
@@ -39,6 +40,7 @@ public class BaseTest {
 		cacheClient.setMode(EnumMode.DISTRIBUTED);
 		cacheClient.setScanPackage("com.pinus");
 		cacheClient.setCreateTable(true);
+		cacheClient.setSyncAction(EnumSyncAction.UPDATE);
 		cacheClient.setPrimaryCache(primaryCache);
 		cacheClient.setSecondCache(secondCache);
 		cacheClient.init();

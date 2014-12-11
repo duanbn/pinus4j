@@ -7,6 +7,7 @@ import java.util.Collection;
 import com.pinus.api.IShardingKey;
 import com.pinus.api.enums.EnumDBMasterSlave;
 import com.pinus.api.enums.EnumDBRouteAlg;
+import com.pinus.api.enums.EnumSyncAction;
 import com.pinus.cluster.beans.DBClusterInfo;
 import com.pinus.cluster.beans.DBConnectionInfo;
 import com.pinus.cluster.beans.DBTable;
@@ -194,6 +195,13 @@ public interface IDBCluster {
 	 *            true:创建, false:不创建
 	 */
 	public void setCreateTable(boolean isCreateTable);
+	
+	/**
+	 * 设置数据表同步动作.
+	 * 
+	 * @param syncAction
+	 */
+	public void setSyncAction(EnumSyncAction syncAction);
 
 	/**
 	 * 是否创建表.

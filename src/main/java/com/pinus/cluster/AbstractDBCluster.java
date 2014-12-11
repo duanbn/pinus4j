@@ -19,6 +19,7 @@ import com.pinus.api.IShardingKey;
 import com.pinus.api.enums.EnumDB;
 import com.pinus.api.enums.EnumDBMasterSlave;
 import com.pinus.api.enums.EnumDBRouteAlg;
+import com.pinus.api.enums.EnumSyncAction;
 import com.pinus.cluster.beans.DBClusterInfo;
 import com.pinus.cluster.beans.DBClusterRegionInfo;
 import com.pinus.cluster.beans.DBConnectionInfo;
@@ -56,6 +57,11 @@ public abstract class AbstractDBCluster implements IDBCluster {
 	 * 是否创建数据库表.
 	 */
 	private boolean isCreateTable;
+
+	/**
+	 * 同步数据表操作.
+	 */
+	private EnumSyncAction syncAction = EnumSyncAction.CREATE;
 
 	/**
 	 * 扫描数据对象包.
@@ -156,6 +162,7 @@ public abstract class AbstractDBCluster implements IDBCluster {
 			this.dbGenerator = new DBMySqlGeneratorImpl();
 			break;
 		}
+		this.dbGenerator.setSyncAction(syncAction);
 
 		try {
 			config = _getConfig(xmlFilePath);
@@ -203,7 +210,7 @@ public abstract class AbstractDBCluster implements IDBCluster {
 			_initTableCluster(dbClusterInfo, tables);
 
 			// 创建数据库表
-			if (isCreateTable) {
+			if (isCreateTable && this.syncAction != EnumSyncAction.NONE) {
 				LOG.info("syncing table info");
 				long start = System.currentTimeMillis();
 				_createTable(tables);
@@ -524,7 +531,8 @@ public abstract class AbstractDBCluster implements IDBCluster {
 				zkClient.create(Const.ZK_SHARDINGINFO, new byte[0], ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
 			}
 
-//			List<String> toBeCleanInfo = zkClient.getChildren(Const.ZK_SHARDINGINFO, false);
+			// List<String> toBeCleanInfo =
+			// zkClient.getChildren(Const.ZK_SHARDINGINFO, false);
 
 			byte[] tableData = null;
 			String tableName = null;
@@ -532,7 +540,7 @@ public abstract class AbstractDBCluster implements IDBCluster {
 				tableData = IOUtil.getBytes(table);
 				tableName = table.getName();
 
-//				toBeCleanInfo.remove(tableName);
+				// toBeCleanInfo.remove(tableName);
 
 				String zkTableNode = Const.ZK_SHARDINGINFO + "/" + tableName;
 				stat = zkClient.exists(zkTableNode, false);
@@ -543,14 +551,15 @@ public abstract class AbstractDBCluster implements IDBCluster {
 				}
 			}
 
-//			if (toBeCleanInfo != null && !toBeCleanInfo.isEmpty()) {
-//				for (String toBeCleanTableName : toBeCleanInfo) {
-//					zkClient.delete(Const.ZK_SHARDINGINFO + "/" + toBeCleanTableName, -1);
-//					if (LOG.isDebugEnabled()) {
-//						LOG.debug("clean expire sharding info " + toBeCleanTableName);
-//					}
-//				}
-//			}
+			// if (toBeCleanInfo != null && !toBeCleanInfo.isEmpty()) {
+			// for (String toBeCleanTableName : toBeCleanInfo) {
+			// zkClient.delete(Const.ZK_SHARDINGINFO + "/" + toBeCleanTableName,
+			// -1);
+			// if (LOG.isDebugEnabled()) {
+			// LOG.debug("clean expire sharding info " + toBeCleanTableName);
+			// }
+			// }
+			// }
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		} finally {
@@ -777,6 +786,15 @@ public abstract class AbstractDBCluster implements IDBCluster {
 	@Override
 	public boolean isCreateTable() {
 		return this.isCreateTable;
+	}
+
+	public EnumSyncAction getSyncAction() {
+		return syncAction;
+	}
+
+	@Override
+	public void setSyncAction(EnumSyncAction syncAction) {
+		this.syncAction = syncAction;
 	}
 
 	@Override

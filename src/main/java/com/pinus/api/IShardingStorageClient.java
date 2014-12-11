@@ -8,6 +8,7 @@ import com.pinus.api.enums.EnumDB;
 import com.pinus.api.enums.EnumDBMasterSlave;
 import com.pinus.api.enums.EnumDBRouteAlg;
 import com.pinus.api.enums.EnumMode;
+import com.pinus.api.enums.EnumSyncAction;
 import com.pinus.api.query.IQuery;
 import com.pinus.cache.IPrimaryCache;
 import com.pinus.cache.ISecondCache;
@@ -566,7 +567,7 @@ public interface IShardingStorageClient {
 	 *             输入参数错误
 	 */
 	public <T> T findByPk(Number pk, IShardingKey<?> shardingKey, Class<T> clazz, EnumDBMasterSlave masterSlave);
-	
+
 	public <T> T findByPk(Number pk, IShardingKey<?> shardingKey, Class<T> clazz, boolean useCache,
 			EnumDBMasterSlave masterSlave);
 
@@ -705,7 +706,8 @@ public interface IShardingStorageClient {
 	 * @throws IllegalArgumentException
 	 *             输入参数错误
 	 */
-//	public <T> List<T> findByShardingPair(List<IShardingKey<?>> shardingKeys, Class<T> clazz, Number... pks);
+	// public <T> List<T> findByShardingPair(List<IShardingKey<?>> shardingKeys,
+	// Class<T> clazz, Number... pks);
 
 	/**
 	 * 多个主分库分表, 多个主键查询, 一个主键对应一个分库分表.
@@ -748,7 +750,8 @@ public interface IShardingStorageClient {
 	 * @throws IllegalArgumentException
 	 *             输入参数错误
 	 */
-//	public <T> List<T> findByShardingPair(List<? extends Number> pks, List<IShardingKey<?>> shardingKeys, Class<T> clazz);
+	// public <T> List<T> findByShardingPair(List<? extends Number> pks,
+	// List<IShardingKey<?>> shardingKeys, Class<T> clazz);
 
 	/**
 	 * 多个主分库分表, 多个主键查询. 主键列表和分库分表因子的列表必须是一一对应, 当查询不到数据时返回空的List，不会返回null.
@@ -998,6 +1001,13 @@ public interface IShardingStorageClient {
 	 * @param isCreateTable
 	 */
 	public void setCreateTable(boolean isCreateTable);
+
+	/**
+	 * 设置数据表同步动作.
+	 * 
+	 * @param syncAction
+	 */
+	public void setSyncAction(EnumSyncAction syncAction);
 
 	/**
 	 * 设置扫描的实体对象包. 用户加载分表信息和自动创建数据表.

@@ -127,9 +127,17 @@ public class DBTableColumn implements Serializable {
 	}
 
 	@Override
+	public String toString() {
+		return "DBTableColumn [field=" + field + ", type=" + type + ", length=" + length + ", isCanNull=" + isCanNull
+				+ ", isPrimaryKey=" + isPrimaryKey + ", isAutoIncrement=" + isAutoIncrement + ", hasDefault="
+				+ hasDefault + ", comment=" + comment + "]";
+	}
+
+	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
+		result = prime * result + ((comment == null) ? 0 : comment.hashCode());
 		result = prime * result + ((field == null) ? 0 : field.hashCode());
 		result = prime * result + (hasDefault ? 1231 : 1237);
 		result = prime * result + (isAutoIncrement ? 1231 : 1237);
@@ -149,6 +157,11 @@ public class DBTableColumn implements Serializable {
 		if (getClass() != obj.getClass())
 			return false;
 		DBTableColumn other = (DBTableColumn) obj;
+		if (comment == null) {
+			if (other.comment != null)
+				return false;
+		} else if (!comment.equals(other.comment))
+			return false;
 		if (field == null) {
 			if (other.field != null)
 				return false;
