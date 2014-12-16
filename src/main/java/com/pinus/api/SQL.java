@@ -41,13 +41,17 @@ public class SQL {
 
 	@Override
 	public String toString() {
-		String s = null;
+		String s = sql;
 
-		for (Object param : params) {
-			if (param instanceof String)
-				s = sql.replaceFirst("\\?", "'" + String.valueOf(param) + "'");
-			else
-				s = sql.replaceFirst("\\?", String.valueOf(param));
+		if (params != null && params.length > 0) {
+			for (Object param : params) {
+				if (param instanceof String)
+					s = s.replaceFirst("\\?", "'" + String.valueOf(param) + "'");
+				else
+					s = s.replaceFirst("\\?", String.valueOf(param));
+			}
+		} else {
+			s = sql;
 		}
 
 		return s;
