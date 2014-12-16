@@ -45,7 +45,7 @@ public class EnvDBClusterImpl extends AbstractDBCluster {
 			DataSource ds = (DataSource) this.initCtx.lookup(envDbConnInfo.getEnvDsName());
 			dbConnInfo.setDatasource(ds);
 		} catch (NamingException e) {
-			throw new LoadConfigException(e);
+			throw new LoadConfigException("load jndi datasource failure, env name " + envDbConnInfo.getEnvDsName());
 		}
 	}
 
