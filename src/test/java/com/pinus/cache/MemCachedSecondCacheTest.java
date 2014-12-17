@@ -7,14 +7,14 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.pinus.api.IShardingKey;
+import org.pinus.api.ShardingKey;
+import org.pinus.api.query.Condition;
+import org.pinus.api.query.IQuery;
+import org.pinus.cluster.DB;
+import org.pinus.exception.DBClusterException;
 
 import com.pinus.BaseTest;
-import com.pinus.api.IShardingKey;
-import com.pinus.api.ShardingKey;
-import com.pinus.api.query.Condition;
-import com.pinus.api.query.IQuery;
-import com.pinus.cluster.DB;
-import com.pinus.exception.DBClusterException;
 
 public class MemCachedSecondCacheTest extends BaseTest {
 

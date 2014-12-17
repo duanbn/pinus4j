@@ -7,13 +7,15 @@ import java.util.Map;
 import junit.framework.Assert;
 
 import org.junit.Test;
+import org.pinus.api.IShardingKey;
+import org.pinus.api.ShardingKey;
+import org.pinus.api.enums.EnumDB;
+import org.pinus.api.enums.EnumDBMasterSlave;
+import org.pinus.cluster.DB;
+import org.pinus.cluster.IDBCluster;
+import org.pinus.cluster.beans.DBTable;
+import org.pinus.cluster.impl.AppDBClusterImpl;
 
-import com.pinus.api.IShardingKey;
-import com.pinus.api.ShardingKey;
-import com.pinus.api.enums.EnumDB;
-import com.pinus.api.enums.EnumDBMasterSlave;
-import com.pinus.cluster.beans.DBTable;
-import com.pinus.cluster.impl.AppDBClusterImpl;
 import com.pinus.entity.TestEntity;
 
 public class DBClusterTest {

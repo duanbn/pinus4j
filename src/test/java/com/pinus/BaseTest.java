@@ -6,15 +6,15 @@ import java.util.Random;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.pinus.api.IShardingStorageClient;
+import org.pinus.api.ShardingStorageClientImpl;
+import org.pinus.api.enums.EnumMode;
+import org.pinus.api.enums.EnumSyncAction;
+import org.pinus.cache.IPrimaryCache;
+import org.pinus.cache.ISecondCache;
+import org.pinus.cache.impl.MemCachedPrimaryCacheImpl;
+import org.pinus.cache.impl.MemCachedSecondCacheImpl;
 
-import com.pinus.api.IShardingStorageClient;
-import com.pinus.api.ShardingStorageClientImpl;
-import com.pinus.api.enums.EnumMode;
-import com.pinus.api.enums.EnumSyncAction;
-import com.pinus.cache.IPrimaryCache;
-import com.pinus.cache.ISecondCache;
-import com.pinus.cache.impl.MemCachedPrimaryCacheImpl;
-import com.pinus.cache.impl.MemCachedSecondCacheImpl;
 import com.pinus.entity.TestEntity;
 import com.pinus.entity.TestGlobalEntity;
 

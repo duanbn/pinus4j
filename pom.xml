@@ -2,25 +2,12 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<groupId>com.pinus</groupId>
+	<groupId>org.pinus</groupId>
 	<artifactId>pinus</artifactId>
 	<version>0.7.0-SNAPSHOT</version>
 	<packaging>jar</packaging>
 
 	<name>pinus</name>
-
-	<distributionManagement>
-		<repository>
-			<id>Releases</id>
-			<name>Internal Releases</name>
-			<url>http://192.168.1.150:8081/nexus/content/repositories/releases</url>
-		</repository>
-		<snapshotRepository>
-			<id>Snapshot</id>
-			<name>Internal Snapshot</name>
-			<url>http://192.168.1.150:8081/nexus/content/repositories/snapshots</url>
-		</snapshotRepository>
-	</distributionManagement>
 
 	<properties>
 		<curator.version>2.7.0</curator.version>

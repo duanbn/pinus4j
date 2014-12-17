@@ -3,10 +3,10 @@ package com.pinus.datalayer;
 import java.util.List;
 
 import org.junit.Test;
+import org.pinus.api.enums.EnumDBMasterSlave;
+import org.pinus.datalayer.jdbc.FatDB;
 
 import com.pinus.BaseTest;
-import com.pinus.api.enums.EnumDBMasterSlave;
-import com.pinus.datalayer.jdbc.FatDB;
 import com.pinus.entity.TestEntity;
 
 public class FatDBTest extends BaseTest {

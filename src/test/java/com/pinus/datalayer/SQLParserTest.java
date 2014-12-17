@@ -5,6 +5,7 @@ import java.util.List;
 import junit.framework.Assert;
 
 import org.junit.Test;
+import org.pinus.datalayer.SQLParser;
 
 public class SQLParserTest {
 

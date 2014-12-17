@@ -1,6 +1,10 @@
 package com.pinus.api.query;
 
 import org.junit.Test;
+import org.pinus.api.query.Condition;
+import org.pinus.api.query.IQuery;
+import org.pinus.api.query.Order;
+import org.pinus.api.query.QueryImpl;
 
 public class QueryImplTest {
 

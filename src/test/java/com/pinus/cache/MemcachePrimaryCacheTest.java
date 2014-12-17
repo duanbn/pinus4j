@@ -10,14 +10,14 @@ import junit.framework.Assert;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.pinus.api.IShardingKey;
+import org.pinus.api.ShardingKey;
+import org.pinus.cluster.DB;
+import org.pinus.exception.DBClusterException;
 
 import com.pinus.BaseTest;
-import com.pinus.api.IShardingKey;
-import com.pinus.api.ShardingKey;
-import com.pinus.cluster.DB;
 import com.pinus.entity.TestEntity;
 import com.pinus.entity.TestGlobalEntity;
-import com.pinus.exception.DBClusterException;
 
 public class MemcachePrimaryCacheTest extends BaseTest {
 

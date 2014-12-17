@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.junit.Test;
+import org.pinus.generator.IIdGenerator;
 
 import com.pinus.BaseTest;
 

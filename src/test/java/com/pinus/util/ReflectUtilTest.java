@@ -5,6 +5,7 @@ import java.util.Map;
 import junit.framework.Assert;
 
 import org.junit.Test;
+import org.pinus.util.ReflectUtil;
 
 import com.pinus.BaseTest;
 import com.pinus.entity.TestEntity;

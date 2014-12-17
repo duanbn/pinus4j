@@ -9,10 +9,13 @@ import junit.framework.Assert;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.pinus.api.IShardingKey;
+import org.pinus.api.SQL;
+import org.pinus.api.ShardingKey;
+import org.pinus.api.query.Condition;
+import org.pinus.api.query.IQuery;
 
 import com.pinus.BaseTest;
-import com.pinus.api.query.Condition;
-import com.pinus.api.query.IQuery;
 import com.pinus.entity.TestEntity;
 
 public class ShardingStorageTest extends BaseTest {
