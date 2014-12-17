@@ -32,12 +32,13 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.apache.log4j.Logger;
 import org.pinus.api.SQL;
 import org.pinus.api.query.IQuery;
 import org.pinus.constant.Const;
 import org.pinus.util.ReflectUtil;
 import org.pinus.util.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * SQL工具类.
@@ -46,7 +47,7 @@ import org.pinus.util.StringUtils;
  */
 public class SQLBuilder {
 
-	public static final Logger LOG = Logger.getLogger(SQLBuilder.class);
+	public static final Logger LOG = LoggerFactory.getLogger(SQLBuilder.class);
 
 	/**
 	 * select count语句缓存.
@@ -599,7 +600,7 @@ public class SQLBuilder {
 				st.close();
 			}
 		} catch (SQLException e) {
-			LOG.error(e);
+			LOG.error(e.getMessage());
 		}
 	}
 
@@ -625,7 +626,7 @@ public class SQLBuilder {
 				conn.close();
 			}
 		} catch (SQLException e) {
-			LOG.error(e);
+			LOG.error(e.getMessage());
 		}
 	}
 

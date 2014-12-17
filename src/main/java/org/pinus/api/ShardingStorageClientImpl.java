@@ -30,7 +30,6 @@ import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.framework.recipes.locks.InterProcessMutex;
 import org.apache.curator.retry.RetryNTimes;
 import org.apache.curator.utils.CloseableUtils;
-import org.apache.log4j.Logger;
 import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.ZooDefs;
 import org.apache.zookeeper.ZooKeeper;
@@ -69,6 +68,8 @@ import org.pinus.generator.impl.StandaloneSequenceIdGeneratorImpl;
 import org.pinus.util.CheckUtil;
 import org.pinus.util.ReflectUtil;
 import org.pinus.util.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * 用户调用接口实现. 数据库类型、数据库连接类型、路由算法可以通过EnumDB、EnumDBConnect、EnumDBRouteAlg枚举进行设置.
@@ -95,7 +96,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 	/**
 	 * 日志.
 	 */
-	public static final Logger LOG = Logger.getLogger(ShardingStorageClientImpl.class);
+	public static final Logger LOG = LoggerFactory.getLogger(ShardingStorageClientImpl.class);
 
 	/**
 	 * reference it self;

@@ -26,8 +26,9 @@ import java.util.List;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
-import org.apache.log4j.Logger;
 import org.pinus.constant.Const;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
@@ -42,7 +43,7 @@ import org.xml.sax.InputSource;
  */
 public class XmlUtil {
 
-	public static final Logger LOG = Logger.getLogger(XmlUtil.class);
+	public static final Logger LOG = LoggerFactory.getLogger(XmlUtil.class);
 
 	private DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 	private Document xmlDoc;
@@ -67,7 +68,7 @@ public class XmlUtil {
 			try {
 				is.close();
 			} catch (IOException e) {
-				LOG.error(e);
+				LOG.error(e.getMessage());
 			}
 		}
 	}
@@ -90,7 +91,7 @@ public class XmlUtil {
 			try {
 				is.close();
 			} catch (IOException e) {
-				LOG.error(e);
+				LOG.error(e.getMessage());
 			}
 		}
 	}

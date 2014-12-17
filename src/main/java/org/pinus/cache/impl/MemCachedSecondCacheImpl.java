@@ -25,17 +25,18 @@ import java.util.Random;
 
 import net.spy.memcached.MemcachedClient;
 
-import org.apache.log4j.Logger;
 import org.pinus.api.query.IQuery;
 import org.pinus.cache.ISecondCache;
 import org.pinus.cluster.DB;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class MemCachedSecondCacheImpl implements ISecondCache {
 
 	/**
 	 * 日志.
 	 */
-	public static final Logger LOG = Logger.getLogger(MemCachedSecondCacheImpl.class);
+	public static final Logger LOG = LoggerFactory.getLogger(MemCachedSecondCacheImpl.class);
 
 	/**
 	 * Spy client

@@ -24,7 +24,6 @@ import java.sql.Statement;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.log4j.Logger;
 import org.pinus.api.enums.EnumSyncAction;
 import org.pinus.cluster.beans.DBIndex;
 import org.pinus.cluster.beans.DBTable;
@@ -32,6 +31,8 @@ import org.pinus.cluster.beans.DBTableColumn;
 import org.pinus.datalayer.SQLBuilder;
 import org.pinus.exception.DDLException;
 import org.pinus.generator.AbstractDBGenerator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * MYSQL数据库生成器的实现. 用于生成MYSQL相关的数据表.
@@ -43,7 +44,7 @@ public class DBMySqlGeneratorImpl extends AbstractDBGenerator {
 	/**
 	 * 日志.
 	 */
-	public static final Logger LOG = Logger.getLogger(DBMySqlGeneratorImpl.class);
+	public static final Logger LOG = LoggerFactory.getLogger(DBMySqlGeneratorImpl.class);
 
 	public static final String SQL_SHOWTABLE = "show tables";
 

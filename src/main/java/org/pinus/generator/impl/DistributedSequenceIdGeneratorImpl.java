@@ -20,11 +20,12 @@ import java.util.concurrent.locks.Lock;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.recipes.locks.InterProcessMutex;
-import org.apache.log4j.Logger;
 import org.pinus.cluster.lock.CuratorDistributeedLock;
 import org.pinus.config.IClusterConfig;
 import org.pinus.constant.Const;
 import org.pinus.generator.AbstractSequenceIdGenerator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * 分布式模式ID生成器. 在分布式情况下，主键生成需要依赖于一个分布式锁来保证ID生成的顺序，不会出现重复ID的情况.
@@ -36,7 +37,7 @@ public class DistributedSequenceIdGeneratorImpl extends AbstractSequenceIdGenera
 	/**
 	 * 日志.
 	 */
-	public static Logger LOG = Logger.getLogger(DistributedSequenceIdGeneratorImpl.class);
+	public static Logger LOG = LoggerFactory.getLogger(DistributedSequenceIdGeneratorImpl.class);
 
 	private CuratorFramework curatorClient;
 

@@ -21,7 +21,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.log4j.Logger;
 import org.pinus.api.IShardingKey;
 import org.pinus.api.SQL;
 import org.pinus.api.enums.EnumDBMasterSlave;
@@ -34,6 +33,8 @@ import org.pinus.datalayer.SQLBuilder;
 import org.pinus.exception.DBClusterException;
 import org.pinus.exception.DBOperationException;
 import org.pinus.util.ReflectUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * 从库查询实现.
@@ -46,7 +47,7 @@ public class ShardingSlaveQueryImpl extends AbstractShardingQuery implements ISh
 	/**
 	 * 日志.
 	 */
-	public static final Logger LOG = Logger.getLogger(ShardingSlaveQueryImpl.class);
+	public static final Logger LOG = LoggerFactory.getLogger(ShardingSlaveQueryImpl.class);
 
 	/**
 	 * 数据库集群.

@@ -19,9 +19,10 @@ package org.pinus.datalayer;
 import java.sql.Connection;
 import java.sql.SQLException;
 
-import org.apache.log4j.Logger;
 import org.pinus.api.SQL;
 import org.pinus.cluster.DB;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * 记录数据库的慢查询日志.
@@ -34,7 +35,7 @@ public class SlowQueryLogger {
 	/**
 	 * 日志
 	 */
-	public static final Logger LOG = Logger.getLogger(SlowQueryLogger.class);
+	public static final Logger LOG = LoggerFactory.getLogger(SlowQueryLogger.class);
 
 	public static void write(DB db, SQL sql, long constTime) {
 		LOG.warn("[" + db + "] \"" + sql.toString() + "\" const " + constTime + "ms");

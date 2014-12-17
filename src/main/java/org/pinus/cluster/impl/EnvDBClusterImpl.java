@@ -21,16 +21,17 @@ import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import javax.sql.DataSource;
 
-import org.apache.log4j.Logger;
 import org.pinus.api.enums.EnumDB;
 import org.pinus.cluster.AbstractDBCluster;
 import org.pinus.cluster.beans.DBConnectionInfo;
 import org.pinus.cluster.beans.EnvDBConnectionInfo;
 import org.pinus.exception.LoadConfigException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class EnvDBClusterImpl extends AbstractDBCluster {
 
-	public static final Logger LOG = Logger.getLogger(EnvDBClusterImpl.class);
+	public static final Logger LOG = LoggerFactory.getLogger(EnvDBClusterImpl.class);
 
 	private Context initCtx;
 
@@ -54,7 +55,7 @@ public class EnvDBClusterImpl extends AbstractDBCluster {
 	public void buildDataSource(DBConnectionInfo dbConnInfo) throws LoadConfigException {
 		EnvDBConnectionInfo envDbConnInfo = (EnvDBConnectionInfo) dbConnInfo;
 
-		LOG.info(envDbConnInfo);
+		LOG.info(envDbConnInfo.toString());
 
 		try {
 			DataSource ds = (DataSource) this.initCtx.lookup(envDbConnInfo.getEnvDsName());

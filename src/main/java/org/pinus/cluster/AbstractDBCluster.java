@@ -25,7 +25,6 @@ import java.util.Map;
 
 import javax.sql.DataSource;
 
-import org.apache.log4j.Logger;
 import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.ZooDefs;
 import org.apache.zookeeper.ZooKeeper;
@@ -54,6 +53,8 @@ import org.pinus.generator.impl.DBMySqlGeneratorImpl;
 import org.pinus.util.IOUtil;
 import org.pinus.util.ReflectUtil;
 import org.pinus.util.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * 抽象数据库集群. 主要负责初始化数据库集群的数据源对象、分表信息.<br/>
@@ -66,7 +67,7 @@ public abstract class AbstractDBCluster implements IDBCluster {
 	/**
 	 * 日志
 	 */
-	private static final Logger LOG = Logger.getLogger(AbstractDBCluster.class);
+	private static final Logger LOG = LoggerFactory.getLogger(AbstractDBCluster.class);
 
 	/**
 	 * 是否创建数据库表.

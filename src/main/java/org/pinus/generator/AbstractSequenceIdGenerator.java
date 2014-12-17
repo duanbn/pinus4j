@@ -22,7 +22,6 @@ import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.locks.Lock;
 
-import org.apache.log4j.Logger;
 import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.ZooDefs;
 import org.apache.zookeeper.ZooKeeper;
@@ -30,6 +29,8 @@ import org.apache.zookeeper.data.Stat;
 import org.pinus.config.IClusterConfig;
 import org.pinus.constant.Const;
 import org.pinus.exception.DBOperationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * 抽象的ID生成器.
@@ -42,7 +43,7 @@ public abstract class AbstractSequenceIdGenerator implements IIdGenerator {
 	/**
 	 * 日志.
 	 */
-	public static final Logger LOG = Logger.getLogger(AbstractDBGenerator.class);
+	public static final Logger LOG = LoggerFactory.getLogger(AbstractDBGenerator.class);
 
 	/**
 	 * 批量生成id缓冲

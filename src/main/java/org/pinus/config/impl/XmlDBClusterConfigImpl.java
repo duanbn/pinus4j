@@ -23,7 +23,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 
-import org.apache.log4j.Logger;
 import org.apache.zookeeper.WatchedEvent;
 import org.apache.zookeeper.Watcher;
 import org.apache.zookeeper.Watcher.Event.KeeperState;
@@ -43,12 +42,14 @@ import org.pinus.constant.Const;
 import org.pinus.exception.LoadConfigException;
 import org.pinus.util.StringUtils;
 import org.pinus.util.XmlUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 public class XmlDBClusterConfigImpl implements IClusterConfig, Watcher {
 
-	public static final Logger LOG = Logger.getLogger(XmlDBClusterConfigImpl.class);
+	public static final Logger LOG = LoggerFactory.getLogger(XmlDBClusterConfigImpl.class);
 
 	/**
 	 * 数据库连接方式. 从应用加载连接，或者从容器加载连接.

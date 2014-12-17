@@ -22,8 +22,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.log4j.Logger;
 import org.pinus.util.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * 数据库表bean. 对数据库表的抽象.
@@ -40,7 +41,7 @@ public class DBTable implements Serializable {
 	/**
 	 * 日志.
 	 */
-	public static final Logger LOG = Logger.getLogger(DBTable.class);
+	public static final Logger LOG = LoggerFactory.getLogger(DBTable.class);
 
 	/**
 	 * 表所在的集群.

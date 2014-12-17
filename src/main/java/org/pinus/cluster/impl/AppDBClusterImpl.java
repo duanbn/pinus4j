@@ -20,13 +20,14 @@ import java.sql.SQLException;
 import java.util.Map;
 
 import org.apache.commons.dbcp.BasicDataSource;
-import org.apache.log4j.Logger;
 import org.pinus.api.enums.EnumDB;
 import org.pinus.cluster.AbstractDBCluster;
 import org.pinus.cluster.beans.AppDBConnectionInfo;
 import org.pinus.cluster.beans.DBConnectionInfo;
 import org.pinus.constant.Const;
 import org.pinus.exception.LoadConfigException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * 基于DBCP连接池的数据库集群实现.
@@ -35,7 +36,7 @@ import org.pinus.exception.LoadConfigException;
  */
 public class AppDBClusterImpl extends AbstractDBCluster {
 
-	public static final Logger LOG = Logger.getLogger(AppDBClusterImpl.class);
+	public static final Logger LOG = LoggerFactory.getLogger(AppDBClusterImpl.class);
 
 	/**
 	 * 构造方法.
@@ -51,7 +52,7 @@ public class AppDBClusterImpl extends AbstractDBCluster {
 	public void buildDataSource(DBConnectionInfo dbConnInfo) throws LoadConfigException {
 		AppDBConnectionInfo appDbConnInfo = (AppDBConnectionInfo) dbConnInfo;
 
-		LOG.info(dbConnInfo);
+		LOG.info(dbConnInfo.toString());
 
 		try {
 			BasicDataSource ds = new BasicDataSource();

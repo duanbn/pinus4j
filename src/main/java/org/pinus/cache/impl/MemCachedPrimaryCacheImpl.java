@@ -26,11 +26,12 @@ import java.util.Map;
 import net.spy.memcached.MemcachedClient;
 import net.spy.memcached.internal.OperationFuture;
 
-import org.apache.log4j.Logger;
 import org.pinus.cache.IPrimaryCache;
 import org.pinus.cluster.DB;
 import org.pinus.util.ReflectUtil;
 import org.pinus.util.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * memcached缓存实现. Pinus存储主缓存的实现. 缓存中的数据不设置过期时间，Pinus存储负责缓存与数据库之间的数据一致性.
@@ -42,7 +43,7 @@ public class MemCachedPrimaryCacheImpl implements IPrimaryCache {
 	/**
 	 * 日志.
 	 */
-	public static final Logger LOG = Logger.getLogger(MemCachedPrimaryCacheImpl.class);
+	public static final Logger LOG = LoggerFactory.getLogger(MemCachedPrimaryCacheImpl.class);
 
 	/**
 	 * Spy client

@@ -23,7 +23,6 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.log4j.Logger;
 import org.pinus.api.IShardingKey;
 import org.pinus.cache.IPrimaryCache;
 import org.pinus.cache.ISecondCache;
@@ -36,6 +35,8 @@ import org.pinus.exception.DBClusterException;
 import org.pinus.exception.DBOperationException;
 import org.pinus.generator.IIdGenerator;
 import org.pinus.util.ReflectUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * 分库分表更新实现. 更新操作包括插入、删除、更新，这些操作只操作主库.
@@ -47,7 +48,7 @@ public class ShardingUpdateImpl implements IShardingUpdate {
 	/**
 	 * 日志.
 	 */
-	public static final Logger LOG = Logger.getLogger(ShardingUpdateImpl.class);
+	public static final Logger LOG = LoggerFactory.getLogger(ShardingUpdateImpl.class);
 
 	/**
 	 * 数据库集群引用
@@ -419,7 +420,7 @@ public class ShardingUpdateImpl implements IShardingUpdate {
 			try {
 				conn.rollback();
 			} catch (SQLException e1) {
-				LOG.error(e1);
+				LOG.error(e1.getMessage());
 			}
 			throw new DBOperationException(e);
 		} finally {
@@ -444,7 +445,7 @@ public class ShardingUpdateImpl implements IShardingUpdate {
 			try {
 				conn.rollback();
 			} catch (SQLException e1) {
-				LOG.error(e1);
+				LOG.error(e1.getMessage());
 			}
 			throw new DBOperationException(e);
 		} finally {
@@ -467,7 +468,7 @@ public class ShardingUpdateImpl implements IShardingUpdate {
 			try {
 				conn.rollback();
 			} catch (SQLException e1) {
-				LOG.error(e1);
+				LOG.error(e1.getMessage());
 			}
 		} finally {
 			SQLBuilder.close(null, ps);

@@ -24,13 +24,14 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 
-import org.apache.log4j.Logger;
 import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.ZooDefs;
 import org.apache.zookeeper.ZooKeeper;
 import org.apache.zookeeper.data.Stat;
 import org.pinus.config.IClusterConfig;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * 基于zookeeper实现的集群锁. 集群锁用于处于在多进程环境下的同步问题. 此锁是采用公平算法.
@@ -54,7 +55,7 @@ import org.pinus.config.IClusterConfig;
 @Deprecated
 public class DistributedLock implements Lock {
 
-	public static final Logger LOG = Logger.getLogger(DistributedLock.class);
+	public static final Logger LOG = LoggerFactory.getLogger(DistributedLock.class);
 
 	private ZooKeeper zk;
 	private String root = "/locks";// 根
@@ -152,7 +153,7 @@ public class DistributedLock implements Lock {
 			}
 			return waitForLock(waitNode, time);
 		} catch (Exception e) {
-			LOG.error(e);
+			LOG.error(e.getMessage());
 		}
 		return false;
 	}
@@ -177,14 +178,14 @@ public class DistributedLock implements Lock {
 			zk.delete(myZnode, -1);
 			myZnode = null;
 		} catch (InterruptedException e) {
-			LOG.error(e);
+			LOG.error(e.getMessage());
 		} catch (KeeperException e) {
-			LOG.error(e);
+			LOG.error(e.getMessage());
 		} finally {
 			try {
 				zk.close();
 			} catch (InterruptedException e) {
-				LOG.error(e);
+				LOG.error(e.getMessage());
 			}
 		}
 	}
