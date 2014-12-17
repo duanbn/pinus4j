@@ -1,3 +1,7 @@
+--Version 0.7.0
+1.在zookeeper中创建pinus目录，将pinus相关的信息放在此目录下.
+2.添加Apache License
+
 --Version 0.6.9
 1.支持基于IQuery级别的二级缓存
 2.优化缓存模块，添加默认缓存过期时间

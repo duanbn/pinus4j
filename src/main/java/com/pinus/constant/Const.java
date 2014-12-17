@@ -1,3 +1,19 @@
+/**
+ * Copyright 2014 Duan Bingnan
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *   
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.pinus.constant;
 
 /**
@@ -10,18 +26,20 @@ public class Const {
 	//
 	// zookeeper目录相关常量.
 	//
+	public static final String ZK_ROOT = "/pinus";
 	/**
 	 * 每个表的分库分表信息的根目录. 每个分表信息保存在此目录下的文件.
 	 */
-	public static final String ZK_SHARDINGINFO = "/shardinginfo";
+	public static final String ZK_SHARDINGINFO = ZK_ROOT + "/shardinginfo";
 	/**
 	 * id生成器根目录. 每一个表的id当前id保存在此目录下相关文件.
 	 */
-	public static final String ZK_PRIMARYKEY = "/primarykey";
+	public static final String ZK_PRIMARYKEY = ZK_ROOT + "/primarykey";
 
 	/**
 	 * 分布式锁目录
 	 */
+	@Deprecated
 	public static final String ZK_LOCKS = "/locks";
 
 	/**

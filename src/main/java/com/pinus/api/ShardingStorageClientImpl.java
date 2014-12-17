@@ -1,3 +1,19 @@
+/**
+ * Copyright 2014 Duan Bingnan
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *   
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.pinus.api;
 
 import java.net.InetSocketAddress;
@@ -15,6 +31,10 @@ import org.apache.curator.framework.recipes.locks.InterProcessMutex;
 import org.apache.curator.retry.RetryNTimes;
 import org.apache.curator.utils.CloseableUtils;
 import org.apache.log4j.Logger;
+import org.apache.zookeeper.CreateMode;
+import org.apache.zookeeper.ZooDefs;
+import org.apache.zookeeper.ZooKeeper;
+import org.apache.zookeeper.data.Stat;
 
 import com.pinus.api.enums.EnumDB;
 import com.pinus.api.enums.EnumDBMasterSlave;
@@ -101,7 +121,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 	/**
 	 * 是否生成数据库表. 默认是不自动生成库表
 	 */
-	private boolean isCreateTable = false;
+	private boolean isCreateTable = true;
 
 	/**
 	 * 同步数据表操作.
@@ -156,6 +176,17 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 	 */
 	public void init() throws LoadConfigException {
 		IClusterConfig clusterConfig = XmlDBClusterConfigImpl.getInstance();
+
+		try {
+			// 创建zookeeper目录
+			ZooKeeper zkClient = clusterConfig.getZooKeeper();
+			Stat stat = zkClient.exists(Const.ZK_ROOT, false);
+			if (stat == null) {
+				zkClient.create(Const.ZK_ROOT, new byte[0], ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
+			}
+		} catch (Exception e) {
+			throw new IllegalStateException("初始化zookeeper根目录失败");
+		}
 
 		// 发现可用的一级缓存
 		if (this.primaryCache != null) {

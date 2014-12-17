@@ -1,3 +1,19 @@
+/**
+ * Copyright 2014 Duan Bingnan
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *   
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.pinus.generator;
 
 import java.io.File;
@@ -135,7 +151,7 @@ public abstract class AbstractDBGenerator implements IDBGenerator {
 		// 获取集群名
 		String cluster = annoTable.cluster();
 		if (StringUtils.isBlank(cluster)) {
-			throw new IllegalArgumentException("@Table的cluster不能为空");
+			throw new IllegalArgumentException(clazz + " @Table的cluster不能为空");
 		}
 		table.setCluster(cluster);
 
@@ -164,7 +180,7 @@ public abstract class AbstractDBGenerator implements IDBGenerator {
 			datetime = f.getAnnotation(DateTime.class);
 			if (datetime != null) {
 				if (f.getType() != Date.class) {
-					throw new IllegalArgumentException(f.getName() + " " + f.getType() + " 无法转化为日期字段");
+					throw new IllegalArgumentException(clazz + " " + f.getName() + " " + f.getType() + " 无法转化为日期字段");
 				}
 				column.setField(f.getName());
 				column.setType(DataTypeBind.getEnum(f.getType()).getDBType());
@@ -180,7 +196,7 @@ public abstract class AbstractDBGenerator implements IDBGenerator {
 			updateTime = f.getAnnotation(UpdateTime.class);
 			if (updateTime != null) {
 				if (f.getType() != java.sql.Timestamp.class) {
-					throw new IllegalArgumentException(f.getName() + " " + f.getType() + " 无法转化为时间戳字段");
+					throw new IllegalArgumentException(clazz + " " + f.getName() + " " + f.getType() + " 无法转化为时间戳字段");
 				}
 				column.setField(f.getName());
 				column.setType(DataTypeBind.UPDATETIME.getDBType());
@@ -194,6 +210,10 @@ public abstract class AbstractDBGenerator implements IDBGenerator {
 			// Field
 			dbField = f.getAnnotation(com.pinus.api.annotation.Field.class);
 			if (dbField != null) {
+				if (f.getType() == java.sql.Timestamp.class) {
+					throw new IllegalArgumentException(clazz + " " + f.getName() + "应该是时间戳类型，必须使用@UpdateTime标注");
+				}
+
 				String fieldName = f.getName();
 				boolean isCanNull = dbField.isCanNull();
 				int length = _getLength(f, dbField);
@@ -241,14 +261,14 @@ public abstract class AbstractDBGenerator implements IDBGenerator {
 					isSetPrimaryKey = true;
 					column.setComment(pk.comment());
 				} else {
-					throw new IllegalArgumentException("被转化的Java对象不能有多个@PrimaryKey注解");
+					throw new IllegalArgumentException(clazz + "被转化的Java对象不能有多个@PrimaryKey注解");
 				}
 				table.addColumn(column);
 			}
 		}
 
 		if (table.getColumns().isEmpty()) {
-			throw new IllegalStateException("被转化的java对象没有包含任何列属性" + defClass);
+			throw new IllegalStateException(clazz + "被转化的java对象没有包含任何列属性" + defClass);
 		}
 
 		return table;
