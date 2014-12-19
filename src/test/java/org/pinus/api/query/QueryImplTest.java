@@ -1,5 +1,7 @@
 package org.pinus.api.query;
 
+import junit.framework.Assert;
+
 import org.junit.Test;
 import org.pinus.api.query.Condition;
 import org.pinus.api.query.IQuery;
@@ -13,9 +15,9 @@ public class QueryImplTest {
 		IQuery query = new QueryImpl();
 		Condition cond = Condition.eq("field", "test field");
 		query.add(cond).orderBy("field", Order.ASC).limit(0, 20);
-		System.out.println(query);
+		Assert.assertEquals(" WHERE field = 'test field' ORDER BY field asc LIMIT 0,20", query.getWhereSql());
 		IQuery cloneOne = query.clone();
-		System.out.println(cloneOne);
+		Assert.assertEquals(" WHERE field = 'test field' ORDER BY field asc LIMIT 0,20", cloneOne.getWhereSql());
 	}
 
 	@Test
@@ -23,17 +25,26 @@ public class QueryImplTest {
 		IQuery query = new QueryImpl();
 		Condition cond = Condition.eq("field", "test field");
 		query.add(cond);
-		System.out.println(query);
+		Assert.assertEquals(" WHERE field = 'test field'", query.getWhereSql());
 
 		query.add(Condition.noteq("field", "test field to"));
-		System.out.println(query);
+		Assert.assertEquals(" WHERE field = 'test field' AND field <> 'test field to'", query.getWhereSql());
 		query.add(Condition.in("field2", 2, 3, 4, 5));
-		System.out.println(query);
+		Assert.assertEquals(" WHERE field = 'test field' AND field <> 'test field to' AND field2 in (2,3,4,5)",
+				query.getWhereSql());
 
 		query.add(Condition.or(Condition.like("likeField", "like%"), Condition.in("infield", "5", "test")));
-		System.out.println(query);
+		Assert.assertEquals(
+				" WHERE field = 'test field' AND field <> 'test field to' AND field2 in (2,3,4,5) AND (likeField like 'like%' OR infield in ('5','test'))",
+				query.getWhereSql());
 
 		query.orderBy("field", Order.DESC).limit(0, 10);
-		System.out.println(query);
+		Assert.assertEquals(
+				" WHERE field = 'test field' AND field <> 'test field to' AND field2 in (2,3,4,5) AND (likeField like 'like%' OR infield in ('5','test')) ORDER BY field desc LIMIT 0,10",
+				query.getWhereSql());
+		
+		IQuery zeroQuery = new QueryImpl();
+		zeroQuery.add(Condition.eq("zero", 0));
+		Assert.assertEquals(" WHERE zero = 0", zeroQuery.getWhereSql());
 	}
 }

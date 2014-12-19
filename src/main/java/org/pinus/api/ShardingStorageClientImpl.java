@@ -23,6 +23,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Future;
 import java.util.concurrent.locks.Lock;
 
 import org.apache.curator.framework.CuratorFramework;
@@ -60,6 +61,7 @@ import org.pinus.datalayer.jdbc.FatDB;
 import org.pinus.datalayer.jdbc.ShardingMasterQueryImpl;
 import org.pinus.datalayer.jdbc.ShardingSlaveQueryImpl;
 import org.pinus.datalayer.jdbc.ShardingUpdateImpl;
+import org.pinus.datalayer.jdbc.TaskExecutor;
 import org.pinus.exception.DBClusterException;
 import org.pinus.exception.LoadConfigException;
 import org.pinus.generator.IIdGenerator;
@@ -285,6 +287,24 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 		instance = this;
 	}
 
+	// ////////////////////////////////////////////////////////
+	// 数据处理相关
+	// ////////////////////////////////////////////////////////
+	@Override
+	public Future<TaskProgress> submit(ITask<?> task, Class<?> clazz) {
+		TaskExecutor taskExecutor = new TaskExecutor(clazz);
+		return taskExecutor.execute(task);
+	}
+
+	@Override
+	public Future<TaskProgress> submit(ITask<?> task, Class<?> clazz, IQuery query) {
+		TaskExecutor taskExecutor = new TaskExecutor(clazz);
+		return taskExecutor.execute(task, query);
+	}
+
+	// ////////////////////////////////////////////////////////
+	// update相关
+	// ////////////////////////////////////////////////////////
 	@Override
 	public Number globalSave(Object entity) {
 		CheckUtil.checkGlobalEntity(entity);
@@ -417,6 +437,9 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 		removeByPkList(Arrays.asList(pks), shardingKey, clazz);
 	}
 
+	// ////////////////////////////////////////////////////////
+	// query相关
+	// ////////////////////////////////////////////////////////
 	@Override
 	public Number getGlobalCount(String clusterName, Class<?> clazz) {
 		return getGlobalCount(clusterName, clazz, true);

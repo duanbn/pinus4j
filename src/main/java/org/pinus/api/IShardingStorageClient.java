@@ -18,6 +18,7 @@ package org.pinus.api;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Future;
 import java.util.concurrent.locks.Lock;
 
 import org.pinus.api.enums.EnumDB;
@@ -41,6 +42,33 @@ import org.pinus.generator.IIdGenerator;
  * @author duanbn
  */
 public interface IShardingStorageClient {
+
+	// ////////////////////////////////////////////////////////
+	// 数据处理相关
+	// ////////////////////////////////////////////////////////
+	/**
+	 * 提交一个数据处理任务.
+	 * 
+	 * @param task
+	 *            处理任务
+	 * @param clazz
+	 *            数据对象的Class
+	 * @return
+	 */
+	public Future<TaskProgress> submit(ITask<?> task, Class<?> clazz);
+
+	/**
+	 * 提交一个数据处理任务. 可以设置一个查询条件，只处理符合查询条件的数据
+	 * 
+	 * @param task
+	 *            处理任务
+	 * @param clazz
+	 *            数据对象的Class
+	 * @param query
+	 *            查询条件
+	 * @return
+	 */
+	public Future<TaskProgress> submit(ITask<?> task, Class<?> clazz, IQuery query);
 
 	// ////////////////////////////////////////////////////////
 	// update相关
