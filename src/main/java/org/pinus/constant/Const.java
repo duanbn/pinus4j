@@ -39,8 +39,7 @@ public class Const {
 	/**
 	 * 分布式锁目录
 	 */
-	@Deprecated
-	public static final String ZK_LOCKS = "/locks";
+	public static final String ZK_LOCKS = ZK_ROOT + "/locks";
 
 	/**
 	 * 字符串超过此值则转换为Text

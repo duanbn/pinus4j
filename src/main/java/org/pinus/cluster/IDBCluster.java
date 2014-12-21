@@ -16,9 +16,9 @@
 
 package org.pinus.cluster;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Collection;
 
 import org.pinus.api.IShardingKey;
 import org.pinus.api.enums.EnumDBMasterSlave;
@@ -120,7 +120,8 @@ public interface IDBCluster {
 	 * @param clusterName
 	 * @return
 	 */
-	public DBConnectionInfo getMasterGlobalConn(String clusterName) throws DBClusterException;
+	public DBConnectionInfo getMasterGlobalConn(String clusterName)
+			throws DBClusterException;
 
 	/**
 	 * 获取从库的全局库连接
@@ -129,7 +130,8 @@ public interface IDBCluster {
 	 * @param slave
 	 * @return
 	 */
-	public DBConnectionInfo getSlaveGlobalDbConn(String clusterName, EnumDBMasterSlave slave) throws DBClusterException;
+	public DBConnectionInfo getSlaveGlobalDbConn(String clusterName,
+			EnumDBMasterSlave slave) throws DBClusterException;
 
 	/**
 	 * 从主库集群中获取被操作的库表.
@@ -140,7 +142,8 @@ public interface IDBCluster {
 	 *            分库分表因子.
 	 * @return 被操作的库表
 	 */
-	public DB selectDbFromMaster(String tableName, IShardingKey<?> value) throws DBClusterException;
+	public DB selectDbFromMaster(String tableName, IShardingKey<?> value)
+			throws DBClusterException;
 
 	/**
 	 * 从从库集群中获取被操作的库表.
@@ -153,8 +156,8 @@ public interface IDBCluster {
 	 *            分库分表因子
 	 * @return 被操作的库表
 	 */
-	public DB selectDbFromSlave(String tableName, IShardingKey<?> value, EnumDBMasterSlave slave)
-			throws DBClusterException;
+	public DB selectDbFromSlave(String tableName, IShardingKey<?> value,
+			EnumDBMasterSlave slave) throws DBClusterException;
 
 	/**
 	 * 获取所有的分片引用.
@@ -168,7 +171,8 @@ public interface IDBCluster {
 	 *
 	 * @return 所有分片
 	 */
-	public List<DB> getAllMasterShardingDB(int tableNum, String clusterName, String tableName);
+	public List<DB> getAllMasterShardingDB(int tableNum, String clusterName,
+			String tableName);
 
 	/**
 	 * 获取此实体对象对应的所有的分库分表引用.
@@ -187,7 +191,8 @@ public interface IDBCluster {
 	 * @param slave
 	 *            从库号
 	 */
-	public List<DB> getAllSlaveShardingDB(Class<?> clazz, EnumDBMasterSlave slave);
+	public List<DB> getAllSlaveShardingDB(Class<?> clazz,
+			EnumDBMasterSlave slave);
 
 	/**
 	 * 获取数据库路由器.
@@ -211,7 +216,7 @@ public interface IDBCluster {
 	 *            true:创建, false:不创建
 	 */
 	public void setCreateTable(boolean isCreateTable);
-	
+
 	/**
 	 * 设置数据表同步动作.
 	 * 

@@ -37,7 +37,7 @@ public class BaseTest {
 		secondCache = new MemCachedSecondCacheImpl(CACHE_HOST, 0);
 
 		cacheClient.setMode(EnumMode.DISTRIBUTED);
-		cacheClient.setScanPackage("com.pinus");
+		cacheClient.setScanPackage("org.pinus");
 		cacheClient.setCreateTable(true);
 		cacheClient.setSyncAction(EnumSyncAction.UPDATE);
 		cacheClient.setPrimaryCache(primaryCache);

@@ -110,9 +110,12 @@ public class SQLBuilder {
 		String pkName = ReflectUtil.getPkName(clazz);
 		StringBuilder SQL = new StringBuilder("SELECT count(" + pkName + ") FROM ");
 		SQL.append(tableName);
-		String whereSql = query.getWhereSql();
-		if (StringUtils.isNotBlank(whereSql))
-			SQL.append(query.getWhereSql());
+		
+		if (query != null) {
+			String whereSql = query.getWhereSql();
+			if (StringUtils.isNotBlank(whereSql))
+				SQL.append(query.getWhereSql());
+		}
 
 		debugSQL(SQL.toString());
 

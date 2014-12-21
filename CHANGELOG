@@ -2,7 +2,7 @@
 1.在zookeeper中创建pinus目录，将pinus相关的信息放在此目录下.
 2.添加Apache License
 3.修改包名为org，将log4j替换为slf4j
-4.添加简单的数据处理框架
+4.添加简单的数据处理框架,提供单进程处理数据的方式
 
 --Version 0.6.9
 1.支持基于IQuery级别的二级缓存

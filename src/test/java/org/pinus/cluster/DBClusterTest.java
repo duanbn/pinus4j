@@ -25,7 +25,7 @@ public class DBClusterTest {
 
 	public DBClusterTest() throws Exception {
 		this.dbCluster = new AppDBClusterImpl(EnumDB.MYSQL);
-		this.dbCluster.setScanPackage("com.pinus.entity");
+		this.dbCluster.setScanPackage("org.pinus.entity");
 		this.dbCluster.startup();
 	}
 
@@ -53,7 +53,8 @@ public class DBClusterTest {
 
 	@Test
 	public void testGetAllSlaveShardingDB() throws Exception {
-		List<DB> dbs = dbCluster.getAllSlaveShardingDB(TestEntity.class, EnumDBMasterSlave.SLAVE0);
+		List<DB> dbs = dbCluster.getAllSlaveShardingDB(TestEntity.class,
+				EnumDBMasterSlave.SLAVE0);
 		for (DB db : dbs) {
 			System.out.println(db);
 		}
@@ -62,7 +63,8 @@ public class DBClusterTest {
 
 	@Test
 	public void testMasterSelect() throws Exception {
-		IShardingKey<Long> sv = new ShardingKey<Long>(CLUSTER_KLSTORAGE, 150080l);
+		IShardingKey<Long> sv = new ShardingKey<Long>(CLUSTER_KLSTORAGE,
+				150080l);
 		DB db = dbCluster.selectDbFromMaster("test_entity", sv);
 		System.out.println(db);
 
@@ -81,20 +83,25 @@ public class DBClusterTest {
 
 	@Test
 	public void testSlaveSelect() throws Exception {
-		IShardingKey<Long> sv = new ShardingKey<Long>(CLUSTER_KLSTORAGE, 150080l);
-		DB db = dbCluster.selectDbFromSlave("test_entity", sv, EnumDBMasterSlave.SLAVE0);
+		IShardingKey<Long> sv = new ShardingKey<Long>(CLUSTER_KLSTORAGE,
+				150080l);
+		DB db = dbCluster.selectDbFromSlave("test_entity", sv,
+				EnumDBMasterSlave.SLAVE0);
 		System.out.println(db);
 
 		sv = new ShardingKey<Long>(CLUSTER_KLSTORAGE, 150081l);
-		db = dbCluster.selectDbFromSlave("test_entity", sv, EnumDBMasterSlave.SLAVE0);
+		db = dbCluster.selectDbFromSlave("test_entity", sv,
+				EnumDBMasterSlave.SLAVE0);
 		System.out.println(db);
 
 		sv = new ShardingKey<Long>(CLUSTER_KLSTORAGE, 1500800l);
-		db = dbCluster.selectDbFromSlave("test_entity", sv, EnumDBMasterSlave.SLAVE0);
+		db = dbCluster.selectDbFromSlave("test_entity", sv,
+				EnumDBMasterSlave.SLAVE0);
 		System.out.println(db);
 
 		sv = new ShardingKey<Long>(CLUSTER_KLSTORAGE, 1500811l);
-		db = dbCluster.selectDbFromSlave("test_entity", sv, EnumDBMasterSlave.SLAVE0);
+		db = dbCluster.selectDbFromSlave("test_entity", sv,
+				EnumDBMasterSlave.SLAVE0);
 		System.out.println(db);
 	}
 
