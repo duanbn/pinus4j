@@ -9,7 +9,7 @@ import org.pinus.api.query.IQuery;
 import org.pinus.cluster.DB;
 import org.pinus.cluster.IDBCluster;
 import org.pinus.cluster.beans.DBConnectionInfo;
-import org.pinus.datalayer.IRecordReader;
+import org.pinus.datalayer.IRecordIterator;
 import org.pinus.datalayer.iterator.GlobalRecordIterator;
 import org.pinus.datalayer.iterator.ShardingRecordIterator;
 import org.pinus.exception.DBClusterException;
@@ -62,11 +62,11 @@ public class TaskExecutor<E> {
 
 		String clusterName = ReflectUtil.getClusterName(clazz);
 
-		IRecordReader<E> reader = null;
+		IRecordIterator<E> reader = null;
 		if (ReflectUtil.isShardingEntity(clazz)) {
 			List<DB> dbs = this.dbCluster.getAllMasterShardingDB(clazz);
 
-			List<IRecordReader<E>> readers = new ArrayList<IRecordReader<E>>(dbs.size());
+			List<IRecordIterator<E>> readers = new ArrayList<IRecordIterator<E>>(dbs.size());
 
 			// 计算总数
 			long total = 0;
@@ -79,7 +79,7 @@ public class TaskExecutor<E> {
 
 			future = new TaskFuture(total, threadPool);
 
-			for (IRecordReader<E> r : readers) {
+			for (IRecordIterator<E> r : readers) {
 				threadPool.submit(new RecrodReaderThread<E>(r, threadPool, task, future));
 			}
 		} else {
@@ -108,7 +108,7 @@ public class TaskExecutor<E> {
 
 	public static class RecrodReaderThread<E> implements Runnable {
 
-		private IRecordReader<E> recordReader;
+		private IRecordIterator<E> recordReader;
 
 		private ThreadPool threadPool;
 
@@ -116,7 +116,7 @@ public class TaskExecutor<E> {
 
 		private TaskFuture future;
 
-		public RecrodReaderThread(IRecordReader<E> recordReader, ThreadPool threadPool, ITask<E> task, TaskFuture future) {
+		public RecrodReaderThread(IRecordIterator<E> recordReader, ThreadPool threadPool, ITask<E> task, TaskFuture future) {
 			this.recordReader = recordReader;
 			this.threadPool = threadPool;
 			this.task = task;

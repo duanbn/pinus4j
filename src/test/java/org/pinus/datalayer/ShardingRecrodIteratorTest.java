@@ -24,7 +24,7 @@ public class ShardingRecrodIteratorTest extends BaseTest {
 	private IShardingKey<Integer> moreKey = new ShardingKey<Integer>(
 			CLUSTER_KLSTORAGE, 1);
 
-	private IRecordReader<TestEntity> reader;
+	private IRecordIterator<TestEntity> reader;
 
 	private List<TestEntity> entities;
 

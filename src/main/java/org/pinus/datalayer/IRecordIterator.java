@@ -11,7 +11,7 @@ import org.pinus.api.query.IQuery;
  *
  * @param <E>
  */
-public interface IRecordReader<E> extends Iterator<E> {
+public interface IRecordIterator<E> extends Iterator<E> {
 
 	/**
 	 * 获取此遍历器需要遍历的结果集总数.

@@ -25,7 +25,7 @@ import org.pinus.api.query.IQuery;
 import org.pinus.api.query.Order;
 import org.pinus.api.query.QueryImpl;
 import org.pinus.cluster.DB;
-import org.pinus.datalayer.IRecordReader;
+import org.pinus.datalayer.IRecordIterator;
 import org.pinus.datalayer.jdbc.AbstractJdbcQuery;
 import org.pinus.exception.DBOperationException;
 import org.pinus.util.ReflectUtil;
@@ -38,7 +38,7 @@ import org.slf4j.LoggerFactory;
  * @author duanbn
  * 
  */
-public class ShardingRecordIterator<E> extends AbstractJdbcQuery implements IRecordReader<E> {
+public class ShardingRecordIterator<E> extends AbstractJdbcQuery implements IRecordIterator<E> {
 
 	public static final Logger LOG = LoggerFactory.getLogger(ShardingRecordIterator.class);
 

@@ -19,7 +19,7 @@ public class GlobalRecrodIteratorTest extends BaseTest {
 
 	private Number[] pks;
 
-	private IRecordReader<TestGlobalEntity> reader;
+	private IRecordIterator<TestGlobalEntity> reader;
 
 	private List<TestGlobalEntity> entities;
 
