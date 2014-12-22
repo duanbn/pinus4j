@@ -40,12 +40,12 @@ import org.slf4j.LoggerFactory;
  * 
  * @author duanbn
  */
-public class ShardingMasterQueryImpl extends AbstractShardingQuery implements IShardingMasterQuery {
+public class JdbcMasterQueryImpl extends AbstractJdbcQuery implements IShardingMasterQuery {
 
 	/**
 	 * 日志.
 	 */
-	public static final Logger LOG = LoggerFactory.getLogger(ShardingMasterQueryImpl.class);
+	public static final Logger LOG = LoggerFactory.getLogger(JdbcMasterQueryImpl.class);
 
 	/**
 	 * 数据库集群引用.

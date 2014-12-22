@@ -43,12 +43,12 @@ import org.slf4j.LoggerFactory;
  * 
  * @author duanbn
  */
-public class ShardingUpdateImpl implements IShardingUpdate {
+public class JdbcUpdateImpl implements IShardingUpdate {
 
 	/**
 	 * 日志.
 	 */
-	public static final Logger LOG = LoggerFactory.getLogger(ShardingUpdateImpl.class);
+	public static final Logger LOG = LoggerFactory.getLogger(JdbcUpdateImpl.class);
 
 	/**
 	 * 数据库集群引用

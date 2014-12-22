@@ -42,12 +42,12 @@ import org.slf4j.LoggerFactory;
  * @author duanbn
  * 
  */
-public class ShardingSlaveQueryImpl extends AbstractShardingQuery implements IShardingSlaveQuery {
+public class JdbcSlaveQueryImpl extends AbstractJdbcQuery implements IShardingSlaveQuery {
 
 	/**
 	 * 日志.
 	 */
-	public static final Logger LOG = LoggerFactory.getLogger(ShardingSlaveQueryImpl.class);
+	public static final Logger LOG = LoggerFactory.getLogger(JdbcSlaveQueryImpl.class);
 
 	/**
 	 * 数据库集群.

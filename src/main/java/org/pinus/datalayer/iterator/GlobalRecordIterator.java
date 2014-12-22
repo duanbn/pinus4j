@@ -1,21 +1,7 @@
-/**
- * Copyright 2014 Duan Bingnan
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * 
- *   http://www.apache.org/licenses/LICENSE-2.0
- *   
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+package org.pinus.datalayer.iterator;
 
-package org.pinus.datalayer.jdbc;
-
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
@@ -24,28 +10,24 @@ import org.pinus.api.query.Condition;
 import org.pinus.api.query.IQuery;
 import org.pinus.api.query.Order;
 import org.pinus.api.query.QueryImpl;
-import org.pinus.cluster.DB;
+import org.pinus.cluster.beans.DBConnectionInfo;
 import org.pinus.datalayer.IRecordReader;
+import org.pinus.datalayer.SQLBuilder;
+import org.pinus.datalayer.jdbc.AbstractJdbcQuery;
 import org.pinus.exception.DBOperationException;
 import org.pinus.util.ReflectUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * 某个实体对象的一个分表遍历器. <b>需要注意的是此遍历器只能遍历主键是数值型的实体</b>
- * 
- * @author duanbn
- * 
- */
-public class ShardingRecordReader<E> extends AbstractShardingQuery implements IRecordReader<E> {
+public class GlobalRecordIterator<E> extends AbstractJdbcQuery implements IRecordReader<E> {
 
-	public static final Logger LOG = LoggerFactory.getLogger(ShardingRecordReader.class);
+	public static final Logger LOG = LoggerFactory.getLogger(GlobalRecordIterator.class);
 
 	private Class<E> clazz;
 
 	private IQuery query;
 
-	private DB db;
+	private DBConnectionInfo dbConnInfo;
 
 	private String pkName;
 	private Queue<E> recordQ;
@@ -53,8 +35,8 @@ public class ShardingRecordReader<E> extends AbstractShardingQuery implements IR
 	private long latestId = 0;
 	private long maxId;
 
-	public ShardingRecordReader(DB db, Class<E> clazz) {
-		this.db = db;
+	public GlobalRecordIterator(DBConnectionInfo dbConnInfo, Class<E> clazz) {
+		this.dbConnInfo = dbConnInfo;
 		this.clazz = clazz;
 
 		try {
@@ -74,14 +56,19 @@ public class ShardingRecordReader<E> extends AbstractShardingQuery implements IR
 			this.recordQ = new LinkedList<E>();
 
 		} catch (NoSuchFieldException e) {
-			throw new DBOperationException("遍历数据失败, clazz " + clazz + " " + db, e);
+			throw new DBOperationException("遍历数据失败, clazz " + clazz, e);
 		}
 	}
 
 	private void _initMaxId() {
 		IQuery query = new QueryImpl();
 		query.limit(1).orderBy(pkName, Order.DESC);
-		List<E> one = selectByQuery(db, query, clazz);
+		List<E> one = null;
+		try {
+			one = selectGlobalByQuery(this.dbConnInfo.getDatasource().getConnection(), query, clazz);
+		} catch (SQLException e1) {
+			throw new DBOperationException("获取max id失败");
+		}
 		if (one.isEmpty()) {
 			this.maxId = 0;
 		} else {
@@ -89,12 +76,12 @@ public class ShardingRecordReader<E> extends AbstractShardingQuery implements IR
 			this.maxId = ReflectUtil.getPkValue(e).longValue();
 		}
 
-		LOG.info("clazz " + clazz + " DB " + db + " maxId " + this.maxId);
+		LOG.info("clazz " + clazz + " maxId " + this.maxId);
 	}
 
 	@Override
 	public long getCount() {
-		return selectCount(db, clazz, query).longValue();
+		return selectGlobalCount(query, dbConnInfo, this.dbConnInfo.getClusterName(), clazz).longValue();
 	}
 
 	@Override
@@ -103,14 +90,30 @@ public class ShardingRecordReader<E> extends AbstractShardingQuery implements IR
 			IQuery query = this.query.clone();
 			long high = this.latestId + STEP;
 			query.add(Condition.gte(pkName, latestId)).add(Condition.lt(pkName, high));
-			List<E> recrods = selectByQuery(db, query, clazz);
+			List<E> recrods;
+			Connection conn = null;
+			try {
+				conn = this.dbConnInfo.getDatasource().getConnection();
+				recrods = selectGlobalByQuery(conn, query, clazz);
+			} catch (SQLException e) {
+				throw new DBOperationException(e);
+			} finally {
+				SQLBuilder.close(conn);
+			}
 			this.latestId = high;
 
 			while (recrods.isEmpty() && this.latestId < maxId) {
 				query = this.query.clone();
 				high = this.latestId + STEP;
 				query.add(Condition.gte(pkName, this.latestId)).add(Condition.lt(pkName, high));
-				recrods = selectByQuery(db, query, clazz);
+				try {
+					conn = this.dbConnInfo.getDatasource().getConnection();
+					recrods = selectGlobalByQuery(conn, query, clazz);
+				} catch (SQLException e) {
+					throw new DBOperationException(e);
+				} finally {
+					SQLBuilder.close(conn);
+				}
 				this.latestId = high;
 			}
 			this.recordQ.addAll(recrods);
@@ -127,10 +130,6 @@ public class ShardingRecordReader<E> extends AbstractShardingQuery implements IR
 	@Override
 	public void remove() {
 		throw new UnsupportedOperationException("this iterator cann't doing remove");
-	}
-
-	public IQuery getQuery() {
-		return query;
 	}
 
 	@Override

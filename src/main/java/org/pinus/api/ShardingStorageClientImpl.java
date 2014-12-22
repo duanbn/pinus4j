@@ -23,7 +23,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Future;
 import java.util.concurrent.locks.Lock;
 
 import org.apache.curator.framework.CuratorFramework;
@@ -54,12 +53,10 @@ import org.pinus.config.impl.XmlDBClusterConfigImpl;
 import org.pinus.constant.Const;
 import org.pinus.datalayer.IShardingMasterQuery;
 import org.pinus.datalayer.IShardingSlaveQuery;
-import org.pinus.datalayer.IShardingStatistics;
 import org.pinus.datalayer.IShardingUpdate;
-import org.pinus.datalayer.jdbc.ShardingRecordReader;
-import org.pinus.datalayer.jdbc.ShardingMasterQueryImpl;
-import org.pinus.datalayer.jdbc.ShardingSlaveQueryImpl;
-import org.pinus.datalayer.jdbc.ShardingUpdateImpl;
+import org.pinus.datalayer.jdbc.JdbcMasterQueryImpl;
+import org.pinus.datalayer.jdbc.JdbcSlaveQueryImpl;
+import org.pinus.datalayer.jdbc.JdbcUpdateImpl;
 import org.pinus.datalayer.jdbc.TaskExecutor;
 import org.pinus.exception.DBClusterException;
 import org.pinus.exception.LoadConfigException;
@@ -266,18 +263,18 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 		//
 		// 初始化分库分表增删改查实现.
 		//
-		this.updater = new ShardingUpdateImpl();
+		this.updater = new JdbcUpdateImpl();
 		this.updater.setDBCluster(this.dbCluster);
 		this.updater.setPrimaryCache(this.primaryCache);
 		this.updater.setIdGenerator(this.idGenerator);
 		this.updater.setSecondCache(secondCache);
 
-		this.masterQueryer = new ShardingMasterQueryImpl();
+		this.masterQueryer = new JdbcMasterQueryImpl();
 		this.masterQueryer.setDBCluster(this.dbCluster);
 		this.masterQueryer.setPrimaryCache(this.primaryCache);
 		this.masterQueryer.setSecondCache(secondCache);
 
-		this.slaveQueryer = new ShardingSlaveQueryImpl();
+		this.slaveQueryer = new JdbcSlaveQueryImpl();
 		this.slaveQueryer.setDBCluster(this.dbCluster);
 		this.slaveQueryer.setPrimaryCache(this.primaryCache);
 		this.slaveQueryer.setSecondCache(secondCache);
@@ -996,11 +993,6 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 		default:
 			return this.slaveQueryer.findByQueryFromSlave(query, shardingKey, clazz, useCache, masterSlave);
 		}
-	}
-
-	@Override
-	public IShardingStatistics getShardingStatistic() {
-		throw new UnsupportedOperationException();
 	}
 
 	@Override

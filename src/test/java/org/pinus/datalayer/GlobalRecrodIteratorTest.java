@@ -11,11 +11,11 @@ import org.junit.Test;
 import org.pinus.BaseTest;
 import org.pinus.cluster.IDBCluster;
 import org.pinus.cluster.beans.DBConnectionInfo;
-import org.pinus.datalayer.jdbc.GlobalRecordReader;
+import org.pinus.datalayer.iterator.GlobalRecordIterator;
 import org.pinus.entity.TestGlobalEntity;
 import org.pinus.exception.DBClusterException;
 
-public class GlobalRecrodReaderTest extends BaseTest {
+public class GlobalRecrodIteratorTest extends BaseTest {
 
 	private Number[] pks;
 
@@ -48,7 +48,7 @@ public class GlobalRecrodReaderTest extends BaseTest {
 		} catch (DBClusterException e) {
 			e.printStackTrace();
 		}
-		this.reader = new GlobalRecordReader<TestGlobalEntity>(dbConnInfo,
+		this.reader = new GlobalRecordIterator<TestGlobalEntity>(dbConnInfo,
 				TestGlobalEntity.class);
 	}
 

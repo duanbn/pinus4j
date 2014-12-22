@@ -10,6 +10,8 @@ import org.pinus.cluster.DB;
 import org.pinus.cluster.IDBCluster;
 import org.pinus.cluster.beans.DBConnectionInfo;
 import org.pinus.datalayer.IRecordReader;
+import org.pinus.datalayer.iterator.GlobalRecordIterator;
+import org.pinus.datalayer.iterator.ShardingRecordIterator;
 import org.pinus.exception.DBClusterException;
 import org.pinus.exception.DBOperationException;
 import org.pinus.util.ReflectUtil;
@@ -69,7 +71,7 @@ public class TaskExecutor<E> {
 			// 计算总数
 			long total = 0;
 			for (DB db : dbs) {
-				reader = new ShardingRecordReader<E>(db, clazz);
+				reader = new ShardingRecordIterator<E>(db, clazz);
 				reader.setQuery(query);
 				readers.add(reader);
 				total += reader.getCount();
@@ -89,7 +91,7 @@ public class TaskExecutor<E> {
 			} catch (DBClusterException e) {
 				throw new DBOperationException(e);
 			}
-			reader = new GlobalRecordReader<E>(dbConnInfo, clazz);
+			reader = new GlobalRecordIterator<E>(dbConnInfo, clazz);
 			reader.setQuery(query);
 
 			future = new TaskFuture(reader.getCount(), threadPool);

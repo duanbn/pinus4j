@@ -29,7 +29,6 @@ import org.pinus.api.query.IQuery;
 import org.pinus.cache.IPrimaryCache;
 import org.pinus.cache.ISecondCache;
 import org.pinus.cluster.IDBCluster;
-import org.pinus.datalayer.IShardingStatistics;
 import org.pinus.exception.DBOperationException;
 import org.pinus.exception.LoadConfigException;
 import org.pinus.generator.IIdGenerator;
@@ -923,13 +922,6 @@ public interface IShardingStorageClient {
 	 *            模式
 	 */
 	public void setMode(EnumMode mode);
-
-	/**
-	 * 获取集群统计组件.
-	 * 
-	 * @return 集群统计组件
-	 */
-	public IShardingStatistics getShardingStatistic();
 
 	/**
 	 * 获取ID生成器

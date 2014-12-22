@@ -13,11 +13,11 @@ import org.pinus.api.IShardingKey;
 import org.pinus.api.ShardingKey;
 import org.pinus.cluster.DB;
 import org.pinus.cluster.IDBCluster;
-import org.pinus.datalayer.jdbc.ShardingRecordReader;
+import org.pinus.datalayer.iterator.ShardingRecordIterator;
 import org.pinus.entity.TestEntity;
 import org.pinus.exception.DBClusterException;
 
-public class ShardingRecrodReaderTest extends BaseTest {
+public class ShardingRecrodIteratorTest extends BaseTest {
 
 	private Number[] pks;
 
@@ -52,7 +52,7 @@ public class ShardingRecrodReaderTest extends BaseTest {
 		} catch (DBClusterException e) {
 			e.printStackTrace();
 		}
-		this.reader = new ShardingRecordReader<TestEntity>(db, TestEntity.class);
+		this.reader = new ShardingRecordIterator<TestEntity>(db, TestEntity.class);
 	}
 
 	@After

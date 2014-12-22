@@ -46,7 +46,7 @@ import org.pinus.cluster.route.impl.SimpleHashClusterRouterImpl;
 import org.pinus.config.IClusterConfig;
 import org.pinus.config.impl.XmlDBClusterConfigImpl;
 import org.pinus.constant.Const;
-import org.pinus.datalayer.jdbc.ShardingRecordReader;
+import org.pinus.datalayer.iterator.ShardingRecordIterator;
 import org.pinus.exception.DBClusterException;
 import org.pinus.exception.DBOperationException;
 import org.pinus.exception.DBRouteException;

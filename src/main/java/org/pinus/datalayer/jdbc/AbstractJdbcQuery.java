@@ -42,7 +42,7 @@ import org.pinus.util.ReflectUtil;
  * 
  * @author duanbn
  */
-public abstract class AbstractShardingQuery {
+public abstract class AbstractJdbcQuery {
 
 	/**
 	 * 一级缓存.
