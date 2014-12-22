@@ -1,5 +1,6 @@
 package org.pinus.api;
 
+import java.text.DecimalFormat;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -41,8 +42,24 @@ public class TaskFuture {
 		this.threadPool = threadPool;
 	}
 
+	public String getProgress() {
+		double val = new Long(this.count.get()).doubleValue() / new Long(this.total).doubleValue();
+		DecimalFormat df = new DecimalFormat("0.00");
+		return df.format(val);
+	}
+
+	/**
+	 * 当然任务是否已经完成
+	 * 
+	 * @return
+	 */
+	public boolean isDone() {
+		return this.count.get() == this.total;
+	}
+
 	public void await() throws InterruptedException {
 		try {
+			// 线程阻塞，当本次处理完成之后会取消阻塞
 			this.cdl.await();
 		} finally {
 			// 关闭线程池
@@ -69,8 +86,7 @@ public class TaskFuture {
 
 	@Override
 	public String toString() {
-		return "TaskFuture [total=" + total + ", cdl=" + cdl + ", count="
-				+ count + "]";
+		return "TaskFuture [total=" + total + ", cdl=" + cdl + ", count=" + count + "]";
 	}
 
 }

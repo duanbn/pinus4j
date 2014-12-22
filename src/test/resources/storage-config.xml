@@ -8,7 +8,7 @@
 	<!-- zookeeper connection -->
 	<db.cluster.zk>127.0.0.1:2181</db.cluster.zk>
 	<!-- id generator batch -->
-	<db.cluster.generateid.batch>1</db.cluster.generateid.batch>
+	<db.cluster.generateid.batch>100</db.cluster.generateid.batch>
 
 	<!-- catalog is "env" or "app" -->
 	<!-- env represent get connection pool from container -->
@@ -43,7 +43,7 @@
 				</db.url>
 			</slave>
 		</global>
-		<region capacity="1-1000000">
+		<region capacity="1-30000000">
 			<master>
 				<sharding>
 					<db.username>root</db.username>
@@ -77,7 +77,7 @@
 				</sharding>
 			</slave>
 		</region>
-		<region capacity="1000001-2000000">
+		<region capacity="30000001-60000000">
 			<master>
 				<sharding>
 					<db.username>root</db.username>

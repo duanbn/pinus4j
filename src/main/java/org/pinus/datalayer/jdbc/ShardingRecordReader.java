@@ -37,11 +37,9 @@ import org.slf4j.LoggerFactory;
  * @author duanbn
  * 
  */
-public class ShardingRecordReader<E> extends AbstractShardingQuery implements
-		IRecordReader<E> {
+public class ShardingRecordReader<E> extends AbstractShardingQuery implements IRecordReader<E> {
 
-	public static final Logger LOG = LoggerFactory
-			.getLogger(ShardingRecordReader.class);
+	public static final Logger LOG = LoggerFactory.getLogger(ShardingRecordReader.class);
 
 	private Class<E> clazz;
 
@@ -51,7 +49,7 @@ public class ShardingRecordReader<E> extends AbstractShardingQuery implements
 
 	private String pkName;
 	private Queue<E> recordQ;
-	private static final int STEP = 2000;
+	private static final int STEP = 5000;
 	private long latestId = 0;
 	private long maxId;
 
@@ -63,9 +61,8 @@ public class ShardingRecordReader<E> extends AbstractShardingQuery implements
 			// check pk type
 			pkName = ReflectUtil.getPkName(clazz);
 			Class<?> type = clazz.getDeclaredField(pkName).getType();
-			if (type != Long.TYPE && type != Integer.TYPE && type != Short.TYPE
-					&& type != Long.class && type != Long.class
-					&& type != Short.class) {
+			if (type != Long.TYPE && type != Integer.TYPE && type != Short.TYPE && type != Long.class
+					&& type != Long.class && type != Short.class) {
 				throw new DBOperationException("被遍历的数据主键不是数值型");
 			}
 			if (this.query == null) {
@@ -77,8 +74,7 @@ public class ShardingRecordReader<E> extends AbstractShardingQuery implements
 			this.recordQ = new LinkedList<E>();
 
 		} catch (NoSuchFieldException e) {
-			throw new DBOperationException("遍历数据失败, clazz " + clazz + " " + db,
-					e);
+			throw new DBOperationException("遍历数据失败, clazz " + clazz + " " + db, e);
 		}
 	}
 
@@ -106,16 +102,14 @@ public class ShardingRecordReader<E> extends AbstractShardingQuery implements
 		if (this.recordQ.isEmpty()) {
 			IQuery query = this.query.clone();
 			long high = this.latestId + STEP;
-			query.add(Condition.gte(pkName, latestId)).add(
-					Condition.lt(pkName, high));
+			query.add(Condition.gte(pkName, latestId)).add(Condition.lt(pkName, high));
 			List<E> recrods = selectByQuery(db, query, clazz);
 			this.latestId = high;
 
 			while (recrods.isEmpty() && this.latestId < maxId) {
 				query = this.query.clone();
 				high = this.latestId + STEP;
-				query.add(Condition.gte(pkName, this.latestId)).add(
-						Condition.lt(pkName, high));
+				query.add(Condition.gte(pkName, this.latestId)).add(Condition.lt(pkName, high));
 				recrods = selectByQuery(db, query, clazz);
 				this.latestId = high;
 			}
@@ -132,8 +126,7 @@ public class ShardingRecordReader<E> extends AbstractShardingQuery implements
 
 	@Override
 	public void remove() {
-		throw new UnsupportedOperationException(
-				"this iterator cann't doing remove");
+		throw new UnsupportedOperationException("this iterator cann't doing remove");
 	}
 
 	public IQuery getQuery() {

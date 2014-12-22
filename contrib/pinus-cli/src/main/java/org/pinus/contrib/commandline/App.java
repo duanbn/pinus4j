@@ -14,37 +14,36 @@
  * limitations under the License.
  */
 
-package com.pinus.contrib.commandline;
+package org.pinus.contrib.commandline;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.*;
 
 import javax.sql.DataSource;
 
 import jline.Completor;
 import jline.ConsoleReader;
-import net.sf.jsqlparser.JSQLParserException;
 import net.sf.jsqlparser.parser.CCJSqlParserUtil;
 import net.sf.jsqlparser.statement.Statement;
 import net.sf.jsqlparser.statement.select.Select;
 import net.sf.jsqlparser.util.TablesNamesFinder;
 
-import com.pinus.api.IShardingKey;
-import com.pinus.api.ShardingKey;
-import com.pinus.api.enums.EnumDB;
-import com.pinus.cluster.DB;
-import com.pinus.cluster.IDBCluster;
-import com.pinus.cluster.beans.DBConnectionInfo;
-import com.pinus.cluster.beans.DBTable;
-import com.pinus.cluster.impl.DbcpDBClusterImpl;
-import com.pinus.exception.DBClusterException;
+import org.pinus.api.IShardingKey;
+import org.pinus.api.ShardingKey;
+import org.pinus.api.enums.EnumDB;
+import org.pinus.cluster.DB;
+import org.pinus.cluster.IDBCluster;
+import org.pinus.cluster.beans.DBConnectionInfo;
+import org.pinus.cluster.beans.DBTable;
+import org.pinus.cluster.impl.AppDBClusterImpl;
+import org.pinus.exception.DBClusterException;
 
 /**
  * pinus command line application.
@@ -332,7 +331,7 @@ public class App {
 	}
 
 	public App(String storageConfigFile) throws Exception {
-		dbCluster = new DbcpDBClusterImpl(EnumDB.MYSQL);
+		dbCluster = new AppDBClusterImpl(EnumDB.MYSQL);
 		dbCluster.setShardInfoFromZk(true);
 		dbCluster.startup(storageConfigFile);
 

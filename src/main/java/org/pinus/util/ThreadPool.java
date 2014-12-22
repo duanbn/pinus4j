@@ -23,7 +23,7 @@ public class ThreadPool {
 	}
 
 	public static ThreadPool newInstance(String poolName) {
-		int minThread = Runtime.getRuntime().availableProcessors();
+		int minThread = Runtime.getRuntime().availableProcessors() * 2;
 		int maxThread = minThread * 4;
 		long waitTime = 3 * 1000;
 

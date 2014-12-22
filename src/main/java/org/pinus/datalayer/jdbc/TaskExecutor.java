@@ -25,13 +25,21 @@ import org.slf4j.LoggerFactory;
  */
 public class TaskExecutor<E> {
 
-	public static final Logger LOG = LoggerFactory
-			.getLogger(TaskExecutor.class);
+	public static final Logger LOG = LoggerFactory.getLogger(TaskExecutor.class);
 
-	private static final String THREADPOOL_NAME = "threadpool-task";
+	/**
+	 * 处理线程池名称.
+	 */
+	private static final String THREADPOOL_NAME = "pinus";
 
+	/**
+	 * 本次处理的数据对象
+	 */
 	private Class<E> clazz;
 
+	/**
+	 * 数据库集群引用
+	 */
 	private IDBCluster dbCluster;
 
 	public TaskExecutor(Class<E> clazz, IDBCluster dbCluster) {
@@ -54,12 +62,9 @@ public class TaskExecutor<E> {
 
 		IRecordReader<E> reader = null;
 		if (ReflectUtil.isShardingEntity(clazz)) {
-			RecrodThread<E> rt = null;
-
 			List<DB> dbs = this.dbCluster.getAllMasterShardingDB(clazz);
 
-			List<IRecordReader<E>> readers = new ArrayList<IRecordReader<E>>(
-					dbs.size());
+			List<IRecordReader<E>> readers = new ArrayList<IRecordReader<E>>(dbs.size());
 
 			// 计算总数
 			long total = 0;
@@ -73,11 +78,7 @@ public class TaskExecutor<E> {
 			future = new TaskFuture(total, threadPool);
 
 			for (IRecordReader<E> r : readers) {
-				while (r.hasNext()) {
-					E record = r.next();
-					rt = new RecrodThread<E>(record, task, future);
-					threadPool.submit(rt);
-				}
+				threadPool.submit(new RecrodReaderThread<E>(r, threadPool, task, future));
 			}
 		} else {
 			RecrodThread<E> rt = null;
@@ -103,10 +104,38 @@ public class TaskExecutor<E> {
 		return future;
 	}
 
+	public static class RecrodReaderThread<E> implements Runnable {
+
+		private IRecordReader<E> recordReader;
+
+		private ThreadPool threadPool;
+
+		private ITask<E> task;
+
+		private TaskFuture future;
+
+		public RecrodReaderThread(IRecordReader<E> recordReader, ThreadPool threadPool, ITask<E> task, TaskFuture future) {
+			this.recordReader = recordReader;
+			this.threadPool = threadPool;
+			this.task = task;
+			this.future = future;
+		}
+
+		@Override
+		public void run() {
+			RecrodThread<E> rt = null;
+			while (recordReader.hasNext()) {
+				E record = recordReader.next();
+				rt = new RecrodThread<E>(record, task, future);
+				threadPool.submit(rt);
+			}
+		}
+
+	}
+
 	public static class RecrodThread<E> implements Runnable {
 
-		public static final Logger LOG = LoggerFactory
-				.getLogger(RecrodThread.class);
+		public static final Logger LOG = LoggerFactory.getLogger(RecrodThread.class);
 
 		private E record;
 

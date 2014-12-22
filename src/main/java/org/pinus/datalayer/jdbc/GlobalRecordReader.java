@@ -18,11 +18,9 @@ import org.pinus.util.ReflectUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class GlobalRecordReader<E> extends AbstractShardingQuery implements
-		IRecordReader<E> {
+public class GlobalRecordReader<E> extends AbstractShardingQuery implements IRecordReader<E> {
 
-	public static final Logger LOG = LoggerFactory
-			.getLogger(GlobalRecordReader.class);
+	public static final Logger LOG = LoggerFactory.getLogger(GlobalRecordReader.class);
 
 	private Class<E> clazz;
 
@@ -32,7 +30,7 @@ public class GlobalRecordReader<E> extends AbstractShardingQuery implements
 
 	private String pkName;
 	private Queue<E> recordQ;
-	private static final int STEP = 2000;
+	private static final int STEP = 5000;
 	private long latestId = 0;
 	private long maxId;
 
@@ -44,9 +42,8 @@ public class GlobalRecordReader<E> extends AbstractShardingQuery implements
 			// check pk type
 			pkName = ReflectUtil.getPkName(clazz);
 			Class<?> type = clazz.getDeclaredField(pkName).getType();
-			if (type != Long.TYPE && type != Integer.TYPE && type != Short.TYPE
-					&& type != Long.class && type != Long.class
-					&& type != Short.class) {
+			if (type != Long.TYPE && type != Integer.TYPE && type != Short.TYPE && type != Long.class
+					&& type != Long.class && type != Short.class) {
 				throw new DBOperationException("被遍历的数据主键不是数值型");
 			}
 			if (this.query == null) {
@@ -67,8 +64,7 @@ public class GlobalRecordReader<E> extends AbstractShardingQuery implements
 		query.limit(1).orderBy(pkName, Order.DESC);
 		List<E> one = null;
 		try {
-			one = selectGlobalByQuery(this.dbConnInfo.getDatasource()
-					.getConnection(), query, clazz);
+			one = selectGlobalByQuery(this.dbConnInfo.getDatasource().getConnection(), query, clazz);
 		} catch (SQLException e1) {
 			throw new DBOperationException("获取max id失败");
 		}
@@ -84,8 +80,7 @@ public class GlobalRecordReader<E> extends AbstractShardingQuery implements
 
 	@Override
 	public long getCount() {
-		return selectGlobalCount(query, dbConnInfo,
-				this.dbConnInfo.getClusterName(), clazz).longValue();
+		return selectGlobalCount(query, dbConnInfo, this.dbConnInfo.getClusterName(), clazz).longValue();
 	}
 
 	@Override
@@ -93,8 +88,7 @@ public class GlobalRecordReader<E> extends AbstractShardingQuery implements
 		if (this.recordQ.isEmpty()) {
 			IQuery query = this.query.clone();
 			long high = this.latestId + STEP;
-			query.add(Condition.gte(pkName, latestId)).add(
-					Condition.lt(pkName, high));
+			query.add(Condition.gte(pkName, latestId)).add(Condition.lt(pkName, high));
 			List<E> recrods;
 			Connection conn = null;
 			try {
@@ -110,8 +104,7 @@ public class GlobalRecordReader<E> extends AbstractShardingQuery implements
 			while (recrods.isEmpty() && this.latestId < maxId) {
 				query = this.query.clone();
 				high = this.latestId + STEP;
-				query.add(Condition.gte(pkName, this.latestId)).add(
-						Condition.lt(pkName, high));
+				query.add(Condition.gte(pkName, this.latestId)).add(Condition.lt(pkName, high));
 				try {
 					conn = this.dbConnInfo.getDatasource().getConnection();
 					recrods = selectGlobalByQuery(conn, query, clazz);
@@ -135,8 +128,7 @@ public class GlobalRecordReader<E> extends AbstractShardingQuery implements
 
 	@Override
 	public void remove() {
-		throw new UnsupportedOperationException(
-				"this iterator cann't doing remove");
+		throw new UnsupportedOperationException("this iterator cann't doing remove");
 	}
 
 	@Override

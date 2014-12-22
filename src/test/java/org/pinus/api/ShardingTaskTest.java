@@ -2,6 +2,7 @@ package org.pinus.api;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 import junit.framework.Assert;
 
@@ -17,8 +18,7 @@ public class ShardingTaskTest extends BaseTest {
 
 	private Number[] pks;
 
-	private IShardingKey<Integer> moreKey = new ShardingKey<Integer>(
-			CLUSTER_KLSTORAGE, 1);
+	private IShardingKey<Integer> moreKey = new ShardingKey<Integer>(CLUSTER_KLSTORAGE, 1);
 
 	private List<TestEntity> entities;
 
@@ -51,7 +51,11 @@ public class ShardingTaskTest extends BaseTest {
 		ITask<TestEntity> task = new SimpleShardingTask();
 
 		TaskFuture future = cacheClient.submit(task, TestEntity.class);
-		future.await();
+		while (!future.isDone()) {
+			System.out.println(future.getProgress());
+			
+			Thread.sleep(2000);
+		}
 
 		System.out.println(future);
 	}
@@ -68,10 +72,16 @@ public class ShardingTaskTest extends BaseTest {
 		System.out.println(future);
 	}
 
+	private static final Random r = new Random();
+
 	public static class SimpleShardingTask implements ITask<TestEntity> {
 		@Override
 		public void doTask(TestEntity entity) {
-			System.out.println(entity);
+			try {
+				Thread.sleep(r.nextInt(10));
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
 		}
 	}
 

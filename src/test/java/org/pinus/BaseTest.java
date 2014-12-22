@@ -6,6 +6,7 @@ import java.util.Random;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Test;
 import org.pinus.api.IShardingStorageClient;
 import org.pinus.api.ShardingStorageClientImpl;
 import org.pinus.api.enums.EnumMode;
@@ -109,12 +110,15 @@ public class BaseTest {
 		return testEntity;
 	}
 
-	// @Test
+	@Test
 	public void genData() throws Exception {
 		TestEntity entity = null;
-		for (int i = 0; i < r.nextInt(9999); i++) {
+		for (int i = 0; i < 60000000; i++) {
 			entity = createEntity();
 			entity.save();
+			if (i % 3000 == 0) {
+				System.out.println("save " + i);
+			}
 		}
 	}
 
