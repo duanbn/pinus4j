@@ -71,9 +71,11 @@ public interface IShardingSlaveQuery {
 	public <T> T findGlobalOneByQueryFromSlave(IQuery query, String clusterName, Class<T> clazz, boolean useCache,
 			EnumDBMasterSlave slave);
 
-	@Deprecated
 	public <T> List<T> findGlobalByPksFromSlave(String clusterName, Class<T> clazz, EnumDBMasterSlave slave,
 			Number... pks);
+
+	public <T> List<T> findGlobalByPksFromSlave(String clusterName, Class<T> clazz, EnumDBMasterSlave slave,
+			boolean useCache, Number... pks);
 
 	/**
 	 * 
@@ -181,9 +183,11 @@ public interface IShardingSlaveQuery {
 	 * @throws IllegalArgumentException
 	 *             输入参数错误
 	 */
-	@Deprecated
 	public <T> List<T> findByPksFromSlave(IShardingKey<?> shardingValue, Class<T> clazz, EnumDBMasterSlave slave,
 			Number... pks);
+
+	public <T> List<T> findByPksFromSlave(IShardingKey<?> shardingKey, Class<T> clazz, EnumDBMasterSlave slave,
+			boolean useCache, Number... pks);
 
 	/**
 	 * 一个从分库分表, 根据多个主键查询.

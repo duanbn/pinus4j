@@ -93,8 +93,9 @@ public interface IShardingMasterQuery {
 	 *            主键
 	 * @return 数据
 	 */
-	@Deprecated
 	public <T> List<T> findGlobalByPksFromMaster(String clusterName, Class<T> clazz, Number... pks);
+	
+	public <T> List<T> findGlobalByPksFromMaster(String clusterName, Class<T> clazz, boolean useCache, Number... pks);
 
 	/**
 	 * 根据主键查询全局表数据. 当查询不到数据时返回空的List，不会返回null.
@@ -226,8 +227,9 @@ public interface IShardingMasterQuery {
 	 * @throws IllegalArgumentException
 	 *             输入参数错误
 	 */
-	@Deprecated
 	public <T> List<T> findByPksFromMaster(IShardingKey<?> shardingValue, Class<T> clazz, Number... pks);
+	
+	public <T> List<T> findByPksFromMaster(IShardingKey<?> shardingKey, Class<T> clazz, boolean useCache, Number... pks);
 
 	/**
 	 * 一个主分库分表, 根据多个主键查询.当查询不到数据时返回空的List，不会返回null.

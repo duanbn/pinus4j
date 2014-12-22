@@ -1,6 +1,8 @@
 package org.pinus.api;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 import junit.framework.Assert;
 
@@ -8,10 +10,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.pinus.BaseTest;
-import org.pinus.api.SQL;
 import org.pinus.api.query.Condition;
 import org.pinus.api.query.IQuery;
-import org.pinus.entity.TestEntity;
 import org.pinus.entity.TestGlobalEntity;
 
 public class GlobalStorageTest extends BaseTest {

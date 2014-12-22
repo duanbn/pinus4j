@@ -121,12 +121,17 @@ public class ShardingMasterQueryImpl extends AbstractShardingQuery implements IS
 
 	@Override
 	public <T> List<T> findGlobalByPksFromMaster(String clusterName, Class<T> clazz, Number... pks) {
+		return findGlobalByPksFromMaster(clusterName, clazz, true, pks);
+	}
+
+	@Override
+	public <T> List<T> findGlobalByPksFromMaster(String clusterName, Class<T> clazz, boolean useCache, Number... pks) {
 		Connection conn = null;
 		try {
 			DBConnectionInfo globalConnection = this.dbCluster.getMasterGlobalConn(clusterName);
 
 			conn = globalConnection.getDatasource().getConnection();
-			return selectGlobalByPksWithCache(conn, clusterName, clazz, pks, true);
+			return selectGlobalByPksWithCache(conn, clusterName, clazz, pks, useCache);
 		} catch (Exception e) {
 			throw new DBOperationException(e);
 		} finally {
@@ -279,12 +284,16 @@ public class ShardingMasterQueryImpl extends AbstractShardingQuery implements IS
 		}
 	}
 
-	@Deprecated
 	@Override
 	public <T> List<T> findByPksFromMaster(IShardingKey<?> shardingKey, Class<T> clazz, Number... pks) {
+		return findByPksFromMaster(shardingKey, clazz, true, pks);
+	}
+
+	@Override
+	public <T> List<T> findByPksFromMaster(IShardingKey<?> shardingKey, Class<T> clazz, boolean useCache, Number... pks) {
 		DB db = _getDbFromMaster(clazz, shardingKey);
 
-		return selectByPksWithCache(db, clazz, pks, true);
+		return selectByPksWithCache(db, clazz, pks, useCache);
 	}
 
 	@Override

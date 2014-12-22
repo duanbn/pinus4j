@@ -106,10 +106,15 @@ public class ShardingSlaveQueryImpl extends AbstractShardingQuery implements ISh
 		}
 	}
 
-	@Deprecated
 	@Override
 	public <T> List<T> findGlobalByPksFromSlave(String clusterName, Class<T> clazz, EnumDBMasterSlave slave,
 			Number... pks) {
+		return findGlobalByPksFromSlave(clusterName, clazz, slave, true, pks);
+	}
+
+	@Override
+	public <T> List<T> findGlobalByPksFromSlave(String clusterName, Class<T> clazz, EnumDBMasterSlave slave,
+			boolean useCache, Number... pks) {
 
 		List<T> result = new ArrayList<T>();
 
@@ -119,7 +124,7 @@ public class ShardingSlaveQueryImpl extends AbstractShardingQuery implements ISh
 
 			conn = globalConnection.getDatasource().getConnection();
 
-			result.addAll(selectGlobalByPksWithCache(conn, clusterName, clazz, pks, true));
+			result.addAll(selectGlobalByPksWithCache(conn, clusterName, clazz, pks, useCache));
 		} catch (Exception e) {
 			throw new DBOperationException(e);
 		} finally {
@@ -243,10 +248,15 @@ public class ShardingSlaveQueryImpl extends AbstractShardingQuery implements ISh
 		return entities.get(0);
 	}
 
-	@Deprecated
 	@Override
 	public <T> List<T> findByPksFromSlave(IShardingKey<?> shardingKey, Class<T> clazz, EnumDBMasterSlave slave,
 			Number... pks) {
+		return findByPksFromSlave(shardingKey, clazz, slave, true, pks);
+	}
+
+	@Override
+	public <T> List<T> findByPksFromSlave(IShardingKey<?> shardingKey, Class<T> clazz, EnumDBMasterSlave slave,
+			boolean useCache, Number... pks) {
 		DB db = _getDbFromSlave(clazz, shardingKey, slave);
 
 		return selectByPksWithCache(db, clazz, pks, true);
