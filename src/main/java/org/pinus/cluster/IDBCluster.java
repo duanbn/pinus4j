@@ -245,7 +245,8 @@ public interface IDBCluster {
 	public void setScanPackage(String scanPackage);
 
 	/**
-	 * 获取集群表集合
+	 * 获取集群表集合.
+	 * 集群中的表集合. {集群名称, {分库下标, {表名, 分表数}}}
 	 * 
 	 * @return 集群表集合
 	 */

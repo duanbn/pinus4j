@@ -34,8 +34,6 @@ import org.pinus.api.enums.EnumDB;
 import org.pinus.api.enums.EnumDBMasterSlave;
 import org.pinus.api.enums.EnumDBRouteAlg;
 import org.pinus.api.enums.EnumSyncAction;
-import org.pinus.cache.IPrimaryCache;
-import org.pinus.cache.ISecondCache;
 import org.pinus.cluster.beans.DBClusterInfo;
 import org.pinus.cluster.beans.DBClusterRegionInfo;
 import org.pinus.cluster.beans.DBConnectionInfo;
@@ -46,7 +44,6 @@ import org.pinus.cluster.route.impl.SimpleHashClusterRouterImpl;
 import org.pinus.config.IClusterConfig;
 import org.pinus.config.impl.XmlDBClusterConfigImpl;
 import org.pinus.constant.Const;
-import org.pinus.datalayer.iterator.ShardingRecordIterator;
 import org.pinus.exception.DBClusterException;
 import org.pinus.exception.DBOperationException;
 import org.pinus.exception.DBRouteException;
@@ -127,10 +124,6 @@ public abstract class AbstractDBCluster implements IDBCluster {
 	 * 集群配置.
 	 */
 	private IClusterConfig config;
-
-	private IPrimaryCache primaryCache;
-
-	private ISecondCache secondCache;
 
 	/**
 	 * 构造方法.

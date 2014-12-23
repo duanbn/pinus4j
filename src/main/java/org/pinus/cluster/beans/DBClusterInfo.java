@@ -20,7 +20,7 @@ import java.util.List;
 import org.pinus.cluster.enums.EnumClusterCatalog;
 
 /**
- * 表示一个数据库集群信息. 包含此集群是主库集群还是从库集群，集群的名称(不带下标的数据库名)，集群连接信息.
+ * 表示一个数据库集群信息.
  * 
  * @author duanbn
  */

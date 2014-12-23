@@ -68,20 +68,20 @@ public class App {
 	 */
 	private List<DBTable> tables;
 
-    private DBTable _getDBTableByName(String tableName) throws CommandException {
-        // find sharding info
-        DBTable dbTable = null;
-        for (DBTable one : this.tables) {
-            if (one.getName().equals(tableName)) {
-                dbTable = one;
-                break;
-            }
-        }
-        if (dbTable == null) {
-            throw new CommandException("cann't find cluster info about table \"" + tableName + "\"");
-        }
-        return dbTable;
-    }
+	private DBTable _getDBTableByName(String tableName) throws CommandException {
+		// find sharding info
+		DBTable dbTable = null;
+		for (DBTable one : this.tables) {
+			if (one.getName().equals(tableName)) {
+				dbTable = one;
+				break;
+			}
+		}
+		if (dbTable == null) {
+			throw new CommandException("cann't find cluster info about table \"" + tableName + "\"");
+		}
+		return dbTable;
+	}
 
 	private DBTable _getDBTableBySql(String sql) throws CommandException {
 		try {
@@ -95,7 +95,7 @@ public class App {
 			}
 			String tableName = tableNames.get(0);
 
-            return _getDBTableByName(tableName);
+			return _getDBTableByName(tableName);
 		} catch (Exception e) {
 			throw new CommandException("syntax error: " + sql);
 		}
@@ -128,7 +128,6 @@ public class App {
 		}
 	}
 
-	@SuppressWarnings({ "rawtypes", "unchecked" })
 	private SqlNode parseShardingSqlNode(String cmd) throws CommandException {
 
 		try {
@@ -145,6 +144,7 @@ public class App {
 			// create sharding key
 			//
 			String cluster = dbTable.getCluster();
+			
 			// handle String and Number
 			IShardingKey<?> key = null;
 			if (shardingValue.startsWith("\"") && shardingValue.endsWith("\"")) {
@@ -172,47 +172,47 @@ public class App {
 		}
 	}
 
-    private void _handleTotal(String cmd) throws CommandException {
-        String tableName = cmd.substring("total ".length() - 1).trim();
-        DBTable dbTable = _getDBTableByName(tableName);
+	private void _handleTotal(String cmd) throws CommandException {
+		String tableName = cmd.substring("total ".length() - 1).trim();
+		DBTable dbTable = _getDBTableByName(tableName);
 
-        int tableNum = dbTable.getShardingNum();
-        String clusterName = dbTable.getCluster();
-        List<DB> dbs = this.dbCluster.getAllMasterShardingDB(tableNum, clusterName, tableName);
+		int tableNum = dbTable.getShardingNum();
+		String clusterName = dbTable.getCluster();
+		List<DB> dbs = this.dbCluster.getAllMasterShardingDB(tableNum, clusterName, tableName);
 
-        long totalCount = 0;
-        for (DB db : dbs) {
-            DataSource ds = db.getDatasource();
-            Connection conn = null;
-            PreparedStatement ps = null;
-            ResultSet rs = null;
-            try {
-                conn = ds.getConnection();
-                ps = conn.prepareStatement("select count(*) from " + db.getTableName() + db.getTableIndex());
-                rs = ps.executeQuery();
-                if (rs.next()) {
-                    totalCount += rs.getLong(1);
-                }
-            } catch (SQLException e) {
-                e.printStackTrace();
-            } finally {
-                try {
-                    if (rs != null) {
-                        rs.close();
-                    }
-                    if (ps != null) {
-                        ps.close();
-                    }
-                    if (conn != null) {
-                        conn.close();
-                    }
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-        System.out.println("total count " + totalCount);
-    }
+		long totalCount = 0;
+		for (DB db : dbs) {
+			DataSource ds = db.getDatasource();
+			Connection conn = null;
+			PreparedStatement ps = null;
+			ResultSet rs = null;
+			try {
+				conn = ds.getConnection();
+				ps = conn.prepareStatement("select count(*) from " + db.getTableName() + db.getTableIndex());
+				rs = ps.executeQuery();
+				if (rs.next()) {
+					totalCount += rs.getLong(1);
+				}
+			} catch (SQLException e) {
+				e.printStackTrace();
+			} finally {
+				try {
+					if (rs != null) {
+						rs.close();
+					}
+					if (ps != null) {
+						ps.close();
+					}
+					if (conn != null) {
+						conn.close();
+					}
+				} catch (SQLException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+		System.out.println("total count " + totalCount);
+	}
 
 	/**
 	 * handle select sql.
@@ -241,19 +241,19 @@ public class App {
 			ResultSetMetaData rsmd = rs.getMetaData();
 			int columnCount = rsmd.getColumnCount();
 			// show table header
-            StringBuilder format = new StringBuilder();
-            List<Object> info = new ArrayList<Object>();
+			StringBuilder format = new StringBuilder();
+			List<Object> info = new ArrayList<Object>();
 			for (int i = 1; i <= columnCount; i++) {
-                format.append("%-" + 32 + "s").append("  ");
-                info.add(rsmd.getColumnName(i));
+				format.append("%-" + 32 + "s").append("  ");
+				info.add(rsmd.getColumnName(i));
 			}
-            format.append("\n");
-            System.out.printf(format.toString(), info.toArray(new Object[info.size()]));
+			format.append("\n");
+			System.out.printf(format.toString(), info.toArray(new Object[info.size()]));
 			// show table record
 			while (rs.next()) {
-                info.clear();
+				info.clear();
 				for (int i = 1; i <= columnCount; i++) {
-                    info.add(rs.getObject(i));
+					info.add(rs.getObject(i));
 				}
 				System.out.printf(format.toString(), info.toArray(new Object[info.size()]));
 			}
@@ -290,8 +290,9 @@ public class App {
 	private void _handleShow() {
 		StringBuilder info = new StringBuilder();
 		boolean isSharding = false;
-        
-        System.out.printf("%-30s  |  %-8s  |  %-10s  |  %-30s  |  %-5s\n", "name", "type", "cluster", "sharding field", "sharding number");
+
+		System.out.printf("%-30s  |  %-8s  |  %-10s  |  %-30s  |  %-5s\n", "name", "type", "cluster", "sharding field",
+				"sharding number");
 
 		for (DBTable table : tables) {
 
@@ -315,14 +316,15 @@ public class App {
 
 			info.setLength(0);
 
-			System.out.printf("%-30s  |  %-8s  |  %-10s  |  %-30s  |  %-5d\n", table.getName(), type, table.getCluster(), shardingField, table.getShardingNum());
+			System.out.printf("%-30s  |  %-8s  |  %-10s  |  %-30s  |  %-5d\n", table.getName(), type,
+					table.getCluster(), shardingField, table.getShardingNum());
 		}
 	}
 
 	public void _handleHelp() {
 		StringBuilder helpInfo = new StringBuilder();
 		helpInfo.append("show       - 显示数据表及每个表的分片信息\n");
-        helpInfo.append("total      - 显示总数\n");
+		helpInfo.append("total      - 显示总数\n");
 		helpInfo.append("select语法 - 分片表 stand sql + sharding by ${value}; e.g: select * from tablename where field=value sharding by 50|\"50\"\n");
 		helpInfo.append("             全局表 stand sql\n");
 		helpInfo.append("help       - 显示帮助信息\n");
@@ -354,10 +356,10 @@ public class App {
 		String cmd = null;
 		while (isRunning) {
 			try {
-                cmd = creader.readLine(CMD_PROMPT);
-                if (cmd.endsWith(";")) {
-                    cmd = cmd.substring(0, cmd.length() - 1);
-                }
+				cmd = creader.readLine(CMD_PROMPT);
+				if (cmd.endsWith(";")) {
+					cmd = cmd.substring(0, cmd.length() - 1);
+				}
 
 				if (cmd.equals("exit")) {
 					isRunning = false;
@@ -368,12 +370,12 @@ public class App {
 				} else if (cmd.toLowerCase().startsWith("delete")) {
 					_handleDelete(cmd);
 				} else if (cmd.toLowerCase().startsWith("total")) {
-                    _handleTotal(cmd);
-                } else if (cmd.toLowerCase().equals("show")) {
+					_handleTotal(cmd);
+				} else if (cmd.toLowerCase().equals("show")) {
 					_handleShow();
 				} else if (cmd.trim().equals("help")) {
 					_handleHelp();
-                } else if (cmd.trim().equals("")) {
+				} else if (cmd.trim().equals("")) {
 				} else {
 					System.out.println("unknow command:\"" + cmd + "\", now support select, update, delete ");
 				}
@@ -381,6 +383,8 @@ public class App {
 				System.out.println(e.getMessage());
 			}
 		}
+
+		this.dbCluster.shutdown();
 	}
 
 	public static void main(String[] args) throws Exception {
@@ -397,6 +401,8 @@ public class App {
 	}
 
 	private class CommandException extends Exception {
+
+		private static final long serialVersionUID = 1L;
 
 		public CommandException(String msg) {
 			super(msg);
