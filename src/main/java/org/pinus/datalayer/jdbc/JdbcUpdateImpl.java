@@ -21,7 +21,9 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.pinus.api.IShardingKey;
 import org.pinus.cache.IPrimaryCache;
@@ -87,28 +89,49 @@ public class JdbcUpdateImpl implements IShardingUpdate {
 		Class<?> clazz = entities.get(0).getClass();
 		String tableName = ReflectUtil.getTableName(clazz);
 
-		// 生成主键
-		int[] newPks = this.idGenerator.genClusterUniqueIntIdBatch(clusterName, tableName, entities.size());
+		int entitySize = entities.size();
+		Number[] pks = new Number[entitySize];
 
-		Number[] pks = new Number[newPks.length];
-		for (int i = 0; i < entities.size(); i++) {
-			try {
-				ReflectUtil.setPkValue(entities.get(i), newPks[i]);
-			} catch (Exception e) {
-				throw new DBOperationException(e);
+		// 如果主键为0，则设置主键
+		Map<Number, Object> map = new HashMap<Number, Object>(entitySize);
+		Number pk = null;
+		Object entity = null;
+		for (int i = 0; i < entitySize; i++) {
+			entity = entities.get(i);
+			pk = ReflectUtil.getPkValue(entity);
+			if (pk == null || pk.longValue() == 0) {
+				map.put(i, entity);
+			} else {
+				pks[i] = pk;
 			}
-			pks[i] = newPks[i];
+		}
+		if (!map.isEmpty()) {
+			int[] newPks = this.idGenerator.genClusterUniqueIntIdBatch(clusterName, tableName, map.size());
+			int i = 0;
+			for (Map.Entry<Number, Object> entry : map.entrySet()) {
+				int pos = entry.getKey().intValue();
+				try {
+					ReflectUtil.setPkValue(entities.get(pos), newPks[i]);
+				} catch (Exception e) {
+					throw new DBOperationException(e);
+				}
+				pks[pos] = newPks[i];
+				i++;
+			}
 		}
 
 		Connection conn = null;
 		try {
 			DBConnectionInfo globalConnection = this.dbCluster.getMasterGlobalConn(clusterName);
+
 			conn = globalConnection.getDatasource().getConnection();
+
 			_saveBatchGlobal(conn, entities);
 
 			if (isCacheAvailable(clazz)) {
 				primaryCache.incrCountGlobal(clusterName, tableName, entities.size());
 			}
+
 			if (isSecondCacheAvailable(clazz)) {
 				secondCache.removeGlobal(clusterName, tableName);
 			}
@@ -196,27 +219,18 @@ public class JdbcUpdateImpl implements IShardingUpdate {
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Override
 	public Number save(Object entity, IShardingKey shardingKey) {
-        Class clazz = entity.getClass();
+		Class clazz = entity.getClass();
 		String tableName = ReflectUtil.getTableName(clazz);
 
 		// set primary key.
-		long pk = this.idGenerator.genClusterUniqueLongId(shardingKey.getClusterName(), tableName);
-		try {
-			ReflectUtil.setPkValue(entity, pk);
-		} catch (Exception e) {
-			throw new DBOperationException(e);
-		}
-
-		if (shardingKey.getValue() instanceof Number) {
-			if (shardingKey.getValue() == null || ((Number) shardingKey.getValue()).intValue() == 0) {
-				shardingKey.setValue(pk);
+		Number pk = ReflectUtil.getPkValue(entity);
+		if (pk == null || pk.intValue() == 0) {
+			pk = this.idGenerator.genClusterUniqueLongId(shardingKey.getClusterName(), tableName);
+			try {
+				ReflectUtil.setPkValue(entity, pk);
+			} catch (Exception e) {
+				throw new DBOperationException(e);
 			}
-		} else if (shardingKey.getValue() instanceof String) {
-			if (shardingKey.getValue() == null) {
-				throw new DBOperationException("使用String做Sharding时，ShardingKey的值不能为Null");
-			}
-		} else {
-			throw new DBOperationException("不支持的ShardingKey类型, 只支持Number或String");
 		}
 
 		DB db = _getDbFromMaster(tableName, shardingKey);
@@ -246,26 +260,44 @@ public class JdbcUpdateImpl implements IShardingUpdate {
 
 	@Override
 	public Number[] saveBatch(List<? extends Object> entities, IShardingKey<?> shardingKey) {
-		if (shardingKey.getValue() instanceof Number && ((Number) shardingKey.getValue()).intValue() == 0) {
-			throw new DBOperationException("分库分表因子的值不能为0, shardingKey=" + shardingKey);
-		}
-
 		Class<?> clazz = entities.get(0).getClass();
 		String tableName = ReflectUtil.getTableName(clazz);
 
 		DB db = _getDbFromMaster(tableName, shardingKey);
 
-		// 生成主键
-		int[] newPks = this.idGenerator.genClusterUniqueIntIdBatch(db.getClusterName(), tableName, entities.size());
+		int entitySize = entities.size();
+		Number[] pks = new Number[entitySize];
 
-		Number[] pks = new Number[newPks.length];
+		// 如果主键为0，则设置主键
+		Map<Number, Object> map = new HashMap<Number, Object>(entitySize);
+		Number pk = null;
+		Object entity = null;
+		for (int i = 0; i < entitySize; i++) {
+			entity = entities.get(i);
+			pk = ReflectUtil.getPkValue(entity);
+			if (pk == null || pk.longValue() == 0) {
+				map.put(i, entity);
+			} else {
+				pks[i] = pk;
+			}
+		}
+		if (!map.isEmpty()) {
+			int[] newPks = this.idGenerator.genClusterUniqueIntIdBatch(db.getClusterName(), tableName, map.size());
+			int i = 0;
+			for (Map.Entry<Number, Object> entry : map.entrySet()) {
+				int pos = entry.getKey().intValue();
+				try {
+					ReflectUtil.setPkValue(entities.get(pos), newPks[i]);
+				} catch (Exception e) {
+					throw new DBOperationException(e);
+				}
+				pks[pos] = newPks[i];
+				i++;
+			}
+		}
+
 		Connection conn = null;
 		try {
-			for (int i = 0; i < entities.size(); i++) {
-				ReflectUtil.setPkValue(entities.get(i), newPks[i]);
-				pks[i] = newPks[i];
-			}
-
 			conn = db.getDatasource().getConnection();
 
 			_saveBatch(conn, entities, db.getTableIndex());
@@ -475,7 +507,7 @@ public class JdbcUpdateImpl implements IShardingUpdate {
 		}
 	}
 
-    /**
+	/**
 	 * 判断一级缓存是否可用
 	 * 
 	 * @return true:启用cache, false:不启用

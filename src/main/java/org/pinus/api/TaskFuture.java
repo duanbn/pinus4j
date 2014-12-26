@@ -27,7 +27,7 @@ public class TaskFuture {
 	/**
 	 * 已经处理的记录数
 	 */
-	private AtomicLong count = new AtomicLong(1);
+	private AtomicLong count = new AtomicLong(0);
 
 	/**
 	 * 执行处理的线程池
@@ -67,13 +67,14 @@ public class TaskFuture {
 		}
 	}
 
-	public void down() {
-		this.cdl.countDown();
+	public void down(int count) {
+		for (int i = 0; i < count; i++)
+			this.cdl.countDown();
 	}
 
-	public void incrCount() {
+	public void incrCount(int count) {
 		if (this.count.get() < this.total)
-			this.count.incrementAndGet();
+			this.count.addAndGet(count);
 	}
 
 	public long getTotal() {

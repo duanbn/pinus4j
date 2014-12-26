@@ -97,7 +97,7 @@ public class TaskExecutor<E> {
 			future = new TaskFuture(reader.getCount(), threadPool);
 
 			while (reader.hasNext()) {
-				E record = reader.next();
+				List<E> record = reader.nextMore();
 				rt = new RecrodThread<E>(record, task, future);
 				threadPool.submit(rt);
 			}
@@ -116,7 +116,8 @@ public class TaskExecutor<E> {
 
 		private TaskFuture future;
 
-		public RecrodReaderThread(IRecordIterator<E> recordReader, ThreadPool threadPool, ITask<E> task, TaskFuture future) {
+		public RecrodReaderThread(IRecordIterator<E> recordReader, ThreadPool threadPool, ITask<E> task,
+				TaskFuture future) {
 			this.recordReader = recordReader;
 			this.threadPool = threadPool;
 			this.task = task;
@@ -127,7 +128,7 @@ public class TaskExecutor<E> {
 		public void run() {
 			RecrodThread<E> rt = null;
 			while (recordReader.hasNext()) {
-				E record = recordReader.next();
+				List<E> record = recordReader.nextMore();
 				rt = new RecrodThread<E>(record, task, future);
 				threadPool.submit(rt);
 			}
@@ -139,13 +140,13 @@ public class TaskExecutor<E> {
 
 		public static final Logger LOG = LoggerFactory.getLogger(RecrodThread.class);
 
-		private E record;
+		private List<E> record;
 
 		private ITask<E> task;
 
 		private TaskFuture future;
 
-		public RecrodThread(E record, ITask<E> task, TaskFuture future) {
+		public RecrodThread(List<E> record, ITask<E> task, TaskFuture future) {
 			this.record = record;
 			this.task = task;
 			this.future = future;
@@ -156,10 +157,10 @@ public class TaskExecutor<E> {
 			try {
 				this.task.doTask(record);
 			} catch (Exception e) {
-				LOG.warn("do task failure " + record);
+				LOG.warn("do task failure " + record, e);
 			} finally {
-				this.future.down();
-				this.future.incrCount();
+				this.future.down(record.size());
+				this.future.incrCount(record.size());
 			}
 		}
 

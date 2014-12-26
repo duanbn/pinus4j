@@ -1,6 +1,7 @@
 package org.pinus.datalayer;
 
 import java.util.Iterator;
+import java.util.List;
 
 import org.pinus.api.query.IQuery;
 
@@ -12,6 +13,13 @@ import org.pinus.api.query.IQuery;
  * @param <E>
  */
 public interface IRecordIterator<E> extends Iterator<E> {
+
+	/**
+	 * 批量返回
+	 * 
+	 * @return
+	 */
+	public List<E> nextMore();
 
 	/**
 	 * 获取此遍历器需要遍历的结果集总数.

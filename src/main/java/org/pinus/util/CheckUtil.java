@@ -23,6 +23,7 @@ import org.pinus.api.SQL;
 import org.pinus.api.annotation.Table;
 import org.pinus.api.enums.EnumDBMasterSlave;
 import org.pinus.api.query.IQuery;
+import org.pinus.exception.DBOperationException;
 
 /**
  * 校验工具.
@@ -139,6 +140,18 @@ public class CheckUtil {
 	public static void checkShardingValue(IShardingKey<?> shardingKey) {
 		if (shardingKey == null || StringUtils.isBlank(shardingKey.getClusterName())) {
 			throw new IllegalArgumentException("参数错误, shardingKey=" + shardingKey);
+		}
+		if (shardingKey.getValue() instanceof Number) {
+			if (shardingKey.getValue() == null || ((Number) shardingKey.getValue()).intValue() == 0) {
+				throw new DBOperationException(
+						"sharding value cann't be null or number zero when sharding value type is number");
+			}
+		} else if (shardingKey.getValue() instanceof String) {
+			if (shardingKey.getValue() == null) {
+				throw new DBOperationException("使用String做Sharding时，ShardingKey的值不能为Null");
+			}
+		} else {
+			throw new DBOperationException("不支持的ShardingKey类型, 只支持Number或String");
 		}
 	}
 

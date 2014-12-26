@@ -2,65 +2,43 @@ package org.pinus.datalayer.iterator;
 
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Queue;
 
 import org.pinus.api.query.Condition;
 import org.pinus.api.query.IQuery;
 import org.pinus.api.query.Order;
 import org.pinus.api.query.QueryImpl;
 import org.pinus.cluster.beans.DBConnectionInfo;
-import org.pinus.datalayer.IRecordIterator;
 import org.pinus.datalayer.SQLBuilder;
-import org.pinus.datalayer.jdbc.AbstractJdbcQuery;
 import org.pinus.exception.DBOperationException;
 import org.pinus.util.ReflectUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class GlobalRecordIterator<E> extends AbstractJdbcQuery implements IRecordIterator<E> {
+/**
+ * 数据库记录便利器. 注意此对象是线程不安全的.
+ * 
+ * @author duanbn
+ *
+ * @param <E>
+ */
+public class GlobalRecordIterator<E> extends AbstractRecordIterator<E> {
 
 	public static final Logger LOG = LoggerFactory.getLogger(GlobalRecordIterator.class);
 
-	private Class<E> clazz;
-
-	private IQuery query;
-
 	private DBConnectionInfo dbConnInfo;
-
-	private String pkName;
-	private Queue<E> recordQ;
-	private static final int STEP = 5000;
-	private long latestId = 0;
-	private long maxId;
-
+	
 	public GlobalRecordIterator(DBConnectionInfo dbConnInfo, Class<E> clazz) {
+		super(clazz);
+
 		this.dbConnInfo = dbConnInfo;
-		this.clazz = clazz;
-
-		try {
-			// check pk type
-			pkName = ReflectUtil.getPkName(clazz);
-			Class<?> type = clazz.getDeclaredField(pkName).getType();
-			if (type != Long.TYPE && type != Integer.TYPE && type != Short.TYPE && type != Long.class
-					&& type != Long.class && type != Short.class) {
-				throw new DBOperationException("被遍历的数据主键不是数值型");
-			}
-			if (this.query == null) {
-				this.query = new QueryImpl();
-			}
-
-			_initMaxId();
-
-			this.recordQ = new LinkedList<E>();
-
-		} catch (NoSuchFieldException e) {
-			throw new DBOperationException("遍历数据失败, clazz " + clazz, e);
-		}
+		
+		this.maxId = getMaxId();
 	}
 
-	private void _initMaxId() {
+	public long getMaxId() {
+		long maxId = 0;
+
 		IQuery query = new QueryImpl();
 		query.limit(1).orderBy(pkName, Order.DESC);
 		List<E> one = null;
@@ -69,14 +47,14 @@ public class GlobalRecordIterator<E> extends AbstractJdbcQuery implements IRecor
 		} catch (SQLException e1) {
 			throw new DBOperationException("获取max id失败");
 		}
-		if (one.isEmpty()) {
-			this.maxId = 0;
-		} else {
+		if (!one.isEmpty()) {
 			E e = one.get(0);
-			this.maxId = ReflectUtil.getPkValue(e).longValue();
+			maxId = ReflectUtil.getPkValue(e).longValue();
 		}
 
-		LOG.info("clazz " + clazz + " maxId " + this.maxId);
+		LOG.info("clazz " + clazz + " maxId=" + maxId);
+
+		return maxId;
 	}
 
 	@Override
@@ -120,22 +98,6 @@ public class GlobalRecordIterator<E> extends AbstractJdbcQuery implements IRecor
 		}
 
 		return !this.recordQ.isEmpty();
-	}
-
-	@Override
-	public E next() {
-		return this.recordQ.poll();
-	}
-
-	@Override
-	public void remove() {
-		throw new UnsupportedOperationException("this iterator cann't doing remove");
-	}
-
-	@Override
-	public void setQuery(IQuery query) {
-		if (query != null)
-			this.query = query;
 	}
 
 }

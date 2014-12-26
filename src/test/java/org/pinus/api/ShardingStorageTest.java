@@ -20,7 +20,11 @@ import org.pinus.entity.TestEntity;
 public class ShardingStorageTest extends BaseTest {
 
 	private Number pk1;
+	private IShardingKey<Number> shardingKey1;
+
 	private Number pk2;
+	private IShardingKey<Number> shardingKey2;
+
 	private Number[] pks;
 
 	private IShardingKey<Integer> moreKey = new ShardingKey<Integer>(CLUSTER_KLSTORAGE, 1);
@@ -31,12 +35,15 @@ public class ShardingStorageTest extends BaseTest {
 		TestEntity entity = createEntity();
 		entity.setTestString("i am pinus1");
 		pk1 = cacheClient.save(entity);
+		shardingKey1 = new ShardingKey<Number>(CLUSTER_KLSTORAGE, entity.getTestInt());
+
 		entity = createEntity();
 		entity.setTestString("i am pinus2");
 		pk2 = cacheClient.save(entity);
+		shardingKey2 = new ShardingKey<Number>(CLUSTER_KLSTORAGE, entity.getTestInt());
+
 		// check save one
-		IShardingKey<Number> oneKey = new ShardingKey<Number>(CLUSTER_KLSTORAGE, pk1);
-		entity = cacheClient.findByPk(pk1, oneKey, TestEntity.class);
+		entity = cacheClient.findByPk(pk1, shardingKey1, TestEntity.class);
 		Assert.assertNotNull(entity);
 
 		// save more
@@ -97,15 +104,6 @@ public class ShardingStorageTest extends BaseTest {
 		}
 	}
 
-//	@Test
-//	public void testFindByShardingPairListClassNumber() {
-//		List<IShardingKey<?>> keys = new ArrayList<IShardingKey<?>>();
-//		keys.add(new ShardingKey<Number>(CLUSTER_KLSTORAGE, pk1));
-//		keys.add(new ShardingKey<Number>(CLUSTER_KLSTORAGE, pk2));
-//		List<TestEntity> entities = cacheClient.findByShardingPair(keys, TestEntity.class, pk1, pk2);
-//		Assert.assertEquals(2, entities.size());
-//	}
-
 	@Test
 	public void testFindBySqlSqlShardingKey() {
 		SQL sql = SQL.valueOf("select * from test_entity where testString=?", "i am pinus");
@@ -118,11 +116,10 @@ public class ShardingStorageTest extends BaseTest {
 
 	@Test
 	public void testUpdateObject() {
-		IShardingKey<Number> oneKey = new ShardingKey<Number>(CLUSTER_KLSTORAGE, pk1);
-		TestEntity entity = cacheClient.findByPk(pk1, oneKey, TestEntity.class);
+		TestEntity entity = cacheClient.findByPk(pk1, shardingKey1, TestEntity.class);
 		entity.setTestFloat(1.1f);
 		cacheClient.update(entity);
-		TestEntity after = cacheClient.findByPk(pk1, oneKey, TestEntity.class);
+		TestEntity after = cacheClient.findByPk(pk1, shardingKey1, TestEntity.class);
 		Assert.assertEquals(entity, after);
 	}
 
@@ -144,12 +141,10 @@ public class ShardingStorageTest extends BaseTest {
 	@After
 	public void after() {
 		// remove one
-		IShardingKey<Number> oneKey = new ShardingKey<Number>(CLUSTER_KLSTORAGE, pk1);
-		cacheClient.removeByPk(pk1, oneKey, TestEntity.class);
-		oneKey = new ShardingKey<Number>(CLUSTER_KLSTORAGE, pk2);
-		cacheClient.removeByPk(pk2, oneKey, TestEntity.class);
+		cacheClient.removeByPk(pk1, shardingKey1, TestEntity.class);
+		cacheClient.removeByPk(pk2, shardingKey2, TestEntity.class);
 		// check remove one
-		TestEntity entity = cacheClient.findByPk(pk1, oneKey, TestEntity.class);
+		TestEntity entity = cacheClient.findByPk(pk1, shardingKey1, TestEntity.class);
 		Assert.assertNull(entity);
 
 		// remove more

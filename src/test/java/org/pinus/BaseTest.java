@@ -6,7 +6,6 @@ import java.util.Random;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.Test;
 import org.pinus.api.IShardingStorageClient;
 import org.pinus.api.ShardingStorageClientImpl;
 import org.pinus.api.enums.EnumMode;
@@ -76,8 +75,8 @@ public class BaseTest {
 		testEntity.setOTestDouble(r.nextDouble());
 		testEntity.setTestFloat(0.15f);
 		testEntity.setOTestFloat(0.15f);
-		testEntity.setTestInt(r.nextInt());
-		testEntity.setOTestInt(r.nextInt());
+		testEntity.setTestInt(r.nextInt(60000000));
+		testEntity.setOTestInt(r.nextInt(60000000));
 		testEntity.setTestLong(r.nextLong());
 		testEntity.setOTestLong(r.nextLong());
 		testEntity.setTestShort((short) r.nextInt(30000));
@@ -100,8 +99,8 @@ public class BaseTest {
 		testEntity.setoTestDouble(r.nextDouble());
 		testEntity.setTestFloat(0.15f);
 		testEntity.setoTestFloat(0.15f);
-		testEntity.setTestInt(r.nextInt());
-		testEntity.setoTestInt(r.nextInt());
+		testEntity.setTestInt(r.nextInt(60000000));
+		testEntity.setoTestInt(r.nextInt(60000000));
 		testEntity.setTestLong(r.nextLong());
 		testEntity.setoTestLong(r.nextLong());
 		testEntity.setTestShort((short) r.nextInt(30000));
@@ -110,7 +109,7 @@ public class BaseTest {
 		return testEntity;
 	}
 
-	@Test
+	// @Test
 	public void genData() throws Exception {
 		TestEntity entity = null;
 		for (int i = 0; i < 60000000; i++) {

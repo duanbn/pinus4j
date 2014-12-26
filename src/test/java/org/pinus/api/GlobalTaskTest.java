@@ -33,16 +33,14 @@ public class GlobalTaskTest extends BaseTest {
 		}
 		pks = cacheClient.globalSaveBatch(entities, CLUSTER_KLSTORAGE);
 		// check save more
-		entities = cacheClient.findGlobalByPks(CLUSTER_KLSTORAGE,
-				TestGlobalEntity.class, pks);
+		entities = cacheClient.findGlobalByPks(CLUSTER_KLSTORAGE, TestGlobalEntity.class, pks);
 		Assert.assertEquals(SIZE, entities.size());
 	}
 
 	@After
 	public void after() {
 		// remove more
-		cacheClient.globalRemoveByPks(CLUSTER_KLSTORAGE,
-				TestGlobalEntity.class, pks);
+		cacheClient.globalRemoveByPks(CLUSTER_KLSTORAGE, TestGlobalEntity.class, pks);
 	}
 
 	@Test
@@ -61,8 +59,7 @@ public class GlobalTaskTest extends BaseTest {
 		IQuery query = cacheClient.createQuery();
 		query.add(Condition.gt("testInt", 100));
 
-		TaskFuture future = cacheClient.submit(task, TestGlobalEntity.class,
-				query);
+		TaskFuture future = cacheClient.submit(task, TestGlobalEntity.class, query);
 		future.await();
 
 		System.out.println(future);
@@ -70,8 +67,8 @@ public class GlobalTaskTest extends BaseTest {
 
 	public static class SimpleGlobalTask implements ITask<TestGlobalEntity> {
 		@Override
-		public void doTask(TestGlobalEntity entity) {
-			System.out.println(entity);
+		public void doTask(List<TestGlobalEntity> entity) {
+			System.out.println(entity.size());
 		}
 	}
 

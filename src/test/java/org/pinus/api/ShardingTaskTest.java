@@ -53,7 +53,7 @@ public class ShardingTaskTest extends BaseTest {
 		TaskFuture future = cacheClient.submit(task, TestEntity.class);
 		while (!future.isDone()) {
 			System.out.println(future.getProgress());
-			
+
 			Thread.sleep(2000);
 		}
 
@@ -76,7 +76,7 @@ public class ShardingTaskTest extends BaseTest {
 
 	public static class SimpleShardingTask implements ITask<TestEntity> {
 		@Override
-		public void doTask(TestEntity entity) {
+		public void doTask(List<TestEntity> entity) {
 			try {
 				Thread.sleep(r.nextInt(10));
 			} catch (InterruptedException e) {
