@@ -1,12 +1,16 @@
 package org.pinus;
 
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Random;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Test;
 import org.pinus.api.IShardingStorageClient;
+import org.pinus.api.ShardingKey;
 import org.pinus.api.ShardingStorageClientImpl;
 import org.pinus.api.enums.EnumMode;
 import org.pinus.api.enums.EnumSyncAction;
@@ -109,14 +113,17 @@ public class BaseTest {
 		return testEntity;
 	}
 
-	// @Test
+	@Test
 	public void genData() throws Exception {
-		TestEntity entity = null;
-		for (int i = 0; i < 60000000; i++) {
-			entity = createEntity();
-			entity.save();
-			if (i % 3000 == 0) {
-				System.out.println("save " + i);
+		List<TestEntity> dataList = new ArrayList<TestEntity>(3000);
+		int i = 0;
+		while (true) {
+			dataList.add(createEntity());
+			if (i++ % 3000 == 0) {
+				Number[] pks = cacheClient.saveBatch(dataList,
+						new ShardingKey<Integer>(CLUSTER_KLSTORAGE, r.nextInt(60000000)));
+				System.out.println("save " + pks.length);
+				dataList.clear();
 			}
 		}
 	}

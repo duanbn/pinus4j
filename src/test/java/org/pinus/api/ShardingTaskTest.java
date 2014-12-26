@@ -72,16 +72,9 @@ public class ShardingTaskTest extends BaseTest {
 		System.out.println(future);
 	}
 
-	private static final Random r = new Random();
-
 	public static class SimpleShardingTask implements ITask<TestEntity> {
 		@Override
 		public void doTask(List<TestEntity> entity) {
-			try {
-				Thread.sleep(r.nextInt(10));
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
 		}
 	}
 
