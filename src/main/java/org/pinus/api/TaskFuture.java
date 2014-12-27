@@ -1,6 +1,8 @@
 package org.pinus.api;
 
 import java.text.DecimalFormat;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -29,6 +31,11 @@ public class TaskFuture {
 	 */
 	private AtomicLong count = new AtomicLong(0);
 
+    /**
+     * 数据收集器
+     */
+    private Map collector;
+
 	/**
 	 * 执行处理的线程池
 	 */
@@ -40,6 +47,8 @@ public class TaskFuture {
 		this.cdl = new CountDownLatch((int) total);
 
 		this.threadPool = threadPool;
+
+        this.collector = new HashMap();
 	}
 
 	public String getProgress() {
@@ -90,4 +99,8 @@ public class TaskFuture {
 		return "TaskFuture [total=" + total + ", cdl=" + cdl + ", count=" + count + "]";
 	}
 
+    public Map getCollector() {
+        return collector;
+    }
+    
 }

@@ -1,6 +1,7 @@
 package org.pinus.api;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * 数据处理任务.
@@ -16,6 +17,6 @@ public interface ITask<T> {
 	 * @param entity
 	 *            一条数据库记录.
 	 */
-	public void doTask(List<T> entity);
+	public void doTask(List<T> entity, Map collector);
 
 }

@@ -2,7 +2,7 @@ package org.pinus.api;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
+import java.util.Map;
 
 import junit.framework.Assert;
 
@@ -74,7 +74,7 @@ public class ShardingTaskTest extends BaseTest {
 
 	public static class SimpleShardingTask implements ITask<TestEntity> {
 		@Override
-		public void doTask(List<TestEntity> entity) {
+		public void doTask(List<TestEntity> entity, Map collector) {
 		}
 	}
 
