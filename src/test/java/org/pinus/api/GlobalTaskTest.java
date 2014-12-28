@@ -53,6 +53,8 @@ public class GlobalTaskTest extends BaseTest {
 		TaskFuture future = cacheClient.submit(task, TestGlobalEntity.class);
 		future.await();
 
+		System.out.println(future.getCollector().get("testInt"));
+
 		System.out.println(future);
 	}
 
@@ -71,8 +73,11 @@ public class GlobalTaskTest extends BaseTest {
 
 	public static class SimpleGlobalTask implements ITask<TestGlobalEntity> {
 		@Override
-		public void doTask(List<TestGlobalEntity> entity, Map collector) {
-			System.out.println(entity.size());
+		public void doTask(List<TestGlobalEntity> entityList,
+				TaskCollector collector) {
+			for (TestGlobalEntity entity : entityList) {
+				collector.incr("testInt", entity.getTestInt());
+			}
 		}
 	}
 

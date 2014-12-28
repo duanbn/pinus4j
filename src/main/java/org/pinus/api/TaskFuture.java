@@ -34,7 +34,7 @@ public class TaskFuture {
     /**
      * 数据收集器
      */
-    private Map collector;
+    private TaskCollector collector;
 
 	/**
 	 * 执行处理的线程池
@@ -48,7 +48,8 @@ public class TaskFuture {
 
 		this.threadPool = threadPool;
 
-        this.collector = new HashMap();
+        // 初始化任务收集器
+        this.collector = new TaskCollector();
 	}
 
 	public String getProgress() {
@@ -99,7 +100,7 @@ public class TaskFuture {
 		return "TaskFuture [total=" + total + ", cdl=" + cdl + ", count=" + count + "]";
 	}
 
-    public Map getCollector() {
+    public TaskCollector getCollector() {
         return collector;
     }
     

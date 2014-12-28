@@ -18,7 +18,8 @@ public class ShardingTaskTest extends BaseTest {
 
 	private Number[] pks;
 
-	private IShardingKey<Integer> moreKey = new ShardingKey<Integer>(CLUSTER_KLSTORAGE, 1);
+	private IShardingKey<Integer> moreKey = new ShardingKey<Integer>(
+			CLUSTER_KLSTORAGE, 1);
 
 	private List<TestEntity> entities;
 
@@ -74,7 +75,7 @@ public class ShardingTaskTest extends BaseTest {
 
 	public static class SimpleShardingTask implements ITask<TestEntity> {
 		@Override
-		public void doTask(List<TestEntity> entity, Map collector) {
+		public void doTask(List<TestEntity> entity, TaskCollector collector) {
 		}
 	}
 

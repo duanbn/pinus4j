@@ -57,7 +57,6 @@ import org.pinus.datalayer.IShardingUpdate;
 import org.pinus.datalayer.jdbc.JdbcMasterQueryImpl;
 import org.pinus.datalayer.jdbc.JdbcSlaveQueryImpl;
 import org.pinus.datalayer.jdbc.JdbcUpdateImpl;
-import org.pinus.datalayer.jdbc.TaskExecutor;
 import org.pinus.exception.DBClusterException;
 import org.pinus.exception.LoadConfigException;
 import org.pinus.generator.IIdGenerator;
