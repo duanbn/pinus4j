@@ -2,7 +2,6 @@ package org.pinus.api;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import junit.framework.Assert;
 
@@ -34,16 +33,14 @@ public class GlobalTaskTest extends BaseTest {
 		}
 		pks = cacheClient.globalSaveBatch(entities, CLUSTER_KLSTORAGE);
 		// check save more
-		entities = cacheClient.findGlobalByPks(CLUSTER_KLSTORAGE,
-				TestGlobalEntity.class, pks);
+		entities = cacheClient.findGlobalByPks(CLUSTER_KLSTORAGE, TestGlobalEntity.class, pks);
 		Assert.assertEquals(SIZE, entities.size());
 	}
 
 	@After
 	public void after() {
 		// remove more
-		cacheClient.globalRemoveByPks(CLUSTER_KLSTORAGE,
-				TestGlobalEntity.class, pks);
+		cacheClient.globalRemoveByPks(CLUSTER_KLSTORAGE, TestGlobalEntity.class, pks);
 	}
 
 	@Test
@@ -52,8 +49,6 @@ public class GlobalTaskTest extends BaseTest {
 
 		TaskFuture future = cacheClient.submit(task, TestGlobalEntity.class);
 		future.await();
-
-		System.out.println(future.getCollector().get("testInt"));
 
 		System.out.println(future);
 	}
@@ -64,19 +59,16 @@ public class GlobalTaskTest extends BaseTest {
 		IQuery query = cacheClient.createQuery();
 		query.add(Condition.gt("testInt", 100));
 
-		TaskFuture future = cacheClient.submit(task, TestGlobalEntity.class,
-				query);
+		TaskFuture future = cacheClient.submit(task, TestGlobalEntity.class, query);
 		future.await();
 
 		System.out.println(future);
 	}
 
-	public static class SimpleGlobalTask implements ITask<TestGlobalEntity> {
+	public static class SimpleGlobalTask extends AbstractTask<TestGlobalEntity> {
 		@Override
-		public void doTask(List<TestGlobalEntity> entityList,
-				TaskCollector collector) {
+		public void doTask(List<TestGlobalEntity> entityList) {
 			for (TestGlobalEntity entity : entityList) {
-				collector.incr("testInt", entity.getTestInt());
 			}
 		}
 	}

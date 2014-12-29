@@ -16,9 +16,11 @@ public class FashionEntityTest extends BaseTest {
 	@Test
 	public void testSharding() {
 		TestEntity entity = createEntity();
+		entity.setId(100);
 		Number pk = entity.save();
+		System.out.println(pk);
 
-		IShardingKey<Number> key = new ShardingKey<Number>(CLUSTER_KLSTORAGE, pk);
+		IShardingKey<Number> key = new ShardingKey<Number>(CLUSTER_KLSTORAGE, entity.getTestInt());
 		TestEntity qentity = cacheClient.findByPk(pk, key, TestEntity.class);
 		Assert.assertNotNull(qentity);
 		IQuery query = cacheClient.createQuery();

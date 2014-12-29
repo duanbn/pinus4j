@@ -37,10 +37,12 @@ public class GlobalStorageTest extends BaseTest {
 			entity.setTestString("i am pinus");
 			entities.add(entity);
 		}
+		entities.get(0).setId(r.nextInt(100000000));
 		pks = cacheClient.globalSaveBatch(entities, CLUSTER_KLSTORAGE);
 		for (int i = 0; i < entities.size(); i++) {
 			entities.get(i).setId(pks[i].longValue());
 		}
+
 		// check save more
 		List<TestGlobalEntity> entities1 = cacheClient.findGlobalByPks(CLUSTER_KLSTORAGE, TestGlobalEntity.class, pks);
 		for (int i = 0; i < entities.size(); i++) {

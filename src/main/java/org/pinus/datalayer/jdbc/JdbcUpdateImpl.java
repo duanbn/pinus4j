@@ -94,15 +94,16 @@ public class JdbcUpdateImpl implements IShardingUpdate {
 
 		// 如果主键为0，则设置主键
 		Map<Number, Object> map = new HashMap<Number, Object>(entitySize);
-		Number pk = null;
+		Number pk = null, maxPk = 0;
 		Object entity = null;
 		for (int i = 0; i < entitySize; i++) {
 			entity = entities.get(i);
 			pk = ReflectUtil.getPkValue(entity);
-			if (pk == null || pk.longValue() == 0) {
+			if (pk == null || pk.intValue() == 0) {
 				map.put(i, entity);
 			} else {
 				pks[i] = pk;
+				maxPk = pk.intValue() > maxPk.intValue() ? pk : maxPk;
 			}
 		}
 		if (!map.isEmpty()) {
@@ -116,9 +117,12 @@ public class JdbcUpdateImpl implements IShardingUpdate {
 					throw new DBOperationException(e);
 				}
 				pks[pos] = newPks[i];
+				maxPk = newPks[i] > maxPk.intValue() ? newPks[i] : maxPk;
 				i++;
 			}
 		}
+
+		this.idGenerator.checkAndSet(maxPk.longValue(), clusterName, tableName);
 
 		Connection conn = null;
 		try {
@@ -233,6 +237,8 @@ public class JdbcUpdateImpl implements IShardingUpdate {
 			}
 		}
 
+		this.idGenerator.checkAndSet(pk.longValue(), shardingKey.getClusterName(), tableName);
+
 		DB db = _getDbFromMaster(tableName, shardingKey);
 
 		List<Object> entities = new ArrayList<Object>(1);
@@ -270,7 +276,7 @@ public class JdbcUpdateImpl implements IShardingUpdate {
 
 		// 如果主键为0，则设置主键
 		Map<Number, Object> map = new HashMap<Number, Object>(entitySize);
-		Number pk = null;
+		Number pk = null, maxPk = 0;
 		Object entity = null;
 		for (int i = 0; i < entitySize; i++) {
 			entity = entities.get(i);
@@ -279,6 +285,7 @@ public class JdbcUpdateImpl implements IShardingUpdate {
 				map.put(i, entity);
 			} else {
 				pks[i] = pk;
+				maxPk = pk.intValue() > maxPk.intValue() ? pk : maxPk;
 			}
 		}
 		if (!map.isEmpty()) {
@@ -292,9 +299,12 @@ public class JdbcUpdateImpl implements IShardingUpdate {
 					throw new DBOperationException(e);
 				}
 				pks[pos] = newPks[i];
+				maxPk = newPks[i] > maxPk.intValue() ? newPks[i] : maxPk;
 				i++;
 			}
 		}
+
+		this.idGenerator.checkAndSet(maxPk.longValue(), db.getClusterName(), tableName);
 
 		Connection conn = null;
 		try {

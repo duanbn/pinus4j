@@ -113,7 +113,7 @@ public class BaseTest {
 		return testEntity;
 	}
 
-	@Test
+//	@Test
 	public void genData() throws Exception {
 		List<TestEntity> dataList = new ArrayList<TestEntity>(3000);
 		int i = 0;

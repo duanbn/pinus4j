@@ -2,7 +2,6 @@ package org.pinus.api;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import junit.framework.Assert;
 
@@ -18,8 +17,7 @@ public class ShardingTaskTest extends BaseTest {
 
 	private Number[] pks;
 
-	private IShardingKey<Integer> moreKey = new ShardingKey<Integer>(
-			CLUSTER_KLSTORAGE, 1);
+	private IShardingKey<Integer> moreKey = new ShardingKey<Integer>(CLUSTER_KLSTORAGE, 1);
 
 	private List<TestEntity> entities;
 
@@ -73,9 +71,9 @@ public class ShardingTaskTest extends BaseTest {
 		System.out.println(future);
 	}
 
-	public static class SimpleShardingTask implements ITask<TestEntity> {
+	public static class SimpleShardingTask extends AbstractTask<TestEntity> {
 		@Override
-		public void doTask(List<TestEntity> entity, TaskCollector collector) {
+		public void doTask(List<TestEntity> entity) {
 		}
 	}
 

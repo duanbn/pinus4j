@@ -50,6 +50,7 @@ public class ShardingStorageTest extends BaseTest {
 			entity.setTestString("i am pinus");
 			entities.add(entity);
 		}
+		entities.get(0).setId(r.nextInt(100000000));
 		pks = cacheClient.saveBatch(entities, moreKey);
 		// check save more
 		entities = cacheClient.findByPks(moreKey, TestEntity.class, pks);

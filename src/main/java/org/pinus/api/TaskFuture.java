@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.pinus.exception.TaskException;
 import org.pinus.util.ThreadPool;
 
 /**
@@ -31,25 +32,25 @@ public class TaskFuture {
 	 */
 	private AtomicLong count = new AtomicLong(0);
 
-    /**
-     * 数据收集器
-     */
-    private TaskCollector collector;
-
 	/**
 	 * 执行处理的线程池
 	 */
 	private ThreadPool threadPool;
 
-	public TaskFuture(long total, ThreadPool threadPool) {
+	/**
+	 * 被执行的任务
+	 */
+	private ITask task;
+
+	public TaskFuture(long total, ThreadPool threadPool, ITask task) {
 		this.total = total;
 
 		this.cdl = new CountDownLatch((int) total);
 
 		this.threadPool = threadPool;
 
-        // 初始化任务收集器
-        this.collector = new TaskCollector();
+		// 当前执行的任务引用.
+		this.task = task;
 	}
 
 	public String getProgress() {
@@ -74,6 +75,12 @@ public class TaskFuture {
 		} finally {
 			// 关闭线程池
 			this.threadPool.shutdown();
+		}
+
+		try {
+			this.task.finish();
+		} catch (Exception e) {
+			throw new TaskException(e);
 		}
 	}
 
@@ -100,8 +107,4 @@ public class TaskFuture {
 		return "TaskFuture [total=" + total + ", cdl=" + cdl + ", count=" + count + "]";
 	}
 
-    public TaskCollector getCollector() {
-        return collector;
-    }
-    
 }

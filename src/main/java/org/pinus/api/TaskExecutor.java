@@ -14,6 +14,7 @@ import org.pinus.datalayer.iterator.GlobalRecordIterator;
 import org.pinus.datalayer.iterator.ShardingRecordIterator;
 import org.pinus.exception.DBClusterException;
 import org.pinus.exception.DBOperationException;
+import org.pinus.exception.TaskException;
 import org.pinus.util.ReflectUtil;
 import org.pinus.util.ThreadPool;
 import org.slf4j.Logger;
@@ -55,6 +56,13 @@ public class TaskExecutor<E> {
 	}
 
 	public TaskFuture execute(ITask<E> task, IQuery query) {
+		// 初始化任务.
+		try {
+			task.init();
+		} catch (Exception e) {
+			throw new TaskException(e);
+		}
+
 		// 创建线程池.
 		ThreadPool threadPool = ThreadPool.newInstance(THREADPOOL_NAME);
 
@@ -63,7 +71,7 @@ public class TaskExecutor<E> {
 		String clusterName = ReflectUtil.getClusterName(clazz);
 
 		IRecordIterator<E> reader = null;
-		if (ReflectUtil.isShardingEntity(clazz)) {
+		if (ReflectUtil.isShardingEntity(clazz)) { // 分片情况
 			List<DB> dbs = this.dbCluster.getAllMasterShardingDB(clazz);
 
 			List<IRecordIterator<E>> readers = new ArrayList<IRecordIterator<E>>(dbs.size());
@@ -77,12 +85,12 @@ public class TaskExecutor<E> {
 				total += reader.getCount();
 			}
 
-			future = new TaskFuture(total, threadPool);
+			future = new TaskFuture(total, threadPool, task);
 
 			for (IRecordIterator<E> r : readers) {
 				threadPool.submit(new RecrodReaderThread<E>(r, threadPool, task, future));
 			}
-		} else {
+		} else { // 全局情况
 			RecrodThread<E> rt = null;
 
 			DBConnectionInfo dbConnInfo;
@@ -94,7 +102,7 @@ public class TaskExecutor<E> {
 			reader = new GlobalRecordIterator<E>(dbConnInfo, clazz);
 			reader.setQuery(query);
 
-			future = new TaskFuture(reader.getCount(), threadPool);
+			future = new TaskFuture(reader.getCount(), threadPool, task);
 
 			while (reader.hasNext()) {
 				List<E> record = reader.nextMore();
@@ -106,6 +114,13 @@ public class TaskExecutor<E> {
 		return future;
 	}
 
+	/**
+	 * 只是在数据分片情况下会被使用.
+	 * 
+	 * @author duanbn
+	 *
+	 * @param <E>
+	 */
 	public static class RecrodReaderThread<E> implements Runnable {
 
 		private IRecordIterator<E> recordReader;
@@ -136,6 +151,13 @@ public class TaskExecutor<E> {
 
 	}
 
+	/**
+	 * 具体执行任务方法.
+	 * 
+	 * @author duanbn
+	 *
+	 * @param <E>
+	 */
 	public static class RecrodThread<E> implements Runnable {
 
 		public static final Logger LOG = LoggerFactory.getLogger(RecrodThread.class);
@@ -155,7 +177,7 @@ public class TaskExecutor<E> {
 		@Override
 		public void run() {
 			try {
-				this.task.doTask(record, this.future.getCollector());
+				this.task.doTask(record);
 			} catch (Exception e) {
 				LOG.warn("do task failure " + record, e);
 			} finally {

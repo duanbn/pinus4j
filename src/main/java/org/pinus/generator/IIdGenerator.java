@@ -25,10 +25,22 @@ import org.pinus.exception.DBOperationException;
  */
 public interface IIdGenerator {
 
-    /**
-     * 需要关闭zookeeper的连接.
-     */
-    public void close();
+	/**
+	 * 校验给定的主键值是否比当前zookeeper中的值大, 如果大则设置为给定的主键值.
+	 * 
+	 * @param pk
+	 *            被校验的主键值
+	 * @param clusterName
+	 *            集群名
+	 * @param name
+	 *            保存主键值的node名称
+	 */
+	public void checkAndSet(long pk, String clusterName, String name);
+
+	/**
+	 * 需要关闭zookeeper的连接.
+	 */
+	public void close();
 
 	/**
 	 * 生成全局唯一的int id. 对一个数据对象的集群全局唯一id.

@@ -73,6 +73,26 @@ public abstract class AbstractSequenceIdGenerator implements IIdGenerator {
 	}
 
 	@Override
+	public synchronized void checkAndSet(long pk, String clusterName, String name) {
+		try {
+			String pkNode = Const.ZK_PRIMARYKEY + "/" + clusterName + "/" + name;
+			Stat stat = zk.exists(pkNode, false);
+			if (stat == null) {
+				// 创建根节点
+				zk.create(pkNode, String.valueOf(pk).getBytes(), ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
+			} else {
+				byte[] data = zk.getData(pkNode, false, null);
+				long currentPk = Long.parseLong(new String(data));
+				if (pk > currentPk) {
+					zk.setData(pkNode, String.valueOf(pk).getBytes(), -1);
+				}
+			}
+		} catch (Exception e) {
+			throw new DBOperationException("校验主键值失败");
+		}
+	}
+
+	@Override
 	public void close() {
 		try {
 			this.zk.close();
