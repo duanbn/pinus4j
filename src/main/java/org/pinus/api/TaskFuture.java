@@ -1,8 +1,6 @@
 package org.pinus.api;
 
 import java.text.DecimalFormat;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -40,9 +38,9 @@ public class TaskFuture {
 	/**
 	 * 被执行的任务
 	 */
-	private ITask task;
+	private ITask<?> task;
 
-	public TaskFuture(long total, ThreadPool threadPool, ITask task) {
+	public TaskFuture(long total, ThreadPool threadPool, ITask<?> task) {
 		this.total = total;
 
 		this.cdl = new CountDownLatch((int) total);

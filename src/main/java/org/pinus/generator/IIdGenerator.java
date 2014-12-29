@@ -35,7 +35,7 @@ public interface IIdGenerator {
 	 * @param name
 	 *            保存主键值的node名称
 	 */
-	public void checkAndSet(long pk, String clusterName, String name);
+	public void checkAndSetPrimaryKey(long pk, String clusterName, String name);
 
 	/**
 	 * 需要关闭zookeeper的连接.
@@ -47,8 +47,8 @@ public interface IIdGenerator {
 	 * 
 	 * @param dbCluster
 	 *            生成全局唯一id的数据库集群
-	 * @param clusterName
-	 *            数据库集群名
+	 * @param zkPath
+	 *            zookeeper目录
 	 * @param name
 	 *            id生成的名字
 	 * 
@@ -57,15 +57,15 @@ public interface IIdGenerator {
 	 * @throws DBOperationException
 	 *             生成id失败
 	 */
-	public int genClusterUniqueIntId(String clusterName, String name);
+	public int genClusterUniqueIntId(String zkPath, String name);
 
 	/**
 	 * 生成全局唯一的long id. 对一个数据对象的集群全局唯一id.
 	 * 
 	 * @param dbCluster
 	 *            生成全局唯一id的数据库集群
-	 * @param clusterName
-	 *            数据库集群名
+	 * @param zkPath
+	 *            zookeeper目录
 	 * @param name
 	 *            id生成的名字
 	 * 
@@ -74,34 +74,34 @@ public interface IIdGenerator {
 	 * @throws DBOperationException
 	 *             生成id失败
 	 */
-	public long genClusterUniqueLongId(String clusterName, String name);
+	public long genClusterUniqueLongId(String zkPath, String name);
 
 	/**
 	 * 批量生成全局唯一主键.
 	 * 
 	 * @param dbCluster
 	 *            生成全局唯一id的数据库集群
-	 * @param clusterName
-	 *            数据库集群名
+	 * @param zkPath
+	 *            zookeeper目录
 	 * @param name
 	 *            id生成的名字
 	 * @param batchSize
 	 *            批量数
 	 */
-	public long[] genClusterUniqueLongIdBatch(String clusterName, String name, int batchSize);
+	public long[] genClusterUniqueLongIdBatch(String zkPath, String name, int batchSize);
 
 	/**
 	 * 批量生成全局唯一主键.
 	 * 
 	 * @param dbCluster
 	 *            生成全局唯一id的数据库集群
-	 * @param clusterName
-	 *            数据库集群名
+	 * @param zkPath
+	 *            zookeeper目录
 	 * @param name
 	 *            id生成的名字
 	 * @param batchSize
 	 *            批量数
 	 */
-	public int[] genClusterUniqueIntIdBatch(String clusterName, String name, int batchSize);
+	public int[] genClusterUniqueIntIdBatch(String zkPath, String name, int batchSize);
 
 }

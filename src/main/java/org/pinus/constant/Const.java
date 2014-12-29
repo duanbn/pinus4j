@@ -35,6 +35,10 @@ public class Const {
 	 * id生成器根目录. 每一个表的id当前id保存在此目录下相关文件.
 	 */
 	public static final String ZK_PRIMARYKEY = ZK_ROOT + "/primarykey";
+	/**
+	 * 序列号生成器
+	 */
+	public static final String ZK_SEQUENCE = ZK_ROOT + "/sequence";
 
 	/**
 	 * 分布式锁目录

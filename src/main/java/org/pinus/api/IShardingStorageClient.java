@@ -658,7 +658,7 @@ public interface IShardingStorageClient {
 	 *             输入参数错误
 	 */
 	public <T> List<T> findByPks(IShardingKey<?> shardingKey, Class<T> clazz, Number... pks);
-	
+
 	public <T> List<T> findByPks(IShardingKey<?> shardingKey, Class<T> clazz, boolean useCache, Number... pks);
 
 	/**
@@ -682,7 +682,7 @@ public interface IShardingStorageClient {
 	 */
 	public <T> List<T> findByPks(IShardingKey<?> shardingKey, Class<T> clazz, EnumDBMasterSlave masterSlave,
 			Number... pks);
-	
+
 	public <T> List<T> findByPks(IShardingKey<?> shardingKey, Class<T> clazz, EnumDBMasterSlave masterSlave,
 			boolean useCache, Number... pks);
 
@@ -940,17 +940,14 @@ public interface IShardingStorageClient {
 	/**
 	 * 生成全局唯一的int id. 对一个数据对象的集群全局唯一id.
 	 * 
-	 * @param clusterName
-	 *            数据库集群名
-	 * @param clazz
-	 *            数据对象class
+	 * @param name
 	 * 
 	 * @return 单个数据对象的集群全局唯一id
 	 * 
 	 * @throws DBOperationException
 	 *             生成id失败
 	 */
-	public int genClusterUniqueIntId(String clusterName, String name);
+	public int genClusterUniqueIntId(String name);
 
 	/**
 	 * 生成全局唯一的long id. 对一个数据对象的集群全局唯一id.
@@ -965,7 +962,7 @@ public interface IShardingStorageClient {
 	 * @throws DBOperationException
 	 *             生成id失败
 	 */
-	public long genClusterUniqueLongId(String clusterName, String name);
+	public long genClusterUniqueLongId(String name);
 
 	/**
 	 * 批量生成全局唯一主键.
@@ -977,7 +974,7 @@ public interface IShardingStorageClient {
 	 * @param batchSize
 	 *            批量数
 	 */
-	public long[] genClusterUniqueLongIdBatch(String clusterName, String name, int batchSize);
+	public long[] genClusterUniqueLongIdBatch(String name, int batchSize);
 
 	/**
 	 * 批量生成全局唯一主键.
@@ -989,7 +986,7 @@ public interface IShardingStorageClient {
 	 * @param batchSize
 	 *            批量数
 	 */
-	public int[] genClusterUniqueIntIdBatch(String clusterName, String name, int batchSize);
+	public int[] genClusterUniqueIntIdBatch(String name, int batchSize);
 
 	/**
 	 * 创建一个查询条件对象.

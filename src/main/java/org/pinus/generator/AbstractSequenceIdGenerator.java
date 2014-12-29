@@ -73,7 +73,7 @@ public abstract class AbstractSequenceIdGenerator implements IIdGenerator {
 	}
 
 	@Override
-	public synchronized void checkAndSet(long pk, String clusterName, String name) {
+	public synchronized void checkAndSetPrimaryKey(long pk, String clusterName, String name) {
 		try {
 			String pkNode = Const.ZK_PRIMARYKEY + "/" + clusterName + "/" + name;
 			Stat stat = zk.exists(pkNode, false);
@@ -202,7 +202,7 @@ public abstract class AbstractSequenceIdGenerator implements IIdGenerator {
 		try {
 			lock.lock();
 
-			String clusterNode = Const.ZK_PRIMARYKEY + "/" + clusterName;
+			String clusterNode = clusterName;
 			Stat stat = zk.exists(clusterNode, false);
 			if (stat == null) {
 				// 创建根节点

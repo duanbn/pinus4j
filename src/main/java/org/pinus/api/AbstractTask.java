@@ -10,12 +10,12 @@ package org.pinus.api;
 public abstract class AbstractTask<T> implements ITask<T> {
 
 	@Override
-	public void init() {
+	public void init() throws Exception {
 		// do noting, override by subclass
 	}
 
 	@Override
-	public void finish() {
+	public void finish() throws Exception {
 		// do noting, override by subclass
 	}
 

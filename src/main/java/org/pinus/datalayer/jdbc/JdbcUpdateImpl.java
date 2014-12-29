@@ -31,6 +31,7 @@ import org.pinus.cache.ISecondCache;
 import org.pinus.cluster.DB;
 import org.pinus.cluster.IDBCluster;
 import org.pinus.cluster.beans.DBConnectionInfo;
+import org.pinus.constant.Const;
 import org.pinus.datalayer.IShardingUpdate;
 import org.pinus.datalayer.SQLBuilder;
 import org.pinus.exception.DBClusterException;
@@ -107,7 +108,8 @@ public class JdbcUpdateImpl implements IShardingUpdate {
 			}
 		}
 		if (!map.isEmpty()) {
-			int[] newPks = this.idGenerator.genClusterUniqueIntIdBatch(clusterName, tableName, map.size());
+			int[] newPks = this.idGenerator.genClusterUniqueIntIdBatch(Const.ZK_PRIMARYKEY + "/" + clusterName,
+					tableName, map.size());
 			int i = 0;
 			for (Map.Entry<Number, Object> entry : map.entrySet()) {
 				int pos = entry.getKey().intValue();
@@ -122,7 +124,7 @@ public class JdbcUpdateImpl implements IShardingUpdate {
 			}
 		}
 
-		this.idGenerator.checkAndSet(maxPk.longValue(), clusterName, tableName);
+		this.idGenerator.checkAndSetPrimaryKey(maxPk.longValue(), clusterName, tableName);
 
 		Connection conn = null;
 		try {
@@ -229,7 +231,8 @@ public class JdbcUpdateImpl implements IShardingUpdate {
 		// set primary key.
 		Number pk = ReflectUtil.getPkValue(entity);
 		if (pk == null || pk.intValue() == 0) {
-			pk = this.idGenerator.genClusterUniqueLongId(shardingKey.getClusterName(), tableName);
+			pk = this.idGenerator.genClusterUniqueLongId(Const.ZK_PRIMARYKEY + "/" + shardingKey.getClusterName(),
+					tableName);
 			try {
 				ReflectUtil.setPkValue(entity, pk);
 			} catch (Exception e) {
@@ -237,7 +240,7 @@ public class JdbcUpdateImpl implements IShardingUpdate {
 			}
 		}
 
-		this.idGenerator.checkAndSet(pk.longValue(), shardingKey.getClusterName(), tableName);
+		this.idGenerator.checkAndSetPrimaryKey(pk.longValue(), shardingKey.getClusterName(), tableName);
 
 		DB db = _getDbFromMaster(tableName, shardingKey);
 
@@ -289,7 +292,8 @@ public class JdbcUpdateImpl implements IShardingUpdate {
 			}
 		}
 		if (!map.isEmpty()) {
-			int[] newPks = this.idGenerator.genClusterUniqueIntIdBatch(db.getClusterName(), tableName, map.size());
+			int[] newPks = this.idGenerator.genClusterUniqueIntIdBatch(Const.ZK_PRIMARYKEY + "/" + db.getClusterName(),
+					tableName, map.size());
 			int i = 0;
 			for (Map.Entry<Number, Object> entry : map.entrySet()) {
 				int pos = entry.getKey().intValue();
@@ -304,7 +308,7 @@ public class JdbcUpdateImpl implements IShardingUpdate {
 			}
 		}
 
-		this.idGenerator.checkAndSet(maxPk.longValue(), db.getClusterName(), tableName);
+		this.idGenerator.checkAndSetPrimaryKey(maxPk.longValue(), db.getClusterName(), tableName);
 
 		Connection conn = null;
 		try {

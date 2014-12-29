@@ -1000,23 +1000,23 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 	}
 
 	@Override
-	public int genClusterUniqueIntId(String clusterName, String name) {
-		return this.idGenerator.genClusterUniqueIntId(clusterName, name);
+	public int genClusterUniqueIntId(String name) {
+		return this.idGenerator.genClusterUniqueIntId(Const.ZK_SEQUENCE, name);
 	}
 
 	@Override
-	public long genClusterUniqueLongId(String clusterName, String name) {
-		return this.idGenerator.genClusterUniqueLongId(clusterName, name);
+	public long genClusterUniqueLongId(String name) {
+		return this.idGenerator.genClusterUniqueLongId(Const.ZK_SEQUENCE, name);
 	}
 
 	@Override
-	public long[] genClusterUniqueLongIdBatch(String clusterName, String name, int batchSize) {
-		return this.idGenerator.genClusterUniqueLongIdBatch(clusterName, name, batchSize);
+	public long[] genClusterUniqueLongIdBatch(String name, int batchSize) {
+		return this.idGenerator.genClusterUniqueLongIdBatch(Const.ZK_SEQUENCE, name, batchSize);
 	}
 
 	@Override
-	public int[] genClusterUniqueIntIdBatch(String clusterName, String name, int batchSize) {
-		return this.idGenerator.genClusterUniqueIntIdBatch(clusterName, name, batchSize);
+	public int[] genClusterUniqueIntIdBatch(String name, int batchSize) {
+		return this.idGenerator.genClusterUniqueIntIdBatch(Const.ZK_SEQUENCE, name, batchSize);
 	}
 
 	@Override

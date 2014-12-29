@@ -7,6 +7,7 @@ import java.util.Set;
 
 import org.junit.Test;
 import org.pinus.BaseTest;
+import org.pinus.constant.Const;
 import org.pinus.generator.IIdGenerator;
 
 public class IdSequnceGeneratorImplTest extends BaseTest {
@@ -20,11 +21,13 @@ public class IdSequnceGeneratorImplTest extends BaseTest {
 	public void testBatchGen() throws Exception {
 		IIdGenerator idGenerator = cacheClient.getIdGenerator();
 
-		int[] intIds = idGenerator.genClusterUniqueIntIdBatch(CLUSTER_KLSTORAGE, TABLE_NAME, 10);
+		int[] intIds = idGenerator.genClusterUniqueIntIdBatch(Const.ZK_PRIMARYKEY + "/" + CLUSTER_KLSTORAGE,
+				TABLE_NAME, 10);
 		for (int i = 0; i < intIds.length; i++) {
 			System.out.print(intIds[i] + " ");
 		}
-		long[] longIds = idGenerator.genClusterUniqueLongIdBatch(CLUSTER_KLSTORAGE, TABLE_NAME, 10);
+		long[] longIds = idGenerator.genClusterUniqueLongIdBatch(Const.ZK_PRIMARYKEY + "/" + CLUSTER_KLSTORAGE,
+				TABLE_NAME, 10);
 		for (int i = 0; i < longIds.length; i++) {
 			System.out.print(longIds[i] + " ");
 		}
@@ -35,7 +38,8 @@ public class IdSequnceGeneratorImplTest extends BaseTest {
 		IIdGenerator idGenerator = cacheClient.getIdGenerator();
 
 		for (int i = 0; i < 10; i++) {
-			System.out.println(idGenerator.genClusterUniqueLongId(CLUSTER_KLSTORAGE, "test_entity"));
+			System.out.println(idGenerator.genClusterUniqueLongId(Const.ZK_PRIMARYKEY + "/" + CLUSTER_KLSTORAGE,
+					"test_entity"));
 		}
 	}
 
@@ -69,8 +73,9 @@ public class IdSequnceGeneratorImplTest extends BaseTest {
 
 		public void run() {
 			for (int i = 0; i < 10; i++) {
-				int id = idGen.genClusterUniqueIntId(CLUSTER_KLSTORAGE, "test_entity");
-				long lId = idGen.genClusterUniqueLongId(CLUSTER_KLSTORAGE, "testglobalentity");
+				int id = idGen.genClusterUniqueIntId(Const.ZK_PRIMARYKEY + "/" + CLUSTER_KLSTORAGE, "test_entity");
+				long lId = idGen.genClusterUniqueLongId(Const.ZK_PRIMARYKEY + "/" + CLUSTER_KLSTORAGE,
+						"testglobalentity");
 				ids.add(id);
 				longIds.add(lId);
 			}
