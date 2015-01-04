@@ -28,4 +28,11 @@ public interface ITask<T> {
 	 */
 	public void finish() throws Exception;
 
+	/**
+	 * 设置批处理一次读取的记录条数
+	 * 
+	 * @return
+	 */
+	public int taskBuffer();
+
 }

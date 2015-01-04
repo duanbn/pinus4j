@@ -35,4 +35,11 @@ public interface IRecordIterator<E> extends Iterator<E> {
 	 */
 	public void setQuery(IQuery query);
 
+	/**
+	 * 设置批量读取记录的条数
+	 * 
+	 * @param step
+	 */
+	public void setStep(int step);
+
 }

@@ -18,5 +18,10 @@ public abstract class AbstractTask<T> implements ITask<T> {
 	public void finish() throws Exception {
 		// do noting, override by subclass
 	}
+	
+	@Override
+	public int taskBuffer() {
+		return 0;
+	}
 
 }

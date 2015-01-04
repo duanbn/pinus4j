@@ -72,14 +72,14 @@ public class ShardingRecordIterator<E> extends AbstractRecordIterator<E> {
 	public boolean hasNext() {
 		if (this.recordQ.isEmpty()) {
 			IQuery query = this.query.clone();
-			long high = this.latestId + STEP;
+			long high = this.latestId + step;
 			query.add(Condition.gte(pkName, latestId)).add(Condition.lt(pkName, high));
 			List<E> recrods = selectByQuery(db, query, clazz);
 			this.latestId = high;
 
 			while (recrods.isEmpty() && this.latestId < maxId) {
 				query = this.query.clone();
-				high = this.latestId + STEP;
+				high = this.latestId + step;
 				query.add(Condition.gte(pkName, this.latestId)).add(Condition.lt(pkName, high));
 				recrods = selectByQuery(db, query, clazz);
 				this.latestId = high;

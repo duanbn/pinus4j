@@ -48,7 +48,9 @@ public class GlobalTaskTest extends BaseTest {
 		ITask<TestGlobalEntity> task = new SimpleGlobalTask();
 
 		TaskFuture future = cacheClient.submit(task, TestGlobalEntity.class);
-		future.await();
+		while (!future.isDone()) {
+			System.out.println(future.getProgress());
+		}
 
 		System.out.println(future);
 	}

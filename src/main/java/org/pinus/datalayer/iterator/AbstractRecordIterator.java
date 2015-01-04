@@ -19,6 +19,8 @@ import org.pinus.util.ReflectUtil;
  *
  */
 public abstract class AbstractRecordIterator<E> extends AbstractJdbcQuery implements IRecordIterator<E> {
+	
+	public static final int STEP = 5000;
 
 	protected Class<E> clazz;
 
@@ -27,7 +29,7 @@ public abstract class AbstractRecordIterator<E> extends AbstractJdbcQuery implem
 	protected IQuery query;
 
 	protected Queue<E> recordQ;
-	protected static final int STEP = 5000;
+	protected int step = STEP;
 	protected long latestId = 0;
 	protected long maxId;
 
@@ -81,5 +83,14 @@ public abstract class AbstractRecordIterator<E> extends AbstractJdbcQuery implem
 	}
 
 	public abstract long getMaxId();
+
+	public int getStep() {
+		return step;
+	}
+
+	@Override
+	public void setStep(int step) {
+		this.step = step;
+	}
 
 }

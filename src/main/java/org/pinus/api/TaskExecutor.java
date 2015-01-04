@@ -80,6 +80,9 @@ public class TaskExecutor<E> {
 			long total = 0;
 			for (DB db : dbs) {
 				reader = new ShardingRecordIterator<E>(db, clazz);
+				if (task.taskBuffer() > 0) {
+					reader.setStep(task.taskBuffer());
+				}
 				reader.setQuery(query);
 				readers.add(reader);
 				total += reader.getCount();
@@ -100,6 +103,9 @@ public class TaskExecutor<E> {
 				throw new DBOperationException(e);
 			}
 			reader = new GlobalRecordIterator<E>(dbConnInfo, clazz);
+			if (task.taskBuffer() > 0) {
+				reader.setStep(task.taskBuffer());
+			}
 			reader.setQuery(query);
 
 			future = new TaskFuture(reader.getCount(), threadPool, task);
