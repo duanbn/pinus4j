@@ -1080,6 +1080,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 		// close id generator
 		this.idGenerator.close();
 
+		// close curator
 		CloseableUtils.closeQuietly(this.curatorClient);
 	}
 

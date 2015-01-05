@@ -26,11 +26,13 @@ public class IdSequnceGeneratorImplTest extends BaseTest {
 		for (int i = 0; i < intIds.length; i++) {
 			System.out.print(intIds[i] + " ");
 		}
+		System.out.println("");
 		long[] longIds = idGenerator.genClusterUniqueLongIdBatch(Const.ZK_PRIMARYKEY + "/" + CLUSTER_KLSTORAGE,
 				TABLE_NAME, 10);
 		for (int i = 0; i < longIds.length; i++) {
 			System.out.print(longIds[i] + " ");
 		}
+		System.out.println("");
 	}
 
 	@Test

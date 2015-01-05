@@ -58,6 +58,8 @@ public interface IIdGenerator {
 	 *             生成id失败
 	 */
 	public int genClusterUniqueIntId(String zkPath, String name);
+	
+	public int genClusterUniqueIntId(String zkPath, String name, long seed);
 
 	/**
 	 * 生成全局唯一的long id. 对一个数据对象的集群全局唯一id.
@@ -75,6 +77,8 @@ public interface IIdGenerator {
 	 *             生成id失败
 	 */
 	public long genClusterUniqueLongId(String zkPath, String name);
+	
+	public long genClusterUniqueLongId(String zkPath, String name, long seed);
 
 	/**
 	 * 批量生成全局唯一主键.
@@ -89,6 +93,8 @@ public interface IIdGenerator {
 	 *            批量数
 	 */
 	public long[] genClusterUniqueLongIdBatch(String zkPath, String name, int batchSize);
+	
+	public long[] genClusterUniqueLongIdBatch(String zkPath, String name, int batchSize, long seed);
 
 	/**
 	 * 批量生成全局唯一主键.
@@ -103,5 +109,7 @@ public interface IIdGenerator {
 	 *            批量数
 	 */
 	public int[] genClusterUniqueIntIdBatch(String zkPath, String name, int batchSize);
+	
+	public int[] genClusterUniqueIntIdBatch(String zkPath, String name, int batchSize, long seed);
 
 }

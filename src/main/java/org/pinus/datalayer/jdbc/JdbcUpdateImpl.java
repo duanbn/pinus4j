@@ -92,8 +92,9 @@ public class JdbcUpdateImpl implements IShardingUpdate {
 
 		int entitySize = entities.size();
 		Number[] pks = new Number[entitySize];
+		boolean isCheckPrimaryKey = true;
 
-		// 如果主键为0，则设置主键
+		// 检查插入数据的主键
 		Map<Number, Object> map = new HashMap<Number, Object>(entitySize);
 		Number pk = null, maxPk = 0;
 		Object entity = null;
@@ -107,9 +108,11 @@ public class JdbcUpdateImpl implements IShardingUpdate {
 				maxPk = pk.intValue() > maxPk.intValue() ? pk : maxPk;
 			}
 		}
+		// 如果主键为0，则设置主键
 		if (!map.isEmpty()) {
+			isCheckPrimaryKey = false;
 			int[] newPks = this.idGenerator.genClusterUniqueIntIdBatch(Const.ZK_PRIMARYKEY + "/" + clusterName,
-					tableName, map.size());
+					tableName, map.size(), maxPk.longValue());
 			int i = 0;
 			for (Map.Entry<Number, Object> entry : map.entrySet()) {
 				int pos = entry.getKey().intValue();
@@ -119,12 +122,12 @@ public class JdbcUpdateImpl implements IShardingUpdate {
 					throw new DBOperationException(e);
 				}
 				pks[pos] = newPks[i];
-				maxPk = newPks[i] > maxPk.intValue() ? newPks[i] : maxPk;
 				i++;
 			}
 		}
 
-		this.idGenerator.checkAndSetPrimaryKey(maxPk.longValue(), clusterName, tableName);
+		if (isCheckPrimaryKey)
+			this.idGenerator.checkAndSetPrimaryKey(maxPk.longValue(), clusterName, tableName);
 
 		Connection conn = null;
 		try {
@@ -228,9 +231,11 @@ public class JdbcUpdateImpl implements IShardingUpdate {
 		Class clazz = entity.getClass();
 		String tableName = ReflectUtil.getTableName(clazz);
 
+		boolean isCheckPrimaryKey = true;
 		// set primary key.
 		Number pk = ReflectUtil.getPkValue(entity);
 		if (pk == null || pk.intValue() == 0) {
+			isCheckPrimaryKey = false;
 			pk = this.idGenerator.genClusterUniqueLongId(Const.ZK_PRIMARYKEY + "/" + shardingKey.getClusterName(),
 					tableName);
 			try {
@@ -240,7 +245,8 @@ public class JdbcUpdateImpl implements IShardingUpdate {
 			}
 		}
 
-		this.idGenerator.checkAndSetPrimaryKey(pk.longValue(), shardingKey.getClusterName(), tableName);
+		if (isCheckPrimaryKey)
+			this.idGenerator.checkAndSetPrimaryKey(pk.longValue(), shardingKey.getClusterName(), tableName);
 
 		DB db = _getDbFromMaster(tableName, shardingKey);
 
@@ -276,6 +282,7 @@ public class JdbcUpdateImpl implements IShardingUpdate {
 
 		int entitySize = entities.size();
 		Number[] pks = new Number[entitySize];
+		boolean isCheckPrimaryKey = true;
 
 		// 如果主键为0，则设置主键
 		Map<Number, Object> map = new HashMap<Number, Object>(entitySize);
@@ -292,8 +299,9 @@ public class JdbcUpdateImpl implements IShardingUpdate {
 			}
 		}
 		if (!map.isEmpty()) {
+			isCheckPrimaryKey = false;
 			int[] newPks = this.idGenerator.genClusterUniqueIntIdBatch(Const.ZK_PRIMARYKEY + "/" + db.getClusterName(),
-					tableName, map.size());
+					tableName, map.size(), maxPk.longValue());
 			int i = 0;
 			for (Map.Entry<Number, Object> entry : map.entrySet()) {
 				int pos = entry.getKey().intValue();
@@ -303,12 +311,12 @@ public class JdbcUpdateImpl implements IShardingUpdate {
 					throw new DBOperationException(e);
 				}
 				pks[pos] = newPks[i];
-				maxPk = newPks[i] > maxPk.intValue() ? newPks[i] : maxPk;
 				i++;
 			}
 		}
 
-		this.idGenerator.checkAndSetPrimaryKey(maxPk.longValue(), db.getClusterName(), tableName);
+		if (isCheckPrimaryKey)
+			this.idGenerator.checkAndSetPrimaryKey(maxPk.longValue(), db.getClusterName(), tableName);
 
 		Connection conn = null;
 		try {
