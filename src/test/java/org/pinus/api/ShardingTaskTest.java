@@ -73,7 +73,7 @@ public class ShardingTaskTest extends BaseTest {
 
 	public static class SimpleShardingTask extends AbstractTask<TestEntity> {
 		@Override
-		public void doTask(List<TestEntity> entity) {
+		public void batchRecord(List<TestEntity> entity) {
 		}
 	}
 

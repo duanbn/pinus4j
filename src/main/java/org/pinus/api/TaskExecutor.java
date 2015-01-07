@@ -183,7 +183,8 @@ public class TaskExecutor<E> {
 		@Override
 		public void run() {
 			try {
-				this.task.doTask(record);
+				this.task.batchRecord(record);
+				this.task.afterBatch();
 			} catch (Exception e) {
 				LOG.warn("do task failure " + record, e);
 			} finally {

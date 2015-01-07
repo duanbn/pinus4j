@@ -69,7 +69,7 @@ public class GlobalTaskTest extends BaseTest {
 
 	public static class SimpleGlobalTask extends AbstractTask<TestGlobalEntity> {
 		@Override
-		public void doTask(List<TestGlobalEntity> entityList) {
+		public void batchRecord(List<TestGlobalEntity> entityList) {
 			for (TestGlobalEntity entity : entityList) {
 			}
 		}

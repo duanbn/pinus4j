@@ -16,13 +16,18 @@ public interface ITask<T> {
 	public void init() throws Exception;
 
 	/**
-	 * 处理数据. <b>此方法会在多线程环境下执行</b>
+	 * 一次批量读取记录. <b>此方法会在多线程环境下执行</b>
 	 * 
 	 * @param entity
-	 *            一条数据库记录.
+	 *            记录
 	 */
-	public void doTask(List<T> entity);
-
+	public void batchRecord(List<T> entity);
+	
+	/**
+	 * 一次批量读取之后执行此方法.
+	 */
+	public void afterBatch();
+	
 	/**
 	 * 本次任务完成时会调用此方法.
 	 */
