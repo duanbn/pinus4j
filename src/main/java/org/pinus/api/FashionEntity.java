@@ -77,11 +77,10 @@ public abstract class FashionEntity {
 
 		if (obj != null) {
 			update();
+			return pk;
 		} else {
 			return save();
 		}
-
-		return null;
 	}
 
 	/**
