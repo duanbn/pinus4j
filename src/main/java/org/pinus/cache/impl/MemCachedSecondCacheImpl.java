@@ -28,6 +28,7 @@ import net.spy.memcached.MemcachedClient;
 import org.pinus.api.query.IQuery;
 import org.pinus.cache.ISecondCache;
 import org.pinus.cluster.DB;
+import org.pinus.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -248,7 +249,7 @@ public class MemCachedSecondCacheImpl implements ISecondCache {
 		cacheKey.append(clusterName).append(".");
 		cacheKey.append(tableName).append(".");
 		cacheKey.append(version).append(".");
-		cacheKey.append(query.getWhereSql().hashCode());
+		cacheKey.append(SecurityUtil.md5(query.getWhereSql()));
 		return cacheKey.toString();
 	}
 
@@ -265,7 +266,7 @@ public class MemCachedSecondCacheImpl implements ISecondCache {
 		cacheKey.append(db.getTableName()).append(db.getTableIndex());
 		cacheKey.append(".");
 		cacheKey.append(version).append(".");
-		cacheKey.append(query.getWhereSql().hashCode());
+		cacheKey.append(SecurityUtil.md5(query.getWhereSql()));
 		return cacheKey.toString();
 	}
 
