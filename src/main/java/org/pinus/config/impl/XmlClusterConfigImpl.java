@@ -30,6 +30,8 @@ import org.apache.zookeeper.ZooKeeper;
 import org.apache.zookeeper.ZooKeeper.States;
 import org.pinus.api.enums.EnumDBMasterSlave;
 import org.pinus.api.enums.EnumDbConnectionPoolCatalog;
+import org.pinus.cache.IPrimaryCache;
+import org.pinus.cache.ISecondCache;
 import org.pinus.cluster.beans.AppDBConnectionInfo;
 import org.pinus.cluster.beans.DBClusterInfo;
 import org.pinus.cluster.beans.DBClusterRegionInfo;
@@ -47,9 +49,15 @@ import org.slf4j.LoggerFactory;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-public class XmlDBClusterConfigImpl implements IClusterConfig, Watcher {
+/**
+ * xml config implements.
+ *
+ * @author duanbn
+ * @since 0.1
+ */
+public class XmlClusterConfigImpl implements IClusterConfig {
 
-	public static final Logger LOG = LoggerFactory.getLogger(XmlDBClusterConfigImpl.class);
+	public static final Logger LOG = LoggerFactory.getLogger(XmlClusterConfigImpl.class);
 
 	/**
 	 * 数据库连接方式. 从应用加载连接，或者从容器加载连接.
@@ -66,6 +74,15 @@ public class XmlDBClusterConfigImpl implements IClusterConfig, Watcher {
 	 */
 	private static HashAlgoEnum hashAlgo;
 
+	private static boolean isCacheEnabled;
+	private static Class<IPrimaryCache> primaryCacheClass;
+	private static int primaryCacheExpire;
+	private static String primaryCacheAddress;
+
+	private static Class<ISecondCache> secondCacheClass;
+	private static int secondCacheExpire;
+	private static String secondCacheAddress;
+
 	/**
 	 * DB集群信息.
 	 */
@@ -80,27 +97,36 @@ public class XmlDBClusterConfigImpl implements IClusterConfig, Watcher {
 	private CountDownLatch connectedLatch = new CountDownLatch(1);
 	private int sessionTimeout = 30000;
 
-	private XmlDBClusterConfigImpl() throws LoadConfigException {
+	private XmlClusterConfigImpl() throws LoadConfigException {
 		this(null);
 	}
 
-	private XmlDBClusterConfigImpl(String xmlFilePath) throws LoadConfigException {
+	private XmlClusterConfigImpl(String xmlFilePath) throws LoadConfigException {
 		if (StringUtils.isBlank(xmlFilePath))
 			xmlUtil = XmlUtil.getInstance();
 		else
 			xmlUtil = XmlUtil.getInstance(new File(xmlFilePath));
 
+		Node root = xmlUtil.getRoot();
+		if (root == null) {
+			throw new LoadConfigException("can not found root node");
+		}
+
 		try {
-			// 加载id生成器
-			_loadIdGeneratorBatch();
+			// load id generator
+			_loadIdGeneratorBatch(root);
 
-			// 加载zookeeper
-			_loadZkUrl();
+			// load zookeeper url
+			_loadZkUrl(root);
 
-			// 加载hash algo
-			_loadHashAlgo();
+			// load hash algo
+			_loadHashAlgo(root);
 
-			_loadDBClusterInfo();
+			// load cluster info
+			_loadDBClusterInfo(root);
+
+			// load cache info
+			_loadCacheInfo(root);
 		} catch (Exception e) {
 			throw new LoadConfigException(e);
 		}
@@ -108,35 +134,9 @@ public class XmlDBClusterConfigImpl implements IClusterConfig, Watcher {
 	}
 
 	/**
-	 * zookeeper节点的监视器
+	 * load db.cluster.generateid.batch.
 	 */
-	public void process(WatchedEvent event) {
-		if (event.getState() == KeeperState.SyncConnected) {
-			connectedLatch.countDown();
-		}
-	}
-
-	@Override
-	public ZooKeeper getZooKeeper() {
-		// 创建zookeeper连接
-		try {
-			ZooKeeper zk = new ZooKeeper(this.zkUrl, sessionTimeout, this);
-			if (States.CONNECTING == zk.getState()) {
-				connectedLatch.await();
-			}
-
-			return zk;
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	private void _loadIdGeneratorBatch() throws LoadConfigException {
-		Node root = xmlUtil.getRoot();
-		if (root == null) {
-			throw new LoadConfigException("找不到root节点");
-		}
-
+	private void _loadIdGeneratorBatch(Node root) throws LoadConfigException {
 		Node idGeneratorBatchNode = xmlUtil.getFirstChildByName(root, Const.PROP_IDGEN_BATCH);
 		try {
 			idGenerateBatch = Integer.parseInt(idGeneratorBatchNode.getTextContent().trim());
@@ -145,26 +145,25 @@ public class XmlDBClusterConfigImpl implements IClusterConfig, Watcher {
 		}
 	}
 
-	private void _loadZkUrl() throws LoadConfigException {
-		Node root = xmlUtil.getRoot();
-		if (root == null) {
-			throw new LoadConfigException("找不到root节点");
-		}
-
+	/**
+	 * load db.cluster.zk.
+	 */
+	private void _loadZkUrl(Node root) throws LoadConfigException {
 		Node zkUrlNode = xmlUtil.getFirstChildByName(root, Const.PROP_ZK_URL);
 		zkUrl = zkUrlNode.getTextContent().trim();
 	}
 
-	private void _loadHashAlgo() throws LoadConfigException {
-		Node root = xmlUtil.getRoot();
-		if (root == null) {
-			throw new LoadConfigException("找不到root节点");
-		}
-
+	/**
+	 * load db.cluster.hash.algo.
+	 */
+	private void _loadHashAlgo(Node root) throws LoadConfigException {
 		Node hashAlgoNode = xmlUtil.getFirstChildByName(root, Const.PROP_HASH_ALGO);
 		hashAlgo = HashAlgoEnum.getEnum(hashAlgoNode.getTextContent().trim());
 	}
 
+	/**
+	 * load db-connection-pool
+	 */
 	private Map<String, Object> _loadDbConnectInfo(Node connPoolNode) throws LoadConfigException {
 		Map<String, Object> map = new HashMap<String, Object>();
 
@@ -231,6 +230,9 @@ public class XmlDBClusterConfigImpl implements IClusterConfig, Watcher {
 		return capacity;
 	}
 
+	/**
+	 * load cluster
+	 */
 	private DBConnectionInfo _getDBConnInfo(String clusterName, Node node, EnumDBMasterSlave masterSlave)
 			throws LoadConfigException {
 		DBConnectionInfo dbConnInfo = null;
@@ -366,12 +368,7 @@ public class XmlDBClusterConfigImpl implements IClusterConfig, Watcher {
 		return dbClusterInfo;
 	}
 
-	private void _loadDBClusterInfo() throws LoadConfigException {
-		Node root = xmlUtil.getRoot();
-		if (root == null) {
-			throw new LoadConfigException("找不到root节点");
-		}
-
+	private void _loadDBClusterInfo(Node root) throws LoadConfigException {
 		List<Node> clusterNodeList = xmlUtil.getChildByName(root, "cluster");
 
 		for (Node clusterNode : clusterNodeList) {
@@ -385,13 +382,44 @@ public class XmlDBClusterConfigImpl implements IClusterConfig, Watcher {
 		}
 	}
 
+	private void _loadCacheInfo(Node root) throws LoadConfigException {
+		Node dbClusterCacheNode = xmlUtil.getFirstChildByName(root, Const.PROP_DB_CLUSTER_CACHE);
+		if (dbClusterCacheNode == null) {
+			throw new LoadConfigException("can not found node " + Const.PROP_DB_CLUSTER_CACHE);
+		}
+
+		try {
+			String isCacheEnabled = xmlUtil.getAttributeValue(dbClusterCacheNode, "enabled");
+			if (StringUtils.isNotBlank(isCacheEnabled)) {
+				this.isCacheEnabled = Boolean.valueOf(isCacheEnabled);
+			}
+
+			if (this.isCacheEnabled) {
+				Node primaryNode = xmlUtil.getFirstChildByName(dbClusterCacheNode, Const.PROP_DB_CLUSTER_CACHE_PRIMARY);
+				primaryCacheExpire = Integer.parseInt(xmlUtil.getAttributeValue(primaryNode, "expire"));
+				primaryCacheClass = (Class<IPrimaryCache>) Class.forName(xmlUtil
+						.getAttributeValue(primaryNode, "class"));
+				Node primaryAddressNode = xmlUtil.getFirstChildByName(primaryNode, Const.PROP_DB_CLUSTER_CACHE_ADDRESS);
+				primaryCacheAddress = primaryAddressNode.getTextContent().trim();
+
+				Node secondNode = xmlUtil.getFirstChildByName(dbClusterCacheNode, Const.PROP_DB_CLUSTER_CACHE_SECOND);
+				secondCacheExpire = Integer.parseInt(xmlUtil.getAttributeValue(secondNode, "expire"));
+				secondCacheClass = (Class<ISecondCache>) Class.forName(xmlUtil.getAttributeValue(secondNode, "class"));
+				Node secondAddressNode = xmlUtil.getFirstChildByName(secondNode, Const.PROP_DB_CLUSTER_CACHE_ADDRESS);
+				secondCacheAddress = secondAddressNode.getTextContent().trim();
+			}
+		} catch (Exception e) {
+			throw new LoadConfigException("parse db.cluster.cache failure", e);
+		}
+	}
+
 	private static IClusterConfig instance;
 
 	public static IClusterConfig getInstance() throws LoadConfigException {
 		if (instance == null) {
-			synchronized (XmlDBClusterConfigImpl.class) {
+			synchronized (XmlClusterConfigImpl.class) {
 				if (instance == null) {
-					instance = new XmlDBClusterConfigImpl();
+					instance = new XmlClusterConfigImpl();
 				}
 			}
 		}
@@ -401,9 +429,9 @@ public class XmlDBClusterConfigImpl implements IClusterConfig, Watcher {
 
 	public static IClusterConfig getInstance(String xmlFilePath) throws LoadConfigException {
 		if (instance == null) {
-			synchronized (XmlDBClusterConfigImpl.class) {
+			synchronized (XmlClusterConfigImpl.class) {
 				if (instance == null) {
-					instance = new XmlDBClusterConfigImpl(xmlFilePath);
+					instance = new XmlClusterConfigImpl(xmlFilePath);
 				}
 			}
 		}
@@ -434,6 +462,41 @@ public class XmlDBClusterConfigImpl implements IClusterConfig, Watcher {
 	@Override
 	public String getZookeeperUrl() {
 		return zkUrl;
+	}
+
+	@Override
+	public boolean isCacheEnabled() {
+		return this.isCacheEnabled;
+	}
+
+	@Override
+	public String getSecondCacheAddress() {
+		return secondCacheAddress;
+	}
+
+	@Override
+	public int getSecondCacheExpire() {
+		return secondCacheExpire;
+	}
+
+	@Override
+	public Class<ISecondCache> getSecondCacheClass() {
+		return secondCacheClass;
+	}
+
+	@Override
+	public String getPrimaryCacheAddress() {
+		return primaryCacheAddress;
+	}
+
+	@Override
+	public int getPrimaryCacheExpire() {
+		return primaryCacheExpire;
+	}
+
+	@Override
+	public Class<IPrimaryCache> getPrimaryCacheClass() {
+		return primaryCacheClass;
 	}
 
 }

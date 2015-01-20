@@ -42,11 +42,30 @@ public class JdbcDataLayerBuilder implements IDataLayerBuilder {
 
 	private ISecondCache secondCache;
 
-	@Override
-	public IDataLayerBuilder setDBCluster(IDBCluster dbCluster) {
-		if (this.dbCluster != null)
-			this.dbCluster = dbCluster;
-		return this;
+    private static JdbcDataLayerBuilder instance;
+
+	private JdbcDataLayerBuilder() {
+	}
+
+	public static IDataLayerBuilder valueOf(IDBCluster dbCluster) {
+        if (instance == null) {
+            synchronized (JdbcDataLayerBuilder.class) {
+                if (instance == null) {
+                    instance = new JdbcDataLayerBuilder();
+                    instance.setDBCluster(dbCluster);
+                }
+            }
+        }
+
+        return instance;
+	}
+
+	public void setDBCluster(IDBCluster dbCluster) {
+		if (dbCluster == null) {
+			throw new IllegalArgumentException("input param should not be null");
+		}
+
+		this.dbCluster = dbCluster;
 	}
 
 	@Override

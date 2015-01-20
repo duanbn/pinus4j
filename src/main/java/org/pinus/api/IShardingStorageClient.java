@@ -915,15 +915,6 @@ public interface IShardingStorageClient {
 	public void setIdGenerator(IIdGenerator idGenerator);
 
 	/**
-	 * 设置模式. 默认情况下是单机模式, 分布式模式需要zookeeper的支持, 在storage-config.properties中配置zk
-	 * url
-	 * 
-	 * @param mode
-	 *            模式
-	 */
-	public void setMode(EnumMode mode);
-
-	/**
 	 * 获取ID生成器
 	 * 
 	 * @return ID生成器
@@ -1022,13 +1013,6 @@ public interface IShardingStorageClient {
 	public void destroy();
 
 	/**
-	 * 设置是否生成库表.
-	 * 
-	 * @param isCreateTable
-	 */
-	public void setCreateTable(boolean isCreateTable);
-
-	/**
 	 * 设置数据表同步动作.
 	 * 
 	 * @param syncAction
@@ -1041,15 +1025,5 @@ public interface IShardingStorageClient {
 	 * @param scanPackage
 	 */
 	public void setScanPackage(String scanPackage);
-
-	/**
-	 * 设置一级缓存.
-	 */
-	public void setPrimaryCache(IPrimaryCache primaryCache);
-
-	/**
-	 * 设置二级缓存.
-	 */
-	public void setSecondCache(ISecondCache secondCache);
 
 }

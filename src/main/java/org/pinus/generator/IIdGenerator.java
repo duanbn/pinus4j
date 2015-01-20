@@ -38,11 +38,6 @@ public interface IIdGenerator {
 	public void checkAndSetPrimaryKey(long pk, String clusterName, String name);
 
 	/**
-	 * 需要关闭zookeeper的连接.
-	 */
-	public void close();
-
-	/**
 	 * 生成全局唯一的int id. 对一个数据对象的集群全局唯一id.
 	 * 
 	 * @param dbCluster

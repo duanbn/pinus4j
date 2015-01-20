@@ -32,36 +32,14 @@ import org.pinus.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class MemCachedSecondCacheImpl implements ISecondCache {
+public class MemCachedSecondCacheImpl extends AbstractMemCachedCache implements ISecondCache {
 
 	/**
 	 * 日志.
 	 */
 	public static final Logger LOG = LoggerFactory.getLogger(MemCachedSecondCacheImpl.class);
 
-	/**
-	 * Spy client
-	 */
-	private MemcachedClient memClient;
-
-	/**
-	 * 过期秒数.
-	 * 
-	 * 默认30秒
-	 */
-	private int expire = 30;
-
 	private static final Random r = new Random();
-
-	/**
-	 * 默认构造方法.
-	 */
-	public MemCachedSecondCacheImpl() {
-	}
-
-	public MemCachedSecondCacheImpl(String s) {
-		this(s, 0);
-	}
 
 	/**
 	 * 构造方法.
@@ -70,33 +48,7 @@ public class MemCachedSecondCacheImpl implements ISecondCache {
 	 *            ip:port,ip:port
 	 */
 	public MemCachedSecondCacheImpl(String s, int expire) {
-		try {
-			List<InetSocketAddress> servers = new ArrayList<InetSocketAddress>();
-			String[] addresses = s.split(",");
-			InetSocketAddress socketAddress = null;
-			for (String address : addresses) {
-				String[] pair = address.split(":");
-				socketAddress = new InetSocketAddress(pair[0], Integer.parseInt(pair[1]));
-				servers.add(socketAddress);
-			}
-			this.memClient = new MemcachedClient(servers);
-		} catch (Exception e) {
-			throw new RuntimeException("连接memcached服务器失败", e);
-		}
-
-		if (expire > 0) {
-			this.expire = expire;
-		}
-	}
-
-	@Override
-	public int getExpire() {
-		return this.expire;
-	}
-
-	@Override
-	public void destroy() {
-		this.memClient.shutdown();
+        super(s, expire);
 	}
 
 	@Override

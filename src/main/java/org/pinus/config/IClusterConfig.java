@@ -20,16 +20,53 @@ import java.util.Map;
 
 import org.apache.zookeeper.ZooKeeper;
 import org.pinus.api.enums.EnumDbConnectionPoolCatalog;
+import org.pinus.cache.IPrimaryCache;
+import org.pinus.cache.ISecondCache;
 import org.pinus.cluster.beans.DBClusterInfo;
 import org.pinus.cluster.enums.HashAlgoEnum;
 
 /**
  * 存储中间件配置信息接口. 此接口提供的信息都是通过配置来获取.
- * 一个storage-config.properties中可以配置多个数据库集群，每个数据库集群又可以配置一个主库集群和多个从库集群.
+ * 一个storage-config.xml中可以配置多个数据库集群，每个数据库集群又可以配置一个主库集群和多个从库集群.
  * 
  * @author duanbn
  */
 public interface IClusterConfig {
+
+	/**
+	 * ture is enabled, false is not.
+	 */
+	public boolean isCacheEnabled();
+
+	/**
+	 * address of second cache.
+	 */
+	public String getSecondCacheAddress();
+
+	/**
+	 * expire time of second cache.
+	 */
+	public int getSecondCacheExpire();
+
+	/**
+	 * get class of second cache.
+	 */
+	public Class<ISecondCache> getSecondCacheClass();
+
+	/**
+	 * address of primary cache.
+	 */
+	public String getPrimaryCacheAddress();
+
+	/**
+	 * expire time of primary cache.
+	 */
+	public int getPrimaryCacheExpire();
+
+	/**
+	 * get class of primary cache.
+	 */
+	public Class<IPrimaryCache> getPrimaryCacheClass();
 
 	/**
 	 * 获取数据库连接方式.
@@ -44,13 +81,6 @@ public interface IClusterConfig {
 	 * @return
 	 */
 	public int getIdGeneratorBatch();
-
-	/**
-	 * 获取zookeeper客户端
-	 * 
-	 * @return
-	 */
-	public ZooKeeper getZooKeeper();
 
 	/**
 	 * 获取配置的hash算法.

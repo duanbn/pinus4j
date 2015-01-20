@@ -22,6 +22,7 @@ import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.locks.Lock;
 
+import org.apache.curator.framework.CuratorFramework;
 import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.ZooDefs;
 import org.apache.zookeeper.ZooKeeper;
@@ -52,12 +53,12 @@ public abstract class AbstractSequenceIdGenerator implements IIdGenerator {
 	private int BUFFER_SIZE;
 	private ZooKeeper zk;
 
-	public AbstractSequenceIdGenerator(IClusterConfig config) {
-		BUFFER_SIZE = config.getIdGeneratorBatch();
+	public AbstractSequenceIdGenerator(CuratorFramework curatorClient, int bufferSize) {
+		BUFFER_SIZE = bufferSize;
 
 		// 创建一个与服务器的连接
 		try {
-			this.zk = config.getZooKeeper();
+			this.zk = curatorClient.getZookeeperClient().getZooKeeper();
 			Stat stat = zk.exists(Const.ZK_PRIMARYKEY, false);
 			if (stat == null) {
 				// 创建根节点
@@ -94,15 +95,6 @@ public abstract class AbstractSequenceIdGenerator implements IIdGenerator {
 			throw new DBOperationException("校验主键值失败");
 		} finally {
 			lock.unlock();
-		}
-	}
-
-	@Override
-	public void close() {
-		try {
-			this.zk.close();
-		} catch (Exception e) {
-			LOG.warn("close zookeeper client failure");
 		}
 	}
 

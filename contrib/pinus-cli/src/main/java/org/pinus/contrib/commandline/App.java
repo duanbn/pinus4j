@@ -41,9 +41,9 @@ import org.pinus.api.enums.EnumDB;
 import org.pinus.cluster.DB;
 import org.pinus.cluster.IDBCluster;
 import org.pinus.cluster.beans.DBConnectionInfo;
-import org.pinus.cluster.beans.DBTable;
 import org.pinus.cluster.impl.AppDBClusterImpl;
 import org.pinus.exception.DBClusterException;
+import org.pinus.generator.beans.DBTable;
 
 /**
  * pinus command line application.

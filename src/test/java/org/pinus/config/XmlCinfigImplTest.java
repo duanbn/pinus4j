@@ -9,14 +9,14 @@ import org.pinus.cluster.beans.DBClusterInfo;
 import org.pinus.cluster.beans.DBClusterRegionInfo;
 import org.pinus.cluster.beans.DBConnectionInfo;
 import org.pinus.config.IClusterConfig;
-import org.pinus.config.impl.XmlDBClusterConfigImpl;
+import org.pinus.config.impl.XmlClusterConfigImpl;
 
 public class XmlCinfigImplTest extends BaseTest {
 
 	private IClusterConfig config;
 
 	public XmlCinfigImplTest() throws Exception {
-		this.config = XmlDBClusterConfigImpl.getInstance();
+		this.config = XmlClusterConfigImpl.getInstance();
 	}
 
 	@Test

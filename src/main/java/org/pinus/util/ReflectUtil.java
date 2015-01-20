@@ -24,12 +24,12 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.pinus.api.annotation.DateTime;
-import org.pinus.api.annotation.PrimaryKey;
-import org.pinus.api.annotation.Table;
-import org.pinus.api.annotation.UpdateTime;
 import org.pinus.constant.Const;
 import org.pinus.exception.DBOperationException;
+import org.pinus.generator.annotation.DateTime;
+import org.pinus.generator.annotation.PrimaryKey;
+import org.pinus.generator.annotation.Table;
+import org.pinus.generator.annotation.UpdateTime;
 
 /**
  * 反射工具类. 提供了一些简单的反射功能. 方便其他操作调用.
@@ -460,7 +460,7 @@ public class ReflectUtil {
 			value = f.get(obj);
 			Class<?> fTypeClazz = f.getType();
 
-			org.pinus.api.annotation.Field annoField = f.getAnnotation(org.pinus.api.annotation.Field.class);
+			org.pinus.generator.annotation.Field annoField = f.getAnnotation(org.pinus.generator.annotation.Field.class);
 			if (fTypeClazz == String.class && annoField != null && annoField.length() > Const.COLUMN_TEXT_LENGTH
 					&& value == null) {
 				value = "";
@@ -535,7 +535,7 @@ public class ReflectUtil {
 		for (Field f : clazz.getDeclaredFields()) {
 			if (f.getAnnotation(PrimaryKey.class) != null) {
 				mappingFields.add(f);
-			} else if (f.getAnnotation(org.pinus.api.annotation.Field.class) != null) {
+			} else if (f.getAnnotation(org.pinus.generator.annotation.Field.class) != null) {
 				mappingFields.add(f);
 			} else if (f.getAnnotation(DateTime.class) != null) {
 				mappingFields.add(f);

@@ -13,9 +13,9 @@ import org.pinus.api.enums.EnumDB;
 import org.pinus.api.enums.EnumDBMasterSlave;
 import org.pinus.cluster.DB;
 import org.pinus.cluster.IDBCluster;
-import org.pinus.cluster.beans.DBTable;
 import org.pinus.cluster.impl.AppDBClusterImpl;
 import org.pinus.entity.TestEntity;
+import org.pinus.generator.beans.DBTable;
 
 public class DBClusterTest {
 

@@ -14,28 +14,44 @@
  * limitations under the License.
  */
 
-package org.pinus.api.annotation;
+package org.pinus.generator.annotation;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
+import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-@Target(ElementType.TYPE)
+@Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
+@Inherited
 /**
- * 表示一个表的主键.
- * 一个表可以定义多个字段的索引.
+ * 字段注解
  *
  * @author duanbn
  */
-public @interface Indexes {
+public @interface Field {
 
-    /**
-     * 索引数组
-     */
-    Index[] value();
+	/**
+	 * 字段是否为null
+	 */
+	boolean isCanNull() default false;
+
+	/**
+	 * 字段长度
+	 */
+	int length() default 0;
+
+	/**
+	 * 是否有默认值
+	 */
+	boolean hasDefault() default true;
+
+	/**
+	 * 注释
+	 */
+	String comment() default "";
 
 }

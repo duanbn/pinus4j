@@ -14,34 +14,32 @@
  * limitations under the License.
  */
 
-package org.pinus.api.annotation;
+package org.pinus.generator;
 
-import java.lang.annotation.Documented;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import org.pinus.api.enums.EnumDB;
+import org.pinus.api.enums.EnumSyncAction;
 
-@Target(ElementType.TYPE)
-@Retention(RetentionPolicy.RUNTIME)
-@Documented
 /**
- * 表示一个字段的索引.
- * 如果联合索引可以使用逗号分隔多个字段
- * 例如<pre>@Index(field="fieldName1,fieldName2")</pre>
+ * db generator builder interface.
  *
  * @author duanbn
+ * @since 0.7.1
  */
-public @interface Index {
+public interface IDBGeneratorBuilder {
 
     /**
-     * 是否是唯一索引.
+     * set sync action.
      */
-    boolean isUnique() default false;
+    public void setSyncAction(EnumSyncAction syncAction);
 
     /**
-     * 需要被索引的字段
+     * set db catalog.
      */
-    String field();
-  
+    public void setDBCatalog(EnumDB enumDb);
+
+    /**
+     * create new db generator instance.
+     */
+    public IDBGenerator build();
+
 }

@@ -29,19 +29,7 @@ import org.pinus.cluster.DB;
  *
  * @author duanbn
  */
-public interface ISecondCache {
-
-	/**
-	 * 获取过期时间
-	 * 
-	 * @return
-	 */
-	public int getExpire();
-
-	/**
-	 * 销毁对象
-	 */
-	public void destroy();
+public interface ISecondCache extends ICache {
 
 	/**
 	 * 获取可以用的服务链接.

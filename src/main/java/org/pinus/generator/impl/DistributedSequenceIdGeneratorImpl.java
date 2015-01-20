@@ -42,7 +42,7 @@ public class DistributedSequenceIdGeneratorImpl extends AbstractSequenceIdGenera
 	private CuratorFramework curatorClient;
 
 	public DistributedSequenceIdGeneratorImpl(IClusterConfig config, CuratorFramework curatorClient) {
-		super(config);
+		super(curatorClient, config.getIdGeneratorBatch());
 		this.curatorClient = curatorClient;
 	}
 

@@ -14,27 +14,53 @@
  * limitations under the License.
  */
 
-package org.pinus.api.annotation;
+package org.pinus.generator.annotation;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
+import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-@Target(ElementType.FIELD)
+@Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
+@Inherited
 /**
- * 数据库时间戳.
+ * 数据表注解.
  *
  * @author duanbn
  */
-public @interface UpdateTime {
-	
+public @interface Table {
+
 	/**
-	 * 注释
+	 * 数据表名
+	 * 
+	 * @return
 	 */
-	String comment() default "";
-	
+	String name() default "";
+
+	/**
+	 * 集群名称
+	 */
+	String cluster();
+
+	/**
+	 * 基于哪个字段进行分片
+	 */
+	String shardingBy() default "";
+
+	/**
+	 * 分表数
+	 */
+	int shardingNum() default 0;
+
+	/**
+	 * 此表是否需要被缓存.
+	 * 
+	 * @return true:是， false:否
+	 */
+	boolean cache() default false;
+
 }

@@ -13,38 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package org.pinus.cache;
 
-package org.pinus.api.annotation;
-
-import java.lang.annotation.Documented;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-
-@Target(ElementType.FIELD)
-@Retention(RetentionPolicy.RUNTIME)
-@Documented
 /**
- * 数据库日期注解.
+ * build cache instance interface.
  *
  * @author duanbn
+ * @since 0.7.1
  */
-public @interface DateTime {
+public interface ICacheBuilder {
 
     /**
-     * 是否为null
+     * build primary cache.
      */
-    boolean isCanNull() default false;
+    public IPrimaryCache buildPrimaryCache();
 
     /**
-     * 是否有默认值
+     * build second cache.
      */
-    boolean hasDefault() default true;
-    
-    /**
-	 * 注释
-	 */
-	String comment() default "";
+    public ISecondCache buildSecondCache();
 
 }

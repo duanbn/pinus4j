@@ -16,52 +16,37 @@
 
 package org.pinus.api;
 
-import java.net.InetSocketAddress;
-import java.net.SocketAddress;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.locks.Lock;
 
-import org.apache.curator.framework.CuratorFramework;
-import org.apache.curator.framework.CuratorFrameworkFactory;
-import org.apache.curator.framework.recipes.locks.InterProcessMutex;
-import org.apache.curator.retry.RetryNTimes;
-import org.apache.curator.utils.CloseableUtils;
-import org.apache.zookeeper.CreateMode;
-import org.apache.zookeeper.ZooDefs;
-import org.apache.zookeeper.ZooKeeper;
-import org.apache.zookeeper.data.Stat;
 import org.pinus.api.enums.EnumDB;
 import org.pinus.api.enums.EnumDBMasterSlave;
 import org.pinus.api.enums.EnumDBRouteAlg;
 import org.pinus.api.enums.EnumDbConnectionPoolCatalog;
-import org.pinus.api.enums.EnumMode;
 import org.pinus.api.enums.EnumSyncAction;
 import org.pinus.api.query.IQuery;
 import org.pinus.api.query.QueryImpl;
-import org.pinus.cache.IPrimaryCache;
-import org.pinus.cache.ISecondCache;
 import org.pinus.cluster.IDBCluster;
 import org.pinus.cluster.impl.AppDBClusterImpl;
 import org.pinus.cluster.impl.EnvDBClusterImpl;
-import org.pinus.cluster.lock.CuratorDistributeedLock;
 import org.pinus.config.IClusterConfig;
-import org.pinus.config.impl.XmlDBClusterConfigImpl;
+import org.pinus.config.impl.XmlClusterConfigImpl;
 import org.pinus.constant.Const;
+import org.pinus.datalayer.IDataLayerBuilder;
+import org.pinus.datalayer.IGlobalMasterQuery;
+import org.pinus.datalayer.IGlobalSlaveQuery;
+import org.pinus.datalayer.IGlobalUpdate;
 import org.pinus.datalayer.IShardingMasterQuery;
 import org.pinus.datalayer.IShardingSlaveQuery;
 import org.pinus.datalayer.IShardingUpdate;
 import org.pinus.datalayer.jdbc.ShardingJdbcMasterQueryImpl;
 import org.pinus.datalayer.jdbc.ShardingJdbcSlaveQueryImpl;
-import org.pinus.datalayer.jdbc.ShardingJdbcUpdateImpl;
 import org.pinus.exception.DBClusterException;
 import org.pinus.exception.LoadConfigException;
 import org.pinus.generator.IIdGenerator;
-import org.pinus.generator.impl.DistributedSequenceIdGeneratorImpl;
-import org.pinus.generator.impl.StandaloneSequenceIdGeneratorImpl;
 import org.pinus.util.CheckUtil;
 import org.pinus.util.ReflectUtil;
 import org.pinus.util.StringUtils;
@@ -101,11 +86,6 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 	public static IShardingStorageClient instance;
 
 	/**
-	 * 运行模式. 默认是单机模式.
-	 */
-	private EnumMode mode = EnumMode.STANDALONE;
-
-	/**
 	 * 分片路由算法.
 	 */
 	private EnumDBRouteAlg enumDBRouteAlg = EnumDBRouteAlg.SIMPLE_HASH;
@@ -114,11 +94,6 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 	 * 数据库类型.
 	 */
 	private EnumDB enumDb = EnumDB.MYSQL;
-
-	/**
-	 * 是否生成数据库表. 默认是不自动生成库表
-	 */
-	private boolean isCreateTable = true;
 
 	/**
 	 * 同步数据表操作.
@@ -131,29 +106,23 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 	private String scanPackage;
 
 	/**
-	 * 数据库集群引用.
-	 */
-	private IDBCluster dbCluster;
-
-	/**
-	 * 一级缓存.
-	 */
-	private IPrimaryCache primaryCache;
-
-	/**
-	 * 二级缓存.
-	 */
-	private ISecondCache secondCache;
-
-	/**
-	 * 主键生成器. 默认使用SimpleIdGeneratorImpl生成器.
+	 * id generator.
 	 */
 	private IIdGenerator idGenerator;
 
 	/**
+	 * 数据库集群引用.
+	 */
+	private IDBCluster dbCluster;
+
+	private IGlobalUpdate globalUpdater;
+	private IGlobalMasterQuery globalMasterQuery;
+	private IGlobalSlaveQuery globalSlaveQuery;
+
+	/**
 	 * 分库分表更新实现.
 	 */
-	private IShardingUpdate updater;
+	private IShardingUpdate shardingUpdater;
 	/**
 	 * 主库查询实现.
 	 */
@@ -164,72 +133,10 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 	private IShardingSlaveQuery slaveQueryer;
 
 	/**
-	 * curator client.
-	 */
-	private CuratorFramework curatorClient;
-
-	/**
 	 * 初始化方法
 	 */
 	public void init() throws LoadConfigException {
-		IClusterConfig clusterConfig = XmlDBClusterConfigImpl.getInstance();
-
-		try {
-			// 创建zookeeper目录
-			ZooKeeper zkClient = clusterConfig.getZooKeeper();
-			Stat stat = zkClient.exists(Const.ZK_ROOT, false);
-			if (stat == null) {
-				zkClient.create(Const.ZK_ROOT, new byte[0], ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
-			}
-		} catch (Exception e) {
-			throw new IllegalStateException("初始化zookeeper根目录失败");
-		}
-
-		// 发现可用的一级缓存
-		if (this.primaryCache != null) {
-			StringBuilder memcachedAddressInfo = new StringBuilder();
-			Collection<SocketAddress> servers = this.primaryCache.getAvailableServers();
-			if (servers != null && !servers.isEmpty()) {
-				for (SocketAddress server : servers) {
-					memcachedAddressInfo.append(((InetSocketAddress) server).getAddress().getHostAddress() + ":"
-							+ ((InetSocketAddress) server).getPort());
-					memcachedAddressInfo.append(",");
-				}
-				memcachedAddressInfo.deleteCharAt(memcachedAddressInfo.length() - 1);
-				LOG.info("find primary cache, expire " + this.primaryCache.getExpire() + ", memcached server - "
-						+ memcachedAddressInfo.toString());
-			}
-		}
-		// 发现可用的二级缓存
-		if (this.secondCache != null) {
-			StringBuilder memcachedAddressInfo = new StringBuilder();
-			Collection<SocketAddress> servers = this.secondCache.getAvailableServers();
-			if (servers != null && !servers.isEmpty()) {
-				for (SocketAddress server : servers) {
-					memcachedAddressInfo.append(((InetSocketAddress) server).getAddress().getHostAddress() + ":"
-							+ ((InetSocketAddress) server).getPort());
-					memcachedAddressInfo.append(",");
-				}
-				memcachedAddressInfo.deleteCharAt(memcachedAddressInfo.length() - 1);
-				LOG.info("find second cache, expire " + this.secondCache.getExpire() + ", memcached server - "
-						+ memcachedAddressInfo.toString());
-			}
-		}
-
-		// 初始化curator framework
-		this.curatorClient = CuratorFrameworkFactory.newClient(clusterConfig.getZookeeperUrl(),
-				new RetryNTimes(5, 1000));
-		this.curatorClient.start();
-
-		// 初始化ID生成器
-		if (this.mode == EnumMode.STANDALONE) {
-			this.idGenerator = new StandaloneSequenceIdGeneratorImpl(clusterConfig);
-		} else if (this.mode == EnumMode.DISTRIBUTED) {
-			this.idGenerator = new DistributedSequenceIdGeneratorImpl(clusterConfig, this.curatorClient);
-		} else {
-			throw new IllegalStateException("运行模式设置错误, mode=" + this.mode);
-		}
-		LOG.info("init primary key generator done");
+		IClusterConfig clusterConfig = XmlClusterConfigImpl.getInstance();
 
 		EnumDbConnectionPoolCatalog enumDbCpCatalog = clusterConfig.getDbConnectionPoolCatalog();
 
@@ -248,7 +155,6 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 		// 设置路由算法.
 		this.dbCluster.setDbRouteAlg(this.enumDBRouteAlg);
 		// 设置是否生成数据库表
-		this.dbCluster.setCreateTable(this.isCreateTable);
 		this.dbCluster.setSyncAction(syncAction);
 		// 设置扫描对象的包
 		this.dbCluster.setScanPackage(this.scanPackage);
@@ -262,21 +168,14 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 		//
 		// 初始化分库分表增删改查实现.
 		//
-		this.updater = new ShardingJdbcUpdateImpl();
-		this.updater.setDBCluster(this.dbCluster);
-		this.updater.setPrimaryCache(this.primaryCache);
-		this.updater.setIdGenerator(this.idGenerator);
-		this.updater.setSecondCache(secondCache);
+		IDataLayerBuilder dataLayerBuilder = this.dbCluster.getDataLayerBuilder();
+		this.globalUpdater = dataLayerBuilder.buildGlobalUpdate(this.dbCluster.getIdGenerator());
+		this.globalMasterQuery = dataLayerBuilder.buildGlobalMasterQuery();
+		this.globalSlaveQuery = dataLayerBuilder.buildGlobalSlaveQuery();
 
+		this.shardingUpdater = dataLayerBuilder.buildShardingUpdate(this.dbCluster.getIdGenerator());
 		this.masterQueryer = new ShardingJdbcMasterQueryImpl();
-		this.masterQueryer.setDBCluster(this.dbCluster);
-		this.masterQueryer.setPrimaryCache(this.primaryCache);
-		this.masterQueryer.setSecondCache(secondCache);
-
 		this.slaveQueryer = new ShardingJdbcSlaveQueryImpl();
-		this.slaveQueryer.setDBCluster(this.dbCluster);
-		this.slaveQueryer.setPrimaryCache(this.primaryCache);
-		this.slaveQueryer.setSecondCache(secondCache);
 
 		// FashionEntity dependency this.
 		instance = this;
@@ -307,7 +206,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 		String clusterName = ReflectUtil.getClusterName(entity.getClass());
 		CheckUtil.checkClusterName(clusterName);
 
-		return this.updater.globalSave(entity, clusterName);
+		return this.globalUpdater.globalSave(entity, clusterName);
 	}
 
 	@Override
@@ -315,7 +214,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 		CheckUtil.checkEntityList(entities);
 		CheckUtil.checkClusterName(clusterName);
 
-		return this.updater.globalSaveBatch(entities, clusterName);
+		return this.globalUpdater.globalSaveBatch(entities, clusterName);
 	}
 
 	@Override
@@ -325,7 +224,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 		String clusterName = ReflectUtil.getClusterName(entity.getClass());
 		CheckUtil.checkClusterName(clusterName);
 
-		this.updater.globalUpdate(entity, clusterName);
+		this.globalUpdater.globalUpdate(entity, clusterName);
 	}
 
 	@Override
@@ -333,7 +232,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 		CheckUtil.checkEntityList(entities);
 		CheckUtil.checkClusterName(clusterName);
 
-		this.updater.globalUpdateBatch(entities, clusterName);
+		this.globalUpdater.globalUpdateBatch(entities, clusterName);
 	}
 
 	@Override
@@ -342,7 +241,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 		CheckUtil.checkClass(clazz);
 		CheckUtil.checkClusterName(clusterName);
 
-		this.updater.globalRemoveByPk(pk, clazz, clusterName);
+		this.globalUpdater.globalRemoveByPk(pk, clazz, clusterName);
 	}
 
 	@Override
@@ -353,7 +252,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 		CheckUtil.checkClass(clazz);
 		CheckUtil.checkClusterName(clusterName);
 
-		this.updater.globalRemoveByPks(pks, clazz, clusterName);
+		this.globalUpdater.globalRemoveByPks(pks, clazz, clusterName);
 	}
 
 	@Override
@@ -374,7 +273,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 		IShardingKey<Object> sk = new ShardingKey<Object>(clusterName, shardingKey);
 		CheckUtil.checkShardingValue(sk);
 
-		return this.updater.save(entity, sk);
+		return this.shardingUpdater.save(entity, sk);
 	}
 
 	@Override
@@ -386,7 +285,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 		IShardingKey<Object> sk = new ShardingKey<Object>(clusterName, shardingKey);
 		CheckUtil.checkShardingValue(sk);
 
-		this.updater.update(entity, sk);
+		this.shardingUpdater.update(entity, sk);
 	}
 
 	@Override
@@ -394,7 +293,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 		CheckUtil.checkEntityList(entities);
 		CheckUtil.checkShardingValue(shardingKey);
 
-		return this.updater.saveBatch(entities, shardingKey);
+		return this.shardingUpdater.saveBatch(entities, shardingKey);
 	}
 
 	@Override
@@ -402,7 +301,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 		CheckUtil.checkEntityList(entities);
 		CheckUtil.checkShardingValue(shardingKey);
 
-		this.updater.updateBatch(entities, shardingKey);
+		this.shardingUpdater.updateBatch(entities, shardingKey);
 	}
 
 	@Override
@@ -411,7 +310,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 		CheckUtil.checkShardingValue(shardingKey);
 		CheckUtil.checkClass(clazz);
 
-		this.updater.removeByPk(pk, shardingKey, clazz);
+		this.shardingUpdater.removeByPk(pk, shardingKey, clazz);
 	}
 
 	@Override
@@ -422,7 +321,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 		CheckUtil.checkShardingValue(shardingKey);
 		CheckUtil.checkClass(clazz);
 
-		this.updater.removeByPks(pks, shardingKey, clazz);
+		this.shardingUpdater.removeByPks(pks, shardingKey, clazz);
 	}
 
 	@Override
@@ -447,7 +346,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 		CheckUtil.checkClusterName(clusterName);
 		CheckUtil.checkClass(clazz);
 
-		return this.masterQueryer.getGlobalCountFromMaster(clusterName, clazz, useCache);
+		return this.globalMasterQuery.getGlobalCountFromMaster(clusterName, clazz, useCache);
 	}
 
 	public Number getGlobalCount(String clusterName, Class<?> clazz, EnumDBMasterSlave masterSlave) {
@@ -465,9 +364,9 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 
 		switch (masterSlave) {
 		case MASTER:
-			return this.masterQueryer.getGlobalCountFromMaster(clusterName, clazz, useCache);
+			return this.globalMasterQuery.getGlobalCountFromMaster(clusterName, clazz, useCache);
 		default:
-			return this.slaveQueryer.getGlobalCountFromSlave(clusterName, clazz, useCache, masterSlave);
+			return this.globalSlaveQuery.getGlobalCountFromSlave(clusterName, clazz, useCache, masterSlave);
 		}
 	}
 
@@ -477,7 +376,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 		CheckUtil.checkClusterName(clusterName);
 		CheckUtil.checkClass(clazz);
 
-		return this.masterQueryer.getGlobalCountFromMaster(query, clusterName, clazz);
+		return this.globalMasterQuery.getGlobalCountFromMaster(query, clusterName, clazz);
 	}
 
 	public Number getGlobalCount(IQuery query, String clusterName, Class<?> clazz, EnumDBMasterSlave masterSlave) {
@@ -493,9 +392,9 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 
 		switch (masterSlave) {
 		case MASTER:
-			return this.masterQueryer.getGlobalCountFromMaster(clusterName, clazz, useCache);
+			return this.globalMasterQuery.getGlobalCountFromMaster(clusterName, clazz, useCache);
 		default:
-			return this.slaveQueryer.getGlobalCountFromSlave(clusterName, clazz, useCache, masterSlave);
+			return this.globalSlaveQuery.getGlobalCountFromSlave(clusterName, clazz, useCache, masterSlave);
 		}
 	}
 
@@ -510,7 +409,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 		CheckUtil.checkNumberGtZero(pk);
 		CheckUtil.checkClass(clazz);
 
-		return this.masterQueryer.findGlobalByPkFromMaster(pk, clusterName, clazz, useCache);
+		return this.globalMasterQuery.findGlobalByPkFromMaster(pk, clusterName, clazz, useCache);
 	}
 
 	@Override
@@ -527,9 +426,9 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 
 		switch (masterSlave) {
 		case MASTER:
-			return this.masterQueryer.findGlobalByPkFromMaster(pk, clusterName, clazz, useCache);
+			return this.globalMasterQuery.findGlobalByPkFromMaster(pk, clusterName, clazz, useCache);
 		default:
-			return this.slaveQueryer.findGlobalByPkFromSlave(pk, clusterName, clazz, useCache, masterSlave);
+			return this.globalSlaveQuery.findGlobalByPkFromSlave(pk, clusterName, clazz, useCache, masterSlave);
 		}
 	}
 
@@ -540,7 +439,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 
 	@Override
 	public <T> T findGlobalOneByQuery(IQuery query, String clusterName, Class<T> clazz, boolean useCache) {
-		return this.masterQueryer.findGlobalOneByQueryFromMaster(query, clusterName, clazz, useCache);
+		return this.globalMasterQuery.findGlobalOneByQueryFromMaster(query, clusterName, clazz, useCache);
 	}
 
 	@Override
@@ -553,9 +452,10 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 			EnumDBMasterSlave masterSlave) {
 		switch (masterSlave) {
 		case MASTER:
-			return this.masterQueryer.findGlobalOneByQueryFromMaster(query, clusterName, clazz, useCache);
+			return this.globalMasterQuery.findGlobalOneByQueryFromMaster(query, clusterName, clazz, useCache);
 		default:
-			return this.slaveQueryer.findGlobalOneByQueryFromSlave(query, clusterName, clazz, useCache, masterSlave);
+			return this.globalSlaveQuery
+					.findGlobalOneByQueryFromSlave(query, clusterName, clazz, useCache, masterSlave);
 		}
 	}
 
@@ -568,7 +468,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 		CheckUtil.checkClusterName(clusterName);
 		CheckUtil.checkClass(clazz);
 
-		return this.masterQueryer.findGlobalByPksFromMaster(clusterName, clazz, pks);
+		return this.globalMasterQuery.findGlobalByPksFromMaster(clusterName, clazz, pks);
 	}
 
 	public <T> List<T> findGlobalByPks(String clusterName, Class<T> clazz, boolean useCache, Number... pks) {
@@ -579,7 +479,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 		CheckUtil.checkClusterName(clusterName);
 		CheckUtil.checkClass(clazz);
 
-		return this.masterQueryer.findGlobalByPksFromMaster(clusterName, clazz, useCache, pks);
+		return this.globalMasterQuery.findGlobalByPksFromMaster(clusterName, clazz, useCache, pks);
 	}
 
 	@Override
@@ -598,9 +498,9 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 
 		switch (masterSlave) {
 		case MASTER:
-			return this.masterQueryer.findGlobalByPksFromMaster(clusterName, clazz, useCache, pks);
+			return this.globalMasterQuery.findGlobalByPksFromMaster(clusterName, clazz, useCache, pks);
 		default:
-			return this.slaveQueryer.findGlobalByPksFromSlave(clusterName, clazz, masterSlave, useCache, pks);
+			return this.globalSlaveQuery.findGlobalByPksFromSlave(clusterName, clazz, masterSlave, useCache, pks);
 		}
 	}
 
@@ -616,7 +516,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 		CheckUtil.checkClass(clazz);
 		CheckUtil.checkNumberList(pks);
 
-		return this.masterQueryer.findGlobalByPkListFromMaster(pks, clusterName, clazz, useCache);
+		return this.globalMasterQuery.findGlobalByPkListFromMaster(pks, clusterName, clazz, useCache);
 	}
 
 	@Override
@@ -634,9 +534,9 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 
 		switch (masterSlave) {
 		case MASTER:
-			return this.masterQueryer.findGlobalByPkListFromMaster(pks, clusterName, clazz, useCache);
+			return this.globalMasterQuery.findGlobalByPkListFromMaster(pks, clusterName, clazz, useCache);
 		default:
-			return this.slaveQueryer.findGlobalByPkListFromSlave(pks, clusterName, clazz, useCache, masterSlave);
+			return this.globalSlaveQuery.findGlobalByPkListFromSlave(pks, clusterName, clazz, useCache, masterSlave);
 		}
 	}
 
@@ -645,7 +545,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 		CheckUtil.checkSQL(sql);
 		CheckUtil.checkClusterName(clusterName);
 
-		return this.masterQueryer.findGlobalBySqlFromMaster(sql, clusterName);
+		return this.globalMasterQuery.findGlobalBySqlFromMaster(sql, clusterName);
 	}
 
 	@Override
@@ -655,9 +555,9 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 
 		switch (masterSlave) {
 		case MASTER:
-			return this.masterQueryer.findGlobalBySqlFromMaster(sql, clusterName);
+			return this.globalMasterQuery.findGlobalBySqlFromMaster(sql, clusterName);
 		default:
-			return this.slaveQueryer.findGlobalBySqlFromSlave(sql, clusterName, masterSlave);
+			return this.globalSlaveQuery.findGlobalBySqlFromSlave(sql, clusterName, masterSlave);
 		}
 	}
 
@@ -672,7 +572,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 		CheckUtil.checkClusterName(clusterName);
 		CheckUtil.checkClass(clazz);
 
-		return this.masterQueryer.findGlobalByQueryFromMaster(query, clusterName, clazz, useCache);
+		return this.globalMasterQuery.findGlobalByQueryFromMaster(query, clusterName, clazz, useCache);
 	}
 
 	@Override
@@ -689,9 +589,9 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 
 		switch (masterSlave) {
 		case MASTER:
-			return this.masterQueryer.findGlobalByQueryFromMaster(query, clusterName, clazz, useCache);
+			return this.globalMasterQuery.findGlobalByQueryFromMaster(query, clusterName, clazz, useCache);
 		default:
-			return this.slaveQueryer.findGlobalByQueryFromSlave(query, clusterName, clazz, useCache, masterSlave);
+			return this.globalSlaveQuery.findGlobalByQueryFromSlave(query, clusterName, clazz, useCache, masterSlave);
 		}
 	}
 
@@ -1026,8 +926,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 
 	@Override
 	public Lock createLock(String lockName) {
-		InterProcessMutex curatorLock = new InterProcessMutex(curatorClient, Const.ZK_LOCKS + "/" + lockName);
-		return new CuratorDistributeedLock(curatorLock);
+		return this.dbCluster.createLock(lockName);
 	}
 
 	@Override
@@ -1077,22 +976,6 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 			throw new RuntimeException(e);
 		}
 
-		// close id generator
-		this.idGenerator.close();
-
-		// close curator
-		CloseableUtils.closeQuietly(this.curatorClient);
-	}
-
-	@Override
-	public void setMode(EnumMode mode) {
-		if (mode != null) {
-			this.mode = mode;
-		}
-	}
-
-	public boolean isCreateTable() {
-		return isCreateTable;
 	}
 
 	public EnumSyncAction getSyncAction() {
@@ -1102,11 +985,6 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 	@Override
 	public void setSyncAction(EnumSyncAction syncAction) {
 		this.syncAction = syncAction;
-	}
-
-	@Override
-	public void setCreateTable(boolean isCreateTable) {
-		this.isCreateTable = isCreateTable;
 	}
 
 	public String getScanPackage() {
@@ -1120,16 +998,6 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 		}
 
 		this.scanPackage = scanPackage;
-	}
-
-	@Override
-	public void setPrimaryCache(IPrimaryCache primaryCache) {
-		this.primaryCache = primaryCache;
-	}
-
-	@Override
-	public void setSecondCache(ISecondCache secondCache) {
-		this.secondCache = secondCache;
 	}
 
 }

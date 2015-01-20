@@ -20,10 +20,10 @@ import java.util.List;
 
 import org.pinus.api.IShardingKey;
 import org.pinus.api.SQL;
-import org.pinus.api.annotation.Table;
 import org.pinus.api.enums.EnumDBMasterSlave;
 import org.pinus.api.query.IQuery;
 import org.pinus.exception.DBOperationException;
+import org.pinus.generator.annotation.Table;
 
 /**
  * 校验工具.

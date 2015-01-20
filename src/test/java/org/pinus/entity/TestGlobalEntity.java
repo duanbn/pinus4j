@@ -5,13 +5,13 @@ import java.sql.Timestamp;
 import java.util.Date;
 
 import org.pinus.api.FashionEntity;
-import org.pinus.api.annotation.DateTime;
-import org.pinus.api.annotation.Field;
-import org.pinus.api.annotation.Index;
-import org.pinus.api.annotation.Indexes;
-import org.pinus.api.annotation.PrimaryKey;
-import org.pinus.api.annotation.Table;
-import org.pinus.api.annotation.UpdateTime;
+import org.pinus.generator.annotation.DateTime;
+import org.pinus.generator.annotation.Field;
+import org.pinus.generator.annotation.Index;
+import org.pinus.generator.annotation.Indexes;
+import org.pinus.generator.annotation.PrimaryKey;
+import org.pinus.generator.annotation.Table;
+import org.pinus.generator.annotation.UpdateTime;
 
 @Table(cluster = "pinus", cache = true)
 @Indexes({ @Index(field = "testInt", isUnique = true) })

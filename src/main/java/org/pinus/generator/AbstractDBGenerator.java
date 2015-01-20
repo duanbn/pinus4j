@@ -30,17 +30,17 @@ import java.util.List;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
-import org.pinus.api.annotation.DateTime;
-import org.pinus.api.annotation.Index;
-import org.pinus.api.annotation.Indexes;
-import org.pinus.api.annotation.PrimaryKey;
-import org.pinus.api.annotation.Table;
-import org.pinus.api.annotation.UpdateTime;
-import org.pinus.cluster.beans.DBIndex;
-import org.pinus.cluster.beans.DBTable;
-import org.pinus.cluster.beans.DBTableColumn;
-import org.pinus.cluster.beans.DataTypeBind;
 import org.pinus.constant.Const;
+import org.pinus.generator.annotation.DateTime;
+import org.pinus.generator.annotation.Index;
+import org.pinus.generator.annotation.Indexes;
+import org.pinus.generator.annotation.PrimaryKey;
+import org.pinus.generator.annotation.Table;
+import org.pinus.generator.annotation.UpdateTime;
+import org.pinus.generator.beans.DBIndex;
+import org.pinus.generator.beans.DBTable;
+import org.pinus.generator.beans.DBTableColumn;
+import org.pinus.generator.beans.DataTypeBind;
 import org.pinus.util.ReflectUtil;
 import org.pinus.util.StringUtils;
 
@@ -168,7 +168,7 @@ public abstract class AbstractDBGenerator implements IDBGenerator {
 
 		// 解析DBTableColumn
 		DBTableColumn column = null;
-		org.pinus.api.annotation.Field dbField = null;
+		org.pinus.generator.annotation.Field dbField = null;
 		PrimaryKey pk = null;
 		UpdateTime updateTime = null;
 		DateTime datetime = null;
@@ -208,7 +208,7 @@ public abstract class AbstractDBGenerator implements IDBGenerator {
 			}
 
 			// Field
-			dbField = f.getAnnotation(org.pinus.api.annotation.Field.class);
+			dbField = f.getAnnotation(org.pinus.generator.annotation.Field.class);
 			if (dbField != null) {
 				if (f.getType() == java.sql.Timestamp.class) {
 					throw new IllegalArgumentException(clazz + " " + f.getName() + "应该是时间戳类型，必须使用@UpdateTime标注");
@@ -296,7 +296,7 @@ public abstract class AbstractDBGenerator implements IDBGenerator {
 		}
 	}
 
-	private static int _getLength(Field f, org.pinus.api.annotation.Field af) {
+	private static int _getLength(Field f, org.pinus.generator.annotation.Field af) {
 		int length = af.length();
 		if (length > 0) {
 			return length;

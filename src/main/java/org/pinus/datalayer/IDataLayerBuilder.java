@@ -30,11 +30,6 @@ import org.pinus.generator.IIdGenerator;
 public interface IDataLayerBuilder {
 
     /**
-     * set db cluster.
-     */
-    public IDataLayerBuilder setDBCluster(IDBCluster dbCluster);
-
-    /**
      * set primary cache.
      */
     public IDataLayerBuilder setPrimaryCache(IPrimaryCache primaryCache);

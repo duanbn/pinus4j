@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.pinus.cluster.beans;
+package org.pinus.generator.beans;
 
 import java.io.Serializable;
 import java.util.ArrayList;
