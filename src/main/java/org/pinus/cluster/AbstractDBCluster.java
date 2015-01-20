@@ -193,7 +193,6 @@ public abstract class AbstractDBCluster implements IDBCluster {
 		// load storage-config.xml
 		try {
 			config = _getConfig(xmlFilePath);
-			LOG.info("load " + xmlFilePath + " done");
 		} catch (LoadConfigException e) {
 			throw new RuntimeException(e);
 		}
@@ -228,26 +227,6 @@ public abstract class AbstractDBCluster implements IDBCluster {
 
 		// 发现可用的二级缓存
 		this.secondCache = cacheBuilder.buildSecondCache();
-
-		//
-		// init db router
-		//
-		switch (enumDBRouteAlg) {
-		case SIMPLE_HASH:
-			dbRouter = new SimpleHashClusterRouterImpl();
-			break;
-		default:
-			dbRouter = new SimpleHashClusterRouterImpl();
-			break;
-		}
-		// 给路由器设置集群信息
-		if (this.dbRouter == null) {
-			throw new DBClusterException("启动前需要设置DBClusterRouter");
-		}
-		// 设置集群信息
-		this.dbRouter.setDbClusterInfo(dbClusterInfo);
-		// 设置hash算法
-		this.dbRouter.setHashAlgo(config.getHashAlgo());
 
 		//
 		// init db generator
@@ -297,6 +276,24 @@ public abstract class AbstractDBCluster implements IDBCluster {
 		} catch (Exception e) {
 			throw new DBClusterException("init database cluster failure", e);
 		}
+
+        //
+		// init db router
+		//
+		switch (enumDBRouteAlg) {
+		case SIMPLE_HASH:
+			dbRouter = new SimpleHashClusterRouterImpl();
+			break;
+		default:
+			dbRouter = new SimpleHashClusterRouterImpl();
+			break;
+		}
+		// set db cluster info.
+		this.dbRouter.setDbClusterInfo(dbClusterInfo);
+        // set table cluster info.
+        this.dbRouter.setTableCluster(tableCluster);
+		// set hash algo
+		this.dbRouter.setHashAlgo(config.getHashAlgo());
 
 		LOG.info("init database cluster done.");
 	}
@@ -664,9 +661,6 @@ public abstract class AbstractDBCluster implements IDBCluster {
 	 * @throws IOException
 	 */
 	private void _createTable(List<DBTable> tables) throws Exception {
-		// {集群名称, {分库下标, {表名, 分表数}}}
-		Map<String, Map<Integer, Map<String, Integer>>> tableCluster = this.dbRouter.getTableCluster();
-
 		String clusterName = null;
 		Map<Integer, Map<String, Integer>> oneDbTables = null;
 		for (DBTable table : tables) {
@@ -798,7 +792,6 @@ public abstract class AbstractDBCluster implements IDBCluster {
 
 			tableCluster.put(clusterName, oneDbTable);
 		}
-		this.dbRouter.setTableCluster(tableCluster);
 	}
 
 	/**

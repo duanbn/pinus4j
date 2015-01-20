@@ -83,13 +83,6 @@ public class JdbcDataLayerBuilder implements IDataLayerBuilder {
 	}
 
 	@Override
-	public void reset() {
-		this.dbCluster = null;
-		this.primaryCache = null;
-		this.secondCache = null;
-	}
-
-	@Override
 	public IGlobalUpdate buildGlobalUpdate(IIdGenerator idGenerator) {
 		IGlobalUpdate globalUpdate = new GlobalJdbcUpdateImpl();
 		globalUpdate.setIdGenerator(idGenerator);

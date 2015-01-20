@@ -40,11 +40,6 @@ public interface IDataLayerBuilder {
     public IDataLayerBuilder setSecondCache(ISecondCache secondCache);
 
     /**
-     * reset state of this builder.
-     */
-    public void reset();
-
-    /**
      * build global update.
      */
     public IGlobalUpdate buildGlobalUpdate(IIdGenerator idGenerator);

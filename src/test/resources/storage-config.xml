@@ -8,7 +8,7 @@
 	<!-- zookeeper connection -->
 	<db.cluster.zk>127.0.0.1:2181</db.cluster.zk>
 	<!-- id generator batch -->
-	<db.cluster.generateid.batch>100</db.cluster.generateid.batch>
+	<db.cluster.generateid.batch>1</db.cluster.generateid.batch>
     <!-- db query cache expire is seconds -->
     <db.cluster.cache enabled="true">
         <primary expire="300" class="org.pinus.cache.impl.MemCachedPrimaryCacheImpl">

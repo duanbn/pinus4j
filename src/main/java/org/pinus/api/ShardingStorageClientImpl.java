@@ -139,7 +139,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 		IClusterConfig clusterConfig = XmlClusterConfigImpl.getInstance();
 
 		EnumDbConnectionPoolCatalog enumDbCpCatalog = clusterConfig.getDbConnectionPoolCatalog();
-
+		
 		// 初始化集群
 		switch (enumDbCpCatalog) {
 		case APP:
@@ -164,6 +164,8 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 		} catch (DBClusterException e) {
 			throw new RuntimeException(e);
 		}
+		
+		this.idGenerator = this.dbCluster.getIdGenerator();
 
 		//
 		// 初始化分库分表增删改查实现.
@@ -174,8 +176,8 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 		this.globalSlaveQuery = dataLayerBuilder.buildGlobalSlaveQuery();
 
 		this.shardingUpdater = dataLayerBuilder.buildShardingUpdate(this.dbCluster.getIdGenerator());
-		this.masterQueryer = new ShardingJdbcMasterQueryImpl();
-		this.slaveQueryer = new ShardingJdbcSlaveQueryImpl();
+		this.masterQueryer = dataLayerBuilder.buildShardingMasterQuery();
+		this.slaveQueryer = dataLayerBuilder.buildShardingSlaveQuery();
 
 		// FashionEntity dependency this.
 		instance = this;

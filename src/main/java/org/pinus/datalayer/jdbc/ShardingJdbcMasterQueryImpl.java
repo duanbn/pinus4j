@@ -250,16 +250,7 @@ public class ShardingJdbcMasterQueryImpl extends AbstractJdbcQuery implements IS
 	 */
 	private DB _getDbFromMaster(Class<?> clazz, IShardingKey<?> shardingKey) {
 		String tableName = ReflectUtil.getTableName(clazz);
-		DB db = null;
-		try {
-			db = this.dbCluster.selectDbFromMaster(tableName, shardingKey);
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("[" + db + "]");
-			}
-		} catch (DBClusterException e) {
-			throw new DBOperationException(e);
-		}
-		return db;
+		return _getDbFromMaster(tableName, shardingKey);
 	}
 
 	private DB _getDbFromMaster(String tableName, IShardingKey<?> shardingKey) {
