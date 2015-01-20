@@ -25,7 +25,6 @@ import org.pinus.api.enums.EnumDBMasterSlave;
 import org.pinus.api.query.IQuery;
 import org.pinus.cache.IPrimaryCache;
 import org.pinus.cache.ISecondCache;
-import org.pinus.cluster.IDBCluster;
 import org.pinus.exception.DBOperationException;
 
 /**
@@ -33,85 +32,7 @@ import org.pinus.exception.DBOperationException;
  * 
  * @author duanbn
  */
-public interface IShardingSlaveQuery {
-
-	/**
-	 * 从从库中获取全局数量.
-	 * 
-	 * @param clusterName
-	 * @param clazz
-	 * @param slave
-	 * @return
-	 */
-	public Number getGlobalCountFromSlave(String clusterName, Class<?> clazz, boolean useCache, EnumDBMasterSlave slave);
-
-	public Number getGlobalCountFromSlave(IQuery query, String clusterName, Class<?> clazz, EnumDBMasterSlave slave);
-
-	/**
-	 * 根据pk从从库中查询
-	 * 
-	 * @param pk
-	 * @param clusterName
-	 * @param clazz
-	 * @param slave
-	 * @return
-	 */
-	public <T> T findGlobalByPkFromSlave(Number pk, String clusterName, Class<T> clazz, boolean useCache,
-			EnumDBMasterSlave slave);
-
-	/**
-	 * 根据查询条件查询单条数据
-	 * 
-	 * @param query
-	 * @param clusterName
-	 * @param clazz
-	 * @param slave
-	 * @return
-	 */
-	public <T> T findGlobalOneByQueryFromSlave(IQuery query, String clusterName, Class<T> clazz, boolean useCache,
-			EnumDBMasterSlave slave);
-
-	public <T> List<T> findGlobalByPksFromSlave(String clusterName, Class<T> clazz, EnumDBMasterSlave slave,
-			Number... pks);
-
-	public <T> List<T> findGlobalByPksFromSlave(String clusterName, Class<T> clazz, EnumDBMasterSlave slave,
-			boolean useCache, Number... pks);
-
-	/**
-	 * 
-	 * @param pks
-	 * @param clusterName
-	 * @param clazz
-	 * @param slave
-	 * @return
-	 */
-	public <T> List<T> findGlobalByPkListFromSlave(List<? extends Number> pks, String clusterName, Class<T> clazz,
-			boolean useCache, EnumDBMasterSlave slave);
-
-	/**
-	 * 
-	 * @param sql
-	 * @param clusterName
-	 * @param slave
-	 * @return
-	 */
-	public List<Map<String, Object>> findGlobalBySqlFromSlave(SQL sql, String clusterName, EnumDBMasterSlave slave);
-
-	/**
-	 * 
-	 * @param query
-	 * @param clusterName
-	 * @param clazz
-	 * @param slave
-	 * @return
-	 */
-	public <T> List<T> findGlobalByQueryFromSlave(IQuery query, String clusterName, Class<T> clazz, boolean useCache,
-			EnumDBMasterSlave slave);
-
-	/**
-	 * 设置数据库集群.
-	 */
-	public void setDBCluster(IDBCluster dbCluster);
+public interface IShardingSlaveQuery extends IDataQuery {
 
 	/**
 	 * 获取从分库分表记录总数.

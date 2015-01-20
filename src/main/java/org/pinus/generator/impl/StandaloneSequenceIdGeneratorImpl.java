@@ -29,6 +29,7 @@ import org.slf4j.LoggerFactory;
  * 
  * @author duanbn
  */
+@Deprecated
 public class StandaloneSequenceIdGeneratorImpl extends AbstractSequenceIdGenerator {
 
 	/**

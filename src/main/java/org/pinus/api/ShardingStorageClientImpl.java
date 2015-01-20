@@ -54,9 +54,9 @@ import org.pinus.constant.Const;
 import org.pinus.datalayer.IShardingMasterQuery;
 import org.pinus.datalayer.IShardingSlaveQuery;
 import org.pinus.datalayer.IShardingUpdate;
-import org.pinus.datalayer.jdbc.JdbcMasterQueryImpl;
-import org.pinus.datalayer.jdbc.JdbcSlaveQueryImpl;
-import org.pinus.datalayer.jdbc.JdbcUpdateImpl;
+import org.pinus.datalayer.jdbc.ShardingJdbcMasterQueryImpl;
+import org.pinus.datalayer.jdbc.ShardingJdbcSlaveQueryImpl;
+import org.pinus.datalayer.jdbc.ShardingJdbcUpdateImpl;
 import org.pinus.exception.DBClusterException;
 import org.pinus.exception.LoadConfigException;
 import org.pinus.generator.IIdGenerator;
@@ -262,18 +262,18 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 		//
 		// 初始化分库分表增删改查实现.
 		//
-		this.updater = new JdbcUpdateImpl();
+		this.updater = new ShardingJdbcUpdateImpl();
 		this.updater.setDBCluster(this.dbCluster);
 		this.updater.setPrimaryCache(this.primaryCache);
 		this.updater.setIdGenerator(this.idGenerator);
 		this.updater.setSecondCache(secondCache);
 
-		this.masterQueryer = new JdbcMasterQueryImpl();
+		this.masterQueryer = new ShardingJdbcMasterQueryImpl();
 		this.masterQueryer.setDBCluster(this.dbCluster);
 		this.masterQueryer.setPrimaryCache(this.primaryCache);
 		this.masterQueryer.setSecondCache(secondCache);
 
-		this.slaveQueryer = new JdbcSlaveQueryImpl();
+		this.slaveQueryer = new ShardingJdbcSlaveQueryImpl();
 		this.slaveQueryer.setDBCluster(this.dbCluster);
 		this.slaveQueryer.setPrimaryCache(this.primaryCache);
 		this.slaveQueryer.setSecondCache(secondCache);

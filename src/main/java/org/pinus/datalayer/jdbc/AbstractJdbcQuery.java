@@ -30,8 +30,10 @@ import org.pinus.api.query.IQuery;
 import org.pinus.cache.IPrimaryCache;
 import org.pinus.cache.ISecondCache;
 import org.pinus.cluster.DB;
+import org.pinus.cluster.IDBCluster;
 import org.pinus.cluster.beans.DBConnectionInfo;
 import org.pinus.constant.Const;
+import org.pinus.datalayer.IDataQuery;
 import org.pinus.datalayer.SQLBuilder;
 import org.pinus.datalayer.SlowQueryLogger;
 import org.pinus.exception.DBOperationException;
@@ -42,7 +44,12 @@ import org.pinus.util.ReflectUtil;
  * 
  * @author duanbn
  */
-public abstract class AbstractJdbcQuery {
+public abstract class AbstractJdbcQuery implements IDataQuery {
+
+    /**
+	 * 数据库集群引用.
+	 */
+	protected IDBCluster dbCluster;
 
 	/**
 	 * 一级缓存.
@@ -840,14 +847,6 @@ public abstract class AbstractJdbcQuery {
 		return result.toArray(new Number[result.size()]);
 	}
 
-	public void setPrimaryCache(IPrimaryCache primaryCache) {
-		this.primaryCache = primaryCache;
-	}
-
-	public void setSecondCache(ISecondCache secondCache) {
-		this.secondCache = secondCache;
-	}
-
 	/**
 	 * 获取列表的主键.
 	 * 
@@ -867,5 +866,34 @@ public abstract class AbstractJdbcQuery {
 
 		return map;
 	}
+	
+    @Override
+	public IDBCluster getDBCluster() {
+	    return dbCluster;
+	}
+	
+    @Override
+	public void setDBCluster(IDBCluster dbCluster) {
+	    this.dbCluster = dbCluster;
+	}
 
+    @Override
+    public void setPrimaryCache(IPrimaryCache primaryCache) {
+		this.primaryCache = primaryCache;
+	}
+    
+    @Override
+    public IPrimaryCache getPrimaryCache() {
+    	return this.primaryCache;
+    }
+
+    @Override
+	public void setSecondCache(ISecondCache secondCache) {
+		this.secondCache = secondCache;
+	}
+    
+    @Override
+    public ISecondCache getSecondCache() {
+    	return this.secondCache;
+    }
 }

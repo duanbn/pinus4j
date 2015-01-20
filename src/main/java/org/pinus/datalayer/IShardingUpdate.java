@@ -30,88 +30,7 @@ import org.pinus.generator.IIdGenerator;
  * 
  * @author duanbn
  */
-public interface IShardingUpdate {
-
-	/**
-	 * 设置ID生成器.
-	 * 
-	 * @param idGenerator
-	 */
-	public void setIdGenerator(IIdGenerator idGenerator);
-
-	/**
-	 * 保存数据到集群全局库.
-	 * 
-	 * @param entity
-	 *            数据对象
-	 * @param clusterName
-	 *            集群名
-	 * 
-	 * @return 主键
-	 * 
-	 * @throws DBOperationException
-	 *             操作失败
-	 */
-	public Number globalSave(Object entity, String clusterName);
-
-	/**
-	 * 批量保存数据到全局库.
-	 * 
-	 * @param entities
-	 *            批量数据对象
-	 * @param clusterName
-	 *            集群名
-	 * 
-	 * @return 主键
-	 * 
-	 * @throws DBOperationException
-	 *             操作失败
-	 */
-	public Number[] globalSaveBatch(List<? extends Object> entities, String clusterName);
-
-	/**
-	 * 更新全局库
-	 * 
-	 * @param entity
-	 *            数据对象
-	 * @param clusterName
-	 *            集群名称
-	 * 
-	 * @throws DBOperationException
-	 *             操作失败
-	 */
-	public void globalUpdate(Object entity, String clusterName);
-
-	/**
-	 * 批量更新全局库
-	 * 
-	 * @param entities
-	 *            批量更新数据
-	 * @param clusterName
-	 *            集群名
-	 * 
-	 * @throws DBOperationException
-	 *             操作失败
-	 */
-	public void globalUpdateBatch(List<? extends Object> entities, String clusterName);
-
-	/**
-	 * 删除全局库
-	 * 
-	 * @param pk
-	 * @param shardingValue
-	 * @param clazz
-	 */
-	public void globalRemoveByPk(Number pk, Class<?> clazz, String clusterName);
-
-	/**
-	 * 批量删除全局库
-	 * 
-	 * @param pks
-	 * @param shardingValue
-	 * @param clazz
-	 */
-	public void globalRemoveByPks(List<? extends Number> pks, Class<?> clazz, String clusterName);
+public interface IShardingUpdate extends IDataUpdate {
 
 	/**
 	 * 保存数据. 当实体对象中表示主键的字段有值时，则使用此值作为主键. 否则根据数据库设置 自动生成主键
@@ -199,20 +118,4 @@ public interface IShardingUpdate {
 	 */
 	public void removeByPks(List<? extends Number> pks, IShardingKey<?> shardingValue, Class<?> clazz);
 
-	/**
-	 * 设置数据库集群.
-	 */
-	public void setDBCluster(IDBCluster dbCluster);
-
-	/**
-	 * 设置一级缓存.
-	 */
-	public void setPrimaryCache(IPrimaryCache primaryCache);
-
-	/**
-	 * 设置二级缓存.
-	 * 
-	 * @param secondCache
-	 */
-	public void setSecondCache(ISecondCache secondCache);
 }
