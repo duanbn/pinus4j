@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.pinus.cluster.route;
+package org.pinus.cluster.route.impl;
 
 import java.util.List;
 import java.util.Map;
@@ -23,8 +23,10 @@ import org.pinus.api.IShardingKey;
 import org.pinus.api.enums.EnumDBMasterSlave;
 import org.pinus.cluster.beans.DBClusterInfo;
 import org.pinus.cluster.beans.DBClusterRegionInfo;
-import org.pinus.cluster.beans.DBConnectionInfo;
+import org.pinus.cluster.beans.DBInfo;
 import org.pinus.cluster.enums.HashAlgoEnum;
+import org.pinus.cluster.route.DBRouteInfo;
+import org.pinus.cluster.route.IClusterRouter;
 import org.pinus.exception.DBRouteException;
 
 /**
@@ -32,7 +34,7 @@ import org.pinus.exception.DBRouteException;
  * 
  * @author duanbn
  */
-public abstract class AbstractDBRouterImpl implements IClusterRouter {
+public abstract class AbstractClusterRouter implements IClusterRouter {
 
 	/**
 	 * hash 算法
@@ -168,7 +170,7 @@ public abstract class AbstractDBRouterImpl implements IClusterRouter {
 	 *            分库分表因子
 	 * @return 路由结果
 	 */
-	protected abstract DBRouteInfo doSelectFromMaster(List<DBConnectionInfo> masterConnections, IShardingKey<?> value)
+	protected abstract DBRouteInfo doSelectFromMaster(List<DBInfo> masterConnections, IShardingKey<?> value)
 			throws DBRouteException;
 
 	/**
@@ -180,7 +182,7 @@ public abstract class AbstractDBRouterImpl implements IClusterRouter {
 	 *            分库分表因子
 	 * @return 路由结果
 	 */
-	protected abstract DBRouteInfo doSelectFromSlave(List<List<DBConnectionInfo>> slaveConnection, int slaveIndex,
+	protected abstract DBRouteInfo doSelectFromSlave(List<List<DBInfo>> slaveConnection, int slaveIndex,
 			IShardingKey<?> value) throws DBRouteException;
 
 }

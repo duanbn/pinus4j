@@ -24,7 +24,7 @@ import java.util.Map;
 import org.pinus.api.SQL;
 import org.pinus.api.enums.EnumDBMasterSlave;
 import org.pinus.api.query.IQuery;
-import org.pinus.cluster.beans.DBConnectionInfo;
+import org.pinus.cluster.beans.DBInfo;
 import org.pinus.datalayer.IGlobalSlaveQuery;
 import org.pinus.datalayer.SQLBuilder;
 import org.pinus.exception.DBClusterException;
@@ -60,7 +60,7 @@ public class GlobalJdbcSlaveQueryImpl extends AbstractJdbcQuery implements IGlob
 
 	@Override
 	public Number getGlobalCountFromSlave(String clusterName, Class<?> clazz, boolean useCache, EnumDBMasterSlave slave) {
-		DBConnectionInfo dbConnInfo = null;
+		DBInfo dbConnInfo = null;
 		try {
 			dbConnInfo = this.dbCluster.getSlaveGlobalDbConn(clusterName, slave);
 		} catch (DBClusterException e) {
@@ -73,7 +73,7 @@ public class GlobalJdbcSlaveQueryImpl extends AbstractJdbcQuery implements IGlob
 
 	@Override
 	public Number getGlobalCountFromSlave(IQuery query, String clusterName, Class<?> clazz, EnumDBMasterSlave slave) {
-		DBConnectionInfo globalConnection;
+		DBInfo globalConnection;
 		try {
 			globalConnection = this.dbCluster.getSlaveGlobalDbConn(clusterName, slave);
 		} catch (DBClusterException e) {
@@ -112,7 +112,7 @@ public class GlobalJdbcSlaveQueryImpl extends AbstractJdbcQuery implements IGlob
 
 		Connection conn = null;
 		try {
-			DBConnectionInfo globalConnection = this.dbCluster.getSlaveGlobalDbConn(clusterName, slave);
+			DBInfo globalConnection = this.dbCluster.getSlaveGlobalDbConn(clusterName, slave);
 
 			conn = globalConnection.getDatasource().getConnection();
 
@@ -134,7 +134,7 @@ public class GlobalJdbcSlaveQueryImpl extends AbstractJdbcQuery implements IGlob
 
 		Connection conn = null;
 		try {
-			DBConnectionInfo globalConnection = this.dbCluster.getSlaveGlobalDbConn(clusterName, slave);
+			DBInfo globalConnection = this.dbCluster.getSlaveGlobalDbConn(clusterName, slave);
 
 			conn = globalConnection.getDatasource().getConnection();
 
@@ -153,7 +153,7 @@ public class GlobalJdbcSlaveQueryImpl extends AbstractJdbcQuery implements IGlob
 	public List<Map<String, Object>> findGlobalBySqlFromSlave(SQL sql, String clusterName, EnumDBMasterSlave slave) {
 		Connection conn = null;
 		try {
-			DBConnectionInfo slaveGlobal = this.dbCluster.getSlaveGlobalDbConn(clusterName, slave);
+			DBInfo slaveGlobal = this.dbCluster.getSlaveGlobalDbConn(clusterName, slave);
 
 			conn = slaveGlobal.getDatasource().getConnection();
 
@@ -172,7 +172,7 @@ public class GlobalJdbcSlaveQueryImpl extends AbstractJdbcQuery implements IGlob
 			EnumDBMasterSlave slave) {
 		Connection conn = null;
 		try {
-			DBConnectionInfo globalConnection = this.dbCluster.getSlaveGlobalDbConn(clusterName, slave);
+			DBInfo globalConnection = this.dbCluster.getSlaveGlobalDbConn(clusterName, slave);
 			conn = globalConnection.getDatasource().getConnection();
 
 			List<T> result = null;

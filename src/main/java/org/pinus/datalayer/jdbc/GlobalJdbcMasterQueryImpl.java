@@ -23,7 +23,7 @@ import java.util.Map;
 
 import org.pinus.api.SQL;
 import org.pinus.api.query.IQuery;
-import org.pinus.cluster.beans.DBConnectionInfo;
+import org.pinus.cluster.beans.DBInfo;
 import org.pinus.datalayer.IGlobalMasterQuery;
 import org.pinus.datalayer.SQLBuilder;
 import org.pinus.exception.DBClusterException;
@@ -65,7 +65,7 @@ public class GlobalJdbcMasterQueryImpl extends AbstractJdbcQuery implements IGlo
 
 	@Override
 	public Number getGlobalCountFromMaster(String clusterName, Class<?> clazz, boolean useCache) {
-		DBConnectionInfo globalConnection;
+		DBInfo globalConnection;
 		try {
 			globalConnection = this.dbCluster.getMasterGlobalConn(clusterName);
 		} catch (DBClusterException e) {
@@ -78,7 +78,7 @@ public class GlobalJdbcMasterQueryImpl extends AbstractJdbcQuery implements IGlo
 
 	@Override
 	public Number getGlobalCountFromMaster(IQuery query, String clusterName, Class<?> clazz) {
-		DBConnectionInfo globalConnection;
+		DBInfo globalConnection;
 		try {
 			globalConnection = this.dbCluster.getMasterGlobalConn(clusterName);
 		} catch (DBClusterException e) {
@@ -98,7 +98,7 @@ public class GlobalJdbcMasterQueryImpl extends AbstractJdbcQuery implements IGlo
 	public <T> T findGlobalByPkFromMaster(Number pk, String clusterName, Class<T> clazz, boolean useCache) {
 		Connection conn = null;
 		try {
-			DBConnectionInfo globalConnection = this.dbCluster.getMasterGlobalConn(clusterName);
+			DBInfo globalConnection = this.dbCluster.getMasterGlobalConn(clusterName);
 
 			conn = globalConnection.getDatasource().getConnection();
 			return selectByPkWithCache(conn, clusterName, pk, clazz, useCache);
@@ -118,7 +118,7 @@ public class GlobalJdbcMasterQueryImpl extends AbstractJdbcQuery implements IGlo
 	public <T> List<T> findGlobalByPksFromMaster(String clusterName, Class<T> clazz, boolean useCache, Number... pks) {
 		Connection conn = null;
 		try {
-			DBConnectionInfo globalConnection = this.dbCluster.getMasterGlobalConn(clusterName);
+			DBInfo globalConnection = this.dbCluster.getMasterGlobalConn(clusterName);
 
 			conn = globalConnection.getDatasource().getConnection();
 			return selectGlobalByPksWithCache(conn, clusterName, clazz, pks, useCache);
@@ -134,7 +134,7 @@ public class GlobalJdbcMasterQueryImpl extends AbstractJdbcQuery implements IGlo
 			boolean useCache) {
 		Connection conn = null;
 		try {
-			DBConnectionInfo globalConnection = this.dbCluster.getMasterGlobalConn(clusterName);
+			DBInfo globalConnection = this.dbCluster.getMasterGlobalConn(clusterName);
 
 			conn = globalConnection.getDatasource().getConnection();
 			return selectGlobalByPksWithCache(conn, clusterName, clazz, pks.toArray(new Number[pks.size()]), useCache);
@@ -149,7 +149,7 @@ public class GlobalJdbcMasterQueryImpl extends AbstractJdbcQuery implements IGlo
 	public List<Map<String, Object>> findGlobalBySqlFromMaster(SQL sql, String clusterName) {
 		Connection conn = null;
 		try {
-			DBConnectionInfo globalConnection = this.dbCluster.getMasterGlobalConn(clusterName);
+			DBInfo globalConnection = this.dbCluster.getMasterGlobalConn(clusterName);
 
 			conn = globalConnection.getDatasource().getConnection();
 
@@ -167,7 +167,7 @@ public class GlobalJdbcMasterQueryImpl extends AbstractJdbcQuery implements IGlo
 	public <T> List<T> findGlobalByQueryFromMaster(IQuery query, String clusterName, Class<T> clazz, boolean useCache) {
 		Connection conn = null;
 		try {
-			DBConnectionInfo globalConnection = this.dbCluster.getMasterGlobalConn(clusterName);
+			DBInfo globalConnection = this.dbCluster.getMasterGlobalConn(clusterName);
 
 			conn = globalConnection.getDatasource().getConnection();
 

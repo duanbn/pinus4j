@@ -30,9 +30,9 @@ public class DBClusterRegionInfo {
 
 	private long end;
 
-	private List<DBConnectionInfo> masterConnection;
+	private List<DBInfo> masterConnection;
 
-	private List<List<DBConnectionInfo>> slaveConnection;
+	private List<List<DBInfo>> slaveConnection;
 
 	@Override
 	public String toString() {
@@ -56,19 +56,19 @@ public class DBClusterRegionInfo {
 		this.end = end;
 	}
 
-	public List<DBConnectionInfo> getMasterConnection() {
+	public List<DBInfo> getMasterConnection() {
 		return masterConnection;
 	}
 
-	public void setMasterConnection(List<DBConnectionInfo> masterConnection) {
+	public void setMasterConnection(List<DBInfo> masterConnection) {
 		this.masterConnection = masterConnection;
 	}
 
-	public List<List<DBConnectionInfo>> getSlaveConnection() {
+	public List<List<DBInfo>> getSlaveConnection() {
 		return slaveConnection;
 	}
 
-	public void setSlaveConnection(List<List<DBConnectionInfo>> slaveConnection) {
+	public void setSlaveConnection(List<List<DBInfo>> slaveConnection) {
 		this.slaveConnection = slaveConnection;
 	}
 

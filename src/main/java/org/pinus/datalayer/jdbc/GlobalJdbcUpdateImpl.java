@@ -22,7 +22,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.pinus.cluster.beans.DBConnectionInfo;
+import org.pinus.cluster.beans.DBInfo;
 import org.pinus.constant.Const;
 import org.pinus.datalayer.IGlobalUpdate;
 import org.pinus.datalayer.SQLBuilder;
@@ -88,7 +88,7 @@ public class GlobalJdbcUpdateImpl extends AbstractJdbcUpdate implements IGlobalU
 
 		Connection conn = null;
 		try {
-			DBConnectionInfo globalConnection = this.dbCluster.getMasterGlobalConn(clusterName);
+			DBInfo globalConnection = this.dbCluster.getMasterGlobalConn(clusterName);
 
 			conn = globalConnection.getDatasource().getConnection();
 
@@ -125,7 +125,7 @@ public class GlobalJdbcUpdateImpl extends AbstractJdbcUpdate implements IGlobalU
 
 		Connection conn = null;
 		try {
-			DBConnectionInfo globalConnection = this.dbCluster.getMasterGlobalConn(clusterName);
+			DBInfo globalConnection = this.dbCluster.getMasterGlobalConn(clusterName);
 
 			conn = globalConnection.getDatasource().getConnection();
 
@@ -161,7 +161,7 @@ public class GlobalJdbcUpdateImpl extends AbstractJdbcUpdate implements IGlobalU
 
 		Connection conn = null;
 		try {
-			DBConnectionInfo globalConnection = this.dbCluster.getMasterGlobalConn(clusterName);
+			DBInfo globalConnection = this.dbCluster.getMasterGlobalConn(clusterName);
 
 			conn = globalConnection.getDatasource().getConnection();
 

@@ -16,12 +16,21 @@
 
 package org.pinus.cluster.beans;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.sql.DataSource;
 
 import org.pinus.api.enums.EnumDBMasterSlave;
 import org.pinus.exception.LoadConfigException;
 
-public abstract class DBConnectionInfo {
+/**
+ * database instance info.
+ *
+ * @author duanbn
+ * @since 1.0.0
+ */
+public abstract class DBInfo {
 
 	/**
 	 * 集群名
@@ -37,6 +46,23 @@ public abstract class DBConnectionInfo {
 	 * 主从中的角色.
 	 */
 	protected EnumDBMasterSlave masterSlave;
+
+    /**
+     * this db instance include table info.
+     */
+    protected List<TableInfo> tableInfos;
+
+    public DBInfo() {
+        this.tableInfos = new ArrayList<TableInfo>();
+    }
+
+    public void addTableInfo(TableInfo tableInfo) {
+        this.tableInfos.add(tableInfo);
+    }
+
+    public TableInfo getTableInfo(int tableIndex) {
+        return this.tableInfos.get(tableIndex);
+    }
 
 	public abstract boolean check() throws LoadConfigException;
 

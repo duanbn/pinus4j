@@ -40,7 +40,7 @@ import org.pinus.api.ShardingKey;
 import org.pinus.api.enums.EnumDB;
 import org.pinus.cluster.DB;
 import org.pinus.cluster.IDBCluster;
-import org.pinus.cluster.beans.DBConnectionInfo;
+import org.pinus.cluster.beans.DBInfo;
 import org.pinus.cluster.impl.AppDBClusterImpl;
 import org.pinus.exception.DBClusterException;
 import org.pinus.generator.beans.DBTable;
@@ -116,7 +116,7 @@ public class App {
 			//
 			String cluster = dbTable.getCluster();
 
-			DBConnectionInfo connInfo = this.dbCluster.getMasterGlobalConn(cluster);
+			DBInfo connInfo = this.dbCluster.getMasterGlobalConn(cluster);
 
 			SqlNode sqlNode = new SqlNode();
 			sqlNode.setDs(connInfo.getDatasource());

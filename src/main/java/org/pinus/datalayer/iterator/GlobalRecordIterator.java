@@ -8,7 +8,7 @@ import org.pinus.api.query.Condition;
 import org.pinus.api.query.IQuery;
 import org.pinus.api.query.Order;
 import org.pinus.api.query.QueryImpl;
-import org.pinus.cluster.beans.DBConnectionInfo;
+import org.pinus.cluster.beans.DBInfo;
 import org.pinus.datalayer.SQLBuilder;
 import org.pinus.exception.DBOperationException;
 import org.pinus.util.ReflectUtil;
@@ -26,9 +26,9 @@ public class GlobalRecordIterator<E> extends AbstractRecordIterator<E> {
 
 	public static final Logger LOG = LoggerFactory.getLogger(GlobalRecordIterator.class);
 
-	private DBConnectionInfo dbConnInfo;
+	private DBInfo dbConnInfo;
 	
-	public GlobalRecordIterator(DBConnectionInfo dbConnInfo, Class<E> clazz) {
+	public GlobalRecordIterator(DBInfo dbConnInfo, Class<E> clazz) {
 		super(clazz);
 
 		this.dbConnInfo = dbConnInfo;

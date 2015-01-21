@@ -36,9 +36,9 @@ public class DBClusterInfo {
 	/**
 	 * 集群中的全局库
 	 */
-	private DBConnectionInfo masterGlobalConnection;
+	private DBInfo masterGlobalConnection;
 
-	private List<DBConnectionInfo> slaveGlobalConnection;
+	private List<DBInfo> slaveGlobalConnection;
 
 	private List<DBClusterRegionInfo> dbRegions;
 
@@ -65,19 +65,19 @@ public class DBClusterInfo {
 		this.catalog = catalog;
 	}
 
-	public DBConnectionInfo getMasterGlobalConnection() {
+	public DBInfo getMasterGlobalConnection() {
 		return masterGlobalConnection;
 	}
 
-	public void setMasterGlobalConnection(DBConnectionInfo masterGlobalConnection) {
+	public void setMasterGlobalConnection(DBInfo masterGlobalConnection) {
 		this.masterGlobalConnection = masterGlobalConnection;
 	}
 
-	public List<DBConnectionInfo> getSlaveGlobalConnection() {
+	public List<DBInfo> getSlaveGlobalConnection() {
 		return slaveGlobalConnection;
 	}
 
-	public void setSlaveGlobalConnection(List<DBConnectionInfo> slaveGlobalConnection) {
+	public void setSlaveGlobalConnection(List<DBInfo> slaveGlobalConnection) {
 		this.slaveGlobalConnection = slaveGlobalConnection;
 	}
 

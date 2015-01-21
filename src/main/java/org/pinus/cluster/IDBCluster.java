@@ -26,7 +26,7 @@ import org.pinus.api.enums.EnumDBMasterSlave;
 import org.pinus.api.enums.EnumDBRouteAlg;
 import org.pinus.api.enums.EnumSyncAction;
 import org.pinus.cluster.beans.DBClusterInfo;
-import org.pinus.cluster.beans.DBConnectionInfo;
+import org.pinus.cluster.beans.DBInfo;
 import org.pinus.cluster.route.IClusterRouter;
 import org.pinus.config.IClusterConfig;
 import org.pinus.datalayer.IDataLayerBuilder;
@@ -131,7 +131,7 @@ public interface IDBCluster {
 	 * @param clusterName
 	 * @return
 	 */
-	public DBConnectionInfo getMasterGlobalConn(String clusterName) throws DBClusterException;
+	public DBInfo getMasterGlobalConn(String clusterName) throws DBClusterException;
 
 	/**
 	 * 获取从库的全局库连接
@@ -140,7 +140,7 @@ public interface IDBCluster {
 	 * @param slave
 	 * @return
 	 */
-	public DBConnectionInfo getSlaveGlobalDbConn(String clusterName, EnumDBMasterSlave slave) throws DBClusterException;
+	public DBInfo getSlaveGlobalDbConn(String clusterName, EnumDBMasterSlave slave) throws DBClusterException;
 
 	/**
 	 * 从主库集群中获取被操作的库表.

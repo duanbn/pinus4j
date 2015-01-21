@@ -27,7 +27,7 @@ import org.pinus.util.StringUtils;
  * 
  * @author duanbn
  */
-public class AppDBConnectionInfo extends DBConnectionInfo {
+public class AppDBInfo extends DBInfo {
 
 	private String username;
 
@@ -84,7 +84,7 @@ public class AppDBConnectionInfo extends DBConnectionInfo {
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		AppDBConnectionInfo other = (AppDBConnectionInfo) obj;
+		AppDBInfo other = (AppDBInfo) obj;
 		if (connPoolInfo == null) {
 			if (other.connPoolInfo != null)
 				return false;

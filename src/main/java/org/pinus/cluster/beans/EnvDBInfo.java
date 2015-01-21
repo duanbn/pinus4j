@@ -19,7 +19,7 @@ package org.pinus.cluster.beans;
 import org.pinus.exception.LoadConfigException;
 import org.pinus.util.StringUtils;
 
-public class EnvDBConnectionInfo extends DBConnectionInfo {
+public class EnvDBInfo extends DBInfo {
 
 	private String envDsName;
 

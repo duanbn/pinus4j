@@ -31,7 +31,7 @@ import org.pinus.cache.IPrimaryCache;
 import org.pinus.cache.ISecondCache;
 import org.pinus.cluster.DB;
 import org.pinus.cluster.IDBCluster;
-import org.pinus.cluster.beans.DBConnectionInfo;
+import org.pinus.cluster.beans.DBInfo;
 import org.pinus.constant.Const;
 import org.pinus.datalayer.IDataQuery;
 import org.pinus.datalayer.SQLBuilder;
@@ -114,7 +114,7 @@ public abstract class AbstractJdbcQuery implements IDataQuery {
 		}
 	}
 
-	protected Number selectGlobalCount(IQuery query, DBConnectionInfo dbConnInfo, String clusterName, Class<?> clazz) {
+	protected Number selectGlobalCount(IQuery query, DBInfo dbConnInfo, String clusterName, Class<?> clazz) {
 		long count = 0;
 		Connection conn = null;
 		PreparedStatement ps = null;
@@ -149,7 +149,7 @@ public abstract class AbstractJdbcQuery implements IDataQuery {
 	 * @param clazz
 	 * @return count数
 	 */
-	protected Number selectGlobalCountWithCache(DBConnectionInfo dbConnInfo, String clusterName, Class<?> clazz,
+	protected Number selectGlobalCountWithCache(DBInfo dbConnInfo, String clusterName, Class<?> clazz,
 			boolean useCache) {
 		String tableName = ReflectUtil.getTableName(clazz);
 

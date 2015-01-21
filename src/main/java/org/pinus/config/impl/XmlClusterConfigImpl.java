@@ -32,11 +32,11 @@ import org.pinus.api.enums.EnumDBMasterSlave;
 import org.pinus.api.enums.EnumDbConnectionPoolCatalog;
 import org.pinus.cache.IPrimaryCache;
 import org.pinus.cache.ISecondCache;
-import org.pinus.cluster.beans.AppDBConnectionInfo;
+import org.pinus.cluster.beans.AppDBInfo;
 import org.pinus.cluster.beans.DBClusterInfo;
 import org.pinus.cluster.beans.DBClusterRegionInfo;
-import org.pinus.cluster.beans.DBConnectionInfo;
-import org.pinus.cluster.beans.EnvDBConnectionInfo;
+import org.pinus.cluster.beans.DBInfo;
+import org.pinus.cluster.beans.EnvDBInfo;
 import org.pinus.cluster.enums.EnumClusterCatalog;
 import org.pinus.cluster.enums.HashAlgoEnum;
 import org.pinus.config.IClusterConfig;
@@ -233,9 +233,9 @@ public class XmlClusterConfigImpl implements IClusterConfig {
 	/**
 	 * load cluster
 	 */
-	private DBConnectionInfo _getDBConnInfo(String clusterName, Node node, EnumDBMasterSlave masterSlave)
+	private DBInfo _getDBConnInfo(String clusterName, Node node, EnumDBMasterSlave masterSlave)
 			throws LoadConfigException {
-		DBConnectionInfo dbConnInfo = null;
+		DBInfo dbConnInfo = null;
 
 		Node root = xmlUtil.getRoot();
 		if (root == null) {
@@ -256,25 +256,25 @@ public class XmlClusterConfigImpl implements IClusterConfig {
 
 		switch (enumCpCatalog) {
 		case ENV:
-			dbConnInfo = new EnvDBConnectionInfo();
+			dbConnInfo = new EnvDBInfo();
 			dbConnInfo.setClusterName(clusterName);
 			dbConnInfo.setMasterSlave(masterSlave);
 
 			String envDsName = node.getTextContent().trim();
-			((EnvDBConnectionInfo) dbConnInfo).setEnvDsName(envDsName);
+			((EnvDBInfo) dbConnInfo).setEnvDsName(envDsName);
 			break;
 		case APP:
-			dbConnInfo = new AppDBConnectionInfo();
+			dbConnInfo = new AppDBInfo();
 			dbConnInfo.setClusterName(clusterName);
 			dbConnInfo.setMasterSlave(masterSlave);
 
 			String username = xmlUtil.getFirstChildByName(node, "db.username").getTextContent().trim();
 			String password = xmlUtil.getFirstChildByName(node, "db.password").getTextContent().trim();
 			String url = xmlUtil.getFirstChildByName(node, "db.url").getTextContent().trim();
-			((AppDBConnectionInfo) dbConnInfo).setUsername(username);
-			((AppDBConnectionInfo) dbConnInfo).setPassword(password);
-			((AppDBConnectionInfo) dbConnInfo).setUrl(url);
-			((AppDBConnectionInfo) dbConnInfo).setConnPoolInfo(_loadDbConnectInfo(connPoolNode));
+			((AppDBInfo) dbConnInfo).setUsername(username);
+			((AppDBInfo) dbConnInfo).setPassword(password);
+			((AppDBInfo) dbConnInfo).setUrl(url);
+			((AppDBInfo) dbConnInfo).setConnPoolInfo(_loadDbConnectInfo(connPoolNode));
 			break;
 		default:
 			throw new LoadConfigException("catalog attribute of db-connection-pool config error, catalog = "
@@ -298,14 +298,14 @@ public class XmlClusterConfigImpl implements IClusterConfig {
 		if (global != null) {
 			// load master global
 			Node masterGlobal = xmlUtil.getFirstChildByName(global, "master");
-			DBConnectionInfo masterGlobalConnection = _getDBConnInfo(clusterName, masterGlobal,
+			DBInfo masterGlobalConnection = _getDBConnInfo(clusterName, masterGlobal,
 					EnumDBMasterSlave.MASTER);
 			dbClusterInfo.setMasterGlobalConnection(masterGlobalConnection);
 
 			// load slave global
 			List<Node> slaveGlobalList = xmlUtil.getChildByName(global, "slave");
 			if (slaveGlobalList != null && !slaveGlobalList.isEmpty()) {
-				List<DBConnectionInfo> slaveGlobalConnection = new ArrayList<DBConnectionInfo>();
+				List<DBInfo> slaveGlobalConnection = new ArrayList<DBInfo>();
 
 				int slaveIndex = 0;
 				for (Node slaveGlobal : slaveGlobalList) {
@@ -336,7 +336,7 @@ public class XmlClusterConfigImpl implements IClusterConfig {
 			regionInfo.setEnd(capacity[1]);
 
 			// load region master
-			List<DBConnectionInfo> regionMasterConnection = new ArrayList<DBConnectionInfo>();
+			List<DBInfo> regionMasterConnection = new ArrayList<DBInfo>();
 			Node master = xmlUtil.getFirstChildByName(regionNode, "master");
 			List<Node> shardingNodeList = xmlUtil.getChildByName(master, "sharding");
 			for (Node shardingNode : shardingNodeList) {
@@ -345,13 +345,13 @@ public class XmlClusterConfigImpl implements IClusterConfig {
 			regionInfo.setMasterConnection(regionMasterConnection);
 
 			// load region slave
-			List<List<DBConnectionInfo>> regionSlaveConnection = new ArrayList<List<DBConnectionInfo>>();
+			List<List<DBInfo>> regionSlaveConnection = new ArrayList<List<DBInfo>>();
 			List<Node> slaveNodeList = xmlUtil.getChildByName(regionNode, "slave");
 			int slaveIndex = 0;
 			for (Node slaveNode : slaveNodeList) {
 				shardingNodeList = xmlUtil.getChildByName(slaveNode, "sharding");
 
-				List<DBConnectionInfo> slaveConnections = new ArrayList<DBConnectionInfo>();
+				List<DBInfo> slaveConnections = new ArrayList<DBInfo>();
 				for (Node shardingNode : shardingNodeList) {
 					slaveConnections.add(_getDBConnInfo(clusterName, shardingNode,
 							EnumDBMasterSlave.getSlaveEnum(slaveIndex)));

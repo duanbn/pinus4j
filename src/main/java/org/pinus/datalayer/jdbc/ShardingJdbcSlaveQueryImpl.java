@@ -27,7 +27,7 @@ import org.pinus.api.enums.EnumDBMasterSlave;
 import org.pinus.api.query.IQuery;
 import org.pinus.cluster.DB;
 import org.pinus.cluster.IDBCluster;
-import org.pinus.cluster.beans.DBConnectionInfo;
+import org.pinus.cluster.beans.DBInfo;
 import org.pinus.datalayer.IShardingSlaveQuery;
 import org.pinus.datalayer.SQLBuilder;
 import org.pinus.exception.DBClusterException;

@@ -19,8 +19,7 @@ package org.pinus.cluster.route.impl;
 import java.util.List;
 
 import org.pinus.api.IShardingKey;
-import org.pinus.cluster.beans.DBConnectionInfo;
-import org.pinus.cluster.route.AbstractDBRouterImpl;
+import org.pinus.cluster.beans.DBInfo;
 import org.pinus.cluster.route.DBRouteInfo;
 import org.pinus.exception.DBRouteException;
 
@@ -31,10 +30,10 @@ import org.pinus.exception.DBRouteException;
  * 
  * @author duanbn
  */
-public class SimpleHashClusterRouterImpl extends AbstractDBRouterImpl {
+public class SimpleHashClusterRouter extends AbstractClusterRouter {
 
 	@Override
-	public DBRouteInfo doSelectFromMaster(List<DBConnectionInfo> masterConnection, IShardingKey<?> value)
+	public DBRouteInfo doSelectFromMaster(List<DBInfo> masterConnection, IShardingKey<?> value)
 			throws DBRouteException {
 		DBRouteInfo dbRoute = new DBRouteInfo();
 
@@ -48,11 +47,11 @@ public class SimpleHashClusterRouterImpl extends AbstractDBRouterImpl {
 	}
 
 	@Override
-	public DBRouteInfo doSelectFromSlave(List<List<DBConnectionInfo>> slaveConnections, int slaveIndex,
+	public DBRouteInfo doSelectFromSlave(List<List<DBInfo>> slaveConnections, int slaveIndex,
 			IShardingKey<?> value) throws DBRouteException {
 		DBRouteInfo dbRoute = new DBRouteInfo();
 
-		List<DBConnectionInfo> slaveConnection = slaveConnections.get(slaveIndex);
+		List<DBInfo> slaveConnection = slaveConnections.get(slaveIndex);
 		if (slaveConnection == null || slaveConnection.isEmpty()) {
 			throw new DBRouteException("查找从库集群失败, dbname=" + value.getClusterName() + ", slaveindex=" + slaveIndex);
 		}
