@@ -20,6 +20,7 @@ import java.util.Map;
 
 import org.pinus.api.IShardingKey;
 import org.pinus.api.enums.EnumDBMasterSlave;
+import org.pinus.cluster.ITableCluster;
 import org.pinus.cluster.beans.DBClusterInfo;
 import org.pinus.cluster.enums.HashAlgoEnum;
 import org.pinus.exception.DBRouteException;
@@ -59,16 +60,15 @@ public interface IClusterRouter {
 	 * 设置数据表集群.
 	 * 
 	 * @param tableCluster
-	 *            数据表信息{集群名称, {分库下标, {表名, 分表数}}}
 	 */
-	public void setTableCluster(Map<String, Map<Integer, Map<String, Integer>>> tableCluster);
+	public void setTableCluster(ITableCluster tableCluster);
 
 	/**
 	 * 获取数据表集群.
 	 * 
-	 * @return 数据表集群信息{集群名称, {分库下标, {表名, 分表数}}}
+	 * @return 数据表集群信息
 	 */
-	public Map<String, Map<Integer, Map<String, Integer>>> getTableCluster();
+	public ITableCluster getTableCluster();
 
 	/**
 	 * 选择需要操作的数据库表.

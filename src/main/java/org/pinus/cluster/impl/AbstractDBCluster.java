@@ -46,6 +46,8 @@ import org.pinus.cache.ISecondCache;
 import org.pinus.cache.impl.MemCachedCacheBuilder;
 import org.pinus.cluster.DB;
 import org.pinus.cluster.IDBCluster;
+import org.pinus.cluster.ITableCluster;
+import org.pinus.cluster.ITableClusterBuilder;
 import org.pinus.cluster.beans.DBClusterInfo;
 import org.pinus.cluster.beans.DBClusterRegionInfo;
 import org.pinus.cluster.beans.DBInfo;
@@ -145,7 +147,7 @@ public abstract class AbstractDBCluster implements IDBCluster {
 	/**
 	 * 集群中的表集合. {集群名称, {分库下标, {表名, 分表数}}}
 	 */
-	private Map<String, Map<Integer, Map<String, Integer>>> tableCluster = new HashMap<String, Map<Integer, Map<String, Integer>>>();
+	private ITableCluster tableCluster;
 
 	/**
 	 * 集群配置.
@@ -265,7 +267,8 @@ public abstract class AbstractDBCluster implements IDBCluster {
 			}
 
 			// 初始化表集群
-			_initTableCluster(dbClusterInfo, tables);
+			ITableClusterBuilder tableClusterBuilder = NumberIndexTableClusterBuilder.valueOf(tables);
+			this.tableCluster = tableClusterBuilder.build();
 
 			// 创建数据库表
 			if (this.syncAction != EnumSyncAction.NONE) {
@@ -664,37 +667,34 @@ public abstract class AbstractDBCluster implements IDBCluster {
 	 */
 	private void _createTable(List<DBTable> tables) throws Exception {
 		String clusterName = null;
-		Map<Integer, Map<String, Integer>> oneDbTables = null;
 		for (DBTable table : tables) {
 			clusterName = table.getCluster();
 			if (table.getShardingNum() > 0) { // 当ShardingNumber大于0时表示分库分表
-				// 读取分表信息
-				oneDbTables = tableCluster.get(clusterName);
+				// read sharding db info.
 				DBClusterInfo dbClusterInfo = this.dbClusterInfo.get(clusterName);
-				if (oneDbTables == null || dbClusterInfo == null) {
+				if (dbClusterInfo == null) {
 					throw new DBClusterException("找不到相关的集群信息, clusterName=" + clusterName);
 				}
 
-				for (Integer dbIndex : oneDbTables.keySet()) {
-
-					// 创建主库库表
-					for (DBClusterRegionInfo region : dbClusterInfo.getDbRegions()) {
-						Connection dbConn = region.getMasterConnection().get(dbIndex).getDatasource().getConnection();
-						int tableNum = oneDbTables.get(dbIndex).get(table.getName());
+				// 创建主库库表
+				for (DBClusterRegionInfo region : dbClusterInfo.getDbRegions()) {
+					for (DBInfo dbInfo : region.getMasterConnection()) {
+						Connection dbConn = dbInfo.getDatasource().getConnection();
+						int tableNum = table.getShardingNum();
 						this.dbGenerator.syncTable(dbConn, table, tableNum);
 						dbConn.close();
 					}
+				}
 
-					// 创建从库库表
-					for (DBClusterRegionInfo region : dbClusterInfo.getDbRegions()) {
-						List<List<DBInfo>> slaveDbs = region.getSlaveConnection();
-						for (List<DBInfo> slaveConns : slaveDbs) {
-							for (DBInfo dbConnInfo : slaveConns) {
-								Connection dbConn = dbConnInfo.getDatasource().getConnection();
-								int tableNum = oneDbTables.get(dbIndex).get(table.getName());
-								this.dbGenerator.syncTable(dbConn, table, tableNum);
-								dbConn.close();
-							}
+				// 创建从库库表
+				for (DBClusterRegionInfo region : dbClusterInfo.getDbRegions()) {
+					List<List<DBInfo>> slaveDbs = region.getSlaveConnection();
+					for (List<DBInfo> slaveConns : slaveDbs) {
+						for (DBInfo dbConnInfo : slaveConns) {
+							Connection dbConn = dbConnInfo.getDatasource().getConnection();
+							int tableNum = table.getShardingNum();
+							this.dbGenerator.syncTable(dbConn, table, tableNum);
+							dbConn.close();
 						}
 					}
 				}
@@ -761,38 +761,6 @@ public abstract class AbstractDBCluster implements IDBCluster {
 				}
 			}
 
-		}
-	}
-
-	/**
-	 * 初始化分表. 并将分表信息设置到分库分表路由器, 主库和从库的分表信息是相同的，因此使用主库集群进行设置.
-	 * 
-	 * @throws DBClusterException
-	 *             初始化失败
-	 */
-	private void _initTableCluster(Map<String, DBClusterInfo> dbCluster, List<DBTable> tables)
-			throws DBClusterException {
-
-		// {分库下标, {表名, 分表数}}
-		Map<Integer, Map<String, Integer>> oneDbTable = null;
-
-		Map<String, Integer> tableInfos = null;
-		for (Map.Entry<String, DBClusterInfo> entry : dbClusterInfo.entrySet()) {
-			oneDbTable = new HashMap<Integer, Map<String, Integer>>();
-
-			String clusterName = entry.getKey();
-
-			int dbNum = 0;
-			List<DBClusterRegionInfo> regions = entry.getValue().getDbRegions();
-			if (!regions.isEmpty())
-				dbNum = regions.get(0).getMasterConnection().size();
-
-			for (int i = 0; i < dbNum; i++) {
-				tableInfos = _loadTableInfo(clusterName, tables);
-				oneDbTable.put(i, tableInfos);
-			}
-
-			this.tableCluster.put(clusterName, oneDbTable);
 		}
 	}
 
@@ -888,8 +856,13 @@ public abstract class AbstractDBCluster implements IDBCluster {
 		this.scanPackage = scanPackage;
 	}
 
+	/*
+	 * public Map<String, Map<Integer, Map<String, Integer>>> getTableCluster()
+	 * { return this.tableCluster; }
+	 */
+
 	@Override
-	public Map<String, Map<Integer, Map<String, Integer>>> getTableCluster() {
+	public ITableCluster getTableCluster() {
 		return this.tableCluster;
 	}
 

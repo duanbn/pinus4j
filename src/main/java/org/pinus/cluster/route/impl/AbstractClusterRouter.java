@@ -21,6 +21,7 @@ import java.util.Map;
 
 import org.pinus.api.IShardingKey;
 import org.pinus.api.enums.EnumDBMasterSlave;
+import org.pinus.cluster.ITableCluster;
 import org.pinus.cluster.beans.DBClusterInfo;
 import org.pinus.cluster.beans.DBClusterRegionInfo;
 import org.pinus.cluster.beans.DBInfo;
@@ -47,9 +48,9 @@ public abstract class AbstractClusterRouter implements IClusterRouter {
 	private Map<String, DBClusterInfo> dbClusterInfo;
 
 	/**
-	 * 数据表集群. {库名, {库下标, {表名, 表个数}}}
+	 * 数据表集群. 
 	 */
-	private Map<String, Map<Integer, Map<String, Integer>>> tableCluster;
+	private ITableCluster tableCluster;
 
 	@Override
 	public void setHashAlgo(HashAlgoEnum algoEnum) {
@@ -67,12 +68,12 @@ public abstract class AbstractClusterRouter implements IClusterRouter {
 	}
 
 	@Override
-	public void setTableCluster(Map<String, Map<Integer, Map<String, Integer>>> tableCluster) {
+	public void setTableCluster(ITableCluster tableCluster) {
 		this.tableCluster = tableCluster;
 	}
 
 	@Override
-	public Map<String, Map<Integer, Map<String, Integer>>> getTableCluster() {
+	public ITableCluster getTableCluster() {
 		return this.tableCluster;
 	}
 
@@ -123,9 +124,8 @@ public abstract class AbstractClusterRouter implements IClusterRouter {
 
 		// 计算分表.
 		try {
-			Map<Integer, Map<String, Integer>> dbCluster = tableCluster.get(dbRouteInfo.getClusterName());
-			Map<String, Integer> tableCluster = dbCluster.get(dbRouteInfo.getDbIndex());
-			int tableNum = tableCluster.get(tableName);
+            // get table number.
+			int tableNum = tableCluster.getTableNumber(clusterName, tableName);
 
 			// 计算分表下标
 			int tableIndex = (int) shardingValue % tableNum;

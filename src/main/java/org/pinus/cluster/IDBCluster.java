@@ -18,7 +18,6 @@ package org.pinus.cluster;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.locks.Lock;
 
 import org.pinus.api.IShardingKey;
@@ -50,7 +49,7 @@ import org.pinus.generator.beans.DBTable;
  * @author duanbn
  */
 public interface IDBCluster {
-	
+
 	public Lock createLock(String name);
 
 	/**
@@ -243,11 +242,11 @@ public interface IDBCluster {
 	public void setScanPackage(String scanPackage);
 
 	/**
-	 * 获取集群表集合. 集群中的表集合. {集群名称, {分库下标, {表名, 分表数}}}
+	 * 获取集群表集合.
 	 * 
 	 * @return 集群表集合
 	 */
-	public Map<String, Map<Integer, Map<String, Integer>>> getTableCluster();
+	public ITableCluster getTableCluster();
 
 	/**
 	 * 获取集群配置.

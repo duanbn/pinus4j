@@ -47,23 +47,6 @@ public abstract class DBInfo {
 	 */
 	protected EnumDBMasterSlave masterSlave;
 
-    /**
-     * this db instance include table info.
-     */
-    protected List<TableInfo> tableInfos;
-
-    public DBInfo() {
-        this.tableInfos = new ArrayList<TableInfo>();
-    }
-
-    public void addTableInfo(TableInfo tableInfo) {
-        this.tableInfos.add(tableInfo);
-    }
-
-    public TableInfo getTableInfo(int tableIndex) {
-        return this.tableInfos.get(tableIndex);
-    }
-
 	public abstract boolean check() throws LoadConfigException;
 
 	public String getClusterName() {
