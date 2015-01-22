@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.pinus.cluster.lock;
+package org.pinus.util;
 
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;

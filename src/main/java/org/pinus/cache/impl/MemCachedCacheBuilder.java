@@ -88,6 +88,8 @@ public class MemCachedCacheBuilder implements ICacheBuilder {
 			throw new RuntimeException("create primary cache instance failure", e);
 		}
 
+        _sleep(100);
+
 		StringBuilder memcachedAddressInfo = new StringBuilder();
 		Collection<SocketAddress> servers = instance.getAvailableServers();
 		if (servers != null && !servers.isEmpty()) {
@@ -97,7 +99,7 @@ public class MemCachedCacheBuilder implements ICacheBuilder {
 				memcachedAddressInfo.append(",");
 			}
 			memcachedAddressInfo.deleteCharAt(memcachedAddressInfo.length() - 1);
-			LOG.info("find primary cache, expire " + this.primaryCacheExpire + ", memcached server - "
+			LOG.info("find primary cache, expire " + this.primaryCacheExpire + " seconds, memcached server - "
 					+ memcachedAddressInfo.toString());
 		}
 
@@ -121,6 +123,8 @@ public class MemCachedCacheBuilder implements ICacheBuilder {
 			throw new RuntimeException("create second cache instance failure", e);
 		}
 
+        _sleep(100);
+
 		StringBuilder memcachedAddressInfo = new StringBuilder();
 		Collection<SocketAddress> servers = instance.getAvailableServers();
 		if (servers != null && !servers.isEmpty()) {
@@ -130,12 +134,19 @@ public class MemCachedCacheBuilder implements ICacheBuilder {
 				memcachedAddressInfo.append(",");
 			}
 			memcachedAddressInfo.deleteCharAt(memcachedAddressInfo.length() - 1);
-			LOG.info("find second cache, expire " + this.secondCacheExpire + ", memcached server - "
+			LOG.info("find second cache, expire " + this.secondCacheExpire + " seconds, memcached server - "
 					+ memcachedAddressInfo.toString());
 		}
 
 		return instance;
 	}
+
+    private void _sleep(int time) {
+        try {
+            Thread.sleep(time);
+        } catch (Exception e) {
+        }
+    }
 
 	public void setPrimaryCacheClass(Class<IPrimaryCache> clazz) {
 		this.primaryCacheClass = clazz;

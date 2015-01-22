@@ -21,13 +21,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CountDownLatch;
 
-import org.apache.zookeeper.WatchedEvent;
-import org.apache.zookeeper.Watcher;
-import org.apache.zookeeper.Watcher.Event.KeeperState;
-import org.apache.zookeeper.ZooKeeper;
-import org.apache.zookeeper.ZooKeeper.States;
 import org.pinus.api.enums.EnumDBMasterSlave;
 import org.pinus.api.enums.EnumDbConnectionPoolCatalog;
 import org.pinus.cache.IPrimaryCache;
@@ -39,6 +33,7 @@ import org.pinus.cluster.beans.DBInfo;
 import org.pinus.cluster.beans.EnvDBInfo;
 import org.pinus.cluster.enums.EnumClusterCatalog;
 import org.pinus.cluster.enums.HashAlgoEnum;
+import org.pinus.cluster.route.IClusterRouter;
 import org.pinus.config.IClusterConfig;
 import org.pinus.constant.Const;
 import org.pinus.exception.LoadConfigException;
@@ -74,6 +69,9 @@ public class XmlClusterConfigImpl implements IClusterConfig {
 	 */
 	private static HashAlgoEnum hashAlgo;
 
+    /**
+     * cache config param.
+     */
 	private static boolean isCacheEnabled;
 	private static Class<IPrimaryCache> primaryCacheClass;
 	private static int primaryCacheExpire;
@@ -94,8 +92,6 @@ public class XmlClusterConfigImpl implements IClusterConfig {
 	 * zookeeper连接地址.
 	 */
 	private static String zkUrl;
-	private CountDownLatch connectedLatch = new CountDownLatch(1);
-	private int sessionTimeout = 30000;
 
 	private XmlClusterConfigImpl() throws LoadConfigException {
 		this(null);
@@ -288,8 +284,21 @@ public class XmlClusterConfigImpl implements IClusterConfig {
 
 	private DBClusterInfo _getDBClusterInfo(String clusterName, Node clusterNode) throws LoadConfigException {
 		DBClusterInfo dbClusterInfo = new DBClusterInfo();
+        // set cluster name
 		dbClusterInfo.setClusterName(clusterName);
-		dbClusterInfo.setCatalog(EnumClusterCatalog.MYSQL);
+        // set router class
+        try {
+            String classFullPath = xmlUtil.getAttributeValue(clusterNode, "class");
+            if (StringUtils.isBlank(classFullPath)) {
+                classFullPath = DEFAULT_CLUSTER_ROUTER_CLASS;
+            }
+            Class<IClusterRouter> clazz = (Class<IClusterRouter>) Class.forName(classFullPath);
+            dbClusterInfo.setRouterClass(clazz);
+        } catch (Exception e) {
+            throw new LoadConfigException(e);
+        }
+        String catalog = xmlUtil.getAttributeValue(clusterNode, "catalog");
+		dbClusterInfo.setCatalog(EnumClusterCatalog.getEnum(catalog));
 
 		//
 		// load global
@@ -300,7 +309,7 @@ public class XmlClusterConfigImpl implements IClusterConfig {
 			Node masterGlobal = xmlUtil.getFirstChildByName(global, "master");
 			DBInfo masterGlobalConnection = _getDBConnInfo(clusterName, masterGlobal,
 					EnumDBMasterSlave.MASTER);
-			dbClusterInfo.setMasterGlobalConnection(masterGlobalConnection);
+			dbClusterInfo.setMasterGlobalDBInfo(masterGlobalConnection);
 
 			// load slave global
 			List<Node> slaveGlobalList = xmlUtil.getChildByName(global, "slave");
@@ -313,7 +322,7 @@ public class XmlClusterConfigImpl implements IClusterConfig {
 							EnumDBMasterSlave.getSlaveEnum(slaveIndex++)));
 				}
 
-				dbClusterInfo.setSlaveGlobalConnection(slaveGlobalConnection);
+				dbClusterInfo.setSlaveGlobalDBInfo(slaveGlobalConnection);
 			}
 		}
 
@@ -397,14 +406,21 @@ public class XmlClusterConfigImpl implements IClusterConfig {
 			if (this.isCacheEnabled) {
 				Node primaryNode = xmlUtil.getFirstChildByName(dbClusterCacheNode, Const.PROP_DB_CLUSTER_CACHE_PRIMARY);
 				primaryCacheExpire = Integer.parseInt(xmlUtil.getAttributeValue(primaryNode, "expire"));
-				primaryCacheClass = (Class<IPrimaryCache>) Class.forName(xmlUtil
-						.getAttributeValue(primaryNode, "class"));
+                String classFullPath = xmlUtil.getAttributeValue(primaryNode, "class");
+                if (StringUtils.isBlank(classFullPath)) {
+                    classFullPath = DEFAULT_PRIMARY_CACHE_CLASS;
+                }
+				primaryCacheClass = (Class<IPrimaryCache>) Class.forName(classFullPath);
 				Node primaryAddressNode = xmlUtil.getFirstChildByName(primaryNode, Const.PROP_DB_CLUSTER_CACHE_ADDRESS);
 				primaryCacheAddress = primaryAddressNode.getTextContent().trim();
 
 				Node secondNode = xmlUtil.getFirstChildByName(dbClusterCacheNode, Const.PROP_DB_CLUSTER_CACHE_SECOND);
 				secondCacheExpire = Integer.parseInt(xmlUtil.getAttributeValue(secondNode, "expire"));
-				secondCacheClass = (Class<ISecondCache>) Class.forName(xmlUtil.getAttributeValue(secondNode, "class"));
+                classFullPath = xmlUtil.getAttributeValue(secondNode, "class");
+                if (StringUtils.isBlank(classFullPath)) {
+                    classFullPath = DEFAULT_SECOND_CACHE_CLASS;
+                }
+				secondCacheClass = (Class<ISecondCache>) Class.forName(classFullPath);
 				Node secondAddressNode = xmlUtil.getFirstChildByName(secondNode, Const.PROP_DB_CLUSTER_CACHE_ADDRESS);
 				secondCacheAddress = secondAddressNode.getTextContent().trim();
 			}

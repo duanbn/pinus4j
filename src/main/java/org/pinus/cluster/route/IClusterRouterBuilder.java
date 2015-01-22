@@ -16,6 +16,8 @@
 
 package org.pinus.cluster.route;
 
+import org.pinus.cluster.enums.HashAlgoEnum;
+
 /**
  * for build cluster router intance.
  *
@@ -24,11 +26,23 @@ package org.pinus.cluster.route;
  */
 public interface IClusterRouterBuilder {
 
+    /**
+     * set hash algo.
+     */
+    public void setHashAlgo(HashAlgoEnum hashAlgo);
+
+    /**
+     * get hash algo.
+     */
+    public HashAlgoEnum getHashAlgo();
+
 	/**
-	 * build router instance.
+	 * build router instance by give cluster name.
+     *
+     * @param clusterName cluster name
 	 * 
 	 * @return
 	 */
-	public IClusterRouter build();
+	public IClusterRouter build(String clusterName);
 
 }

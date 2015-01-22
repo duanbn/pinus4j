@@ -21,7 +21,7 @@ package org.pinus.cluster.route;
  * 
  * @author duanbn
  */
-public class DBRouteInfo {
+public class RouteInfo {
 
 	/**
 	 * 集群名称. 等于不带下标的数据库名

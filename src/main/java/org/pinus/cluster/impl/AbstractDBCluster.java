@@ -51,9 +51,8 @@ import org.pinus.cluster.ITableClusterBuilder;
 import org.pinus.cluster.beans.DBClusterInfo;
 import org.pinus.cluster.beans.DBClusterRegionInfo;
 import org.pinus.cluster.beans.DBInfo;
-import org.pinus.cluster.lock.CuratorDistributeedLock;
-import org.pinus.cluster.route.DBRouteInfo;
 import org.pinus.cluster.route.IClusterRouter;
+import org.pinus.cluster.route.RouteInfo;
 import org.pinus.cluster.route.impl.SimpleHashClusterRouter;
 import org.pinus.config.IClusterConfig;
 import org.pinus.config.impl.XmlClusterConfigImpl;
@@ -70,6 +69,7 @@ import org.pinus.generator.IDBGeneratorBuilder;
 import org.pinus.generator.IIdGenerator;
 import org.pinus.generator.beans.DBTable;
 import org.pinus.generator.impl.DistributedSequenceIdGeneratorImpl;
+import org.pinus.util.CuratorDistributeedLock;
 import org.pinus.util.IOUtil;
 import org.pinus.util.ReflectUtil;
 import org.pinus.util.StringUtils;
@@ -140,7 +140,7 @@ public abstract class AbstractDBCluster implements IDBCluster {
 	private IClusterRouter dbRouter;
 
 	/**
-	 * 分库分表信息. {clusterName, clusterInfo}
+	 * cluster info. {clusterName, clusterInfo}
 	 */
 	private Map<String, DBClusterInfo> dbClusterInfo;
 
@@ -170,12 +170,12 @@ public abstract class AbstractDBCluster implements IDBCluster {
 	}
 
 	@Override
-	public Collection<DBClusterInfo> getDbClusterInfo() {
+	public Collection<DBClusterInfo> getDBClusterInfo() {
 		return this.dbClusterInfo.values();
 	}
 
 	@Override
-	public DBClusterInfo getDbClusterInfo(String clusterName) {
+	public DBClusterInfo getDBClusterInfo(String clusterName) {
 		DBClusterInfo clusterInfo = dbClusterInfo.get(clusterName);
 
 		if (clusterInfo == null) {
@@ -294,7 +294,7 @@ public abstract class AbstractDBCluster implements IDBCluster {
 			break;
 		}
 		// set db cluster info.
-		this.dbRouter.setDbClusterInfo(dbClusterInfo);
+		this.dbRouter.setDBCluster(this);
 		// set table cluster info.
 		this.dbRouter.setTableCluster(tableCluster);
 		// set hash algo
@@ -311,20 +311,22 @@ public abstract class AbstractDBCluster implements IDBCluster {
 	public void shutdown() throws DBClusterException {
 
 		// close cache connection
-		this.primaryCache.close();
-		this.secondCache.close();
+        if (this.primaryCache != null)
+            this.primaryCache.close();
+        if (this.secondCache != null)
+            this.secondCache.close();
 
 		try {
 			// close database connection
 			for (Map.Entry<String, DBClusterInfo> entry : this.dbClusterInfo.entrySet()) {
 				// 关闭全局库
 				// 主全局库
-				DBInfo masterGlobal = entry.getValue().getMasterGlobalConnection();
+				DBInfo masterGlobal = entry.getValue().getMasterGlobalDBInfo();
 				if (masterGlobal != null)
 					closeDataSource(masterGlobal);
 
 				// 从全局库
-				List<DBInfo> slaveDbs = entry.getValue().getSlaveGlobalConnection();
+				List<DBInfo> slaveDbs = entry.getValue().getSlaveGlobalDBInfo();
 				if (slaveDbs != null && !slaveDbs.isEmpty()) {
 					for (DBInfo slaveGlobal : slaveDbs) {
 						closeDataSource(slaveGlobal);
@@ -362,7 +364,7 @@ public abstract class AbstractDBCluster implements IDBCluster {
 			throw new DBClusterException("没有找到集群信息, clustername=" + clusterName);
 		}
 
-		DBInfo masterConnection = dbClusterInfo.getMasterGlobalConnection();
+		DBInfo masterConnection = dbClusterInfo.getMasterGlobalDBInfo();
 		if (masterConnection == null) {
 			throw new DBClusterException("此集群没有配置全局主库, clustername=" + clusterName);
 		}
@@ -376,7 +378,7 @@ public abstract class AbstractDBCluster implements IDBCluster {
 			throw new DBClusterException("没有找到集群信息, clustername=" + clusterName);
 		}
 
-		List<DBInfo> slaveDbs = dbClusterInfo.getSlaveGlobalConnection();
+		List<DBInfo> slaveDbs = dbClusterInfo.getSlaveGlobalDBInfo();
 		if (slaveDbs == null || slaveDbs.isEmpty()) {
 			throw new DBClusterException("此集群没有配置全局从库, clustername=" + clusterName);
 		}
@@ -389,7 +391,7 @@ public abstract class AbstractDBCluster implements IDBCluster {
 
 		// 计算分库
 		// 计算路由信息
-		DBRouteInfo routeInfo = null;
+		RouteInfo routeInfo = null;
 		try {
 			routeInfo = dbRouter.select(EnumDBMasterSlave.MASTER, tableName, value);
 		} catch (DBRouteException e) {
@@ -435,7 +437,7 @@ public abstract class AbstractDBCluster implements IDBCluster {
 
 		// 计算分库
 		// 计算路由信息
-		DBRouteInfo routeInfo = null;
+		RouteInfo routeInfo = null;
 		try {
 			routeInfo = dbRouter.select(slaveNum, tableName, value);
 		} catch (DBRouteException e) {
@@ -488,7 +490,7 @@ public abstract class AbstractDBCluster implements IDBCluster {
 		}
 
 		DB db = null;
-		DBClusterInfo dbClusterInfo = this.getDbClusterInfo(clusterName);
+		DBClusterInfo dbClusterInfo = this.getDBClusterInfo(clusterName);
 		for (DBClusterRegionInfo region : dbClusterInfo.getDbRegions()) {
 			int dbIndex = 0;
 			for (DBInfo connInfo : region.getMasterConnection()) {
@@ -536,7 +538,7 @@ public abstract class AbstractDBCluster implements IDBCluster {
 		DB db = null;
 		String clusterName = ReflectUtil.getClusterName(clazz);
 		String tableName = ReflectUtil.getTableName(clazz);
-		DBClusterInfo dbClusterInfo = this.getDbClusterInfo(clusterName);
+		DBClusterInfo dbClusterInfo = this.getDBClusterInfo(clusterName);
 		for (DBClusterRegionInfo region : dbClusterInfo.getDbRegions()) {
 			int dbIndex = 0;
 			for (DBInfo connInfo : region.getSlaveConnection().get(slave.getValue())) {
@@ -568,6 +570,8 @@ public abstract class AbstractDBCluster implements IDBCluster {
 	@Override
 	public IDataLayerBuilder getDataLayerBuilder() {
 		IDataLayerBuilder builder = JdbcDataLayerBuilder.valueOf(this);
+        builder.setPrimaryCache(this.primaryCache);
+        builder.setSecondCache(this.secondCache);
 		return builder;
 	}
 
@@ -705,7 +709,7 @@ public abstract class AbstractDBCluster implements IDBCluster {
 					throw new DBClusterException("加载集群失败，未知的集群，cluster name=" + clusterName);
 				}
 				// 全局主库
-				DBInfo dbConnInfo = dbClusterInfo.getMasterGlobalConnection();
+				DBInfo dbConnInfo = dbClusterInfo.getMasterGlobalDBInfo();
 				if (dbConnInfo != null) {
 					DataSource globalDs = dbConnInfo.getDatasource();
 					if (globalDs != null) {
@@ -716,7 +720,7 @@ public abstract class AbstractDBCluster implements IDBCluster {
 				}
 
 				// 全局从库
-				List<DBInfo> slaveDbs = dbClusterInfo.getSlaveGlobalConnection();
+				List<DBInfo> slaveDbs = dbClusterInfo.getSlaveGlobalDBInfo();
 				if (slaveDbs != null && !slaveDbs.isEmpty()) {
 					for (DBInfo slaveConnInfo : slaveDbs) {
 						Connection conn = slaveConnInfo.getDatasource().getConnection();
@@ -734,12 +738,12 @@ public abstract class AbstractDBCluster implements IDBCluster {
 		for (Map.Entry<String, DBClusterInfo> entry : dbClusterInfo.entrySet()) {
 
 			// 初始化全局主库
-			DBInfo masterGlobalConnection = entry.getValue().getMasterGlobalConnection();
+			DBInfo masterGlobalConnection = entry.getValue().getMasterGlobalDBInfo();
 			if (masterGlobalConnection != null)
 				buildDataSource(masterGlobalConnection);
 
 			// 初始化全局从库
-			List<DBInfo> slaveDbs = entry.getValue().getSlaveGlobalConnection();
+			List<DBInfo> slaveDbs = entry.getValue().getSlaveGlobalDBInfo();
 			if (slaveDbs != null && !slaveDbs.isEmpty()) {
 				for (DBInfo slaveGlobalConnection : slaveDbs) {
 					buildDataSource(slaveGlobalConnection);
@@ -789,17 +793,17 @@ public abstract class AbstractDBCluster implements IDBCluster {
 	}
 
 	@Override
-	public IClusterRouter getDbRouter() {
+	public IClusterRouter getDBRouter() {
 		return dbRouter;
 	}
 
 	@Override
-	public void setDbRouteAlg(EnumDBRouteAlg routeAlg) {
+	public void setDBRouteAlg(EnumDBRouteAlg routeAlg) {
 		this.enumDBRouteAlg = routeAlg;
 	}
 
 	@Override
-	public EnumDBRouteAlg getDbRouteAlg() {
+	public EnumDBRouteAlg getDBRouteAlg() {
 		return this.enumDBRouteAlg;
 	}
 
@@ -842,7 +846,7 @@ public abstract class AbstractDBCluster implements IDBCluster {
 	}
 
 	@Override
-	public IDBGenerator getDbGenerator() {
+	public IDBGenerator getDBGenerator() {
 		return this.dbGenerator;
 	}
 

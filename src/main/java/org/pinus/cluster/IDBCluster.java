@@ -50,6 +50,11 @@ import org.pinus.generator.beans.DBTable;
  */
 public interface IDBCluster {
 
+    /**
+     * create a destribute lock by give name.
+     *
+     * @return destirbute lock.
+     */
 	public Lock createLock(String name);
 
 	/**
@@ -86,7 +91,7 @@ public interface IDBCluster {
 	 *
 	 * @return all cluster info.
 	 */
-	public Collection<DBClusterInfo> getDbClusterInfo();
+	public Collection<DBClusterInfo> getDBClusterInfo();
 
 	/**
 	 * 获取集群信息.
@@ -95,7 +100,7 @@ public interface IDBCluster {
 	 *            集群名
 	 * @return 集群信息
 	 */
-	public DBClusterInfo getDbClusterInfo(String clusterName);
+	public DBClusterInfo getDBClusterInfo(String clusterName);
 
 	/**
 	 * 启动集群. 调用数据库集群前需要调用此方法，为了初始化集群连接.
@@ -202,17 +207,17 @@ public interface IDBCluster {
 	/**
 	 * 获取数据库路由器.
 	 */
-	public IClusterRouter getDbRouter();
+	public IClusterRouter getDBRouter();
 
 	/**
 	 * 设置路由算法.
 	 */
-	public void setDbRouteAlg(EnumDBRouteAlg routeAlg);
+	public void setDBRouteAlg(EnumDBRouteAlg routeAlg);
 
 	/**
 	 * 获取路由算法.
 	 */
-	public EnumDBRouteAlg getDbRouteAlg();
+	public EnumDBRouteAlg getDBRouteAlg();
 
 	/**
 	 * 设置数据表同步动作.
@@ -224,7 +229,7 @@ public interface IDBCluster {
 	/**
 	 * 获取db生成器.
 	 */
-	public IDBGenerator getDbGenerator();
+	public IDBGenerator getDBGenerator();
 
 	/**
 	 * 获取id生成器.

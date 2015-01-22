@@ -20,10 +20,10 @@ import java.util.concurrent.locks.Lock;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.recipes.locks.InterProcessMutex;
-import org.pinus.cluster.lock.CuratorDistributeedLock;
 import org.pinus.config.IClusterConfig;
 import org.pinus.constant.Const;
 import org.pinus.generator.AbstractSequenceIdGenerator;
+import org.pinus.util.CuratorDistributeedLock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

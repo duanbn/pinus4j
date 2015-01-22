@@ -20,7 +20,7 @@ import java.util.List;
 
 import org.pinus.api.IShardingKey;
 import org.pinus.cluster.beans.DBInfo;
-import org.pinus.cluster.route.DBRouteInfo;
+import org.pinus.cluster.route.RouteInfo;
 import org.pinus.exception.DBRouteException;
 
 /**
@@ -33,9 +33,9 @@ import org.pinus.exception.DBRouteException;
 public class SimpleHashClusterRouter extends AbstractClusterRouter {
 
 	@Override
-	public DBRouteInfo doSelectFromMaster(List<DBInfo> masterConnection, IShardingKey<?> value)
+	public RouteInfo doSelectFromMaster(List<DBInfo> masterConnection, IShardingKey<?> value)
 			throws DBRouteException {
-		DBRouteInfo dbRoute = new DBRouteInfo();
+		RouteInfo dbRoute = new RouteInfo();
 
 		long shardingValue = getShardingValue(value);
 		int dbNum = masterConnection.size();
@@ -47,9 +47,9 @@ public class SimpleHashClusterRouter extends AbstractClusterRouter {
 	}
 
 	@Override
-	public DBRouteInfo doSelectFromSlave(List<List<DBInfo>> slaveConnections, int slaveIndex,
+	public RouteInfo doSelectFromSlave(List<List<DBInfo>> slaveConnections, int slaveIndex,
 			IShardingKey<?> value) throws DBRouteException {
-		DBRouteInfo dbRoute = new DBRouteInfo();
+		RouteInfo dbRoute = new RouteInfo();
 
 		List<DBInfo> slaveConnection = slaveConnections.get(slaveIndex);
 		if (slaveConnection == null || slaveConnection.isEmpty()) {

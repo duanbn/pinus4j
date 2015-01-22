@@ -115,8 +115,17 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 	 */
 	private IDBCluster dbCluster;
 
+    /**
+     * global updater.
+     */
 	private IGlobalUpdate globalUpdater;
+    /**
+     * global master queryer.
+     */
 	private IGlobalMasterQuery globalMasterQuery;
+    /**
+     * global slave queryer.
+     */
 	private IGlobalSlaveQuery globalSlaveQuery;
 
 	/**
@@ -153,7 +162,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 			break;
 		}
 		// 设置路由算法.
-		this.dbCluster.setDbRouteAlg(this.enumDBRouteAlg);
+		this.dbCluster.setDBRouteAlg(this.enumDBRouteAlg);
 		// 设置是否生成数据库表
 		this.dbCluster.setSyncAction(syncAction);
 		// 设置扫描对象的包
@@ -171,6 +180,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 		// 初始化分库分表增删改查实现.
 		//
 		IDataLayerBuilder dataLayerBuilder = this.dbCluster.getDataLayerBuilder();
+
 		this.globalUpdater = dataLayerBuilder.buildGlobalUpdate(this.dbCluster.getIdGenerator());
 		this.globalMasterQuery = dataLayerBuilder.buildGlobalMasterQuery();
 		this.globalSlaveQuery = dataLayerBuilder.buildGlobalSlaveQuery();

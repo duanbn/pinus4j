@@ -27,10 +27,10 @@ public class XmlCinfigImplTest extends BaseTest {
 			DBClusterInfo dbClusterInfo = entry.getValue();
 
 			System.out.println("master global");
-			System.out.println(dbClusterInfo.getMasterGlobalConnection());
+			System.out.println(dbClusterInfo.getMasterGlobalDBInfo());
 
 			System.out.println("slave global");
-			for (DBInfo connInfo : dbClusterInfo.getSlaveGlobalConnection()) {
+			for (DBInfo connInfo : dbClusterInfo.getSlaveGlobalDBInfo()) {
 				System.out.println(connInfo);
 			}
 

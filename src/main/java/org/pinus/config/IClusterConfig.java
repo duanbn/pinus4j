@@ -30,8 +30,24 @@ import org.pinus.cluster.enums.HashAlgoEnum;
  * 一个storage-config.xml中可以配置多个数据库集群，每个数据库集群又可以配置一个主库集群和多个从库集群.
  * 
  * @author duanbn
+ * @since 0.1.0
  */
 public interface IClusterConfig {
+
+    /**
+     *  the class of default primary cache implement.
+     */
+    public static final String DEFAULT_PRIMARY_CACHE_CLASS = "org.pinus.cache.impl.MemCachedPrimaryCacheImpl";
+
+    /**
+     * the class of default second cache implement.
+     */
+    public static final String DEFAULT_SECOND_CACHE_CLASS = "org.pinus.cache.impl.MemCachedSecondCacheImpl";
+
+    /**
+     * the class of default cluster router implement.
+     */
+    public static final String DEFAULT_CLUSTER_ROUTER_CLASS = "org.pinus.cluster.route.impl.SimpleHashClusterRouter";
 
 	/**
 	 * ture is enabled, false is not.

@@ -16,12 +16,10 @@
 
 package org.pinus.cluster.route;
 
-import java.util.Map;
-
 import org.pinus.api.IShardingKey;
 import org.pinus.api.enums.EnumDBMasterSlave;
+import org.pinus.cluster.IDBCluster;
 import org.pinus.cluster.ITableCluster;
-import org.pinus.cluster.beans.DBClusterInfo;
 import org.pinus.cluster.enums.HashAlgoEnum;
 import org.pinus.exception.DBRouteException;
 
@@ -49,12 +47,16 @@ public interface IClusterRouter {
 	public HashAlgoEnum getHashAlgo();
 
 	/**
-	 * 设置主库集群.
-	 * 
-	 * @param dbClusterInfo
-	 *            集群信息.
+	 * set db cluster.
+     *
+     * @param dbCluster cluster info.
 	 */
-	public void setDbClusterInfo(Map<String, DBClusterInfo> dbClusterInfo);
+	public void setDBCluster(IDBCluster dbCluster);
+
+    /**
+     * get db cluster.
+     */
+    public IDBCluster getDBCluster();
 
 	/**
 	 * 设置数据表集群.
@@ -85,7 +87,7 @@ public interface IClusterRouter {
 	 * @throws DBRouteException
 	 *             路由操作失败
 	 */
-	public DBRouteInfo select(EnumDBMasterSlave clusterType, String tableName, IShardingKey<?> value)
+	public RouteInfo select(EnumDBMasterSlave clusterType, String tableName, IShardingKey<?> value)
 			throws DBRouteException;
 
 }

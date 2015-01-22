@@ -148,6 +148,10 @@ public class XmlUtil {
 	}
 
 	public String getAttributeValue(Node node, String attribute) {
+        if (node == null) {
+            return null;
+        }
+
 		NamedNodeMap namedNodeMap = node.getAttributes();
 		if (namedNodeMap == null) {
 			return null;

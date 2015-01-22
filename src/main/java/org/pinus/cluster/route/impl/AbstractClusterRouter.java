@@ -17,17 +17,17 @@
 package org.pinus.cluster.route.impl;
 
 import java.util.List;
-import java.util.Map;
 
 import org.pinus.api.IShardingKey;
 import org.pinus.api.enums.EnumDBMasterSlave;
+import org.pinus.cluster.IDBCluster;
 import org.pinus.cluster.ITableCluster;
 import org.pinus.cluster.beans.DBClusterInfo;
 import org.pinus.cluster.beans.DBClusterRegionInfo;
 import org.pinus.cluster.beans.DBInfo;
 import org.pinus.cluster.enums.HashAlgoEnum;
-import org.pinus.cluster.route.DBRouteInfo;
 import org.pinus.cluster.route.IClusterRouter;
+import org.pinus.cluster.route.RouteInfo;
 import org.pinus.exception.DBRouteException;
 
 /**
@@ -43,9 +43,9 @@ public abstract class AbstractClusterRouter implements IClusterRouter {
 	private HashAlgoEnum hashAlgo;
 
 	/**
-	 * 主库集群.
+	 * db cluster.
 	 */
-	private Map<String, DBClusterInfo> dbClusterInfo;
+	private IDBCluster dbCluster;
 
 	/**
 	 * 数据表集群. 
@@ -62,10 +62,15 @@ public abstract class AbstractClusterRouter implements IClusterRouter {
 		return this.hashAlgo;
 	}
 
-	@Override
-	public void setDbClusterInfo(Map<String, DBClusterInfo> dbClusterInfo) {
-		this.dbClusterInfo = dbClusterInfo;
-	}
+    @Override
+    public void setDBCluster(IDBCluster dbCluster) {
+        this.dbCluster = dbCluster;
+    }
+
+    @Override
+    public IDBCluster getDBCluster() {
+        return this.dbCluster;
+    }
 
 	@Override
 	public void setTableCluster(ITableCluster tableCluster) {
@@ -78,13 +83,18 @@ public abstract class AbstractClusterRouter implements IClusterRouter {
 	}
 
 	@Override
-	public DBRouteInfo select(EnumDBMasterSlave clusterType, String tableName, IShardingKey<?> value)
+	public RouteInfo select(EnumDBMasterSlave clusterType, String tableName, IShardingKey<?> value)
 			throws DBRouteException {
-		DBRouteInfo dbRouteInfo = null;
+		RouteInfo dbRouteInfo = null;
 
 		long shardingValue = getShardingValue(value);
 		String clusterName = value.getClusterName();
-		List<DBClusterRegionInfo> regionInfos = this.dbClusterInfo.get(clusterName).getDbRegions();
+
+        DBClusterInfo dbClusterInfo = this.dbCluster.getDBClusterInfo(clusterName);
+        if (dbClusterInfo == null) {
+            throw new IllegalStateException("can not found cluster " + clusterName);
+        }
+		List<DBClusterRegionInfo> regionInfos = dbClusterInfo.getDbRegions();
 
 		if (regionInfos == null || regionInfos.isEmpty()) {
 			throw new DBRouteException("查找集群失败, clustername=" + clusterName);
@@ -170,7 +180,7 @@ public abstract class AbstractClusterRouter implements IClusterRouter {
 	 *            分库分表因子
 	 * @return 路由结果
 	 */
-	protected abstract DBRouteInfo doSelectFromMaster(List<DBInfo> masterConnections, IShardingKey<?> value)
+	protected abstract RouteInfo doSelectFromMaster(List<DBInfo> masterConnections, IShardingKey<?> value)
 			throws DBRouteException;
 
 	/**
@@ -182,7 +192,7 @@ public abstract class AbstractClusterRouter implements IClusterRouter {
 	 *            分库分表因子
 	 * @return 路由结果
 	 */
-	protected abstract DBRouteInfo doSelectFromSlave(List<List<DBInfo>> slaveConnection, int slaveIndex,
+	protected abstract RouteInfo doSelectFromSlave(List<List<DBInfo>> slaveConnection, int slaveIndex,
 			IShardingKey<?> value) throws DBRouteException;
 
 }

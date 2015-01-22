@@ -35,9 +35,6 @@ public class BaseTest {
 
 	@BeforeClass
 	public static void setup() throws Exception {
-		primaryCache = new MemCachedPrimaryCacheImpl(CACHE_HOST, 0);
-		secondCache = new MemCachedSecondCacheImpl(CACHE_HOST, 0);
-
 		cacheClient.setScanPackage("org.pinus");
 		cacheClient.setSyncAction(EnumSyncAction.UPDATE);
 		cacheClient.init();
