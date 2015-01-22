@@ -42,6 +42,11 @@ public abstract class DBInfo {
 	 */
 	protected DataSource datasource;
 
+    /**
+     * database name.
+     */
+    protected String dbName;
+
 	/**
 	 * 主从中的角色.
 	 */

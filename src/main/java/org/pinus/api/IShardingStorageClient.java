@@ -22,12 +22,8 @@ import java.util.concurrent.locks.Lock;
 
 import org.pinus.api.enums.EnumDB;
 import org.pinus.api.enums.EnumDBMasterSlave;
-import org.pinus.api.enums.EnumDBRouteAlg;
-import org.pinus.api.enums.EnumMode;
 import org.pinus.api.enums.EnumSyncAction;
 import org.pinus.api.query.IQuery;
-import org.pinus.cache.IPrimaryCache;
-import org.pinus.cache.ISecondCache;
 import org.pinus.cluster.IDBCluster;
 import org.pinus.exception.DBOperationException;
 import org.pinus.exception.LoadConfigException;
@@ -993,14 +989,6 @@ public interface IShardingStorageClient {
 	 *            数据库枚举
 	 */
 	public void setEnumDb(EnumDB enumDb);
-
-	/**
-	 * 设置路由算法. 默认使用取模哈希算法
-	 * 
-	 * @param enumDBRouteAlg
-	 *            路由算法枚举
-	 */
-	public void setEnumDBRouteAlg(EnumDBRouteAlg enumDBRouteAlg);
 
 	/**
 	 * 初始化集群客户端.

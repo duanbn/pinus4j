@@ -22,7 +22,6 @@ import java.util.concurrent.locks.Lock;
 
 import org.pinus.api.IShardingKey;
 import org.pinus.api.enums.EnumDBMasterSlave;
-import org.pinus.api.enums.EnumDBRouteAlg;
 import org.pinus.api.enums.EnumSyncAction;
 import org.pinus.cluster.beans.DBClusterInfo;
 import org.pinus.cluster.beans.DBInfo;
@@ -205,19 +204,9 @@ public interface IDBCluster {
 	public List<DB> getAllSlaveShardingDB(Class<?> clazz, EnumDBMasterSlave slave);
 
 	/**
-	 * 获取数据库路由器.
+     * get cluster router.
 	 */
-	public IClusterRouter getDBRouter();
-
-	/**
-	 * 设置路由算法.
-	 */
-	public void setDBRouteAlg(EnumDBRouteAlg routeAlg);
-
-	/**
-	 * 获取路由算法.
-	 */
-	public EnumDBRouteAlg getDBRouteAlg();
+	public IClusterRouter getDBRouter(String clusterName);
 
 	/**
 	 * 设置数据表同步动作.

@@ -18,6 +18,7 @@ package org.pinus.config.impl;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -84,7 +85,7 @@ public class XmlClusterConfigImpl implements IClusterConfig {
 	/**
 	 * DB集群信息.
 	 */
-	private static Map<String, DBClusterInfo> dbClusterInfo = new HashMap<String, DBClusterInfo>();
+	private static Collection<DBClusterInfo> dbClusterInfos = new ArrayList<DBClusterInfo>();
 
 	private XmlUtil xmlUtil;
 
@@ -227,7 +228,7 @@ public class XmlClusterConfigImpl implements IClusterConfig {
 	}
 
 	/**
-	 * load cluster
+	 * load db info.
 	 */
 	private DBInfo _getDBConnInfo(String clusterName, Node node, EnumDBMasterSlave masterSlave)
 			throws LoadConfigException {
@@ -387,7 +388,7 @@ public class XmlClusterConfigImpl implements IClusterConfig {
 			}
 
 			String name = xmlUtil.getAttributeValue(clusterNode, "name");
-			dbClusterInfo.put(name, _getDBClusterInfo(name, clusterNode));
+			dbClusterInfos.add(_getDBClusterInfo(name, clusterNode));
 		}
 	}
 
@@ -471,8 +472,8 @@ public class XmlClusterConfigImpl implements IClusterConfig {
 	}
 
 	@Override
-	public Map<String, DBClusterInfo> getDBClusterInfo() {
-		return dbClusterInfo;
+	public Collection<DBClusterInfo> getDBClusterInfos() {
+		return dbClusterInfos;
 	}
 
 	@Override

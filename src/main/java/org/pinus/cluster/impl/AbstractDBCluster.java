@@ -38,13 +38,15 @@ import org.apache.zookeeper.data.Stat;
 import org.pinus.api.IShardingKey;
 import org.pinus.api.enums.EnumDB;
 import org.pinus.api.enums.EnumDBMasterSlave;
-import org.pinus.api.enums.EnumDBRouteAlg;
 import org.pinus.api.enums.EnumSyncAction;
 import org.pinus.cache.ICacheBuilder;
 import org.pinus.cache.IPrimaryCache;
 import org.pinus.cache.ISecondCache;
 import org.pinus.cache.impl.MemCachedCacheBuilder;
 import org.pinus.cluster.DB;
+import org.pinus.cluster.DefaultContainerFactory;
+import org.pinus.cluster.DefaultContainerFactory.ContainerType;
+import org.pinus.cluster.IContainer;
 import org.pinus.cluster.IDBCluster;
 import org.pinus.cluster.ITableCluster;
 import org.pinus.cluster.ITableClusterBuilder;
@@ -52,8 +54,9 @@ import org.pinus.cluster.beans.DBClusterInfo;
 import org.pinus.cluster.beans.DBClusterRegionInfo;
 import org.pinus.cluster.beans.DBInfo;
 import org.pinus.cluster.route.IClusterRouter;
+import org.pinus.cluster.route.IClusterRouterBuilder;
 import org.pinus.cluster.route.RouteInfo;
-import org.pinus.cluster.route.impl.SimpleHashClusterRouter;
+import org.pinus.cluster.route.impl.DefaultClusterRouterBuilder;
 import org.pinus.config.IClusterConfig;
 import org.pinus.config.impl.XmlClusterConfigImpl;
 import org.pinus.constant.Const;
@@ -110,11 +113,6 @@ public abstract class AbstractDBCluster implements IDBCluster {
 	protected EnumDB enumDb = EnumDB.MYSQL;
 
 	/**
-	 * 路由算法. 默认使用取模哈希算法
-	 */
-	protected EnumDBRouteAlg enumDBRouteAlg = EnumDBRouteAlg.SIMPLE_HASH;
-
-	/**
 	 * 数据库表生成器.
 	 */
 	private IDBGenerator dbGenerator;
@@ -135,14 +133,15 @@ public abstract class AbstractDBCluster implements IDBCluster {
 	private ISecondCache secondCache;
 
 	/**
-	 * 数据库路由器
+	 * cluster router.
 	 */
-	private IClusterRouter dbRouter;
+	private IContainer<IClusterRouter> dbRouterC;
 
 	/**
 	 * cluster info. {clusterName, clusterInfo}
 	 */
-	private Map<String, DBClusterInfo> dbClusterInfo;
+	// private Map<String, DBClusterInfo> dbClusterInfo;
+	private IContainer<DBClusterInfo> dbClusterInfoC;
 
 	/**
 	 * 集群中的表集合. {集群名称, {分库下标, {表名, 分表数}}}
@@ -171,12 +170,12 @@ public abstract class AbstractDBCluster implements IDBCluster {
 
 	@Override
 	public Collection<DBClusterInfo> getDBClusterInfo() {
-		return this.dbClusterInfo.values();
+		return this.dbClusterInfoC.values();
 	}
 
 	@Override
 	public DBClusterInfo getDBClusterInfo(String clusterName) {
-		DBClusterInfo clusterInfo = dbClusterInfo.get(clusterName);
+		DBClusterInfo clusterInfo = this.dbClusterInfoC.find(clusterName);
 
 		if (clusterInfo == null) {
 			throw new DBOperationException("找不到集群信息, clusterName=" + clusterName);
@@ -201,12 +200,12 @@ public abstract class AbstractDBCluster implements IDBCluster {
 			throw new RuntimeException(e);
 		}
 
-		// 初始化curator framework
+		// init curator framework
 		this.curatorClient = CuratorFrameworkFactory.newClient(config.getZookeeperUrl(), new RetryNTimes(5, 1000));
 		this.curatorClient.start();
 
 		try {
-			// 创建zookeeper root dir
+			// create zookeeper root dir
 			ZooKeeper zkClient = this.curatorClient.getZookeeperClient().getZooKeeper();
 			Stat stat = zkClient.exists(Const.ZK_ROOT, false);
 			if (stat == null) {
@@ -226,10 +225,10 @@ public abstract class AbstractDBCluster implements IDBCluster {
 		// init db cache
 		//
 		ICacheBuilder cacheBuilder = MemCachedCacheBuilder.valueOf(config);
-		// 发现可用的一级缓存
+		// find primary cache
 		this.primaryCache = cacheBuilder.buildPrimaryCache();
 
-		// 发现可用的二级缓存
+		// find second cache
 		this.secondCache = cacheBuilder.buildSecondCache();
 
 		//
@@ -239,12 +238,12 @@ public abstract class AbstractDBCluster implements IDBCluster {
 		this.dbGenerator = dbGeneratorBuilder.build();
 
 		//
-		// 加载DB集群信息
+		// load db cluster info.
 		//
-		dbClusterInfo = config.getDBClusterInfo();
+		Collection<DBClusterInfo> dbClusterInfos = config.getDBClusterInfos();
 		try {
 			// 初始化主集群连接
-			_initDBCluster(this.dbClusterInfo);
+			_initDBCluster(dbClusterInfos);
 
 			// 初始化数据表集群信息.
 			List<DBTable> tables = null;
@@ -266,11 +265,11 @@ public abstract class AbstractDBCluster implements IDBCluster {
 				throw new DBClusterException("找不到可以创建库表的实体对象, package=" + scanPackage);
 			}
 
-			// 初始化表集群
+			// init table cluster.
 			ITableClusterBuilder tableClusterBuilder = NumberIndexTableClusterBuilder.valueOf(tables);
 			this.tableCluster = tableClusterBuilder.build();
 
-			// 创建数据库表
+			// create db tables.
 			if (this.syncAction != EnumSyncAction.NONE) {
 				LOG.info("syncing table info");
 				long start = System.currentTimeMillis();
@@ -285,21 +284,15 @@ public abstract class AbstractDBCluster implements IDBCluster {
 		//
 		// init db router
 		//
-		switch (enumDBRouteAlg) {
-		case SIMPLE_HASH:
-			dbRouter = new SimpleHashClusterRouter();
-			break;
-		default:
-			dbRouter = new SimpleHashClusterRouter();
-			break;
+		this.dbRouterC = DefaultContainerFactory.createContainer(ContainerType.MAP);
+		IClusterRouterBuilder routerBuilder = null;
+		String clusterName = null;
+		for (DBClusterInfo clusterInfo : this.dbClusterInfoC.values()) {
+			clusterName = clusterInfo.getClusterName();
+			routerBuilder = DefaultClusterRouterBuilder.valueOf(this, this.tableCluster);
+			routerBuilder.setHashAlgo(config.getHashAlgo());
+			this.dbRouterC.add(clusterName, routerBuilder.build(clusterName));
 		}
-		// set db cluster info.
-		this.dbRouter.setDBCluster(this);
-		// set table cluster info.
-		this.dbRouter.setTableCluster(tableCluster);
-		// set hash algo
-		this.dbRouter.setHashAlgo(config.getHashAlgo());
-
 		LOG.info("init database cluster done.");
 	}
 
@@ -311,22 +304,22 @@ public abstract class AbstractDBCluster implements IDBCluster {
 	public void shutdown() throws DBClusterException {
 
 		// close cache connection
-        if (this.primaryCache != null)
-            this.primaryCache.close();
-        if (this.secondCache != null)
-            this.secondCache.close();
+		if (this.primaryCache != null)
+			this.primaryCache.close();
+		if (this.secondCache != null)
+			this.secondCache.close();
 
 		try {
 			// close database connection
-			for (Map.Entry<String, DBClusterInfo> entry : this.dbClusterInfo.entrySet()) {
+			for (DBClusterInfo dbClusterInfo : this.dbClusterInfoC.values()) {
 				// 关闭全局库
 				// 主全局库
-				DBInfo masterGlobal = entry.getValue().getMasterGlobalDBInfo();
+				DBInfo masterGlobal = dbClusterInfo.getMasterGlobalDBInfo();
 				if (masterGlobal != null)
 					closeDataSource(masterGlobal);
 
 				// 从全局库
-				List<DBInfo> slaveDbs = entry.getValue().getSlaveGlobalDBInfo();
+				List<DBInfo> slaveDbs = dbClusterInfo.getSlaveGlobalDBInfo();
 				if (slaveDbs != null && !slaveDbs.isEmpty()) {
 					for (DBInfo slaveGlobal : slaveDbs) {
 						closeDataSource(slaveGlobal);
@@ -334,7 +327,7 @@ public abstract class AbstractDBCluster implements IDBCluster {
 				}
 
 				// 关闭集群库
-				for (DBClusterRegionInfo regionInfo : entry.getValue().getDbRegions()) {
+				for (DBClusterRegionInfo regionInfo : dbClusterInfo.getDbRegions()) {
 					// 主集群
 					for (DBInfo dbConnInfo : regionInfo.getMasterConnection()) {
 						closeDataSource(dbConnInfo);
@@ -359,21 +352,21 @@ public abstract class AbstractDBCluster implements IDBCluster {
 
 	@Override
 	public DBInfo getMasterGlobalConn(String clusterName) throws DBClusterException {
-		DBClusterInfo dbClusterInfo = this.dbClusterInfo.get(clusterName);
+		DBClusterInfo dbClusterInfo = this.dbClusterInfoC.find(clusterName);
 		if (dbClusterInfo == null) {
 			throw new DBClusterException("没有找到集群信息, clustername=" + clusterName);
 		}
 
-		DBInfo masterConnection = dbClusterInfo.getMasterGlobalDBInfo();
-		if (masterConnection == null) {
+		DBInfo masterDBInfo = dbClusterInfo.getMasterGlobalDBInfo();
+		if (masterDBInfo == null) {
 			throw new DBClusterException("此集群没有配置全局主库, clustername=" + clusterName);
 		}
-		return masterConnection;
+		return masterDBInfo;
 	}
 
 	@Override
 	public DBInfo getSlaveGlobalDbConn(String clusterName, EnumDBMasterSlave slave) throws DBClusterException {
-		DBClusterInfo dbClusterInfo = this.dbClusterInfo.get(clusterName);
+		DBClusterInfo dbClusterInfo = this.dbClusterInfoC.find(clusterName);
 		if (dbClusterInfo == null) {
 			throw new DBClusterException("没有找到集群信息, clustername=" + clusterName);
 		}
@@ -393,7 +386,14 @@ public abstract class AbstractDBCluster implements IDBCluster {
 		// 计算路由信息
 		RouteInfo routeInfo = null;
 		try {
-			routeInfo = dbRouter.select(EnumDBMasterSlave.MASTER, tableName, value);
+			String clusterName = value.getClusterName();
+
+			IClusterRouter router = this.dbRouterC.find(clusterName);
+			if (router == null) {
+				throw new IllegalStateException("can not found db router by " + clusterName);
+			}
+
+			routeInfo = router.select(EnumDBMasterSlave.MASTER, tableName, value);
 		} catch (DBRouteException e) {
 			throw new DBClusterException(e);
 		}
@@ -402,7 +402,7 @@ public abstract class AbstractDBCluster implements IDBCluster {
 		int tableIndex = routeInfo.getTableIndex();
 
 		// 获取连接信息
-		DBClusterInfo dbClusterInfo = this.dbClusterInfo.get(clusterName);
+		DBClusterInfo dbClusterInfo = this.dbClusterInfoC.find(clusterName);
 		if (dbClusterInfo == null) {
 			throw new DBClusterException("找不到数据库集群, shardingkey=" + value + ", tablename=" + tableName);
 		}
@@ -439,7 +439,14 @@ public abstract class AbstractDBCluster implements IDBCluster {
 		// 计算路由信息
 		RouteInfo routeInfo = null;
 		try {
-			routeInfo = dbRouter.select(slaveNum, tableName, value);
+			String clusterName = value.getClusterName();
+
+			IClusterRouter router = this.dbRouterC.find(clusterName);
+			if (router == null) {
+				throw new IllegalStateException("can not found db router by " + clusterName);
+			}
+
+			routeInfo = router.select(slaveNum, tableName, value);
 		} catch (DBRouteException e) {
 			throw new DBClusterException(e);
 		}
@@ -449,7 +456,7 @@ public abstract class AbstractDBCluster implements IDBCluster {
 		int tableIndex = routeInfo.getTableIndex();
 
 		// 获取连接信息
-		DBClusterInfo dbClusterInfo = this.dbClusterInfo.get(clusterName);
+		DBClusterInfo dbClusterInfo = this.dbClusterInfoC.find(clusterName);
 		if (dbClusterInfo == null) {
 			throw new DBClusterException("找不到数据库集群, shardingkey=" + value + ", tablename=" + tableName + ", slavenum="
 					+ slaveNum.getValue());
@@ -570,8 +577,8 @@ public abstract class AbstractDBCluster implements IDBCluster {
 	@Override
 	public IDataLayerBuilder getDataLayerBuilder() {
 		IDataLayerBuilder builder = JdbcDataLayerBuilder.valueOf(this);
-        builder.setPrimaryCache(this.primaryCache);
-        builder.setSecondCache(this.secondCache);
+		builder.setPrimaryCache(this.primaryCache);
+		builder.setSecondCache(this.secondCache);
 		return builder;
 	}
 
@@ -675,7 +682,7 @@ public abstract class AbstractDBCluster implements IDBCluster {
 			clusterName = table.getCluster();
 			if (table.getShardingNum() > 0) { // 当ShardingNumber大于0时表示分库分表
 				// read sharding db info.
-				DBClusterInfo dbClusterInfo = this.dbClusterInfo.get(clusterName);
+				DBClusterInfo dbClusterInfo = this.dbClusterInfoC.find(clusterName);
 				if (dbClusterInfo == null) {
 					throw new DBClusterException("找不到相关的集群信息, clusterName=" + clusterName);
 				}
@@ -704,7 +711,7 @@ public abstract class AbstractDBCluster implements IDBCluster {
 				}
 
 			} else { // 当ShardingNumber等于0时表示全局表
-				DBClusterInfo dbClusterInfo = this.dbClusterInfo.get(clusterName);
+				DBClusterInfo dbClusterInfo = this.dbClusterInfoC.find(clusterName);
 				if (dbClusterInfo == null) {
 					throw new DBClusterException("加载集群失败，未知的集群，cluster name=" + clusterName);
 				}
@@ -734,27 +741,30 @@ public abstract class AbstractDBCluster implements IDBCluster {
 		}
 	}
 
-	private void _initDBCluster(Map<String, DBClusterInfo> dbClusterInfo) throws LoadConfigException {
-		for (Map.Entry<String, DBClusterInfo> entry : dbClusterInfo.entrySet()) {
+	private void _initDBCluster(Collection<DBClusterInfo> dbClusterInfos) throws LoadConfigException {
+		this.dbClusterInfoC = DefaultContainerFactory.createContainer(ContainerType.MAP);
+
+		for (DBClusterInfo dbClusterInfo : dbClusterInfos) {
+			this.dbClusterInfoC.add(dbClusterInfo.getClusterName(), dbClusterInfo);
 
 			// 初始化全局主库
-			DBInfo masterGlobalConnection = entry.getValue().getMasterGlobalDBInfo();
-			if (masterGlobalConnection != null)
-				buildDataSource(masterGlobalConnection);
+			DBInfo masterGlobalDBInfo = dbClusterInfo.getMasterGlobalDBInfo();
+			if (masterGlobalDBInfo != null)
+				buildDataSource(masterGlobalDBInfo);
 
 			// 初始化全局从库
-			List<DBInfo> slaveDbs = entry.getValue().getSlaveGlobalDBInfo();
+			List<DBInfo> slaveDbs = dbClusterInfo.getSlaveGlobalDBInfo();
 			if (slaveDbs != null && !slaveDbs.isEmpty()) {
-				for (DBInfo slaveGlobalConnection : slaveDbs) {
-					buildDataSource(slaveGlobalConnection);
+				for (DBInfo slaveGlobalDBInfo : slaveDbs) {
+					buildDataSource(slaveGlobalDBInfo);
 				}
 			}
 
 			// 初始化集群
-			for (DBClusterRegionInfo regionInfo : entry.getValue().getDbRegions()) {
+			for (DBClusterRegionInfo regionInfo : dbClusterInfo.getDbRegions()) {
 				// 初始化集群主库
-				for (DBInfo masterConnection : regionInfo.getMasterConnection()) {
-					buildDataSource(masterConnection);
+				for (DBInfo masterDBInfo : regionInfo.getMasterConnection()) {
+					buildDataSource(masterDBInfo);
 				}
 
 				// 初始化集群从库
@@ -793,18 +803,8 @@ public abstract class AbstractDBCluster implements IDBCluster {
 	}
 
 	@Override
-	public IClusterRouter getDBRouter() {
-		return dbRouter;
-	}
-
-	@Override
-	public void setDBRouteAlg(EnumDBRouteAlg routeAlg) {
-		this.enumDBRouteAlg = routeAlg;
-	}
-
-	@Override
-	public EnumDBRouteAlg getDBRouteAlg() {
-		return this.enumDBRouteAlg;
+	public IClusterRouter getDBRouter(String clusterName) {
+		return this.dbRouterC.find(clusterName);
 	}
 
 	/**

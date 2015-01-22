@@ -24,7 +24,6 @@ import java.util.concurrent.locks.Lock;
 
 import org.pinus.api.enums.EnumDB;
 import org.pinus.api.enums.EnumDBMasterSlave;
-import org.pinus.api.enums.EnumDBRouteAlg;
 import org.pinus.api.enums.EnumDbConnectionPoolCatalog;
 import org.pinus.api.enums.EnumSyncAction;
 import org.pinus.api.query.IQuery;
@@ -42,8 +41,6 @@ import org.pinus.datalayer.IGlobalUpdate;
 import org.pinus.datalayer.IShardingMasterQuery;
 import org.pinus.datalayer.IShardingSlaveQuery;
 import org.pinus.datalayer.IShardingUpdate;
-import org.pinus.datalayer.jdbc.ShardingJdbcMasterQueryImpl;
-import org.pinus.datalayer.jdbc.ShardingJdbcSlaveQueryImpl;
 import org.pinus.exception.DBClusterException;
 import org.pinus.exception.LoadConfigException;
 import org.pinus.generator.IIdGenerator;
@@ -84,11 +81,6 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 	 * reference it self;
 	 */
 	public static IShardingStorageClient instance;
-
-	/**
-	 * 分片路由算法.
-	 */
-	private EnumDBRouteAlg enumDBRouteAlg = EnumDBRouteAlg.SIMPLE_HASH;
 
 	/**
 	 * 数据库类型.
@@ -161,8 +153,6 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 			this.dbCluster = new AppDBClusterImpl(enumDb);
 			break;
 		}
-		// 设置路由算法.
-		this.dbCluster.setDBRouteAlg(this.enumDBRouteAlg);
 		// 设置是否生成数据库表
 		this.dbCluster.setSyncAction(syncAction);
 		// 设置扫描对象的包
@@ -965,18 +955,6 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 			throw new IllegalArgumentException("参数错误, 参数不能为空");
 		}
 		this.enumDb = enumDb;
-	}
-
-	public EnumDBRouteAlg getEnumDBRouteAlg() {
-		return enumDBRouteAlg;
-	}
-
-	@Override
-	public void setEnumDBRouteAlg(EnumDBRouteAlg enumDBRouteAlg) {
-		if (enumDBRouteAlg == null) {
-			throw new IllegalArgumentException("参数错误, 参数不能为空");
-		}
-		this.enumDBRouteAlg = enumDBRouteAlg;
 	}
 
 	@Override

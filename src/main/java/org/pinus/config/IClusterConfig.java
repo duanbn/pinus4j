@@ -16,9 +16,8 @@
 
 package org.pinus.config;
 
-import java.util.Map;
+import java.util.Collection;
 
-import org.apache.zookeeper.ZooKeeper;
 import org.pinus.api.enums.EnumDbConnectionPoolCatalog;
 import org.pinus.cache.IPrimaryCache;
 import org.pinus.cache.ISecondCache;
@@ -110,7 +109,7 @@ public interface IClusterConfig {
 	 * 
 	 * @return
 	 */
-	public Map<String, DBClusterInfo> getDBClusterInfo();
+	public Collection<DBClusterInfo> getDBClusterInfos();
 
 	/**
 	 * 获取xml中配置的zookeeper连接

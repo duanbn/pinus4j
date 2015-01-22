@@ -58,6 +58,7 @@ public class DefaultClusterRouterBuilder implements IClusterRouterBuilder {
         DefaultClusterRouterBuilder builder = new DefaultClusterRouterBuilder();
         builder.setDBCluster(dbCluster);
         builder.setTableCluster(tableCluster);
+        builder.setConfig(dbCluster.getClusterConfig());
         return builder;
     }
 

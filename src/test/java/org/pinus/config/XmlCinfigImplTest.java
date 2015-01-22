@@ -1,5 +1,6 @@
 package org.pinus.config;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -8,7 +9,6 @@ import org.pinus.BaseTest;
 import org.pinus.cluster.beans.DBClusterInfo;
 import org.pinus.cluster.beans.DBClusterRegionInfo;
 import org.pinus.cluster.beans.DBInfo;
-import org.pinus.config.IClusterConfig;
 import org.pinus.config.impl.XmlClusterConfigImpl;
 
 public class XmlCinfigImplTest extends BaseTest {
@@ -21,11 +21,8 @@ public class XmlCinfigImplTest extends BaseTest {
 
 	@Test
 	public void testGetClusterInfo() throws Exception {
-		Map<String, DBClusterInfo> map = this.config.getDBClusterInfo();
-		for (Map.Entry<String, DBClusterInfo> entry : map.entrySet()) {
-			System.out.println(entry.getKey());
-			DBClusterInfo dbClusterInfo = entry.getValue();
-
+		Collection<DBClusterInfo> dbClusterInfos = this.config.getDBClusterInfos();
+		for (DBClusterInfo dbClusterInfo : dbClusterInfos) {
 			System.out.println("master global");
 			System.out.println(dbClusterInfo.getMasterGlobalDBInfo());
 
