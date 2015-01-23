@@ -16,6 +16,8 @@
 
 package org.pinus.cluster.route;
 
+import org.pinus.cluster.beans.DBInfo;
+
 /**
  * 表示一次路由操作的结果.
  * 
@@ -24,36 +26,30 @@ package org.pinus.cluster.route;
 public class RouteInfo {
 
 	/**
-	 * 集群名称. 等于不带下标的数据库名
+	 * cluster name.
 	 */
 	private String clusterName;
 
 	/**
-	 * 集群下标
+	 * region index.
 	 */
 	private int regionIndex;
 
-	/**
-	 * 被选中的数据库下标.
-	 */
-	private int dbIndex;
+    /**
+     * db info is selected.
+     */
+    private DBInfo dbInfo;
 
 	/**
-	 * 数据表名.
+	 *  table name.
 	 */
 	private String tableName;
 
 	/**
-	 * 数据表下标.
+	 *  index of table.
 	 */
 	private int tableIndex;
-
-	@Override
-	public String toString() {
-		return "DBRouteInfo [clusterName=" + clusterName + ", regionIndex=" + regionIndex + ", dbIndex=" + dbIndex
-				+ ", tableName=" + tableName + ", tableIndex=" + tableIndex + "]";
-	}
-
+	
 	public String getClusterName() {
 		return clusterName;
 	}
@@ -70,20 +66,20 @@ public class RouteInfo {
 		this.regionIndex = regionIndex;
 	}
 
-	public int getDbIndex() {
-		return dbIndex;
-	}
-
-	public void setDbIndex(int dbIndex) {
-		this.dbIndex = dbIndex;
-	}
-
 	public String getTableName() {
 		return tableName;
 	}
 
 	public void setTableName(String tableName) {
 		this.tableName = tableName;
+	}
+
+	public DBInfo getDbInfo() {
+		return dbInfo;
+	}
+
+	public void setDbInfo(DBInfo dbInfo) {
+		this.dbInfo = dbInfo;
 	}
 
 	public int getTableIndex() {

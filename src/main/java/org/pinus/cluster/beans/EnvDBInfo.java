@@ -37,6 +37,31 @@ public class EnvDBInfo extends DBInfo {
 				+ envDsName + "]";
 	}
 
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((envDsName == null) ? 0 : envDsName.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		EnvDBInfo other = (EnvDBInfo) obj;
+		if (envDsName == null) {
+			if (other.envDsName != null)
+				return false;
+		} else if (!envDsName.equals(other.envDsName))
+			return false;
+		return true;
+	}
+
 	public String getEnvDsName() {
 		return envDsName;
 	}

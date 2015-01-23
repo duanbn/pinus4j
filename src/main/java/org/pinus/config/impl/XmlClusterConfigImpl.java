@@ -352,7 +352,7 @@ public class XmlClusterConfigImpl implements IClusterConfig {
 			for (Node shardingNode : shardingNodeList) {
 				regionMasterConnection.add(_getDBConnInfo(clusterName, shardingNode, EnumDBMasterSlave.MASTER));
 			}
-			regionInfo.setMasterConnection(regionMasterConnection);
+			regionInfo.setMasterDBInfos(regionMasterConnection);
 
 			// load region slave
 			List<List<DBInfo>> regionSlaveConnection = new ArrayList<List<DBInfo>>();
@@ -369,7 +369,7 @@ public class XmlClusterConfigImpl implements IClusterConfig {
 
 				regionSlaveConnection.add(slaveConnections);
 			}
-			regionInfo.setSlaveConnection(regionSlaveConnection);
+			regionInfo.setSlaveDBInfos(regionSlaveConnection);
 
 			dbRegions.add(regionInfo);
 		}

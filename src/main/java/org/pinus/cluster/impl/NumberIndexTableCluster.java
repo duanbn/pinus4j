@@ -16,9 +16,9 @@
 
 package org.pinus.cluster.impl;
 
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-
+import org.pinus.cluster.DefaultContainerFactory;
+import org.pinus.cluster.DefaultContainerFactory.ContainerType;
+import org.pinus.cluster.IContainer;
 import org.pinus.cluster.ITableCluster;
 import org.pinus.cluster.beans.TableNumberInfo;
 
@@ -30,15 +30,17 @@ import org.pinus.cluster.beans.TableNumberInfo;
  */
 public class NumberIndexTableCluster implements ITableCluster {
 
-    private Map<String, TableNumberInfo> meta;
+    //private Map<String, TableNumberInfo> meta;
+    private IContainer<TableNumberInfo> tableNumberInfoC;
 
 	public NumberIndexTableCluster() {
-        this.meta = new ConcurrentHashMap<String, TableNumberInfo>();
+        //this.meta = new ConcurrentHashMap<String, TableNumberInfo>();
+        this.tableNumberInfoC = DefaultContainerFactory.createContainer(ContainerType.MAP);
     }
 
     @Override
     public int getTableNumber(String clusterName, String tableName) {
-        TableNumberInfo tableNumberInfo = this.meta.get(clusterName);
+        TableNumberInfo tableNumberInfo = this.tableNumberInfoC.find(clusterName);
 
         if (tableNumberInfo == null) {
             throw new RuntimeException("can not found table number info in " + clusterName);
@@ -48,11 +50,11 @@ public class NumberIndexTableCluster implements ITableCluster {
     }
 
     public void addTableNumberInfo(String clusterName, TableNumberInfo tableNumberInfo) {
-        this.meta.put(clusterName, tableNumberInfo);
+        this.tableNumberInfoC.add(clusterName, tableNumberInfo);
     }
 
     public TableNumberInfo getTableNumberInfo(String clusterName) {
-        return this.meta.get(clusterName);
+        return this.tableNumberInfoC.find(clusterName);
     }
 
 }

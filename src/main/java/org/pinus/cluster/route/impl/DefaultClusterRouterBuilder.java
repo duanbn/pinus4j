@@ -54,10 +54,10 @@ public class DefaultClusterRouterBuilder implements IClusterRouterBuilder {
      *
      * @return instance of cluster router builder.
      */
-    public static IClusterRouterBuilder valueOf(IDBCluster dbCluster, ITableCluster tableCluster) {
+    public static IClusterRouterBuilder valueOf(IDBCluster dbCluster) {
         DefaultClusterRouterBuilder builder = new DefaultClusterRouterBuilder();
         builder.setDBCluster(dbCluster);
-        builder.setTableCluster(tableCluster);
+        builder.setTableCluster(dbCluster.getTableCluster());
         builder.setConfig(dbCluster.getClusterConfig());
         return builder;
     }

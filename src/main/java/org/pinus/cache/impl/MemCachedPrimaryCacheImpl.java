@@ -52,7 +52,7 @@ public class MemCachedPrimaryCacheImpl extends AbstractMemCachedCache implements
 	 *            ip:port,ip:port
 	 */
 	public MemCachedPrimaryCacheImpl(String s, int expire) {
-        super(s, expire);
+		super(s, expire);
 	}
 
 	@Override
@@ -439,9 +439,9 @@ public class MemCachedPrimaryCacheImpl extends AbstractMemCachedCache implements
 	 */
 	private String _buildCountKey(DB db) {
 		StringBuilder key = new StringBuilder();
-		key.append(db.getClusterName()).append(db.getDbIndex());
+		key.append(db.getClusterName()).append(db.getDbName());
 		key.append(".");
-		key.append(db.getStart()).append(db.getEnd());
+		key.append(db.getRegionInfo().getStart()).append(db.getRegionInfo().getEnd());
 		key.append(".");
 		key.append(db.getTableName()).append(db.getTableIndex());
 		key.append(".c");
@@ -464,9 +464,9 @@ public class MemCachedPrimaryCacheImpl extends AbstractMemCachedCache implements
 	 */
 	private String _buildKey(DB db, Number id) {
 		StringBuilder key = new StringBuilder();
-		key.append(db.getClusterName()).append(db.getDbIndex());
+		key.append(db.getClusterName()).append(db.getDbName());
 		key.append(".");
-		key.append(db.getStart()).append(db.getEnd());
+		key.append(db.getRegionInfo().getStart()).append(db.getRegionInfo().getEnd());
 		key.append(".");
 		key.append(db.getTableName()).append(db.getTableIndex());
 		key.append(".");

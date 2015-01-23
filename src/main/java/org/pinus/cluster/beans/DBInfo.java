@@ -16,9 +16,6 @@
 
 package org.pinus.cluster.beans;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import javax.sql.DataSource;
 
 import org.pinus.api.enums.EnumDBMasterSlave;
@@ -77,5 +74,12 @@ public abstract class DBInfo {
 	public void setMasterSlave(EnumDBMasterSlave masterSlave) {
 		this.masterSlave = masterSlave;
 	}
-
+    
+    public String getDbName() {
+        return dbName;
+    }
+    
+    public void setDbName(String dbName) {
+        this.dbName = dbName;
+    }
 }

@@ -185,9 +185,9 @@ public class MemCachedSecondCacheImpl extends AbstractMemCachedCache implements 
 
 	public String _buildShardingVersion(DB db) {
 		StringBuilder versionKey = new StringBuilder("sec.version.");
-		versionKey.append(db.getClusterName()).append(db.getDbIndex());
+		versionKey.append(db.getClusterName()).append(db.getDbName());
 		versionKey.append(".");
-		versionKey.append(db.getStart()).append(db.getEnd());
+		versionKey.append(db.getRegionInfo().getStart()).append(db.getRegionInfo().getEnd());
 		versionKey.append(".");
 		versionKey.append(db.getTableName()).append(db.getTableIndex());
 		return versionKey.toString();
@@ -211,9 +211,9 @@ public class MemCachedSecondCacheImpl extends AbstractMemCachedCache implements 
 	 */
 	private String _buildShardingCacheKey(IQuery query, DB db, int version) {
 		StringBuilder cacheKey = new StringBuilder("sec.");
-		cacheKey.append(db.getClusterName()).append(db.getDbIndex());
+		cacheKey.append(db.getClusterName()).append(db.getDbName());
 		cacheKey.append(".");
-		cacheKey.append(db.getStart()).append(db.getEnd());
+		cacheKey.append(db.getRegionInfo().getStart()).append(db.getRegionInfo().getEnd());
 		cacheKey.append(".");
 		cacheKey.append(db.getTableName()).append(db.getTableIndex());
 		cacheKey.append(".");

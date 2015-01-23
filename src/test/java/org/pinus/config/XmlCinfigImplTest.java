@@ -33,12 +33,12 @@ public class XmlCinfigImplTest extends BaseTest {
 
 			for (DBClusterRegionInfo region : dbClusterInfo.getDbRegions()) {
 				System.out.println("master sharding");
-				for (DBInfo connInfo : region.getMasterConnection()) {
+				for (DBInfo connInfo : region.getMasterDBInfos()) {
 					System.out.println(connInfo);
 				}
 
 				System.out.println("slave sharding");
-				List<List<DBInfo>> a = region.getSlaveConnection();
+				List<List<DBInfo>> a = region.getSlaveDBInfos();
 				for (List<DBInfo> b : a) {
 					for (DBInfo c : b) {
 						System.out.println(c);

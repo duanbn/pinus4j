@@ -35,7 +35,7 @@
 		<minEvictableIdleTimeMillis>10000</minEvictableIdleTimeMillis>
 	</db-connection-pool>
 
-	<cluster name="pinus" catalog="mysql">
+	<cluster name="pinus" catalog="mysql" class="org.pinus.cluster.route.impl.SimpleHashClusterRouter">
 		<global>
 			<master>
 				<db.username>root</db.username>

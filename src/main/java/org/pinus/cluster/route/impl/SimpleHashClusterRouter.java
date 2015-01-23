@@ -20,50 +20,26 @@ import java.util.List;
 
 import org.pinus.api.IShardingKey;
 import org.pinus.cluster.beans.DBInfo;
-import org.pinus.cluster.route.RouteInfo;
 import org.pinus.exception.DBRouteException;
 
 /**
- * 基于取模预算的哈希算法实现. 此算法采用两次哈希算法进行数据库表的定位，第一次哈希选择数据库，第二次哈希选择数据库表.
- * 两次哈希使用的同一个分库分表因子，因此在使用此算法时需要注意一点，分库的数量和分表的数量需要具有奇偶性
- * 当数据库数量为奇数时每个库的分表个数必须是偶数，否则数据不会被均匀的散列在表中.
+ * default simple hash algo router implements.
  * 
  * @author duanbn
+ * @since 0.1.0
  */
 public class SimpleHashClusterRouter extends AbstractClusterRouter {
 
 	@Override
-	public RouteInfo doSelectFromMaster(List<DBInfo> masterConnection, IShardingKey<?> value)
-			throws DBRouteException {
-		RouteInfo dbRoute = new RouteInfo();
+	public DBInfo doSelect(List<DBInfo> dbInfos, IShardingKey<?> value) throws DBRouteException {
 
 		long shardingValue = getShardingValue(value);
-		int dbNum = masterConnection.size();
-		int dbIndex = (int) shardingValue % dbNum;
 
-		dbRoute.setDbIndex(dbIndex);
-
-		return dbRoute;
-	}
-
-	@Override
-	public RouteInfo doSelectFromSlave(List<List<DBInfo>> slaveConnections, int slaveIndex,
-			IShardingKey<?> value) throws DBRouteException {
-		RouteInfo dbRoute = new RouteInfo();
-
-		List<DBInfo> slaveConnection = slaveConnections.get(slaveIndex);
-		if (slaveConnection == null || slaveConnection.isEmpty()) {
-			throw new DBRouteException("查找从库集群失败, dbname=" + value.getClusterName() + ", slaveindex=" + slaveIndex);
-		}
-
-		long shardingValue = getShardingValue(value);
-		int dbNum = slaveConnection.size();
+		int dbNum = dbInfos.size();
 
 		int dbIndex = (int) shardingValue % dbNum;
 
-		dbRoute.setDbIndex(dbIndex);
-
-		return dbRoute;
+		return dbInfos.get(dbIndex);
 	}
 
 }

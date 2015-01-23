@@ -30,14 +30,51 @@ public class DBClusterRegionInfo {
 
 	private long end;
 
-	private List<DBInfo> masterConnection;
+	private List<DBInfo> masterDBInfos;
 
-	private List<List<DBInfo>> slaveConnection;
+	private List<List<DBInfo>> slaveDBInfos;
 
 	@Override
 	public String toString() {
-		return "DBClusterRegionInfo [start=" + start + ", end=" + end + ", masterConnection=" + masterConnection
-				+ ", slaveConnection=" + slaveConnection + "]";
+		return "DBClusterRegionInfo [start=" + start + ", end=" + end + ", masterConnection=" + masterDBInfos
+				+ ", slaveConnection=" + slaveDBInfos + "]";
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + (int) (end ^ (end >>> 32));
+		result = prime * result + ((masterDBInfos == null) ? 0 : masterDBInfos.hashCode());
+		result = prime * result + ((slaveDBInfos == null) ? 0 : slaveDBInfos.hashCode());
+		result = prime * result + (int) (start ^ (start >>> 32));
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		DBClusterRegionInfo other = (DBClusterRegionInfo) obj;
+		if (end != other.end)
+			return false;
+		if (masterDBInfos == null) {
+			if (other.masterDBInfos != null)
+				return false;
+		} else if (!masterDBInfos.equals(other.masterDBInfos))
+			return false;
+		if (slaveDBInfos == null) {
+			if (other.slaveDBInfos != null)
+				return false;
+		} else if (!slaveDBInfos.equals(other.slaveDBInfos))
+			return false;
+		if (start != other.start)
+			return false;
+		return true;
 	}
 
 	public long getStart() {
@@ -56,20 +93,20 @@ public class DBClusterRegionInfo {
 		this.end = end;
 	}
 
-	public List<DBInfo> getMasterConnection() {
-		return masterConnection;
+	public List<DBInfo> getMasterDBInfos() {
+		return masterDBInfos;
 	}
 
-	public void setMasterConnection(List<DBInfo> masterConnection) {
-		this.masterConnection = masterConnection;
+	public void setMasterDBInfos(List<DBInfo> masterDBInfos) {
+		this.masterDBInfos = masterDBInfos;
 	}
 
-	public List<List<DBInfo>> getSlaveConnection() {
-		return slaveConnection;
+	public List<List<DBInfo>> getSlaveDBInfos() {
+		return slaveDBInfos;
 	}
 
-	public void setSlaveConnection(List<List<DBInfo>> slaveConnection) {
-		this.slaveConnection = slaveConnection;
+	public void setSlaveDBInfos(List<List<DBInfo>> slaveDBInfos) {
+		this.slaveDBInfos = slaveDBInfos;
 	}
 
 }

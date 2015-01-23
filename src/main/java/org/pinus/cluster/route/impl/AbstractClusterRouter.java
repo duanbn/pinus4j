@@ -48,7 +48,7 @@ public abstract class AbstractClusterRouter implements IClusterRouter {
 	private IDBCluster dbCluster;
 
 	/**
-	 * 数据表集群. 
+	 * 数据表集群.
 	 */
 	private ITableCluster tableCluster;
 
@@ -62,15 +62,15 @@ public abstract class AbstractClusterRouter implements IClusterRouter {
 		return this.hashAlgo;
 	}
 
-    @Override
-    public void setDBCluster(IDBCluster dbCluster) {
-        this.dbCluster = dbCluster;
-    }
+	@Override
+	public void setDBCluster(IDBCluster dbCluster) {
+		this.dbCluster = dbCluster;
+	}
 
-    @Override
-    public IDBCluster getDBCluster() {
-        return this.dbCluster;
-    }
+	@Override
+	public IDBCluster getDBCluster() {
+		return this.dbCluster;
+	}
 
 	@Override
 	public void setTableCluster(ITableCluster tableCluster) {
@@ -85,17 +85,19 @@ public abstract class AbstractClusterRouter implements IClusterRouter {
 	@Override
 	public RouteInfo select(EnumDBMasterSlave clusterType, String tableName, IShardingKey<?> value)
 			throws DBRouteException {
-		RouteInfo dbRouteInfo = null;
+		RouteInfo dbRouteInfo = new RouteInfo();
 
 		long shardingValue = getShardingValue(value);
 		String clusterName = value.getClusterName();
 
-        DBClusterInfo dbClusterInfo = this.dbCluster.getDBClusterInfo(clusterName);
-        if (dbClusterInfo == null) {
-            throw new IllegalStateException("can not found cluster " + clusterName);
-        }
-		List<DBClusterRegionInfo> regionInfos = dbClusterInfo.getDbRegions();
+		// find cluster info.
+		DBClusterInfo dbClusterInfo = this.dbCluster.getDBClusterInfo(clusterName);
+		if (dbClusterInfo == null) {
+			throw new IllegalStateException("can not found cluster " + clusterName);
+		}
 
+		// compute and find cluster region info.
+		List<DBClusterRegionInfo> regionInfos = dbClusterInfo.getDbRegions();
 		if (regionInfos == null || regionInfos.isEmpty()) {
 			throw new DBRouteException("查找集群失败, clustername=" + clusterName);
 		}
@@ -110,41 +112,51 @@ public abstract class AbstractClusterRouter implements IClusterRouter {
 			regionIndex++;
 		}
 		if (regionInfo == null) {
-			throw new DBRouteException("查找集群失败, 超出容量, dbname=" + clusterName + ", shardingvalue=" + shardingValue);
+			throw new DBRouteException("find db cluster failure, over capacity, cluster name is " + clusterName
+					+ ", sharding value is " + shardingValue);
 		}
 
+		// compute and find database instance.
+		List<DBInfo> dbInfos = null;
 		switch (clusterType) {
 		case MASTER:
-			if (regionInfo.getMasterConnection() == null || regionInfo.getMasterConnection().isEmpty()) {
-				throw new DBRouteException("查找集群失败, clustername=" + clusterName);
-			}
-			dbRouteInfo = doSelectFromMaster(regionInfo.getMasterConnection(), value);
+			dbInfos = regionInfo.getMasterDBInfos();
 			break;
 		default:
+			// get multi slave info.
+			List<List<DBInfo>> multiSlaveDBInfos = regionInfo.getSlaveDBInfos();
+			if (multiSlaveDBInfos == null || multiSlaveDBInfos.isEmpty()) {
+				throw new DBRouteException("find slave db cluster failure cluster name is " + clusterName);
+			}
 			int slaveIndex = clusterType.getValue();
-			dbRouteInfo = doSelectFromSlave(regionInfo.getSlaveConnection(), slaveIndex, value);
+			dbInfos = multiSlaveDBInfos.get(slaveIndex);
 			break;
 		}
-		if (dbRouteInfo == null) {
-			throw new RuntimeException("路由操作失败， 找不到相关的库表, clusterType=" + clusterType + ", sharding value=" + value);
+
+		// do select
+		if (dbInfos == null || dbInfos.isEmpty()) {
+			throw new DBRouteException("find db cluster failure, cluster name is " + clusterName);
 		}
 
+		DBInfo dbInfo = doSelect(dbInfos, value);
+
+		dbRouteInfo.setDbInfo(dbInfo);
 		dbRouteInfo.setClusterName(clusterName);
 		dbRouteInfo.setRegionIndex(regionIndex);
 
-		// 计算分表.
+		// compute and find table
 		try {
-            // get table number.
+			// get table number.
 			int tableNum = tableCluster.getTableNumber(clusterName, tableName);
 
-			// 计算分表下标
+			// compute table index.
 			int tableIndex = (int) shardingValue % tableNum;
 
 			dbRouteInfo.setTableName(tableName);
 			dbRouteInfo.setTableIndex(tableIndex);
 		} catch (Exception e) {
-			throw new DBRouteException("路由操作失败, 找不到可以用的库表, dbname=" + dbRouteInfo.getClusterName() + ", dbindex="
-					+ dbRouteInfo.getDbIndex() + ", tablename=" + tableName);
+			throw new DBRouteException("find table failure, cluster name is " + dbRouteInfo.getClusterName()
+					+ "db name is " + dbRouteInfo.getDbInfo().getDbName() + ", table name is " + tableName);
 		}
 
 		return dbRouteInfo;
@@ -172,27 +184,14 @@ public abstract class AbstractClusterRouter implements IClusterRouter {
 	}
 
 	/**
-	 * 路由操作. 从主库集群中获取目标库表.
-	 * 
-	 * @param dbMasterCluster
-	 *            主库集群信息.
+	 * select database instance.
+	 *
+	 * @param dbInfos
+	 *            database cluster info.
 	 * @param value
-	 *            分库分表因子
-	 * @return 路由结果
+	 *            sharding value.
+	 *
+	 * @return index of database info list.
 	 */
-	protected abstract RouteInfo doSelectFromMaster(List<DBInfo> masterConnections, IShardingKey<?> value)
-			throws DBRouteException;
-
-	/**
-	 * 路由操作. 从从库中获取路由库表.
-	 * 
-	 * @param dbSlaveCluster
-	 *            从库集群信息
-	 * @param value
-	 *            分库分表因子
-	 * @return 路由结果
-	 */
-	protected abstract RouteInfo doSelectFromSlave(List<List<DBInfo>> slaveConnection, int slaveIndex,
-			IShardingKey<?> value) throws DBRouteException;
-
+	protected abstract DBInfo doSelect(List<DBInfo> dbInfos, IShardingKey<?> value) throws DBRouteException;
 }
