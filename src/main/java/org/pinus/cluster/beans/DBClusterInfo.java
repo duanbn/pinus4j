@@ -18,34 +18,51 @@ package org.pinus.cluster.beans;
 import java.util.List;
 
 import org.pinus.cluster.enums.EnumClusterCatalog;
+import org.pinus.cluster.route.IClusterRouter;
 
 /**
  * 表示一个数据库集群信息.
  * 
  * @author duanbn
+ * @since 0.6.0
  */
 public class DBClusterInfo {
 
 	/**
-	 * 数据库集群名称.
+	 * cluster name.
 	 */
 	private String clusterName;
 
+    /**
+     * catalog for database.
+     */
 	private EnumClusterCatalog catalog;
 
+    /**
+     * class of cluster router.
+     * this class for create router instance.
+     */
+    private Class<IClusterRouter> routerClass;
+
 	/**
-	 * 集群中的全局库
+	 *  master global database info.
 	 */
-	private DBConnectionInfo masterGlobalConnection;
+	private DBInfo masterGlobalDBInfo;
 
-	private List<DBConnectionInfo> slaveGlobalConnection;
+    /**
+     * slave global database info.
+     */
+	private List<DBInfo> slaveGlobalDBInfo;
 
+    /**
+     * sharding database info.
+     */
 	private List<DBClusterRegionInfo> dbRegions;
 
 	@Override
 	public String toString() {
-		return "DBClusterInfo [clusterName=" + clusterName + ", catalog=" + catalog + ", masterGlobalConnection="
-				+ masterGlobalConnection + ", slaveGlobalConnection=" + slaveGlobalConnection + ", dbRegions="
+		return "DBClusterInfo [clusterName=" + clusterName + ", catalog=" + catalog + ", masterGlobalDBInfo="
+				+ masterGlobalDBInfo + ", slaveGlobalDBInfo=" + slaveGlobalDBInfo + ", dbRegions="
 				+ dbRegions + "]";
 	}
 
@@ -65,20 +82,28 @@ public class DBClusterInfo {
 		this.catalog = catalog;
 	}
 
-	public DBConnectionInfo getMasterGlobalConnection() {
-		return masterGlobalConnection;
+    public void setRouterClass(Class<IClusterRouter> clazz) {
+        this.routerClass = clazz;
+    }
+
+    public Class<IClusterRouter> getRouterClass() {
+        return this.routerClass;
+    }
+
+	public DBInfo getMasterGlobalDBInfo() {
+		return masterGlobalDBInfo;
 	}
 
-	public void setMasterGlobalConnection(DBConnectionInfo masterGlobalConnection) {
-		this.masterGlobalConnection = masterGlobalConnection;
+	public void setMasterGlobalDBInfo(DBInfo masterGlobalDBInfo) {
+		this.masterGlobalDBInfo = masterGlobalDBInfo;
 	}
 
-	public List<DBConnectionInfo> getSlaveGlobalConnection() {
-		return slaveGlobalConnection;
+	public List<DBInfo> getSlaveGlobalDBInfo() {
+		return slaveGlobalDBInfo;
 	}
 
-	public void setSlaveGlobalConnection(List<DBConnectionInfo> slaveGlobalConnection) {
-		this.slaveGlobalConnection = slaveGlobalConnection;
+	public void setSlaveGlobalDBInfo(List<DBInfo> slaveGlobalDBInfo) {
+		this.slaveGlobalDBInfo = slaveGlobalDBInfo;
 	}
 
 	public List<DBClusterRegionInfo> getDbRegions() {

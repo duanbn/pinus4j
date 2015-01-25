@@ -22,9 +22,8 @@ import javax.naming.NamingException;
 import javax.sql.DataSource;
 
 import org.pinus.api.enums.EnumDB;
-import org.pinus.cluster.AbstractDBCluster;
-import org.pinus.cluster.beans.DBConnectionInfo;
-import org.pinus.cluster.beans.EnvDBConnectionInfo;
+import org.pinus.cluster.beans.DBInfo;
+import org.pinus.cluster.beans.EnvDBInfo;
 import org.pinus.exception.LoadConfigException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,8 +51,8 @@ public class EnvDBClusterImpl extends AbstractDBCluster {
 	}
 
 	@Override
-	public void buildDataSource(DBConnectionInfo dbConnInfo) throws LoadConfigException {
-		EnvDBConnectionInfo envDbConnInfo = (EnvDBConnectionInfo) dbConnInfo;
+	public void buildDataSource(DBInfo dbConnInfo) throws LoadConfigException {
+		EnvDBInfo envDbConnInfo = (EnvDBInfo) dbConnInfo;
 
 		LOG.info(envDbConnInfo.toString());
 
@@ -66,7 +65,7 @@ public class EnvDBClusterImpl extends AbstractDBCluster {
 	}
 
 	@Override
-	public void closeDataSource(DBConnectionInfo dbConnInfo) {
+	public void closeDataSource(DBInfo dbConnInfo) {
 		// 由容器负责关闭数据库连接
 	}
 

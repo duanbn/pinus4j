@@ -7,11 +7,11 @@ import java.util.Date;
 import org.apache.commons.lang.builder.ToStringBuilder;
 import org.apache.commons.lang.builder.ToStringStyle;
 import org.pinus.api.FashionEntity;
-import org.pinus.api.annotation.DateTime;
-import org.pinus.api.annotation.Field;
-import org.pinus.api.annotation.PrimaryKey;
-import org.pinus.api.annotation.Table;
-import org.pinus.api.annotation.UpdateTime;
+import org.pinus.generator.annotation.DateTime;
+import org.pinus.generator.annotation.Field;
+import org.pinus.generator.annotation.PrimaryKey;
+import org.pinus.generator.annotation.Table;
+import org.pinus.generator.annotation.UpdateTime;
 
 @Table(name = "test_entity", cluster = "pinus", shardingBy = "testInt", shardingNum = 3, cache = true)
 public class TestEntity extends FashionEntity implements Serializable {

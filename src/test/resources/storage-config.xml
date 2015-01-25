@@ -8,7 +8,16 @@
 	<!-- zookeeper connection -->
 	<db.cluster.zk>127.0.0.1:2181</db.cluster.zk>
 	<!-- id generator batch -->
-	<db.cluster.generateid.batch>100</db.cluster.generateid.batch>
+	<db.cluster.generateid.batch>1</db.cluster.generateid.batch>
+    <!-- db query cache expire is seconds -->
+    <db.cluster.cache enabled="true">
+        <primary expire="300" class="org.pinus.cache.impl.MemCachedPrimaryCacheImpl">
+            <address>127.0.0.1:11211</address>
+        </primary>
+        <second expire="300" class="org.pinus.cache.impl.MemCachedSecondCacheImpl">
+            <address>127.0.0.1:11211</address>
+        </second>
+    </db.cluster.cache>
 
 	<!-- catalog is "env" or "app" -->
 	<!-- env represent get connection pool from container -->
@@ -26,7 +35,7 @@
 		<minEvictableIdleTimeMillis>10000</minEvictableIdleTimeMillis>
 	</db-connection-pool>
 
-	<cluster name="pinus" catalog="mysql">
+	<cluster name="pinus" catalog="mysql" class="org.pinus.cluster.route.impl.SimpleHashClusterRouter">
 		<global>
 			<master>
 				<db.username>root</db.username>

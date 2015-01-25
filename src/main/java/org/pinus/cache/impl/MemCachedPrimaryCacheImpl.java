@@ -38,34 +38,12 @@ import org.slf4j.LoggerFactory;
  * 
  * @author duanbn
  */
-public class MemCachedPrimaryCacheImpl implements IPrimaryCache {
+public class MemCachedPrimaryCacheImpl extends AbstractMemCachedCache implements IPrimaryCache {
 
 	/**
 	 * 日志.
 	 */
 	public static final Logger LOG = LoggerFactory.getLogger(MemCachedPrimaryCacheImpl.class);
-
-	/**
-	 * Spy client
-	 */
-	private MemcachedClient memClient;
-
-	/**
-	 * 过期秒数.
-	 * 
-	 * 默认30秒
-	 */
-	private int expire = 30;
-
-	/**
-	 * 默认构造方法.
-	 */
-	public MemCachedPrimaryCacheImpl() {
-	}
-
-	public MemCachedPrimaryCacheImpl(String s) {
-		this(s, 0);
-	}
 
 	/**
 	 * 构造方法.
@@ -74,33 +52,7 @@ public class MemCachedPrimaryCacheImpl implements IPrimaryCache {
 	 *            ip:port,ip:port
 	 */
 	public MemCachedPrimaryCacheImpl(String s, int expire) {
-		try {
-			List<InetSocketAddress> servers = new ArrayList<InetSocketAddress>();
-			String[] addresses = s.split(",");
-			InetSocketAddress socketAddress = null;
-			for (String address : addresses) {
-				String[] pair = address.split(":");
-				socketAddress = new InetSocketAddress(pair[0], Integer.parseInt(pair[1]));
-				servers.add(socketAddress);
-			}
-			this.memClient = new MemcachedClient(servers);
-		} catch (Exception e) {
-			throw new RuntimeException("连接memcached服务器失败", e);
-		}
-
-		if (expire > 0) {
-			this.expire = expire;
-		}
-	}
-
-	@Override
-	public int getExpire() {
-		return expire;
-	}
-
-	@Override
-	public void destroy() {
-		this.memClient.shutdown();
+		super(s, expire);
 	}
 
 	@Override
@@ -487,9 +439,9 @@ public class MemCachedPrimaryCacheImpl implements IPrimaryCache {
 	 */
 	private String _buildCountKey(DB db) {
 		StringBuilder key = new StringBuilder();
-		key.append(db.getClusterName()).append(db.getDbIndex());
+		key.append(db.getClusterName()).append(db.getDbName());
 		key.append(".");
-		key.append(db.getStart()).append(db.getEnd());
+		key.append(db.getRegionInfo().getStart()).append(db.getRegionInfo().getEnd());
 		key.append(".");
 		key.append(db.getTableName()).append(db.getTableIndex());
 		key.append(".c");
@@ -512,9 +464,9 @@ public class MemCachedPrimaryCacheImpl implements IPrimaryCache {
 	 */
 	private String _buildKey(DB db, Number id) {
 		StringBuilder key = new StringBuilder();
-		key.append(db.getClusterName()).append(db.getDbIndex());
+		key.append(db.getClusterName()).append(db.getDbName());
 		key.append(".");
-		key.append(db.getStart()).append(db.getEnd());
+		key.append(db.getRegionInfo().getStart()).append(db.getRegionInfo().getEnd());
 		key.append(".");
 		key.append(db.getTableName()).append(db.getTableIndex());
 		key.append(".");

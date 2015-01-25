@@ -21,8 +21,8 @@ import java.sql.Connection;
 import java.util.List;
 
 import org.pinus.api.enums.EnumSyncAction;
-import org.pinus.cluster.beans.DBTable;
 import org.pinus.exception.DDLException;
+import org.pinus.generator.beans.DBTable;
 
 /**
  * 数据库表生成器接口.

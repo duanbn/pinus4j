@@ -1,5 +1,6 @@
 package org.pinus.config;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -7,43 +8,39 @@ import org.junit.Test;
 import org.pinus.BaseTest;
 import org.pinus.cluster.beans.DBClusterInfo;
 import org.pinus.cluster.beans.DBClusterRegionInfo;
-import org.pinus.cluster.beans.DBConnectionInfo;
-import org.pinus.config.IClusterConfig;
-import org.pinus.config.impl.XmlDBClusterConfigImpl;
+import org.pinus.cluster.beans.DBInfo;
+import org.pinus.config.impl.XmlClusterConfigImpl;
 
 public class XmlCinfigImplTest extends BaseTest {
 
 	private IClusterConfig config;
 
 	public XmlCinfigImplTest() throws Exception {
-		this.config = XmlDBClusterConfigImpl.getInstance();
+		this.config = XmlClusterConfigImpl.getInstance();
 	}
 
 	@Test
 	public void testGetClusterInfo() throws Exception {
-		Map<String, DBClusterInfo> map = this.config.getDBClusterInfo();
-		for (Map.Entry<String, DBClusterInfo> entry : map.entrySet()) {
-			System.out.println(entry.getKey());
-			DBClusterInfo dbClusterInfo = entry.getValue();
-
+		Collection<DBClusterInfo> dbClusterInfos = this.config.getDBClusterInfos();
+		for (DBClusterInfo dbClusterInfo : dbClusterInfos) {
 			System.out.println("master global");
-			System.out.println(dbClusterInfo.getMasterGlobalConnection());
+			System.out.println(dbClusterInfo.getMasterGlobalDBInfo());
 
 			System.out.println("slave global");
-			for (DBConnectionInfo connInfo : dbClusterInfo.getSlaveGlobalConnection()) {
+			for (DBInfo connInfo : dbClusterInfo.getSlaveGlobalDBInfo()) {
 				System.out.println(connInfo);
 			}
 
 			for (DBClusterRegionInfo region : dbClusterInfo.getDbRegions()) {
 				System.out.println("master sharding");
-				for (DBConnectionInfo connInfo : region.getMasterConnection()) {
+				for (DBInfo connInfo : region.getMasterDBInfos()) {
 					System.out.println(connInfo);
 				}
 
 				System.out.println("slave sharding");
-				List<List<DBConnectionInfo>> a = region.getSlaveConnection();
-				for (List<DBConnectionInfo> b : a) {
-					for (DBConnectionInfo c : b) {
+				List<List<DBInfo>> a = region.getSlaveDBInfos();
+				for (List<DBInfo> b : a) {
+					for (DBInfo c : b) {
 						System.out.println(c);
 					}
 				}

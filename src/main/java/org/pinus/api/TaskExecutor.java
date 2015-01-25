@@ -8,7 +8,7 @@ import org.pinus.api.TaskFuture;
 import org.pinus.api.query.IQuery;
 import org.pinus.cluster.DB;
 import org.pinus.cluster.IDBCluster;
-import org.pinus.cluster.beans.DBConnectionInfo;
+import org.pinus.cluster.beans.DBInfo;
 import org.pinus.datalayer.IRecordIterator;
 import org.pinus.datalayer.iterator.GlobalRecordIterator;
 import org.pinus.datalayer.iterator.ShardingRecordIterator;
@@ -96,7 +96,7 @@ public class TaskExecutor<E> {
 		} else { // 全局情况
 			RecrodThread<E> rt = null;
 
-			DBConnectionInfo dbConnInfo;
+			DBInfo dbConnInfo;
 			try {
 				dbConnInfo = this.dbCluster.getMasterGlobalConn(clusterName);
 			} catch (DBClusterException e) {

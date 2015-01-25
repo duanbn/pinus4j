@@ -16,20 +16,72 @@
 
 package org.pinus.config;
 
-import java.util.Map;
+import java.util.Collection;
 
-import org.apache.zookeeper.ZooKeeper;
 import org.pinus.api.enums.EnumDbConnectionPoolCatalog;
+import org.pinus.cache.IPrimaryCache;
+import org.pinus.cache.ISecondCache;
 import org.pinus.cluster.beans.DBClusterInfo;
 import org.pinus.cluster.enums.HashAlgoEnum;
 
 /**
  * 存储中间件配置信息接口. 此接口提供的信息都是通过配置来获取.
- * 一个storage-config.properties中可以配置多个数据库集群，每个数据库集群又可以配置一个主库集群和多个从库集群.
+ * 一个storage-config.xml中可以配置多个数据库集群，每个数据库集群又可以配置一个主库集群和多个从库集群.
  * 
  * @author duanbn
+ * @since 0.1.0
  */
 public interface IClusterConfig {
+
+    /**
+     *  the class of default primary cache implement.
+     */
+    public static final String DEFAULT_PRIMARY_CACHE_CLASS = "org.pinus.cache.impl.MemCachedPrimaryCacheImpl";
+
+    /**
+     * the class of default second cache implement.
+     */
+    public static final String DEFAULT_SECOND_CACHE_CLASS = "org.pinus.cache.impl.MemCachedSecondCacheImpl";
+
+    /**
+     * the class of default cluster router implement.
+     */
+    public static final String DEFAULT_CLUSTER_ROUTER_CLASS = "org.pinus.cluster.route.impl.SimpleHashClusterRouter";
+
+	/**
+	 * ture is enabled, false is not.
+	 */
+	public boolean isCacheEnabled();
+
+	/**
+	 * address of second cache.
+	 */
+	public String getSecondCacheAddress();
+
+	/**
+	 * expire time of second cache.
+	 */
+	public int getSecondCacheExpire();
+
+	/**
+	 * get class of second cache.
+	 */
+	public Class<ISecondCache> getSecondCacheClass();
+
+	/**
+	 * address of primary cache.
+	 */
+	public String getPrimaryCacheAddress();
+
+	/**
+	 * expire time of primary cache.
+	 */
+	public int getPrimaryCacheExpire();
+
+	/**
+	 * get class of primary cache.
+	 */
+	public Class<IPrimaryCache> getPrimaryCacheClass();
 
 	/**
 	 * 获取数据库连接方式.
@@ -46,13 +98,6 @@ public interface IClusterConfig {
 	public int getIdGeneratorBatch();
 
 	/**
-	 * 获取zookeeper客户端
-	 * 
-	 * @return
-	 */
-	public ZooKeeper getZooKeeper();
-
-	/**
 	 * 获取配置的hash算法.
 	 * 
 	 * @return hash算法枚举
@@ -64,7 +109,7 @@ public interface IClusterConfig {
 	 * 
 	 * @return
 	 */
-	public Map<String, DBClusterInfo> getDBClusterInfo();
+	public Collection<DBClusterInfo> getDBClusterInfos();
 
 	/**
 	 * 获取xml中配置的zookeeper连接

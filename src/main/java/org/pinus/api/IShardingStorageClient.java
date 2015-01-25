@@ -22,12 +22,8 @@ import java.util.concurrent.locks.Lock;
 
 import org.pinus.api.enums.EnumDB;
 import org.pinus.api.enums.EnumDBMasterSlave;
-import org.pinus.api.enums.EnumDBRouteAlg;
-import org.pinus.api.enums.EnumMode;
 import org.pinus.api.enums.EnumSyncAction;
 import org.pinus.api.query.IQuery;
-import org.pinus.cache.IPrimaryCache;
-import org.pinus.cache.ISecondCache;
 import org.pinus.cluster.IDBCluster;
 import org.pinus.exception.DBOperationException;
 import org.pinus.exception.LoadConfigException;
@@ -915,15 +911,6 @@ public interface IShardingStorageClient {
 	public void setIdGenerator(IIdGenerator idGenerator);
 
 	/**
-	 * 设置模式. 默认情况下是单机模式, 分布式模式需要zookeeper的支持, 在storage-config.properties中配置zk
-	 * url
-	 * 
-	 * @param mode
-	 *            模式
-	 */
-	public void setMode(EnumMode mode);
-
-	/**
 	 * 获取ID生成器
 	 * 
 	 * @return ID生成器
@@ -1004,14 +991,6 @@ public interface IShardingStorageClient {
 	public void setEnumDb(EnumDB enumDb);
 
 	/**
-	 * 设置路由算法. 默认使用取模哈希算法
-	 * 
-	 * @param enumDBRouteAlg
-	 *            路由算法枚举
-	 */
-	public void setEnumDBRouteAlg(EnumDBRouteAlg enumDBRouteAlg);
-
-	/**
 	 * 初始化集群客户端.
 	 */
 	public void init() throws LoadConfigException;
@@ -1020,13 +999,6 @@ public interface IShardingStorageClient {
 	 * 关闭存储.
 	 */
 	public void destroy();
-
-	/**
-	 * 设置是否生成库表.
-	 * 
-	 * @param isCreateTable
-	 */
-	public void setCreateTable(boolean isCreateTable);
 
 	/**
 	 * 设置数据表同步动作.
@@ -1041,15 +1013,5 @@ public interface IShardingStorageClient {
 	 * @param scanPackage
 	 */
 	public void setScanPackage(String scanPackage);
-
-	/**
-	 * 设置一级缓存.
-	 */
-	public void setPrimaryCache(IPrimaryCache primaryCache);
-
-	/**
-	 * 设置二级缓存.
-	 */
-	public void setSecondCache(ISecondCache secondCache);
 
 }

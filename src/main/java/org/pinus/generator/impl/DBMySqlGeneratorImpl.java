@@ -25,12 +25,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.pinus.api.enums.EnumSyncAction;
-import org.pinus.cluster.beans.DBIndex;
-import org.pinus.cluster.beans.DBTable;
-import org.pinus.cluster.beans.DBTableColumn;
 import org.pinus.datalayer.SQLBuilder;
 import org.pinus.exception.DDLException;
 import org.pinus.generator.AbstractDBGenerator;
+import org.pinus.generator.beans.DBIndex;
+import org.pinus.generator.beans.DBTable;
+import org.pinus.generator.beans.DBTableColumn;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

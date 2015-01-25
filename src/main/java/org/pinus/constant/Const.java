@@ -95,6 +95,14 @@ public class Const {
 	 */
 	public static final String PROP_ZK_URL = "db.cluster.zk";
 
+    //
+    // cache prop
+    //
+    public static final String PROP_DB_CLUSTER_CACHE = "db.cluster.cache";
+    public static final String PROP_DB_CLUSTER_CACHE_PRIMARY = "primary";
+    public static final String PROP_DB_CLUSTER_CACHE_SECOND = "second";
+    public static final String PROP_DB_CLUSTER_CACHE_ADDRESS = "address";
+
 	// dbcp连接池
 	public static final String PROP_MAXACTIVE = "maxActive";
 	public static final String PROP_MINIDLE = "minIdle";

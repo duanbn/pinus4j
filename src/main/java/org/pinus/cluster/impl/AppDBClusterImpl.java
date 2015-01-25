@@ -21,9 +21,8 @@ import java.util.Map;
 
 import org.apache.commons.dbcp.BasicDataSource;
 import org.pinus.api.enums.EnumDB;
-import org.pinus.cluster.AbstractDBCluster;
-import org.pinus.cluster.beans.AppDBConnectionInfo;
-import org.pinus.cluster.beans.DBConnectionInfo;
+import org.pinus.cluster.beans.AppDBInfo;
+import org.pinus.cluster.beans.DBInfo;
 import org.pinus.constant.Const;
 import org.pinus.exception.LoadConfigException;
 import org.slf4j.Logger;
@@ -49,8 +48,8 @@ public class AppDBClusterImpl extends AbstractDBCluster {
 	}
 
 	@Override
-	public void buildDataSource(DBConnectionInfo dbConnInfo) throws LoadConfigException {
-		AppDBConnectionInfo appDbConnInfo = (AppDBConnectionInfo) dbConnInfo;
+	public void buildDataSource(DBInfo dbConnInfo) throws LoadConfigException {
+		AppDBInfo appDbConnInfo = (AppDBInfo) dbConnInfo;
 
 		LOG.info(dbConnInfo.toString());
 
@@ -82,7 +81,7 @@ public class AppDBClusterImpl extends AbstractDBCluster {
 	}
 
 	@Override
-	public void closeDataSource(DBConnectionInfo dbConnInfo) {
+	public void closeDataSource(DBInfo dbConnInfo) {
 		try {
 			((BasicDataSource) dbConnInfo.getDatasource()).close();
 		} catch (SQLException e) {

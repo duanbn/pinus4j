@@ -16,16 +16,28 @@
 
 package org.pinus.cluster.enums;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public enum EnumClusterCatalog {
 
 	/**
 	 * mysql.
 	 */
-	MYSQL("MYSQL"),
+	MYSQL("mysql"),
 	/**
 	 * redis.
 	 */
-	REDIS("REDIS");
+	REDIS("redis");
+
+    private static final Map<String, EnumClusterCatalog> map;
+
+    static {
+        map = new HashMap<String, EnumClusterCatalog>(2);
+        for (EnumClusterCatalog type : EnumClusterCatalog.values()) {
+            map.put(type.value, type);
+		}
+    }
 
 	private String value;
 
@@ -38,11 +50,11 @@ public enum EnumClusterCatalog {
 	}
 
 	public static EnumClusterCatalog getEnum(String value) {
-		for (EnumClusterCatalog type : EnumClusterCatalog.values()) {
-			if (type.value.equals(value)) {
-				return type;
-			}
-		}
-		throw new IllegalArgumentException("找不到相关枚举, value=" + value);
+        EnumClusterCatalog catalog = map.get(value);
+
+        if (catalog == null) 
+            throw new IllegalArgumentException("找不到相关枚举, value=" + value);
+        
+        return catalog;
 	}
 }

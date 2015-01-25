@@ -22,6 +22,7 @@ import java.sql.SQLException;
 
 import javax.sql.DataSource;
 
+import org.pinus.cluster.beans.DBClusterRegionInfo;
 import org.pinus.datalayer.SQLBuilder;
 
 /**
@@ -29,25 +30,25 @@ import org.pinus.datalayer.SQLBuilder;
  * 
  * @author duanbn
  */
-public class DB implements Comparable<DB> {
+public class DB {
 
 	/**
-	 * jdbc数据库连接对象.
+	 * jdbc data source.
 	 */
 	private DataSource datasource;
 
 	/**
-	 * 集群名称.
+	 * cluster name.
 	 */
 	private String clusterName;
-
+	
 	/**
-	 * 数据库下标.
+	 * database name.
 	 */
-	private int dbIndex;
+	private String dbName;
 
 	/**
-	 * 被操作的表名.
+	 * table name.
 	 */
 	private String tableName;
 
@@ -56,18 +57,27 @@ public class DB implements Comparable<DB> {
 	 */
 	private int tableIndex;
 
-	/**
-	 * 主库集群信息.
-	 */
-	private IDBCluster dbCluster;
-
-	private long start;
-
-	private long end;
+	private DBClusterRegionInfo regionInfo;
 
 	private String databaseProductName;
 	private String host;
 	private String catalog;
+
+	private DB() {
+	}
+
+	public static DB valueOf(DataSource ds, String clusterName, String dbName, String tableName, int tableIndex,
+			DBClusterRegionInfo regionInfo) {
+		DB db = new DB();
+		db.setDatasource(ds);
+		db.setClusterName(clusterName);
+		db.setDbName(dbName);
+		db.setTableName(tableName);
+		db.setTableIndex(tableIndex);
+		db.setRegionInfo(regionInfo);
+
+		return db;
+	}
 
 	@Override
 	public String toString() {
@@ -76,13 +86,70 @@ public class DB implements Comparable<DB> {
 		info.append(" host=" + host);
 		info.append(" db=").append(catalog);
 		info.append(" tableName=").append(this.tableName).append(this.tableIndex);
-		info.append(" start=").append(this.start).append(" end=").append(this.end);
+		info.append(" start=").append(this.regionInfo.getStart()).append(" end=").append(this.regionInfo.getEnd());
 		return info.toString();
 	}
 
-	@Override
-	public int compareTo(DB db) {
-		return this.dbIndex - db.getDbIndex();
+	public DataSource getDatasource() {
+		return datasource;
+	}
+
+	public void setDatasource(DataSource datasource) {
+		DatabaseMetaData dbMeta;
+		Connection dbConn = null;
+		try {
+			dbConn = datasource.getConnection();
+			dbMeta = dbConn.getMetaData();
+			this.databaseProductName = dbMeta.getDatabaseProductName();
+			String url = dbMeta.getURL().substring(13);
+			this.host = url.substring(0, url.indexOf("/"));
+			this.catalog = dbConn.getCatalog();
+		} catch (SQLException e) {
+			throw new RuntimeException(e);
+		} finally {
+			SQLBuilder.close(dbConn);
+		}
+		this.datasource = datasource;
+	}
+
+	public String getDbName() {
+		return dbName;
+	}
+
+	public void setDbName(String dbName) {
+		this.dbName = dbName;
+	}
+
+	public String getTableName() {
+		return tableName;
+	}
+
+	public void setTableName(String tableName) {
+		this.tableName = tableName;
+	}
+
+	public int getTableIndex() {
+		return tableIndex;
+	}
+
+	public void setTableIndex(int tableIndex) {
+		this.tableIndex = tableIndex;
+	}
+
+	public String getClusterName() {
+		return clusterName;
+	}
+
+	public void setClusterName(String clusterName) {
+		this.clusterName = clusterName;
+	}
+
+	public DBClusterRegionInfo getRegionInfo() {
+		return regionInfo;
+	}
+
+	public void setRegionInfo(DBClusterRegionInfo regionInfo) {
+		this.regionInfo = regionInfo;
 	}
 
 	@Override
@@ -92,11 +159,8 @@ public class DB implements Comparable<DB> {
 		result = prime * result + ((catalog == null) ? 0 : catalog.hashCode());
 		result = prime * result + ((clusterName == null) ? 0 : clusterName.hashCode());
 		result = prime * result + ((databaseProductName == null) ? 0 : databaseProductName.hashCode());
-		result = prime * result + ((dbCluster == null) ? 0 : dbCluster.hashCode());
-		result = prime * result + dbIndex;
-		result = prime * result + (int) (end ^ (end >>> 32));
 		result = prime * result + ((host == null) ? 0 : host.hashCode());
-		result = prime * result + (int) (start ^ (start >>> 32));
+		result = prime * result + ((regionInfo == null) ? 0 : regionInfo.hashCode());
 		result = prime * result + tableIndex;
 		result = prime * result + ((tableName == null) ? 0 : tableName.hashCode());
 		return result;
@@ -126,21 +190,15 @@ public class DB implements Comparable<DB> {
 				return false;
 		} else if (!databaseProductName.equals(other.databaseProductName))
 			return false;
-		if (dbCluster == null) {
-			if (other.dbCluster != null)
-				return false;
-		} else if (!dbCluster.equals(other.dbCluster))
-			return false;
-		if (dbIndex != other.dbIndex)
-			return false;
-		if (end != other.end)
-			return false;
 		if (host == null) {
 			if (other.host != null)
 				return false;
 		} else if (!host.equals(other.host))
 			return false;
-		if (start != other.start)
+		if (regionInfo == null) {
+			if (other.regionInfo != null)
+				return false;
+		} else if (!regionInfo.equals(other.regionInfo))
 			return false;
 		if (tableIndex != other.tableIndex)
 			return false;
@@ -152,81 +210,4 @@ public class DB implements Comparable<DB> {
 		return true;
 	}
 
-	public DataSource getDatasource() {
-		return datasource;
-	}
-
-	public void setDatasource(DataSource datasource) {
-		DatabaseMetaData dbMeta;
-		Connection dbConn = null;
-		try {
-			dbConn = datasource.getConnection();
-			dbMeta = dbConn.getMetaData();
-			this.databaseProductName = dbMeta.getDatabaseProductName();
-			String url = dbMeta.getURL().substring(13);
-			this.host = url.substring(0, url.indexOf("/"));
-			this.catalog = dbConn.getCatalog();
-		} catch (SQLException e) {
-			throw new RuntimeException(e);
-		} finally {
-			SQLBuilder.close(dbConn);
-		}
-		this.datasource = datasource;
-	}
-
-	public String getTableName() {
-		return tableName;
-	}
-
-	public void setTableName(String tableName) {
-		this.tableName = tableName;
-	}
-
-	public int getTableIndex() {
-		return tableIndex;
-	}
-
-	public void setTableIndex(int tableIndex) {
-		this.tableIndex = tableIndex;
-	}
-
-	public IDBCluster getDbCluster() {
-		return dbCluster;
-	}
-
-	public void setDbCluster(IDBCluster dbCluster) {
-		this.dbCluster = dbCluster;
-	}
-
-	public String getClusterName() {
-		return clusterName;
-	}
-
-	public void setClusterName(String clusterName) {
-		this.clusterName = clusterName;
-	}
-
-	public int getDbIndex() {
-		return dbIndex;
-	}
-
-	public void setDbIndex(int dbIndex) {
-		this.dbIndex = dbIndex;
-	}
-
-	public long getStart() {
-		return start;
-	}
-
-	public void setStart(long start) {
-		this.start = start;
-	}
-
-	public long getEnd() {
-		return end;
-	}
-
-	public void setEnd(long end) {
-		this.end = end;
-	}
 }

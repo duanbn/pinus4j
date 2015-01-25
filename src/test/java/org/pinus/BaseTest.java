@@ -8,11 +8,9 @@ import java.util.Random;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.Test;
 import org.pinus.api.IShardingStorageClient;
 import org.pinus.api.ShardingKey;
 import org.pinus.api.ShardingStorageClientImpl;
-import org.pinus.api.enums.EnumMode;
 import org.pinus.api.enums.EnumSyncAction;
 import org.pinus.cache.IPrimaryCache;
 import org.pinus.cache.ISecondCache;
@@ -37,23 +35,14 @@ public class BaseTest {
 
 	@BeforeClass
 	public static void setup() throws Exception {
-		primaryCache = new MemCachedPrimaryCacheImpl(CACHE_HOST, 0);
-		secondCache = new MemCachedSecondCacheImpl(CACHE_HOST, 0);
-
-		cacheClient.setMode(EnumMode.DISTRIBUTED);
 		cacheClient.setScanPackage("org.pinus");
-		cacheClient.setCreateTable(true);
 		cacheClient.setSyncAction(EnumSyncAction.UPDATE);
-		cacheClient.setPrimaryCache(primaryCache);
-		cacheClient.setSecondCache(secondCache);
 		cacheClient.init();
 	}
 
 	@AfterClass
 	public static void setdown() {
 		cacheClient.destroy();
-		primaryCache.destroy();
-		secondCache.destroy();
 	}
 
 	String[] seeds = new String[] { "a", "b", "c", "d", "e", "f", "g", "h", "i" };
@@ -113,7 +102,7 @@ public class BaseTest {
 		return testEntity;
 	}
 
-//	@Test
+	// @Test
 	public void genData() throws Exception {
 		List<TestEntity> dataList = new ArrayList<TestEntity>(3000);
 		int i = 0;

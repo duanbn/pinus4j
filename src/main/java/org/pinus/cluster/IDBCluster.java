@@ -18,19 +18,20 @@ package org.pinus.cluster;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
+import java.util.concurrent.locks.Lock;
 
 import org.pinus.api.IShardingKey;
 import org.pinus.api.enums.EnumDBMasterSlave;
-import org.pinus.api.enums.EnumDBRouteAlg;
 import org.pinus.api.enums.EnumSyncAction;
 import org.pinus.cluster.beans.DBClusterInfo;
-import org.pinus.cluster.beans.DBConnectionInfo;
-import org.pinus.cluster.beans.DBTable;
+import org.pinus.cluster.beans.DBInfo;
 import org.pinus.cluster.route.IClusterRouter;
 import org.pinus.config.IClusterConfig;
+import org.pinus.datalayer.IDataLayerBuilder;
 import org.pinus.exception.DBClusterException;
 import org.pinus.generator.IDBGenerator;
+import org.pinus.generator.IIdGenerator;
+import org.pinus.generator.beans.DBTable;
 
 /**
  * 数据库集群. 数据库集群主要类，持有所有的数据库集群信息，保存集群的数据库连接包括主库和从库。 初始化集群的方法，<br/>
@@ -39,7 +40,6 @@ import org.pinus.generator.IDBGenerator;
  * <pre>
  * IDBCluster dbCluster = new DbcpDBClusterImpl(); </br>
  * dbCluster.setDbRouteAlg(EnumDBRouteAlg); // 设置分片路由算法. 可选
- * dbCluster.setCreateTable(true | false); // 默认为false, 可选
  * dbCluster.setScanPackage("entity full path package"); // 可选
  * dbCluster.setShardInfoFromZk(true | false); // 默认为false, 可选
  * dbCluster.startup();
@@ -48,6 +48,20 @@ import org.pinus.generator.IDBGenerator;
  * @author duanbn
  */
 public interface IDBCluster {
+
+    /**
+     * create a destribute lock by give name.
+     *
+     * @return destirbute lock.
+     */
+	public Lock createLock(String name);
+
+	/**
+	 * get data layer component builder.
+	 * 
+	 * @see IDataLayerBuilder
+	 */
+	public IDataLayerBuilder getDataLayerBuilder();
 
 	/**
 	 * 设置此集群是否从zookeeper中加载分片信息.
@@ -76,7 +90,7 @@ public interface IDBCluster {
 	 *
 	 * @return all cluster info.
 	 */
-	public Collection<DBClusterInfo> getDbClusterInfo();
+	public Collection<DBClusterInfo> getDBClusterInfo();
 
 	/**
 	 * 获取集群信息.
@@ -85,7 +99,7 @@ public interface IDBCluster {
 	 *            集群名
 	 * @return 集群信息
 	 */
-	public DBClusterInfo getDbClusterInfo(String clusterName);
+	public DBClusterInfo getDBClusterInfo(String clusterName);
 
 	/**
 	 * 启动集群. 调用数据库集群前需要调用此方法，为了初始化集群连接.
@@ -120,8 +134,7 @@ public interface IDBCluster {
 	 * @param clusterName
 	 * @return
 	 */
-	public DBConnectionInfo getMasterGlobalConn(String clusterName)
-			throws DBClusterException;
+	public DBInfo getMasterGlobalConn(String clusterName) throws DBClusterException;
 
 	/**
 	 * 获取从库的全局库连接
@@ -130,8 +143,7 @@ public interface IDBCluster {
 	 * @param slave
 	 * @return
 	 */
-	public DBConnectionInfo getSlaveGlobalDbConn(String clusterName,
-			EnumDBMasterSlave slave) throws DBClusterException;
+	public DBInfo getSlaveGlobalDbConn(String clusterName, EnumDBMasterSlave slave) throws DBClusterException;
 
 	/**
 	 * 从主库集群中获取被操作的库表.
@@ -142,8 +154,7 @@ public interface IDBCluster {
 	 *            分库分表因子.
 	 * @return 被操作的库表
 	 */
-	public DB selectDbFromMaster(String tableName, IShardingKey<?> value)
-			throws DBClusterException;
+	public DB selectDbFromMaster(String tableName, IShardingKey<?> value) throws DBClusterException;
 
 	/**
 	 * 从从库集群中获取被操作的库表.
@@ -156,8 +167,8 @@ public interface IDBCluster {
 	 *            分库分表因子
 	 * @return 被操作的库表
 	 */
-	public DB selectDbFromSlave(String tableName, IShardingKey<?> value,
-			EnumDBMasterSlave slave) throws DBClusterException;
+	public DB selectDbFromSlave(String tableName, IShardingKey<?> value, EnumDBMasterSlave slave)
+			throws DBClusterException;
 
 	/**
 	 * 获取所有的分片引用.
@@ -171,8 +182,7 @@ public interface IDBCluster {
 	 *
 	 * @return 所有分片
 	 */
-	public List<DB> getAllMasterShardingDB(int tableNum, String clusterName,
-			String tableName);
+	public List<DB> getAllMasterShardingDB(int tableNum, String clusterName, String tableName);
 
 	/**
 	 * 获取此实体对象对应的所有的分库分表引用.
@@ -191,31 +201,12 @@ public interface IDBCluster {
 	 * @param slave
 	 *            从库号
 	 */
-	public List<DB> getAllSlaveShardingDB(Class<?> clazz,
-			EnumDBMasterSlave slave);
+	public List<DB> getAllSlaveShardingDB(Class<?> clazz, EnumDBMasterSlave slave);
 
 	/**
-	 * 获取数据库路由器.
+     * get cluster router.
 	 */
-	public IClusterRouter getDbRouter();
-
-	/**
-	 * 设置路由算法.
-	 */
-	public void setDbRouteAlg(EnumDBRouteAlg routeAlg);
-
-	/**
-	 * 获取路由算法.
-	 */
-	public EnumDBRouteAlg getDbRouteAlg();
-
-	/**
-	 * 设置是否创建表.
-	 * 
-	 * @param isCreateTable
-	 *            true:创建, false:不创建
-	 */
-	public void setCreateTable(boolean isCreateTable);
+	public IClusterRouter getDBRouter(String clusterName);
 
 	/**
 	 * 设置数据表同步动作.
@@ -225,16 +216,16 @@ public interface IDBCluster {
 	public void setSyncAction(EnumSyncAction syncAction);
 
 	/**
-	 * 是否创建表.
-	 * 
-	 * @return true:创建, false:不创建
+	 * 获取db生成器.
 	 */
-	public boolean isCreateTable();
+	public IDBGenerator getDBGenerator();
 
 	/**
 	 * 获取id生成器.
+	 * 
+	 * @return
 	 */
-	public IDBGenerator getDbGenerator();
+	public IIdGenerator getIdGenerator();
 
 	/**
 	 * 设置需要扫描的实体对象包.
@@ -246,11 +237,10 @@ public interface IDBCluster {
 
 	/**
 	 * 获取集群表集合.
-	 * 集群中的表集合. {集群名称, {分库下标, {表名, 分表数}}}
 	 * 
 	 * @return 集群表集合
 	 */
-	public Map<String, Map<Integer, Map<String, Integer>>> getTableCluster();
+	public ITableCluster getTableCluster();
 
 	/**
 	 * 获取集群配置.

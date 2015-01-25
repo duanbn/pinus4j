@@ -28,39 +28,18 @@ import net.spy.memcached.MemcachedClient;
 import org.pinus.api.query.IQuery;
 import org.pinus.cache.ISecondCache;
 import org.pinus.cluster.DB;
+import org.pinus.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class MemCachedSecondCacheImpl implements ISecondCache {
+public class MemCachedSecondCacheImpl extends AbstractMemCachedCache implements ISecondCache {
 
 	/**
 	 * 日志.
 	 */
 	public static final Logger LOG = LoggerFactory.getLogger(MemCachedSecondCacheImpl.class);
 
-	/**
-	 * Spy client
-	 */
-	private MemcachedClient memClient;
-
-	/**
-	 * 过期秒数.
-	 * 
-	 * 默认30秒
-	 */
-	private int expire = 30;
-
 	private static final Random r = new Random();
-
-	/**
-	 * 默认构造方法.
-	 */
-	public MemCachedSecondCacheImpl() {
-	}
-
-	public MemCachedSecondCacheImpl(String s) {
-		this(s, 0);
-	}
 
 	/**
 	 * 构造方法.
@@ -69,33 +48,7 @@ public class MemCachedSecondCacheImpl implements ISecondCache {
 	 *            ip:port,ip:port
 	 */
 	public MemCachedSecondCacheImpl(String s, int expire) {
-		try {
-			List<InetSocketAddress> servers = new ArrayList<InetSocketAddress>();
-			String[] addresses = s.split(",");
-			InetSocketAddress socketAddress = null;
-			for (String address : addresses) {
-				String[] pair = address.split(":");
-				socketAddress = new InetSocketAddress(pair[0], Integer.parseInt(pair[1]));
-				servers.add(socketAddress);
-			}
-			this.memClient = new MemcachedClient(servers);
-		} catch (Exception e) {
-			throw new RuntimeException("连接memcached服务器失败", e);
-		}
-
-		if (expire > 0) {
-			this.expire = expire;
-		}
-	}
-
-	@Override
-	public int getExpire() {
-		return this.expire;
-	}
-
-	@Override
-	public void destroy() {
-		this.memClient.shutdown();
+        super(s, expire);
 	}
 
 	@Override
@@ -232,9 +185,9 @@ public class MemCachedSecondCacheImpl implements ISecondCache {
 
 	public String _buildShardingVersion(DB db) {
 		StringBuilder versionKey = new StringBuilder("sec.version.");
-		versionKey.append(db.getClusterName()).append(db.getDbIndex());
+		versionKey.append(db.getClusterName()).append(db.getDbName());
 		versionKey.append(".");
-		versionKey.append(db.getStart()).append(db.getEnd());
+		versionKey.append(db.getRegionInfo().getStart()).append(db.getRegionInfo().getEnd());
 		versionKey.append(".");
 		versionKey.append(db.getTableName()).append(db.getTableIndex());
 		return versionKey.toString();
@@ -248,7 +201,7 @@ public class MemCachedSecondCacheImpl implements ISecondCache {
 		cacheKey.append(clusterName).append(".");
 		cacheKey.append(tableName).append(".");
 		cacheKey.append(version).append(".");
-		cacheKey.append(query.getWhereSql().hashCode());
+		cacheKey.append(SecurityUtil.md5(query.getWhereSql()));
 		return cacheKey.toString();
 	}
 
@@ -258,14 +211,14 @@ public class MemCachedSecondCacheImpl implements ISecondCache {
 	 */
 	private String _buildShardingCacheKey(IQuery query, DB db, int version) {
 		StringBuilder cacheKey = new StringBuilder("sec.");
-		cacheKey.append(db.getClusterName()).append(db.getDbIndex());
+		cacheKey.append(db.getClusterName()).append(db.getDbName());
 		cacheKey.append(".");
-		cacheKey.append(db.getStart()).append(db.getEnd());
+		cacheKey.append(db.getRegionInfo().getStart()).append(db.getRegionInfo().getEnd());
 		cacheKey.append(".");
 		cacheKey.append(db.getTableName()).append(db.getTableIndex());
 		cacheKey.append(".");
 		cacheKey.append(version).append(".");
-		cacheKey.append(query.getWhereSql().hashCode());
+		cacheKey.append(SecurityUtil.md5(query.getWhereSql()));
 		return cacheKey.toString();
 	}
 
