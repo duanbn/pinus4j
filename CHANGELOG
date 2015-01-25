@@ -1,4 +1,4 @@
---Version 0.8.0
+--Version 1.0.0
 TODO:
 1.实现JDBC Driver
 2.对数据库的读写性能进行优化
