@@ -176,7 +176,9 @@ public abstract class AbstractDBGenerator implements IDBGenerator {
 		for (Field f : clazz.getDeclaredFields()) {
 			column = new DBTableColumn();
 
+            //
 			// Datatime
+            //
 			datetime = f.getAnnotation(DateTime.class);
 			if (datetime != null) {
 				if (f.getType() != Date.class) {
@@ -192,7 +194,9 @@ public abstract class AbstractDBGenerator implements IDBGenerator {
 				table.addColumn(column);
 			}
 
+            //
 			// UpdateTime
+            //
 			updateTime = f.getAnnotation(UpdateTime.class);
 			if (updateTime != null) {
 				if (f.getType() != java.sql.Timestamp.class) {
@@ -207,7 +211,9 @@ public abstract class AbstractDBGenerator implements IDBGenerator {
 				table.addColumn(column);
 			}
 
+            //
 			// Field
+            //
 			dbField = f.getAnnotation(org.pinus.generator.annotation.Field.class);
 			if (dbField != null) {
 				if (f.getType() == java.sql.Timestamp.class) {
@@ -228,10 +234,11 @@ public abstract class AbstractDBGenerator implements IDBGenerator {
 				if (column.isHasDefault())
 					column.setDefaultValue(DataTypeBind.getEnum(f.getType()).getDefaultValue());
 
-				// 如果字符串长度超过4000则使用text类型
+				// 如果字符串长度超过指定长度则使用text类型
 				if (column.getType().equals(DataTypeBind.STRING.getDBType())
 						&& column.getLength() > Const.COLUMN_TEXT_LENGTH) {
 					column.setType(DataTypeBind.TEXT.getDBType());
+                    column.setHasDefault(false); // text default value gen by pinus, not db.
 					column.setLength(0);
 					column.setDefaultValue(DataTypeBind.TEXT.getDefaultValue());
 				}
@@ -244,7 +251,9 @@ public abstract class AbstractDBGenerator implements IDBGenerator {
 				table.addColumn(column);
 			}
 
+            //
 			// PrimaryKey
+            //
 			pk = f.getAnnotation(PrimaryKey.class);
 			if (pk != null) {
 				if (!isSetPrimaryKey) {
