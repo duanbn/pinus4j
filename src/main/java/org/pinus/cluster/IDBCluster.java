@@ -171,20 +171,6 @@ public interface IDBCluster {
 			throws DBClusterException;
 
 	/**
-	 * 获取所有的分片引用.
-	 *
-	 * @param tableNum
-	 *            分表数
-	 * @param clusterName
-	 *            分片名称
-	 * @param tableName
-	 *            表名
-	 *
-	 * @return 所有分片
-	 */
-	public List<DB> getAllMasterShardingDB(int tableNum, String clusterName, String tableName);
-
-	/**
 	 * 获取此实体对象对应的所有的分库分表引用.
 	 * 
 	 * @param clazz

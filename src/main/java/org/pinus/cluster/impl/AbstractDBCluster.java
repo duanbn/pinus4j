@@ -460,29 +460,6 @@ public abstract class AbstractDBCluster implements IDBCluster {
 	}
 
 	@Override
-	public List<DB> getAllMasterShardingDB(int tableNum, String clusterName, String tableName) {
-		List<DB> dbs = new ArrayList<DB>();
-
-		if (tableNum == 0) {
-			throw new IllegalStateException("table number is 0");
-		}
-
-		DB db = null;
-		DBClusterInfo dbClusterInfo = this.getDBClusterInfo(clusterName);
-		for (DBClusterRegionInfo region : dbClusterInfo.getDbRegions()) {
-			for (DBInfo dbInfo : region.getMasterDBInfos()) {
-				for (int tableIndex = 0; tableIndex < tableNum; tableIndex++) {
-					db = DB.valueOf(dbInfo.getDatasource(), clusterName, dbInfo.getDbName(), tableName, tableIndex,
-							region);
-					dbs.add(db);
-				}
-			}
-		}
-
-		return dbs;
-	}
-
-	@Override
 	public List<DB> getAllMasterShardingDB(Class<?> clazz) {
 		int tableNum = ReflectUtil.getTableNum(clazz);
 		if (tableNum == 0) {
@@ -492,7 +469,7 @@ public abstract class AbstractDBCluster implements IDBCluster {
 		String clusterName = ReflectUtil.getClusterName(clazz);
 		String tableName = ReflectUtil.getTableName(clazz);
 
-		return getAllMasterShardingDB(tableNum, clusterName, tableName);
+		return _getAllMasterShardingDB(tableNum, clusterName, tableName);
 	}
 
 	@Override
@@ -573,6 +550,36 @@ public abstract class AbstractDBCluster implements IDBCluster {
 		}
 
 		return tables;
+	}
+
+	/**
+	 * get all master sharding info.
+	 * 
+	 * @param tableNum
+	 * @param clusterName
+	 * @param tableName
+	 * @return
+	 */
+	private List<DB> _getAllMasterShardingDB(int tableNum, String clusterName, String tableName) {
+		List<DB> dbs = new ArrayList<DB>();
+
+		if (tableNum == 0) {
+			throw new IllegalStateException("table number is 0");
+		}
+
+		DB db = null;
+		DBClusterInfo dbClusterInfo = this.getDBClusterInfo(clusterName);
+		for (DBClusterRegionInfo region : dbClusterInfo.getDbRegions()) {
+			for (DBInfo dbInfo : region.getMasterDBInfos()) {
+				for (int tableIndex = 0; tableIndex < tableNum; tableIndex++) {
+					db = DB.valueOf(dbInfo.getDatasource(), clusterName, dbInfo.getDbName(), tableName, tableIndex,
+							region);
+					dbs.add(db);
+				}
+			}
+		}
+
+		return dbs;
 	}
 
 	/**
