@@ -1,12 +1,5 @@
---Version 0.8.0
-TODO:
-1.实现JDBC Driver
-2.对数据库的读写性能进行优化
-2.1.添加写入缓冲区，并且支持手动flush和自动flush两种方式进行同步
-2.2.查询时支持自动选取从库读取
-3.实现master slave主从同步
-3.1.实现思路：使用zk的leader选举leader来执行数据同步操作，需要一个消息系统来记录save, update, remove操作
-因此需要对消息队列进行一层抽象.
+--Version 1.0.1
+1.修改包名为pinus4j
 
 --Version 0.7.1
 1.代码重构
