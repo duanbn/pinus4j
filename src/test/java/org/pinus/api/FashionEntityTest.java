@@ -4,12 +4,12 @@ import junit.framework.Assert;
 
 import org.junit.Test;
 import org.pinus.BaseTest;
-import org.pinus.api.IShardingKey;
-import org.pinus.api.ShardingKey;
-import org.pinus.api.query.Condition;
-import org.pinus.api.query.IQuery;
 import org.pinus.entity.TestEntity;
 import org.pinus.entity.TestGlobalEntity;
+import org.pinus4j.api.IShardingKey;
+import org.pinus4j.api.ShardingKey;
+import org.pinus4j.api.query.Condition;
+import org.pinus4j.api.query.IQuery;
 
 public class FashionEntityTest extends BaseTest {
 

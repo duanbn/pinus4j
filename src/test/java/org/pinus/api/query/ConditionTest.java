@@ -1,7 +1,7 @@
 package org.pinus.api.query;
 
 import org.junit.Test;
-import org.pinus.api.query.Condition;
+import org.pinus4j.api.query.Condition;
 
 public class ConditionTest {
 

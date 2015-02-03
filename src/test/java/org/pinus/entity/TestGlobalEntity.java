@@ -4,14 +4,14 @@ import java.io.Serializable;
 import java.sql.Timestamp;
 import java.util.Date;
 
-import org.pinus.api.FashionEntity;
-import org.pinus.generator.annotation.DateTime;
-import org.pinus.generator.annotation.Field;
-import org.pinus.generator.annotation.Index;
-import org.pinus.generator.annotation.Indexes;
-import org.pinus.generator.annotation.PrimaryKey;
-import org.pinus.generator.annotation.Table;
-import org.pinus.generator.annotation.UpdateTime;
+import org.pinus4j.api.FashionEntity;
+import org.pinus4j.generator.annotations.DateTime;
+import org.pinus4j.generator.annotations.Field;
+import org.pinus4j.generator.annotations.Index;
+import org.pinus4j.generator.annotations.Indexes;
+import org.pinus4j.generator.annotations.PrimaryKey;
+import org.pinus4j.generator.annotations.Table;
+import org.pinus4j.generator.annotations.UpdateTime;
 
 @Table(cluster = "pinus", cache = true)
 @Indexes({ @Index(field = "testInt", isUnique = true) })

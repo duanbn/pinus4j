@@ -3,7 +3,7 @@ package org.pinus.api.query;
 import junit.framework.Assert;
 
 import org.junit.Test;
-import org.pinus.api.SQL;
+import org.pinus4j.api.SQL;
 
 public class SQLTest {
 

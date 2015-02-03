@@ -9,9 +9,12 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.pinus.BaseTest;
-import org.pinus.api.query.Condition;
-import org.pinus.api.query.IQuery;
 import org.pinus.entity.TestGlobalEntity;
+import org.pinus4j.api.AbstractTask;
+import org.pinus4j.api.ITask;
+import org.pinus4j.api.TaskFuture;
+import org.pinus4j.api.query.Condition;
+import org.pinus4j.api.query.IQuery;
 
 public class GlobalTaskTest extends BaseTest {
 

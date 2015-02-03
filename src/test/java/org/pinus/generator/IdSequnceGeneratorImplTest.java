@@ -7,8 +7,8 @@ import java.util.Set;
 
 import org.junit.Test;
 import org.pinus.BaseTest;
-import org.pinus.constant.Const;
-import org.pinus.generator.IIdGenerator;
+import org.pinus4j.constant.Const;
+import org.pinus4j.generator.IIdGenerator;
 
 public class IdSequnceGeneratorImplTest extends BaseTest {
 

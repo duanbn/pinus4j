@@ -9,9 +9,9 @@ import java.util.concurrent.locks.Lock;
 import junit.framework.Assert;
 
 import org.junit.Test;
-import org.pinus.api.IShardingKey;
-import org.pinus.api.ShardingKey;
 import org.pinus.entity.TestEntity;
+import org.pinus4j.api.IShardingKey;
+import org.pinus4j.api.ShardingKey;
 
 public class LoadTest extends BaseTest {
 

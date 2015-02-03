@@ -1,7 +1,7 @@
 package org.pinus.util;
 
 import org.junit.Test;
-import org.pinus.cluster.enums.HashAlgoEnum;
+import org.pinus4j.cluster.enums.HashAlgoEnum;
 
 public class HashAlgoEnumTest {
 

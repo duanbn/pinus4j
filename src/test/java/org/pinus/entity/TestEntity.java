@@ -6,12 +6,12 @@ import java.util.Date;
 
 import org.apache.commons.lang.builder.ToStringBuilder;
 import org.apache.commons.lang.builder.ToStringStyle;
-import org.pinus.api.FashionEntity;
-import org.pinus.generator.annotation.DateTime;
-import org.pinus.generator.annotation.Field;
-import org.pinus.generator.annotation.PrimaryKey;
-import org.pinus.generator.annotation.Table;
-import org.pinus.generator.annotation.UpdateTime;
+import org.pinus4j.api.FashionEntity;
+import org.pinus4j.generator.annotations.DateTime;
+import org.pinus4j.generator.annotations.Field;
+import org.pinus4j.generator.annotations.PrimaryKey;
+import org.pinus4j.generator.annotations.Table;
+import org.pinus4j.generator.annotations.UpdateTime;
 
 @Table(name = "test_entity", cluster = "pinus", shardingBy = "testInt", shardingNum = 3, cache = true)
 public class TestEntity extends FashionEntity implements Serializable {

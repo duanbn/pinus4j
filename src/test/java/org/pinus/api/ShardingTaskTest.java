@@ -9,9 +9,14 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.pinus.BaseTest;
-import org.pinus.api.query.Condition;
-import org.pinus.api.query.IQuery;
 import org.pinus.entity.TestEntity;
+import org.pinus4j.api.AbstractTask;
+import org.pinus4j.api.IShardingKey;
+import org.pinus4j.api.ITask;
+import org.pinus4j.api.ShardingKey;
+import org.pinus4j.api.TaskFuture;
+import org.pinus4j.api.query.Condition;
+import org.pinus4j.api.query.IQuery;
 
 public class ShardingTaskTest extends BaseTest {
 

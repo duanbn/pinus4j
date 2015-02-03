@@ -8,16 +8,16 @@ import java.util.Random;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.pinus.api.IShardingStorageClient;
-import org.pinus.api.ShardingKey;
-import org.pinus.api.ShardingStorageClientImpl;
-import org.pinus.api.enums.EnumSyncAction;
-import org.pinus.cache.IPrimaryCache;
-import org.pinus.cache.ISecondCache;
-import org.pinus.cache.impl.MemCachedPrimaryCacheImpl;
-import org.pinus.cache.impl.MemCachedSecondCacheImpl;
 import org.pinus.entity.TestEntity;
 import org.pinus.entity.TestGlobalEntity;
+import org.pinus4j.api.IShardingStorageClient;
+import org.pinus4j.api.ShardingKey;
+import org.pinus4j.api.ShardingStorageClientImpl;
+import org.pinus4j.api.enums.EnumSyncAction;
+import org.pinus4j.cache.IPrimaryCache;
+import org.pinus4j.cache.ISecondCache;
+import org.pinus4j.cache.impl.MemCachedPrimaryCacheImpl;
+import org.pinus4j.cache.impl.MemCachedSecondCacheImpl;
 
 public class BaseTest {
 

@@ -3,10 +3,10 @@ package org.pinus.datalayer;
 import junit.framework.Assert;
 
 import org.junit.Test;
-import org.pinus.api.query.IQuery;
-import org.pinus.api.query.QueryImpl;
-import org.pinus.datalayer.SQLBuilder;
 import org.pinus.entity.TestEntity;
+import org.pinus4j.api.query.IQuery;
+import org.pinus4j.api.query.QueryImpl;
+import org.pinus4j.datalayer.SQLBuilder;
 
 public class SQLBuilderTest {
 

@@ -7,7 +7,7 @@ import junit.framework.Assert;
 import org.junit.Test;
 import org.pinus.BaseTest;
 import org.pinus.entity.TestEntity;
-import org.pinus.util.ReflectUtil;
+import org.pinus4j.utils.ReflectUtil;
 
 public class ReflectUtilTest extends BaseTest {
 

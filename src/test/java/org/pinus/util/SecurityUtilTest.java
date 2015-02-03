@@ -1,6 +1,7 @@
 package org.pinus.util;
 
 import org.junit.Test;
+import org.pinus4j.utils.SecurityUtil;
 
 public class SecurityUtilTest {
 

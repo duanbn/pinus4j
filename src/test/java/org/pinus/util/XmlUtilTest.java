@@ -4,7 +4,7 @@ import java.io.File;
 import java.net.URL;
 
 import org.junit.Test;
-import org.pinus.util.XmlUtil;
+import org.pinus4j.utils.XmlUtil;
 
 public class XmlUtilTest {
 

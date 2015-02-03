@@ -6,10 +6,11 @@ import java.util.Map;
 
 import org.junit.Test;
 import org.pinus.BaseTest;
-import org.pinus.cluster.beans.DBClusterInfo;
-import org.pinus.cluster.beans.DBClusterRegionInfo;
-import org.pinus.cluster.beans.DBInfo;
-import org.pinus.config.impl.XmlClusterConfigImpl;
+import org.pinus4j.cluster.beans.DBClusterInfo;
+import org.pinus4j.cluster.beans.DBClusterRegionInfo;
+import org.pinus4j.cluster.beans.DBInfo;
+import org.pinus4j.cluster.config.IClusterConfig;
+import org.pinus4j.cluster.config.impl.XmlClusterConfigImpl;
 
 public class XmlCinfigImplTest extends BaseTest {
 

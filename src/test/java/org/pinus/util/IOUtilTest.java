@@ -2,7 +2,7 @@ package org.pinus.util;
 
 import org.junit.Assert;
 import org.junit.Test;
-import org.pinus.util.IOUtil;
+import org.pinus4j.utils.IOUtil;
 
 public class IOUtilTest {
 

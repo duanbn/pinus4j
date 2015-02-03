@@ -10,9 +10,10 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.pinus.BaseTest;
-import org.pinus.api.query.Condition;
-import org.pinus.api.query.IQuery;
 import org.pinus.entity.TestGlobalEntity;
+import org.pinus4j.api.SQL;
+import org.pinus4j.api.query.Condition;
+import org.pinus4j.api.query.IQuery;
 
 public class GlobalStorageTest extends BaseTest {
 

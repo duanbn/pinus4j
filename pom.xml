@@ -2,29 +2,19 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<groupId>org.pinus</groupId>
-	<artifactId>pinus</artifactId>
-	<version>1.0.0-SNAPSHOT</version>
+	<groupId>org.pinus4j</groupId>
+	<artifactId>pinus-orm</artifactId>
+	<version>1.0.1</version>
 	<packaging>jar</packaging>
 
 	<name>pinus</name>
 
-    <distributionManagement>
-		<repository>
-			<id>Releases</id>
-			<name>Internal Releases</name>
-			<url>http://192.168.1.150:8081/nexus/content/repositories/releases</url>
-		</repository>
-		<snapshotRepository>
-			<id>Snapshot</id>
-			<name>Internal Snapshot</name>
-			<url>http://192.168.1.150:8081/nexus/content/repositories/snapshots</url>
-		</snapshotRepository>
-	</distributionManagement>
-
 	<properties>
 		<curator.version>2.7.0</curator.version>
 		<spymemcached.version>2.8.4</spymemcached.version>
+		<jsqlparser.version>0.9</jsqlparser.version>
+		<dbcp.version>1.4</dbcp.version>
+		<slf4j.version>1.7.7</slf4j.version>
 	</properties>
 
 	<dependencies>
@@ -41,17 +31,22 @@
 		<dependency>
 			<groupId>com.github.jsqlparser</groupId>
 			<artifactId>jsqlparser</artifactId>
-			<version>0.9</version>
+			<version>${jsqlparser.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>commons-dbcp</groupId>
 			<artifactId>commons-dbcp</artifactId>
-			<version>1.4</version>
+			<version>${dbcp.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>com.google.code.simple-spring-memcached</groupId>
 			<artifactId>spymemcached</artifactId>
 			<version>${spymemcached.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
+			<version>${slf4j.version}</version>
 		</dependency>
 
 		<dependency>
@@ -71,11 +66,6 @@
 			<artifactId>mysql-connector-java</artifactId>
 			<version>5.1.29</version>
 			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-api</artifactId>
-			<version>1.7.7</version>
 		</dependency>
 		<dependency>
 			<groupId>org.slf4j</groupId>

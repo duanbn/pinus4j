@@ -3,10 +3,10 @@ package org.pinus.api.query;
 import junit.framework.Assert;
 
 import org.junit.Test;
-import org.pinus.api.query.Condition;
-import org.pinus.api.query.IQuery;
-import org.pinus.api.query.Order;
-import org.pinus.api.query.QueryImpl;
+import org.pinus4j.api.query.Condition;
+import org.pinus4j.api.query.IQuery;
+import org.pinus4j.api.query.Order;
+import org.pinus4j.api.query.QueryImpl;
 
 public class QueryImplTest {
 
