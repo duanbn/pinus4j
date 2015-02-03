@@ -17,6 +17,8 @@
 package org.pinus4j.generator.beans;
 
 import java.util.Date;
+import java.util.Map;
+import java.util.HashMap;
 
 /**
  * 数据库类型映射.
@@ -83,6 +85,14 @@ public enum DataTypeBind {
 	 */
 	private Object defaultValue;
 
+    private static final Map<String, DataTypeBind> MAP = new HashMap<String, DataTypeBind>(13);
+
+    static {
+        for (DataTypeBind value : DataTypeBind.values()) {
+            MAP.put(value.getDBType(), value);
+        }
+    }
+
 	/**
 	 * 构造方法
 	 * 
@@ -104,13 +114,11 @@ public enum DataTypeBind {
 		return this.defaultValue;
 	}
 
+    /**
+     * get enum object by enum value.
+     */
 	public static DataTypeBind getEnum(String dbType) {
-		for (DataTypeBind type : DataTypeBind.values()) {
-			if (type.dbType.equals(dbType)) {
-				return type;
-			}
-		}
-		return null;
+        return MAP.get(dbType);
 	}
 
 	public static DataTypeBind getEnum(Class<?> fieldType) {

@@ -469,7 +469,37 @@ public abstract class AbstractDBCluster implements IDBCluster {
 		String clusterName = ReflectUtil.getClusterName(clazz);
 		String tableName = ReflectUtil.getTableName(clazz);
 
-		return _getAllMasterShardingDB(tableNum, clusterName, tableName);
+		return getAllMasterShardingDB(tableNum, clusterName, tableName);
+	}
+	
+	/**
+	 * get all master sharding info.
+	 * 
+	 * @param tableNum
+	 * @param clusterName
+	 * @param tableName
+	 * @return
+	 */
+	public List<DB> getAllMasterShardingDB(int tableNum, String clusterName, String tableName) {
+		List<DB> dbs = new ArrayList<DB>();
+
+		if (tableNum == 0) {
+			throw new IllegalStateException("table number is 0");
+		}
+
+		DB db = null;
+		DBClusterInfo dbClusterInfo = this.getDBClusterInfo(clusterName);
+		for (DBClusterRegionInfo region : dbClusterInfo.getDbRegions()) {
+			for (DBInfo dbInfo : region.getMasterDBInfos()) {
+				for (int tableIndex = 0; tableIndex < tableNum; tableIndex++) {
+					db = DB.valueOf(dbInfo.getDatasource(), clusterName, dbInfo.getDbName(), tableName, tableIndex,
+							region);
+					dbs.add(db);
+				}
+			}
+		}
+
+		return dbs;
 	}
 
 	@Override
@@ -550,36 +580,6 @@ public abstract class AbstractDBCluster implements IDBCluster {
 		}
 
 		return tables;
-	}
-
-	/**
-	 * get all master sharding info.
-	 * 
-	 * @param tableNum
-	 * @param clusterName
-	 * @param tableName
-	 * @return
-	 */
-	private List<DB> _getAllMasterShardingDB(int tableNum, String clusterName, String tableName) {
-		List<DB> dbs = new ArrayList<DB>();
-
-		if (tableNum == 0) {
-			throw new IllegalStateException("table number is 0");
-		}
-
-		DB db = null;
-		DBClusterInfo dbClusterInfo = this.getDBClusterInfo(clusterName);
-		for (DBClusterRegionInfo region : dbClusterInfo.getDbRegions()) {
-			for (DBInfo dbInfo : region.getMasterDBInfos()) {
-				for (int tableIndex = 0; tableIndex < tableNum; tableIndex++) {
-					db = DB.valueOf(dbInfo.getDatasource(), clusterName, dbInfo.getDbName(), tableName, tableIndex,
-							region);
-					dbs.add(db);
-				}
-			}
-		}
-
-		return dbs;
 	}
 
 	/**
@@ -842,11 +842,6 @@ public abstract class AbstractDBCluster implements IDBCluster {
 	public void setScanPackage(String scanPackage) {
 		this.scanPackage = scanPackage;
 	}
-
-	/*
-	 * public Map<String, Map<Integer, Map<String, Integer>>> getTableCluster()
-	 * { return this.tableCluster; }
-	 */
 
 	@Override
 	public ITableCluster getTableCluster() {

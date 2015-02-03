@@ -49,11 +49,11 @@ import org.pinus4j.generator.beans.DBTable;
  */
 public interface IDBCluster {
 
-    /**
-     * create a destribute lock by give name.
-     *
-     * @return destirbute lock.
-     */
+	/**
+	 * create a destribute lock by give name.
+	 *
+	 * @return destirbute lock.
+	 */
 	public Lock createLock(String name);
 
 	/**
@@ -180,6 +180,16 @@ public interface IDBCluster {
 	public List<DB> getAllMasterShardingDB(Class<?> clazz);
 
 	/**
+	 * get all master sharding info.
+	 * 
+	 * @param tableNum
+	 * @param clusterName
+	 * @param tableName
+	 * @return
+	 */
+	public List<DB> getAllMasterShardingDB(int tableNum, String clusterName, String tableName);
+
+	/**
 	 * 获取集群从库列表.
 	 * 
 	 * @param clazz
@@ -190,7 +200,7 @@ public interface IDBCluster {
 	public List<DB> getAllSlaveShardingDB(Class<?> clazz, EnumDBMasterSlave slave);
 
 	/**
-     * get cluster router.
+	 * get cluster router.
 	 */
 	public IClusterRouter getDBRouter(String clusterName);
 
