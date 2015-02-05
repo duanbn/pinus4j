@@ -17,12 +17,9 @@
 package org.pinus4j.cluster.impl;
 
 import java.sql.Connection;
-import java.sql.DatabaseMetaData;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.locks.Lock;
 
 import javax.sql.DataSource;
@@ -46,11 +43,11 @@ import org.pinus4j.cache.ISecondCache;
 import org.pinus4j.cache.impl.MemCachedCacheBuilder;
 import org.pinus4j.cluster.DB;
 import org.pinus4j.cluster.DefaultContainerFactory;
+import org.pinus4j.cluster.DefaultContainerFactory.ContainerType;
 import org.pinus4j.cluster.IContainer;
 import org.pinus4j.cluster.IDBCluster;
 import org.pinus4j.cluster.ITableCluster;
 import org.pinus4j.cluster.ITableClusterBuilder;
-import org.pinus4j.cluster.DefaultContainerFactory.ContainerType;
 import org.pinus4j.cluster.beans.DBClusterInfo;
 import org.pinus4j.cluster.beans.DBClusterRegionInfo;
 import org.pinus4j.cluster.beans.DBInfo;
@@ -142,7 +139,6 @@ public abstract class AbstractDBCluster implements IDBCluster {
 	/**
 	 * cluster info. {clusterName, clusterInfo}
 	 */
-	// private Map<String, DBClusterInfo> dbClusterInfo;
 	private IContainer<DBClusterInfo> dbClusterInfoC;
 
 	/**
@@ -471,7 +467,7 @@ public abstract class AbstractDBCluster implements IDBCluster {
 
 		return getAllMasterShardingDB(tableNum, clusterName, tableName);
 	}
-	
+
 	/**
 	 * get all master sharding info.
 	 * 
@@ -526,6 +522,16 @@ public abstract class AbstractDBCluster implements IDBCluster {
 		}
 
 		return dbs;
+	}
+
+	@Override
+	public IPrimaryCache getPrimaryCache() {
+		return this.primaryCache;
+	}
+
+	@Override
+	public ISecondCache getSecondCache() {
+		return this.secondCache;
 	}
 
 	@Override
@@ -705,6 +711,8 @@ public abstract class AbstractDBCluster implements IDBCluster {
 		this.dbClusterInfoC = DefaultContainerFactory.createContainer(ContainerType.MAP);
 
 		for (DBClusterInfo dbClusterInfo : dbClusterInfos) {
+            LOG.info("init db cluster " + dbClusterInfo.getClusterName() + ", router is [" + dbClusterInfo.getRouterClass().getName() + "]");
+
 			this.dbClusterInfoC.add(dbClusterInfo.getClusterName(), dbClusterInfo);
 
 			// 初始化全局主库
@@ -759,30 +767,6 @@ public abstract class AbstractDBCluster implements IDBCluster {
 			}
 		}
 
-	}
-
-	/**
-	 * build table info by table meta.
-	 */
-	private Map<String, Integer> _loadTableInfo(String clusterName, List<DBTable> tables) throws DBClusterException {
-		Map<String, Integer> tableInfos = new HashMap<String, Integer>(tables.size());
-
-		for (DBTable table : tables) {
-			if (table.getCluster().equals(clusterName)) {
-
-				String tableName = table.getName();
-
-				int shardingNum = table.getShardingNum();
-
-				tableInfos.put(tableName, shardingNum);
-			}
-		}
-
-		if (tableInfos.isEmpty()) {
-			throw new DBClusterException("找不到可以创建库表的实体对象, 集群名=" + clusterName);
-		}
-
-		return tableInfos;
 	}
 
 	@Override

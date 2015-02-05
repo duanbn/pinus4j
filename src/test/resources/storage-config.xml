@@ -14,10 +14,10 @@
 
     <!-- db query cache expire is seconds -->
     <db.cluster.cache enabled="true">
-        <primary expire="300" class="org.pinus.cache.impl.MemCachedPrimaryCacheImpl">
+        <primary expire="300">
             <address>127.0.0.1:11211</address>
         </primary>
-        <second expire="300" class="org.pinus.cache.impl.MemCachedSecondCacheImpl">
+        <second expire="300">
             <address>127.0.0.1:11211</address>
         </second>
     </db.cluster.cache>
@@ -39,7 +39,7 @@
 	</db-connection-pool>
 
     <!-- cluster config -->
-	<cluster name="pinus" catalog="mysql" class="org.pinus.cluster.route.impl.SimpleHashClusterRouter">
+	<cluster name="pinus" catalog="mysql">
 		<global>
 			<master>
 				<db.username>root</db.username>

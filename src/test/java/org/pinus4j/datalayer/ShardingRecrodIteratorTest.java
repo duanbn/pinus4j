@@ -46,7 +46,7 @@ public class ShardingRecrodIteratorTest extends BaseTest {
 		entities = cacheClient.findByPks(moreKey, TestEntity.class, pks);
 		Assert.assertEquals(SIZE, entities.size());
 
-		IDBCluster dbCluster = cacheClient.getDbCluster();
+		IDBCluster dbCluster = cacheClient.getDBCluster();
 		DB db = null;
 		try {
 			db = dbCluster.selectDbFromMaster("test_entity", moreKey);

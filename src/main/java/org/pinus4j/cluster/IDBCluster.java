@@ -23,6 +23,8 @@ import java.util.concurrent.locks.Lock;
 import org.pinus4j.api.IShardingKey;
 import org.pinus4j.api.enums.EnumDBMasterSlave;
 import org.pinus4j.api.enums.EnumSyncAction;
+import org.pinus4j.cache.IPrimaryCache;
+import org.pinus4j.cache.ISecondCache;
 import org.pinus4j.cluster.beans.DBClusterInfo;
 import org.pinus4j.cluster.beans.DBInfo;
 import org.pinus4j.cluster.config.IClusterConfig;
@@ -48,6 +50,20 @@ import org.pinus4j.generator.beans.DBTable;
  * @author duanbn
  */
 public interface IDBCluster {
+
+	/**
+	 * get primary cache ref.
+	 * 
+	 * @return primary cache instance.
+	 */
+	public IPrimaryCache getPrimaryCache();
+
+	/**
+	 * get second cache ref.
+	 * 
+	 * @return second cache instance.
+	 */
+	public ISecondCache getSecondCache();
 
 	/**
 	 * create a destribute lock by give name.

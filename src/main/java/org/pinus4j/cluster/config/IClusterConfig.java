@@ -36,17 +36,17 @@ public interface IClusterConfig {
     /**
      *  the class of default primary cache implement.
      */
-    public static final String DEFAULT_PRIMARY_CACHE_CLASS = "org.pinus.cache.impl.MemCachedPrimaryCacheImpl";
+    public static final String DEFAULT_PRIMARY_CACHE_CLASS = "org.pinus4j.cache.impl.MemCachedPrimaryCacheImpl";
 
     /**
      * the class of default second cache implement.
      */
-    public static final String DEFAULT_SECOND_CACHE_CLASS = "org.pinus.cache.impl.MemCachedSecondCacheImpl";
+    public static final String DEFAULT_SECOND_CACHE_CLASS = "org.pinus4j.cache.impl.MemCachedSecondCacheImpl";
 
     /**
      * the class of default cluster router implement.
      */
-    public static final String DEFAULT_CLUSTER_ROUTER_CLASS = "org.pinus.cluster.route.impl.SimpleHashClusterRouter";
+    public static final String DEFAULT_CLUSTER_ROUTER_CLASS = "org.pinus4j.cluster.router.impl.SimpleHashClusterRouter";
 
 	/**
 	 * ture is enabled, false is not.

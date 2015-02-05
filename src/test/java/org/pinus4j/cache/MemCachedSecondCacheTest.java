@@ -30,7 +30,7 @@ public class MemCachedSecondCacheTest extends BaseTest {
 	public void before() {
 		IShardingKey<?> shardingValue = new ShardingKey<Integer>(CLUSTER_KLSTORAGE, 1);
 		try {
-			db = cacheClient.getDbCluster().selectDbFromMaster("test_entity", shardingValue);
+			db = cacheClient.getDBCluster().selectDbFromMaster("test_entity", shardingValue);
 		} catch (DBClusterException e) {
 			e.printStackTrace();
 		}

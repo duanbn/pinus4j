@@ -289,7 +289,7 @@ public class XmlClusterConfigImpl implements IClusterConfig {
 		dbClusterInfo.setClusterName(clusterName);
         // set router class
         try {
-            String classFullPath = xmlUtil.getAttributeValue(clusterNode, "class");
+            String classFullPath = xmlUtil.getAttributeValue(clusterNode, "router");
             if (StringUtils.isBlank(classFullPath)) {
                 classFullPath = DEFAULT_CLUSTER_ROUTER_CLASS;
             }

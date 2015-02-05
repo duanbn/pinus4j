@@ -19,7 +19,6 @@ package org.pinus4j.cluster.router.impl;
 import org.pinus4j.cluster.IDBCluster;
 import org.pinus4j.cluster.ITableCluster;
 import org.pinus4j.cluster.beans.DBClusterInfo;
-import org.pinus4j.cluster.config.IClusterConfig;
 import org.pinus4j.cluster.enums.HashAlgoEnum;
 import org.pinus4j.cluster.router.IClusterRouter;
 import org.pinus4j.cluster.router.IClusterRouterBuilder;
@@ -33,8 +32,6 @@ import org.pinus4j.cluster.router.IClusterRouterBuilder;
 public class DefaultClusterRouterBuilder implements IClusterRouterBuilder {
 
     private ThreadLocal<HashAlgoEnum> hashAlgoLocal;
-
-    private IClusterConfig config;
 
     private IDBCluster dbCluster;
 
@@ -58,7 +55,6 @@ public class DefaultClusterRouterBuilder implements IClusterRouterBuilder {
         DefaultClusterRouterBuilder builder = new DefaultClusterRouterBuilder();
         builder.setDBCluster(dbCluster);
         builder.setTableCluster(dbCluster.getTableCluster());
-        builder.setConfig(dbCluster.getClusterConfig());
         return builder;
     }
 
@@ -108,13 +104,5 @@ public class DefaultClusterRouterBuilder implements IClusterRouterBuilder {
     
     public void setTableCluster(ITableCluster tableCluster) {
         this.tableCluster = tableCluster;
-    }
-    
-    public IClusterConfig getConfig() {
-        return config;
-    }
-    
-    public void setConfig(IClusterConfig config) {
-        this.config = config;
     }
 }

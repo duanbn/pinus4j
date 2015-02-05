@@ -25,7 +25,7 @@ public class DBClusterTest {
 
 	public DBClusterTest() throws Exception {
 		this.dbCluster = new AppDBClusterImpl(EnumDB.MYSQL);
-		this.dbCluster.setScanPackage("org.pinus.entity");
+		this.dbCluster.setScanPackage("org.pinus4j.entity");
 		this.dbCluster.startup();
 	}
 

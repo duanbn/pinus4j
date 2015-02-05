@@ -11,10 +11,10 @@
 	<db.cluster.generateid.batch>1</db.cluster.generateid.batch>
     <!-- db query cache expire is seconds -->
     <db.cluster.cache enabled="true">
-        <primary expire="300" class="org.pinus.cache.impl.MemCachedPrimaryCacheImpl">
+        <primary expire="300">
             <address>127.0.0.1:11211</address>
         </primary>
-        <second expire="300" class="org.pinus.cache.impl.MemCachedSecondCacheImpl">
+        <second expire="300">
             <address>127.0.0.1:11211</address>
         </second>
     </db.cluster.cache>

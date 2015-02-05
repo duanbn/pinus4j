@@ -42,7 +42,7 @@ public class GlobalRecrodIteratorTest extends BaseTest {
 				TestGlobalEntity.class, pks);
 		Assert.assertEquals(SIZE, entities.size());
 
-		IDBCluster dbCluster = cacheClient.getDbCluster();
+		IDBCluster dbCluster = cacheClient.getDBCluster();
 		DBInfo dbConnInfo = null;
 		try {
 			dbConnInfo = dbCluster.getMasterGlobalConn(CLUSTER_KLSTORAGE);

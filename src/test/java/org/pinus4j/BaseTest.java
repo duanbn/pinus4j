@@ -14,8 +14,6 @@ import org.pinus4j.api.ShardingStorageClientImpl;
 import org.pinus4j.api.enums.EnumSyncAction;
 import org.pinus4j.cache.IPrimaryCache;
 import org.pinus4j.cache.ISecondCache;
-import org.pinus4j.cache.impl.MemCachedPrimaryCacheImpl;
-import org.pinus4j.cache.impl.MemCachedSecondCacheImpl;
 import org.pinus4j.entity.TestEntity;
 import org.pinus4j.entity.TestGlobalEntity;
 
@@ -35,9 +33,13 @@ public class BaseTest {
 
 	@BeforeClass
 	public static void setup() throws Exception {
-		cacheClient.setScanPackage("org.pinus");
+		cacheClient.setScanPackage("org.pinus4j");
 		cacheClient.setSyncAction(EnumSyncAction.UPDATE);
 		cacheClient.init();
+
+		primaryCache = cacheClient.getDBCluster().getPrimaryCache();
+
+		secondCache = cacheClient.getDBCluster().getSecondCache();
 	}
 
 	@AfterClass

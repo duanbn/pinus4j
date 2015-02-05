@@ -4,11 +4,11 @@
 
 	<groupId>org.pinus4j</groupId>
 	<artifactId>pinus-orm</artifactId>
-	<version>1.0.1</version>
+	<version>1.0.2</version>
 	<packaging>jar</packaging>
 
 	<name>pinus-orm</name>
-    <description>pinsu4j is a lightweight java orm framework for mysql database.</description>
+    <description>pinsu4j is a lightweight orm framework for mysql database.</description>
     <url>http://www.pinus4j.org</url>
 
     <licenses>
@@ -28,7 +28,7 @@
     <scm>
         <connection>scm:git:https://github.com/duanbn/pinus4j.git</connection>
         <developerConnection>scm:git:https://github.com/duanbn/pinus4j.git</developerConnection>
-        <url>scm:git:https://github.com/duanbn/pinus4j.git</url>
+        <url>https://github.com/duanbn/pinus4j.git</url>
     </scm>
 
 	<properties>

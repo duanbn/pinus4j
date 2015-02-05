@@ -192,6 +192,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 		return taskExecutor.execute(task);
 	}
 
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
 	public <T> TaskFuture submit(ITask<T> task, Class<T> clazz, IQuery query) {
 		TaskExecutor taskExecutor = new TaskExecutor(clazz, this.dbCluster);
@@ -897,7 +898,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 	}
 
 	@Override
-	public IDBCluster getDbCluster() {
+	public IDBCluster getDBCluster() {
 		return this.dbCluster;
 	}
 

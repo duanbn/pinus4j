@@ -18,7 +18,7 @@ import org.pinus4j.entity.TestEntity;
 import org.pinus4j.entity.TestGlobalEntity;
 import org.pinus4j.exceptions.DBClusterException;
 
-public class MemcachePrimaryCacheTest extends BaseTest {
+public class MemCachePrimaryCacheTest extends BaseTest {
 
 	private String tableName = "test_entity";
 
@@ -28,7 +28,7 @@ public class MemcachePrimaryCacheTest extends BaseTest {
 	public void before() {
 		IShardingKey<?> shardingValue = new ShardingKey<Integer>(CLUSTER_KLSTORAGE, 1);
 		try {
-			db = cacheClient.getDbCluster().selectDbFromMaster(tableName, shardingValue);
+			db = cacheClient.getDBCluster().selectDbFromMaster(tableName, shardingValue);
 		} catch (DBClusterException e) {
 			e.printStackTrace();
 		}

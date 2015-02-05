@@ -922,7 +922,7 @@ public interface IShardingStorageClient {
 	 * 
 	 * @return 数据库集群
 	 */
-	public IDBCluster getDbCluster();
+	public IDBCluster getDBCluster();
 
 	/**
 	 * 生成全局唯一的int id. 对一个数据对象的集群全局唯一id.
