@@ -9,13 +9,12 @@ import junit.framework.Assert;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.pinus4j.BaseTest;
-import org.pinus4j.api.SQL;
+import org.pinus4j.ApiBaseTest;
 import org.pinus4j.api.query.Condition;
 import org.pinus4j.api.query.IQuery;
 import org.pinus4j.entity.TestGlobalEntity;
 
-public class GlobalStorageTest extends BaseTest {
+public class GlobalStorageTest extends ApiBaseTest {
 
 	private Number pk1;
 	private Number[] pks;

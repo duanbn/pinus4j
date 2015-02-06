@@ -29,8 +29,9 @@ import org.pinus4j.api.SQL;
 import org.pinus4j.api.query.IQuery;
 import org.pinus4j.cache.IPrimaryCache;
 import org.pinus4j.cache.ISecondCache;
-import org.pinus4j.cluster.DB;
+import org.pinus4j.cluster.IDBResource;
 import org.pinus4j.cluster.IDBCluster;
+import org.pinus4j.cluster.ShardingDBResource;
 import org.pinus4j.cluster.beans.DBInfo;
 import org.pinus4j.constant.Const;
 import org.pinus4j.datalayer.IDataQuery;
@@ -46,7 +47,7 @@ import org.pinus4j.utils.ReflectUtil;
  */
 public abstract class AbstractJdbcQuery implements IDataQuery {
 
-    /**
+	/**
 	 * 数据库集群引用.
 	 */
 	protected IDBCluster dbCluster;
@@ -114,13 +115,13 @@ public abstract class AbstractJdbcQuery implements IDataQuery {
 		}
 	}
 
-	protected Number selectGlobalCount(IQuery query, DBInfo dbConnInfo, String clusterName, Class<?> clazz) {
+	protected Number selectGlobalCount(IQuery query, IDBResource dbResource, String clusterName, Class<?> clazz) {
 		long count = 0;
 		Connection conn = null;
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 		try {
-			conn = dbConnInfo.getDatasource().getConnection();
+			conn = dbResource.getDatasource().getConnection();
 			String sql = SQLBuilder.buildSelectCountGlobalSql(clazz, query);
 			ps = conn.prepareStatement(sql);
 			long begin = System.currentTimeMillis();
@@ -149,7 +150,7 @@ public abstract class AbstractJdbcQuery implements IDataQuery {
 	 * @param clazz
 	 * @return count数
 	 */
-	protected Number selectGlobalCountWithCache(DBInfo dbConnInfo, String clusterName, Class<?> clazz,
+	protected Number selectGlobalCountWithCache(IDBResource dbResource, String clusterName, Class<?> clazz,
 			boolean useCache) {
 		String tableName = ReflectUtil.getTableName(clazz);
 
@@ -164,7 +165,7 @@ public abstract class AbstractJdbcQuery implements IDataQuery {
 		long count = 0;
 		Connection conn = null;
 		try {
-			conn = dbConnInfo.getDatasource().getConnection();
+			conn = dbResource.getDatasource().getConnection();
 			count = _selectGlobalCount(conn, clazz).longValue();
 		} catch (SQLException e) {
 			throw new DBOperationException(e);
@@ -193,7 +194,7 @@ public abstract class AbstractJdbcQuery implements IDataQuery {
 	 * @throws IllegalArgumentException
 	 *             输入参数错误
 	 */
-	private Number _selectCount(DB db, Class<?> clazz) {
+	private Number _selectCount(ShardingDBResource db, Class<?> clazz) {
 		Connection conn = null;
 		PreparedStatement ps = null;
 		ResultSet rs = null;
@@ -227,7 +228,7 @@ public abstract class AbstractJdbcQuery implements IDataQuery {
 	 * @param clazz
 	 * @return count数
 	 */
-	protected Number selectCountWithCache(DB db, Class<?> clazz, boolean useCache) {
+	protected Number selectCountWithCache(ShardingDBResource db, Class<?> clazz, boolean useCache) {
 		// 操作缓存
 		if (isCacheAvailable(clazz, useCache)) {
 			long count = primaryCache.getCount(db);
@@ -257,7 +258,7 @@ public abstract class AbstractJdbcQuery implements IDataQuery {
 	 * 
 	 * @return 记录数
 	 */
-	protected Number selectCount(DB db, Class<?> clazz, IQuery query) {
+	protected Number selectCount(ShardingDBResource db, Class<?> clazz, IQuery query) {
 		Connection conn = null;
 		PreparedStatement ps = null;
 		ResultSet rs = null;
@@ -347,7 +348,7 @@ public abstract class AbstractJdbcQuery implements IDataQuery {
 	 * @throws IllegalArgumentException
 	 *             输入参数错误
 	 */
-	private <T> T _selectByPk(DB db, Number pk, Class<T> clazz) {
+	private <T> T _selectByPk(ShardingDBResource db, Number pk, Class<T> clazz) {
 		Connection conn = null;
 		PreparedStatement ps = null;
 		ResultSet rs = null;
@@ -383,7 +384,7 @@ public abstract class AbstractJdbcQuery implements IDataQuery {
 	 * @param clazz
 	 * @return 查询结果
 	 */
-	protected <T> T selectByPkWithCache(DB db, Number pk, Class<T> clazz, boolean useCache) {
+	protected <T> T selectByPkWithCache(ShardingDBResource db, Number pk, Class<T> clazz, boolean useCache) {
 		T data = null;
 		if (isCacheAvailable(clazz, useCache)) {
 			data = primaryCache.get(db, pk);
@@ -523,7 +524,7 @@ public abstract class AbstractJdbcQuery implements IDataQuery {
 	 * @throws IllegalArgumentException
 	 *             输入参数错误
 	 */
-	private <T> List<T> _selectByPks(DB db, Class<T> clazz, Number[] pks) {
+	private <T> List<T> _selectByPks(ShardingDBResource db, Class<T> clazz, Number[] pks) {
 		List<T> result = new ArrayList<T>(1);
 
 		Connection conn = null;
@@ -549,7 +550,7 @@ public abstract class AbstractJdbcQuery implements IDataQuery {
 		return result;
 	}
 
-	private <T> Map<Number, T> selectByPksWithMap(DB db, Class<T> clazz, Number[] pks) {
+	private <T> Map<Number, T> selectByPksWithMap(ShardingDBResource db, Class<T> clazz, Number[] pks) {
 		Map<Number, T> result = new HashMap<Number, T>();
 
 		Connection conn = null;
@@ -586,7 +587,7 @@ public abstract class AbstractJdbcQuery implements IDataQuery {
 	 * @param pks
 	 * @return 查询结果
 	 */
-	protected <T> List<T> selectByPksWithCache(DB db, Class<T> clazz, Number[] pks, boolean useCache) {
+	protected <T> List<T> selectByPksWithCache(ShardingDBResource db, Class<T> clazz, Number[] pks, boolean useCache) {
 		List<T> result = new ArrayList<T>();
 		if (pks.length == 0 || pks == null) {
 			return result;
@@ -678,7 +679,7 @@ public abstract class AbstractJdbcQuery implements IDataQuery {
 	 * @throws IllegalArgumentException
 	 *             输入参数错误
 	 */
-	protected List<Map<String, Object>> selectBySql(DB db, SQL sql) {
+	protected List<Map<String, Object>> selectBySql(ShardingDBResource db, SQL sql) {
 		List<Map<String, Object>> result = new ArrayList<Map<String, Object>>();
 		Connection conn = null;
 		PreparedStatement ps = null;
@@ -749,7 +750,7 @@ public abstract class AbstractJdbcQuery implements IDataQuery {
 	 * @throws IllegalArgumentException
 	 *             输入参数错误
 	 */
-	protected <T> List<T> selectByQuery(DB db, IQuery query, Class<T> clazz) {
+	protected <T> List<T> selectByQuery(ShardingDBResource db, IQuery query, Class<T> clazz) {
 		List<T> result = new ArrayList<T>();
 
 		Connection conn = null;
@@ -818,7 +819,7 @@ public abstract class AbstractJdbcQuery implements IDataQuery {
 	 * @param clazz
 	 * @return pk值
 	 */
-	protected <T> Number[] selectPksByQuery(DB db, IQuery query, Class<T> clazz) {
+	protected <T> Number[] selectPksByQuery(ShardingDBResource db, IQuery query, Class<T> clazz) {
 		List<Number> result = new ArrayList<Number>();
 
 		Connection conn = null;
@@ -866,34 +867,34 @@ public abstract class AbstractJdbcQuery implements IDataQuery {
 
 		return map;
 	}
-	
-    @Override
+
+	@Override
 	public IDBCluster getDBCluster() {
-	    return dbCluster;
-	}
-	
-    @Override
-	public void setDBCluster(IDBCluster dbCluster) {
-	    this.dbCluster = dbCluster;
+		return dbCluster;
 	}
 
-    @Override
-    public void setPrimaryCache(IPrimaryCache primaryCache) {
+	@Override
+	public void setDBCluster(IDBCluster dbCluster) {
+		this.dbCluster = dbCluster;
+	}
+
+	@Override
+	public void setPrimaryCache(IPrimaryCache primaryCache) {
 		this.primaryCache = primaryCache;
 	}
-    
-    @Override
-    public IPrimaryCache getPrimaryCache() {
-    	return this.primaryCache;
-    }
 
-    @Override
+	@Override
+	public IPrimaryCache getPrimaryCache() {
+		return this.primaryCache;
+	}
+
+	@Override
 	public void setSecondCache(ISecondCache secondCache) {
 		this.secondCache = secondCache;
 	}
-    
-    @Override
-    public ISecondCache getSecondCache() {
-    	return this.secondCache;
-    }
+
+	@Override
+	public ISecondCache getSecondCache() {
+		return this.secondCache;
+	}
 }

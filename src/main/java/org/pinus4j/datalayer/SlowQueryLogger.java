@@ -20,7 +20,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 
 import org.pinus4j.api.SQL;
-import org.pinus4j.cluster.DB;
+import org.pinus4j.cluster.ShardingDBResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,11 +37,11 @@ public class SlowQueryLogger {
 	 */
 	public static final Logger LOG = LoggerFactory.getLogger(SlowQueryLogger.class);
 
-	public static void write(DB db, SQL sql, long constTime) {
+	public static void write(ShardingDBResource db, SQL sql, long constTime) {
 		LOG.warn("[" + db + "] \"" + sql.toString() + "\" const " + constTime + "ms");
 	}
 
-	public static void write(DB db, String sql, long constTime) {
+	public static void write(ShardingDBResource db, String sql, long constTime) {
 		LOG.warn("[" + db + "] \"" + sql + "\" const " + constTime + "ms");
 	}
 

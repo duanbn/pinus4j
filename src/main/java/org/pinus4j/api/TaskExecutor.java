@@ -3,12 +3,11 @@ package org.pinus4j.api;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.pinus4j.api.ITask;
-import org.pinus4j.api.TaskFuture;
 import org.pinus4j.api.query.IQuery;
-import org.pinus4j.cluster.DB;
+import org.pinus4j.cluster.IDBResource;
+import org.pinus4j.cluster.GlobalDBResource;
 import org.pinus4j.cluster.IDBCluster;
-import org.pinus4j.cluster.beans.DBInfo;
+import org.pinus4j.cluster.ShardingDBResource;
 import org.pinus4j.datalayer.IRecordIterator;
 import org.pinus4j.datalayer.iterator.GlobalRecordIterator;
 import org.pinus4j.datalayer.iterator.ShardingRecordIterator;
@@ -72,14 +71,14 @@ public class TaskExecutor<E> {
 
 		IRecordIterator<E> reader = null;
 		if (ReflectUtil.isShardingEntity(clazz)) { // 分片情况
-			List<DB> dbs = this.dbCluster.getAllMasterShardingDB(clazz);
+			List<IDBResource> dbResources = this.dbCluster.getAllMasterShardingDBResource(clazz);
 
-			List<IRecordIterator<E>> readers = new ArrayList<IRecordIterator<E>>(dbs.size());
+			List<IRecordIterator<E>> readers = new ArrayList<IRecordIterator<E>>(dbResources.size());
 
 			// 计算总数
 			long total = 0;
-			for (DB db : dbs) {
-				reader = new ShardingRecordIterator<E>(db, clazz);
+			for (IDBResource dbResource : dbResources) {
+				reader = new ShardingRecordIterator<E>((ShardingDBResource) dbResource, clazz);
 				if (task.taskBuffer() > 0) {
 					reader.setStep(task.taskBuffer());
 				}
@@ -96,13 +95,13 @@ public class TaskExecutor<E> {
 		} else { // 全局情况
 			RecrodThread<E> rt = null;
 
-			DBInfo dbConnInfo;
+			IDBResource dbResource;
 			try {
-				dbConnInfo = this.dbCluster.getMasterGlobalConn(clusterName);
+				dbResource = this.dbCluster.getMasterGlobalDBResource(clusterName);
 			} catch (DBClusterException e) {
 				throw new DBOperationException(e);
 			}
-			reader = new GlobalRecordIterator<E>(dbConnInfo, clazz);
+			reader = new GlobalRecordIterator<E>((GlobalDBResource) dbResource, clazz);
 			if (task.taskBuffer() > 0) {
 				reader.setStep(task.taskBuffer());
 			}

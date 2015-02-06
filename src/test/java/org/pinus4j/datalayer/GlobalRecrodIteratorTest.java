@@ -8,15 +8,15 @@ import junit.framework.Assert;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.pinus4j.BaseTest;
+import org.pinus4j.ApiBaseTest;
+import org.pinus4j.cluster.IDBResource;
+import org.pinus4j.cluster.GlobalDBResource;
 import org.pinus4j.cluster.IDBCluster;
-import org.pinus4j.cluster.beans.DBInfo;
-import org.pinus4j.datalayer.IRecordIterator;
 import org.pinus4j.datalayer.iterator.GlobalRecordIterator;
 import org.pinus4j.entity.TestGlobalEntity;
 import org.pinus4j.exceptions.DBClusterException;
 
-public class GlobalRecrodIteratorTest extends BaseTest {
+public class GlobalRecrodIteratorTest extends ApiBaseTest {
 
 	private Number[] pks;
 
@@ -38,26 +38,23 @@ public class GlobalRecrodIteratorTest extends BaseTest {
 		}
 		pks = cacheClient.globalSaveBatch(entities, CLUSTER_KLSTORAGE);
 		// check save more
-		entities = cacheClient.findGlobalByPks(CLUSTER_KLSTORAGE,
-				TestGlobalEntity.class, pks);
+		entities = cacheClient.findGlobalByPks(CLUSTER_KLSTORAGE, TestGlobalEntity.class, pks);
 		Assert.assertEquals(SIZE, entities.size());
 
 		IDBCluster dbCluster = cacheClient.getDBCluster();
-		DBInfo dbConnInfo = null;
+		IDBResource dbResource = null;
 		try {
-			dbConnInfo = dbCluster.getMasterGlobalConn(CLUSTER_KLSTORAGE);
+			dbResource = dbCluster.getMasterGlobalDBResource(CLUSTER_KLSTORAGE);
 		} catch (DBClusterException e) {
 			e.printStackTrace();
 		}
-		this.reader = new GlobalRecordIterator<TestGlobalEntity>(dbConnInfo,
-				TestGlobalEntity.class);
+		this.reader = new GlobalRecordIterator<TestGlobalEntity>((GlobalDBResource) dbResource, TestGlobalEntity.class);
 	}
 
 	@After
 	public void after() {
 		// remove more
-		cacheClient.globalRemoveByPks(CLUSTER_KLSTORAGE,
-				TestGlobalEntity.class, pks);
+		cacheClient.globalRemoveByPks(CLUSTER_KLSTORAGE, TestGlobalEntity.class, pks);
 	}
 
 	@Test

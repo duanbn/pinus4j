@@ -10,25 +10,25 @@ import junit.framework.Assert;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.pinus4j.BaseTest;
+import org.pinus4j.ApiBaseTest;
 import org.pinus4j.api.IShardingKey;
 import org.pinus4j.api.ShardingKey;
-import org.pinus4j.cluster.DB;
+import org.pinus4j.cluster.ShardingDBResource;
 import org.pinus4j.entity.TestEntity;
 import org.pinus4j.entity.TestGlobalEntity;
 import org.pinus4j.exceptions.DBClusterException;
 
-public class MemCachePrimaryCacheTest extends BaseTest {
+public class MemCachePrimaryCacheTest extends ApiBaseTest {
 
 	private String tableName = "test_entity";
 
-	private DB db;
+	private ShardingDBResource db;
 
 	@Before
 	public void before() {
 		IShardingKey<?> shardingValue = new ShardingKey<Integer>(CLUSTER_KLSTORAGE, 1);
 		try {
-			db = cacheClient.getDBCluster().selectDbFromMaster(tableName, shardingValue);
+			db = (ShardingDBResource) cacheClient.getDBCluster().selectDBResourceFromMaster(tableName, shardingValue);
 		} catch (DBClusterException e) {
 			e.printStackTrace();
 		}

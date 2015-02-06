@@ -8,22 +8,20 @@ import junit.framework.Assert;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.pinus4j.BaseTest;
+import org.pinus4j.ApiBaseTest;
 import org.pinus4j.api.IShardingKey;
 import org.pinus4j.api.ShardingKey;
-import org.pinus4j.cluster.DB;
 import org.pinus4j.cluster.IDBCluster;
-import org.pinus4j.datalayer.IRecordIterator;
+import org.pinus4j.cluster.ShardingDBResource;
 import org.pinus4j.datalayer.iterator.ShardingRecordIterator;
 import org.pinus4j.entity.TestEntity;
 import org.pinus4j.exceptions.DBClusterException;
 
-public class ShardingRecrodIteratorTest extends BaseTest {
+public class ShardingRecrodIteratorTest extends ApiBaseTest {
 
 	private Number[] pks;
 
-	private IShardingKey<Integer> moreKey = new ShardingKey<Integer>(
-			CLUSTER_KLSTORAGE, 1);
+	private IShardingKey<Integer> moreKey = new ShardingKey<Integer>(CLUSTER_KLSTORAGE, 1);
 
 	private IRecordIterator<TestEntity> reader;
 
@@ -47,9 +45,9 @@ public class ShardingRecrodIteratorTest extends BaseTest {
 		Assert.assertEquals(SIZE, entities.size());
 
 		IDBCluster dbCluster = cacheClient.getDBCluster();
-		DB db = null;
+		ShardingDBResource db = null;
 		try {
-			db = dbCluster.selectDbFromMaster("test_entity", moreKey);
+			db = (ShardingDBResource) dbCluster.selectDBResourceFromMaster("test_entity", moreKey);
 		} catch (DBClusterException e) {
 			e.printStackTrace();
 		}

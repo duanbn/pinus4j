@@ -11,7 +11,7 @@ import org.pinus4j.api.IShardingKey;
 import org.pinus4j.api.ShardingKey;
 import org.pinus4j.api.enums.EnumDB;
 import org.pinus4j.api.enums.EnumDBMasterSlave;
-import org.pinus4j.cluster.DB;
+import org.pinus4j.cluster.IDBResource;
 import org.pinus4j.cluster.IDBCluster;
 import org.pinus4j.cluster.impl.AppDBClusterImpl;
 import org.pinus4j.entity.TestEntity;
@@ -44,8 +44,8 @@ public class DBClusterTest {
 
 	@Test
 	public void testGetAllMasterShardingDB() throws Exception {
-		List<DB> dbs = dbCluster.getAllMasterShardingDB(TestEntity.class);
-		for (DB db : dbs) {
+		List<IDBResource> dbs = dbCluster.getAllMasterShardingDBResource(TestEntity.class);
+		for (IDBResource db : dbs) {
 			System.out.println(db);
 		}
 		System.out.println(dbs.size());
@@ -53,8 +53,8 @@ public class DBClusterTest {
 
 	@Test
 	public void testGetAllSlaveShardingDB() throws Exception {
-		List<DB> dbs = dbCluster.getAllSlaveShardingDB(TestEntity.class, EnumDBMasterSlave.SLAVE0);
-		for (DB db : dbs) {
+		List<IDBResource> dbs = dbCluster.getAllSlaveShardingDBResource(TestEntity.class, EnumDBMasterSlave.SLAVE0);
+		for (IDBResource db : dbs) {
 			System.out.println(db);
 		}
 		System.out.println(dbs.size());
@@ -63,38 +63,38 @@ public class DBClusterTest {
 	@Test
 	public void testMasterSelect() throws Exception {
 		IShardingKey<Long> sv = new ShardingKey<Long>(CLUSTER_KLSTORAGE, 150080l);
-		DB db = dbCluster.selectDbFromMaster("test_entity", sv);
+		IDBResource db = dbCluster.selectDBResourceFromMaster("test_entity", sv);
 		System.out.println(db);
 
 		sv = new ShardingKey<Long>(CLUSTER_KLSTORAGE, 150081l);
-		db = dbCluster.selectDbFromMaster("test_entity", sv);
+		db = dbCluster.selectDBResourceFromMaster("test_entity", sv);
 		System.out.println(db);
 
 		sv = new ShardingKey<Long>(CLUSTER_KLSTORAGE, 50080l);
-		db = dbCluster.selectDbFromMaster("test_entity", sv);
+		db = dbCluster.selectDBResourceFromMaster("test_entity", sv);
 		System.out.println(db);
 
 		sv = new ShardingKey<Long>(CLUSTER_KLSTORAGE, 50081l);
-		db = dbCluster.selectDbFromMaster("test_entity", sv);
+		db = dbCluster.selectDBResourceFromMaster("test_entity", sv);
 		System.out.println(db);
 	}
 
 	@Test
 	public void testSlaveSelect() throws Exception {
 		IShardingKey<Long> sv = new ShardingKey<Long>(CLUSTER_KLSTORAGE, 150080l);
-		DB db = dbCluster.selectDbFromSlave("test_entity", sv, EnumDBMasterSlave.SLAVE0);
+		IDBResource db = dbCluster.selectDBResourceFromSlave("test_entity", sv, EnumDBMasterSlave.SLAVE0);
 		System.out.println(db);
 
 		sv = new ShardingKey<Long>(CLUSTER_KLSTORAGE, 150081l);
-		db = dbCluster.selectDbFromSlave("test_entity", sv, EnumDBMasterSlave.SLAVE0);
+		db = dbCluster.selectDBResourceFromSlave("test_entity", sv, EnumDBMasterSlave.SLAVE0);
 		System.out.println(db);
 
 		sv = new ShardingKey<Long>(CLUSTER_KLSTORAGE, 1500800l);
-		db = dbCluster.selectDbFromSlave("test_entity", sv, EnumDBMasterSlave.SLAVE0);
+		db = dbCluster.selectDBResourceFromSlave("test_entity", sv, EnumDBMasterSlave.SLAVE0);
 		System.out.println(db);
 
 		sv = new ShardingKey<Long>(CLUSTER_KLSTORAGE, 1500811l);
-		db = dbCluster.selectDbFromSlave("test_entity", sv, EnumDBMasterSlave.SLAVE0);
+		db = dbCluster.selectDBResourceFromSlave("test_entity", sv, EnumDBMasterSlave.SLAVE0);
 		System.out.println(db);
 	}
 

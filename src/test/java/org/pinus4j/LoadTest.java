@@ -13,7 +13,7 @@ import org.pinus4j.api.IShardingKey;
 import org.pinus4j.api.ShardingKey;
 import org.pinus4j.entity.TestEntity;
 
-public class LoadTest extends BaseTest {
+public class LoadTest extends ApiBaseTest {
 
 	private static final CountDownLatch cdl = new CountDownLatch(99999999);
 
@@ -57,7 +57,7 @@ public class LoadTest extends BaseTest {
 							lock.lock();
 							System.out.println(counter++);
 
-							Thread.sleep(r.nextInt(100));
+							Thread.sleep(r.nextInt(10));
 						} catch (Exception e) {
 							e.printStackTrace();
 						} finally {

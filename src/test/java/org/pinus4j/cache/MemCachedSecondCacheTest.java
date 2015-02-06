@@ -7,18 +7,18 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.pinus4j.BaseTest;
+import org.pinus4j.ApiBaseTest;
 import org.pinus4j.api.IShardingKey;
 import org.pinus4j.api.ShardingKey;
 import org.pinus4j.api.query.Condition;
 import org.pinus4j.api.query.IQuery;
-import org.pinus4j.cluster.DB;
+import org.pinus4j.cluster.ShardingDBResource;
 import org.pinus4j.exceptions.DBClusterException;
 
-public class MemCachedSecondCacheTest extends BaseTest {
+public class MemCachedSecondCacheTest extends ApiBaseTest {
 
 	private IQuery query;
-	private DB db;
+	private ShardingDBResource db;
 
 	public MemCachedSecondCacheTest() {
 		this.query = cacheClient.createQuery();
@@ -30,7 +30,7 @@ public class MemCachedSecondCacheTest extends BaseTest {
 	public void before() {
 		IShardingKey<?> shardingValue = new ShardingKey<Integer>(CLUSTER_KLSTORAGE, 1);
 		try {
-			db = cacheClient.getDBCluster().selectDbFromMaster("test_entity", shardingValue);
+			db = (ShardingDBResource) cacheClient.getDBCluster().selectDBResourceFromMaster("test_entity", shardingValue);
 		} catch (DBClusterException e) {
 			e.printStackTrace();
 		}

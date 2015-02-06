@@ -21,7 +21,7 @@ import java.util.Collection;
 import java.util.List;
 
 import org.pinus4j.api.query.IQuery;
-import org.pinus4j.cluster.DB;
+import org.pinus4j.cluster.ShardingDBResource;
 
 /**
  * 二级缓存接口. 二级缓存提供对条件查询的结果进行缓存. 二级缓存的key格式：[clusterName + dbIndex].[tableName +
@@ -75,7 +75,7 @@ public interface ISecondCache extends ICache {
 	 * @param data
 	 *            结果集
 	 */
-	public void put(IQuery query, DB db, List data);
+	public void put(IQuery query, ShardingDBResource db, List data);
 
 	/**
 	 * 读取分片缓存.
@@ -85,7 +85,7 @@ public interface ISecondCache extends ICache {
 	 *
 	 * @return 结果集.
 	 */
-	public List get(IQuery query, DB db);
+	public List get(IQuery query, ShardingDBResource db);
 
 	/**
 	 * 清除分片缓存.
@@ -93,6 +93,6 @@ public interface ISecondCache extends ICache {
 	 * @param query
 	 *            查询条件.
 	 */
-	public void remove(DB db);
+	public void remove(ShardingDBResource db);
 
 }

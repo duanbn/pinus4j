@@ -26,12 +26,8 @@ import org.pinus4j.api.enums.EnumSyncAction;
 import org.pinus4j.cache.IPrimaryCache;
 import org.pinus4j.cache.ISecondCache;
 import org.pinus4j.cluster.beans.DBClusterInfo;
-import org.pinus4j.cluster.beans.DBInfo;
-import org.pinus4j.cluster.config.IClusterConfig;
-import org.pinus4j.cluster.router.IClusterRouter;
 import org.pinus4j.datalayer.IDataLayerBuilder;
 import org.pinus4j.exceptions.DBClusterException;
-import org.pinus4j.generator.IDBGenerator;
 import org.pinus4j.generator.IIdGenerator;
 import org.pinus4j.generator.beans.DBTable;
 
@@ -150,7 +146,7 @@ public interface IDBCluster {
 	 * @param clusterName
 	 * @return
 	 */
-	public DBInfo getMasterGlobalConn(String clusterName) throws DBClusterException;
+	public IDBResource getMasterGlobalDBResource(String clusterName) throws DBClusterException;
 
 	/**
 	 * 获取从库的全局库连接
@@ -159,7 +155,7 @@ public interface IDBCluster {
 	 * @param slave
 	 * @return
 	 */
-	public DBInfo getSlaveGlobalDbConn(String clusterName, EnumDBMasterSlave slave) throws DBClusterException;
+	public IDBResource getSlaveGlobalDBResource(String clusterName, EnumDBMasterSlave slave) throws DBClusterException;
 
 	/**
 	 * 从主库集群中获取被操作的库表.
@@ -170,7 +166,7 @@ public interface IDBCluster {
 	 *            分库分表因子.
 	 * @return 被操作的库表
 	 */
-	public DB selectDbFromMaster(String tableName, IShardingKey<?> value) throws DBClusterException;
+	public IDBResource selectDBResourceFromMaster(String tableName, IShardingKey<?> value) throws DBClusterException;
 
 	/**
 	 * 从从库集群中获取被操作的库表.
@@ -183,7 +179,7 @@ public interface IDBCluster {
 	 *            分库分表因子
 	 * @return 被操作的库表
 	 */
-	public DB selectDbFromSlave(String tableName, IShardingKey<?> value, EnumDBMasterSlave slave)
+	public IDBResource selectDBResourceFromSlave(String tableName, IShardingKey<?> value, EnumDBMasterSlave slave)
 			throws DBClusterException;
 
 	/**
@@ -193,7 +189,7 @@ public interface IDBCluster {
 	 *            数据对象
 	 * @return
 	 */
-	public List<DB> getAllMasterShardingDB(Class<?> clazz);
+	public List<IDBResource> getAllMasterShardingDBResource(Class<?> clazz);
 
 	/**
 	 * get all master sharding info.
@@ -203,7 +199,7 @@ public interface IDBCluster {
 	 * @param tableName
 	 * @return
 	 */
-	public List<DB> getAllMasterShardingDB(int tableNum, String clusterName, String tableName);
+	public List<IDBResource> getAllMasterShardingDBResource(int tableNum, String clusterName, String tableName);
 
 	/**
 	 * 获取集群从库列表.
@@ -213,12 +209,7 @@ public interface IDBCluster {
 	 * @param slave
 	 *            从库号
 	 */
-	public List<DB> getAllSlaveShardingDB(Class<?> clazz, EnumDBMasterSlave slave);
-
-	/**
-	 * get cluster router.
-	 */
-	public IClusterRouter getDBRouter(String clusterName);
+	public List<IDBResource> getAllSlaveShardingDBResource(Class<?> clazz, EnumDBMasterSlave slave);
 
 	/**
 	 * 设置数据表同步动作.
@@ -226,11 +217,6 @@ public interface IDBCluster {
 	 * @param syncAction
 	 */
 	public void setSyncAction(EnumSyncAction syncAction);
-
-	/**
-	 * 获取db生成器.
-	 */
-	public IDBGenerator getDBGenerator();
 
 	/**
 	 * 获取id生成器.
@@ -253,12 +239,5 @@ public interface IDBCluster {
 	 * @return 集群表集合
 	 */
 	public ITableCluster getTableCluster();
-
-	/**
-	 * 获取集群配置.
-	 * 
-	 * @return
-	 */
-	public IClusterConfig getClusterConfig();
 
 }

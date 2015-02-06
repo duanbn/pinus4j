@@ -8,7 +8,8 @@ import org.pinus4j.api.query.Condition;
 import org.pinus4j.api.query.IQuery;
 import org.pinus4j.api.query.Order;
 import org.pinus4j.api.query.QueryImpl;
-import org.pinus4j.cluster.beans.DBInfo;
+import org.pinus4j.cluster.IDBResource;
+import org.pinus4j.cluster.GlobalDBResource;
 import org.pinus4j.datalayer.SQLBuilder;
 import org.pinus4j.exceptions.DBOperationException;
 import org.pinus4j.utils.ReflectUtil;
@@ -26,13 +27,13 @@ public class GlobalRecordIterator<E> extends AbstractRecordIterator<E> {
 
 	public static final Logger LOG = LoggerFactory.getLogger(GlobalRecordIterator.class);
 
-	private DBInfo dbConnInfo;
-	
-	public GlobalRecordIterator(DBInfo dbConnInfo, Class<E> clazz) {
+	private IDBResource dbResource;
+
+	public GlobalRecordIterator(GlobalDBResource dbResource, Class<E> clazz) {
 		super(clazz);
 
-		this.dbConnInfo = dbConnInfo;
-		
+		this.dbResource = dbResource;
+
 		this.maxId = getMaxId();
 	}
 
@@ -43,7 +44,7 @@ public class GlobalRecordIterator<E> extends AbstractRecordIterator<E> {
 		query.limit(1).orderBy(pkName, Order.DESC);
 		List<E> one = null;
 		try {
-			one = selectGlobalByQuery(this.dbConnInfo.getDatasource().getConnection(), query, clazz);
+			one = selectGlobalByQuery(this.dbResource.getDatasource().getConnection(), query, clazz);
 		} catch (SQLException e1) {
 			throw new DBOperationException("获取max id失败");
 		}
@@ -59,7 +60,7 @@ public class GlobalRecordIterator<E> extends AbstractRecordIterator<E> {
 
 	@Override
 	public long getCount() {
-		return selectGlobalCount(query, dbConnInfo, this.dbConnInfo.getClusterName(), clazz).longValue();
+		return selectGlobalCount(query, dbResource, this.dbResource.getClusterName(), clazz).longValue();
 	}
 
 	@Override
@@ -71,7 +72,7 @@ public class GlobalRecordIterator<E> extends AbstractRecordIterator<E> {
 			List<E> recrods;
 			Connection conn = null;
 			try {
-				conn = this.dbConnInfo.getDatasource().getConnection();
+				conn = this.dbResource.getDatasource().getConnection();
 				recrods = selectGlobalByQuery(conn, query, clazz);
 			} catch (SQLException e) {
 				throw new DBOperationException(e);
@@ -85,7 +86,7 @@ public class GlobalRecordIterator<E> extends AbstractRecordIterator<E> {
 				high = this.latestId + step;
 				query.add(Condition.gte(pkName, this.latestId)).add(Condition.lt(pkName, high));
 				try {
-					conn = this.dbConnInfo.getDatasource().getConnection();
+					conn = this.dbResource.getDatasource().getConnection();
 					recrods = selectGlobalByQuery(conn, query, clazz);
 				} catch (SQLException e) {
 					throw new DBOperationException(e);

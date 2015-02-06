@@ -38,9 +38,9 @@ import net.sf.jsqlparser.util.TablesNamesFinder;
 import org.pinus4j.api.IShardingKey;
 import org.pinus4j.api.ShardingKey;
 import org.pinus4j.api.enums.EnumDB;
-import org.pinus4j.cluster.DB;
+import org.pinus4j.cluster.IDBResource;
 import org.pinus4j.cluster.IDBCluster;
-import org.pinus4j.cluster.beans.DBInfo;
+import org.pinus4j.cluster.ShardingDBResource;
 import org.pinus4j.cluster.impl.AppDBClusterImpl;
 import org.pinus4j.exceptions.DBClusterException;
 import org.pinus4j.generator.beans.DBTable;
@@ -116,7 +116,7 @@ public class App {
 			//
 			String cluster = dbTable.getCluster();
 
-			DBInfo connInfo = this.dbCluster.getMasterGlobalConn(cluster);
+			IDBResource connInfo = this.dbCluster.getMasterGlobalDBResource(cluster);
 
 			SqlNode sqlNode = new SqlNode();
 			sqlNode.setDs(connInfo.getDatasource());
@@ -144,7 +144,7 @@ public class App {
 			// create sharding key
 			//
 			String cluster = dbTable.getCluster();
-			
+
 			// handle String and Number
 			IShardingKey<?> key = null;
 			if (shardingValue.startsWith("\"") && shardingValue.endsWith("\"")) {
@@ -153,9 +153,9 @@ public class App {
 				key = new ShardingKey<Long>(cluster, Long.parseLong(shardingValue));
 			}
 
-			DB db = null;
+			ShardingDBResource db = null;
 			try {
-				db = this.dbCluster.selectDbFromMaster(tableName, key);
+				db = (ShardingDBResource) this.dbCluster.selectDBResourceFromMaster(tableName, key);
 				System.out.println(db);
 			} catch (DBClusterException e) {
 				throw new RuntimeException(e);
@@ -178,17 +178,21 @@ public class App {
 
 		int tableNum = dbTable.getShardingNum();
 		String clusterName = dbTable.getCluster();
-		List<DB> dbs = this.dbCluster.getAllMasterShardingDB(tableNum, clusterName, tableName);
+		List<IDBResource> dbResources = this.dbCluster.getAllMasterShardingDBResource(tableNum, clusterName, tableName);
 
 		long totalCount = 0;
-		for (DB db : dbs) {
-			DataSource ds = db.getDatasource();
+		ShardingDBResource shardingDBResource = null;
+		for (IDBResource dbResource : dbResources) {
+			shardingDBResource = (ShardingDBResource) dbResource;
+
+			DataSource ds = shardingDBResource.getDatasource();
 			Connection conn = null;
 			PreparedStatement ps = null;
 			ResultSet rs = null;
 			try {
 				conn = ds.getConnection();
-				ps = conn.prepareStatement("select count(*) from " + db.getTableName() + db.getTableIndex());
+				ps = conn.prepareStatement("select count(*) from " + shardingDBResource.getTableName()
+						+ shardingDBResource.getTableIndex());
 				rs = ps.executeQuery();
 				if (rs.next()) {
 					totalCount += rs.getLong(1);

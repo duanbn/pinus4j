@@ -30,19 +30,19 @@ import org.pinus4j.exceptions.LoadConfigException;
 public abstract class DBInfo {
 
 	/**
+	 * 数据源
+	 */
+	protected DataSource datasource;
+
+	/**
 	 * 集群名
 	 */
 	protected String clusterName;
 
 	/**
-	 * 数据源
+	 * database name.
 	 */
-	protected DataSource datasource;
-
-    /**
-     * database name.
-     */
-    protected String dbName;
+	protected String dbName;
 
 	/**
 	 * 主从中的角色.
@@ -74,12 +74,12 @@ public abstract class DBInfo {
 	public void setMasterSlave(EnumDBMasterSlave masterSlave) {
 		this.masterSlave = masterSlave;
 	}
-    
-    public String getDbName() {
-        return dbName;
-    }
-    
-    public void setDbName(String dbName) {
-        this.dbName = dbName;
-    }
+
+	public String getDbName() {
+		return dbName;
+	}
+
+	public void setDbName(String dbName) {
+		this.dbName = dbName;
+	}
 }

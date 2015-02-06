@@ -27,7 +27,7 @@ import net.spy.memcached.MemcachedClient;
 
 import org.pinus4j.api.query.IQuery;
 import org.pinus4j.cache.ISecondCache;
-import org.pinus4j.cluster.DB;
+import org.pinus4j.cluster.ShardingDBResource;
 import org.pinus4j.utils.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,7 +48,7 @@ public class MemCachedSecondCacheImpl extends AbstractMemCachedCache implements 
 	 *            ip:port,ip:port
 	 */
 	public MemCachedSecondCacheImpl(String s, int expire) {
-        super(s, expire);
+		super(s, expire);
 	}
 
 	@Override
@@ -116,7 +116,7 @@ public class MemCachedSecondCacheImpl extends AbstractMemCachedCache implements 
 	}
 
 	@Override
-	public void put(IQuery query, DB db, List data) {
+	public void put(IQuery query, ShardingDBResource db, List data) {
 		try {
 			String versionKey = _buildShardingVersion(db);
 			int version = r.nextInt(10000);
@@ -138,7 +138,7 @@ public class MemCachedSecondCacheImpl extends AbstractMemCachedCache implements 
 	}
 
 	@Override
-	public List get(IQuery query, DB db) {
+	public List get(IQuery query, ShardingDBResource db) {
 		try {
 			String versionKey = _buildShardingVersion(db);
 
@@ -162,7 +162,7 @@ public class MemCachedSecondCacheImpl extends AbstractMemCachedCache implements 
 	}
 
 	@Override
-	public void remove(DB db) {
+	public void remove(ShardingDBResource db) {
 		String versionKey = _buildShardingVersion(db);
 		if (_exists(versionKey)) {
 			this.memClient.incr(versionKey, 1);
@@ -183,13 +183,13 @@ public class MemCachedSecondCacheImpl extends AbstractMemCachedCache implements 
 		return versionKey.toString();
 	}
 
-	public String _buildShardingVersion(DB db) {
+	public String _buildShardingVersion(ShardingDBResource shardingDBResource) {
 		StringBuilder versionKey = new StringBuilder("sec.version.");
-		versionKey.append(db.getClusterName()).append(db.getDbName());
+		versionKey.append(shardingDBResource.getClusterName()).append(shardingDBResource.getDbName());
 		versionKey.append(".");
-		versionKey.append(db.getRegionInfo().getStart()).append(db.getRegionInfo().getEnd());
+		versionKey.append(shardingDBResource.getRegionStart()).append(shardingDBResource.getRegionEnd());
 		versionKey.append(".");
-		versionKey.append(db.getTableName()).append(db.getTableIndex());
+		versionKey.append(shardingDBResource.getTableName()).append(shardingDBResource.getTableIndex());
 		return versionKey.toString();
 	}
 
@@ -209,13 +209,13 @@ public class MemCachedSecondCacheImpl extends AbstractMemCachedCache implements 
 	 * sharding second cache key. sec.[clustername].[startend].[tablename +
 	 * tableIndex].[version].hashCode
 	 */
-	private String _buildShardingCacheKey(IQuery query, DB db, int version) {
+	private String _buildShardingCacheKey(IQuery query, ShardingDBResource shardingDBResource, int version) {
 		StringBuilder cacheKey = new StringBuilder("sec.");
-		cacheKey.append(db.getClusterName()).append(db.getDbName());
+		cacheKey.append(shardingDBResource.getClusterName()).append(shardingDBResource.getDbName());
 		cacheKey.append(".");
-		cacheKey.append(db.getRegionInfo().getStart()).append(db.getRegionInfo().getEnd());
+		cacheKey.append(shardingDBResource.getRegionStart()).append(shardingDBResource.getRegionEnd());
 		cacheKey.append(".");
-		cacheKey.append(db.getTableName()).append(db.getTableIndex());
+		cacheKey.append(shardingDBResource.getTableName()).append(shardingDBResource.getTableIndex());
 		cacheKey.append(".");
 		cacheKey.append(version).append(".");
 		cacheKey.append(SecurityUtil.md5(query.getWhereSql()));

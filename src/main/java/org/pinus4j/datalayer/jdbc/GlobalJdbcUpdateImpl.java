@@ -22,7 +22,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.pinus4j.cluster.beans.DBInfo;
+import org.pinus4j.cluster.IDBResource;
 import org.pinus4j.constant.Const;
 import org.pinus4j.datalayer.IGlobalUpdate;
 import org.pinus4j.datalayer.SQLBuilder;
@@ -88,9 +88,9 @@ public class GlobalJdbcUpdateImpl extends AbstractJdbcUpdate implements IGlobalU
 
 		Connection conn = null;
 		try {
-			DBInfo globalConnection = this.dbCluster.getMasterGlobalConn(clusterName);
+			IDBResource dbResource = this.dbCluster.getMasterGlobalDBResource(clusterName);
 
-			conn = globalConnection.getDatasource().getConnection();
+			conn = dbResource.getDatasource().getConnection();
 
 			_saveBatchGlobal(conn, entities);
 
@@ -125,9 +125,9 @@ public class GlobalJdbcUpdateImpl extends AbstractJdbcUpdate implements IGlobalU
 
 		Connection conn = null;
 		try {
-			DBInfo globalConnection = this.dbCluster.getMasterGlobalConn(clusterName);
+			IDBResource dbResource = this.dbCluster.getMasterGlobalDBResource(clusterName);
 
-			conn = globalConnection.getDatasource().getConnection();
+			conn = dbResource.getDatasource().getConnection();
 
 			_updateBatchGlobal(conn, entities);
 
@@ -161,9 +161,9 @@ public class GlobalJdbcUpdateImpl extends AbstractJdbcUpdate implements IGlobalU
 
 		Connection conn = null;
 		try {
-			DBInfo globalConnection = this.dbCluster.getMasterGlobalConn(clusterName);
+			IDBResource dbResource = this.dbCluster.getMasterGlobalDBResource(clusterName);
 
-			conn = globalConnection.getDatasource().getConnection();
+			conn = dbResource.getDatasource().getConnection();
 
 			_removeByPksGlobal(conn, pks, clazz);
 

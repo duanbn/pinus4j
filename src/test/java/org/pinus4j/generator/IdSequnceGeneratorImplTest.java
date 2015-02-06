@@ -6,11 +6,10 @@ import java.util.List;
 import java.util.Set;
 
 import org.junit.Test;
-import org.pinus4j.BaseTest;
+import org.pinus4j.ApiBaseTest;
 import org.pinus4j.constant.Const;
-import org.pinus4j.generator.IIdGenerator;
 
-public class IdSequnceGeneratorImplTest extends BaseTest {
+public class IdSequnceGeneratorImplTest extends ApiBaseTest {
 
 	public static final Set<Integer> ids = new HashSet<Integer>();
 	public static final Set<Long> longIds = new HashSet<Long>();

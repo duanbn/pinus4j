@@ -6,6 +6,8 @@
 代码重构
     将DB对象重构为ShardingDBResource
     添加GlobalDBResource
+性能优化
+	优化查找数据库资源的性能
 
 --version 1.0.2
 fix bug 

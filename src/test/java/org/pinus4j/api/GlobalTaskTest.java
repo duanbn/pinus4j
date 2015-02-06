@@ -8,15 +8,12 @@ import junit.framework.Assert;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.pinus4j.BaseTest;
-import org.pinus4j.api.AbstractTask;
-import org.pinus4j.api.ITask;
-import org.pinus4j.api.TaskFuture;
+import org.pinus4j.ApiBaseTest;
 import org.pinus4j.api.query.Condition;
 import org.pinus4j.api.query.IQuery;
 import org.pinus4j.entity.TestGlobalEntity;
 
-public class GlobalTaskTest extends BaseTest {
+public class GlobalTaskTest extends ApiBaseTest {
 
 	private Number[] pks;
 

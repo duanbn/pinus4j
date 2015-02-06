@@ -16,7 +16,6 @@
 
 package org.pinus4j.cache.impl;
 
-import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -27,7 +26,7 @@ import net.spy.memcached.MemcachedClient;
 import net.spy.memcached.internal.OperationFuture;
 
 import org.pinus4j.cache.IPrimaryCache;
-import org.pinus4j.cluster.DB;
+import org.pinus4j.cluster.ShardingDBResource;
 import org.pinus4j.utils.ReflectUtil;
 import org.pinus4j.utils.StringUtils;
 import org.slf4j.Logger;
@@ -164,37 +163,37 @@ public class MemCachedPrimaryCacheImpl extends AbstractMemCachedCache implements
 	}
 
 	@Override
-	public void setCount(DB db, long count) {
+	public void setCount(ShardingDBResource db, long count) {
 		String key = _buildCountKey(db);
 		_setCount(key, count);
 	}
 
 	@Override
-	public void removeCount(DB db) {
+	public void removeCount(ShardingDBResource db) {
 		String key = _buildCountKey(db);
 		_removeCount(key);
 	}
 
 	@Override
-	public long decrCount(DB db, long delta) {
+	public long decrCount(ShardingDBResource db, long delta) {
 		String key = _buildCountKey(db);
 		return _decrCount(key, delta);
 	}
 
 	@Override
-	public long incrCount(DB db, long delta) {
+	public long incrCount(ShardingDBResource db, long delta) {
 		String key = _buildCountKey(db);
 		return _incrCount(key, delta);
 	}
 
 	@Override
-	public long getCount(DB db) {
+	public long getCount(ShardingDBResource db) {
 		String key = _buildCountKey(db);
 		return _getCount(key);
 	}
 
 	@Override
-	public void put(DB db, Number id, Object data) {
+	public void put(ShardingDBResource db, Number id, Object data) {
 		if (data == null) {
 			return;
 		}
@@ -204,7 +203,7 @@ public class MemCachedPrimaryCacheImpl extends AbstractMemCachedCache implements
 	}
 
 	@Override
-	public void put(DB db, Number[] ids, List<? extends Object> data) {
+	public void put(ShardingDBResource db, Number[] ids, List<? extends Object> data) {
 		if (data == null || data.isEmpty()) {
 			return;
 		}
@@ -217,7 +216,7 @@ public class MemCachedPrimaryCacheImpl extends AbstractMemCachedCache implements
 	}
 
 	@Override
-	public void put(DB db, Map<Number, ? extends Object> data) {
+	public void put(ShardingDBResource db, Map<Number, ? extends Object> data) {
 		if (data == null || data.isEmpty()) {
 			return;
 		}
@@ -232,13 +231,13 @@ public class MemCachedPrimaryCacheImpl extends AbstractMemCachedCache implements
 	}
 
 	@Override
-	public <T> T get(DB db, Number id) {
+	public <T> T get(ShardingDBResource db, Number id) {
 		String key = _buildKey(db, id);
 		return _get(key);
 	}
 
 	@Override
-	public List<Object> get(DB db, Number... ids) {
+	public List<Object> get(ShardingDBResource db, Number... ids) {
 		List<String> keys = new ArrayList<String>();
 		for (Number id : ids) {
 			keys.add(_buildKey(db, id));
@@ -247,13 +246,13 @@ public class MemCachedPrimaryCacheImpl extends AbstractMemCachedCache implements
 	}
 
 	@Override
-	public void remove(DB db, Number id) {
+	public void remove(ShardingDBResource db, Number id) {
 		String key = _buildKey(db, id);
 		_remove(key);
 	}
 
 	@Override
-	public void remove(DB db, List<? extends Number> ids) {
+	public void remove(ShardingDBResource db, List<? extends Number> ids) {
 		List<String> keys = new ArrayList<String>();
 		for (Number id : ids) {
 			keys.add(_buildKey(db, id));
@@ -437,13 +436,13 @@ public class MemCachedPrimaryCacheImpl extends AbstractMemCachedCache implements
 	 * 创建count主键. [clusterName + dbIndex].[start + end].[tableName +
 	 * tableIndex].c
 	 */
-	private String _buildCountKey(DB db) {
+	private String _buildCountKey(ShardingDBResource shardingDBResource) {
 		StringBuilder key = new StringBuilder();
-		key.append(db.getClusterName()).append(db.getDbName());
+		key.append(shardingDBResource.getClusterName()).append(shardingDBResource.getDbName());
 		key.append(".");
-		key.append(db.getRegionInfo().getStart()).append(db.getRegionInfo().getEnd());
+		key.append(shardingDBResource.getRegionStart()).append(shardingDBResource.getRegionEnd());
 		key.append(".");
-		key.append(db.getTableName()).append(db.getTableIndex());
+		key.append(shardingDBResource.getTableName()).append(shardingDBResource.getTableIndex());
 		key.append(".c");
 		return key.toString();
 	}
@@ -462,13 +461,13 @@ public class MemCachedPrimaryCacheImpl extends AbstractMemCachedCache implements
 	 * 创建memcached主键. [clusterName + dbIndex].[start + end].[tableName +
 	 * tableIndex].[id]
 	 */
-	private String _buildKey(DB db, Number id) {
+	private String _buildKey(ShardingDBResource shardingDBResource, Number id) {
 		StringBuilder key = new StringBuilder();
-		key.append(db.getClusterName()).append(db.getDbName());
+		key.append(shardingDBResource.getClusterName()).append(shardingDBResource.getDbName());
 		key.append(".");
-		key.append(db.getRegionInfo().getStart()).append(db.getRegionInfo().getEnd());
+		key.append(shardingDBResource.getRegionStart()).append(shardingDBResource.getRegionEnd());
 		key.append(".");
-		key.append(db.getTableName()).append(db.getTableIndex());
+		key.append(shardingDBResource.getTableName()).append(shardingDBResource.getTableIndex());
 		key.append(".");
 		key.append(id);
 		return key.toString();

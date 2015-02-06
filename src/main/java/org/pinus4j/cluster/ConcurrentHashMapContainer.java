@@ -26,11 +26,11 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author duanbn
  * @since 1.0.0
  */
-public class MapContainer<E> implements IContainer<E> {
+public class ConcurrentHashMapContainer<E> implements IContainer<E> {
 
 	private final Map<String, E> map;
 
-	MapContainer() {
+	ConcurrentHashMapContainer() {
 		map = new ConcurrentHashMap<String, E>();
 	}
 
@@ -45,9 +45,9 @@ public class MapContainer<E> implements IContainer<E> {
 		this.map.put(key, e);
 	}
 
-    @Override
-    public Collection<E> values() {
-        return this.map.values();
-    }
+	@Override
+	public Collection<E> values() {
+		return this.map.values();
+	}
 
 }

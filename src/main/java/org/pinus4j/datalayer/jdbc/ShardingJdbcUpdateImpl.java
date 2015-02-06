@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.pinus4j.api.IShardingKey;
-import org.pinus4j.cluster.DB;
+import org.pinus4j.cluster.ShardingDBResource;
 import org.pinus4j.constant.Const;
 import org.pinus4j.datalayer.IShardingUpdate;
 import org.pinus4j.datalayer.SQLBuilder;
@@ -69,7 +69,7 @@ public class ShardingJdbcUpdateImpl extends AbstractJdbcUpdate implements IShard
 		if (isCheckPrimaryKey)
 			this.idGenerator.checkAndSetPrimaryKey(pk.longValue(), shardingKey.getClusterName(), tableName);
 
-		DB db = _getDbFromMaster(tableName, shardingKey);
+		ShardingDBResource db = _getDbFromMaster(tableName, shardingKey);
 
 		List<Object> entities = new ArrayList<Object>(1);
 		entities.add(entity);
@@ -99,7 +99,7 @@ public class ShardingJdbcUpdateImpl extends AbstractJdbcUpdate implements IShard
 		Class<?> clazz = entities.get(0).getClass();
 		String tableName = ReflectUtil.getTableName(clazz);
 
-		DB db = _getDbFromMaster(tableName, shardingKey);
+		ShardingDBResource db = _getDbFromMaster(tableName, shardingKey);
 
 		int entitySize = entities.size();
 		Number[] pks = new Number[entitySize];
@@ -173,7 +173,7 @@ public class ShardingJdbcUpdateImpl extends AbstractJdbcUpdate implements IShard
 		Class<?> clazz = entities.get(0).getClass();
 
 		String talbeName = ReflectUtil.getTableName(clazz);
-		DB db = _getDbFromMaster(talbeName, shardingKey);
+		ShardingDBResource db = _getDbFromMaster(talbeName, shardingKey);
 		Connection conn = null;
 		try {
 			conn = db.getDatasource().getConnection();
@@ -209,7 +209,7 @@ public class ShardingJdbcUpdateImpl extends AbstractJdbcUpdate implements IShard
 	@Override
 	public void removeByPks(List<? extends Number> pks, IShardingKey<?> shardingKey, Class<?> clazz) {
 		String talbeName = ReflectUtil.getTableName(clazz);
-		DB db = _getDbFromMaster(talbeName, shardingKey);
+		ShardingDBResource db = _getDbFromMaster(talbeName, shardingKey);
 
 		Connection conn = null;
 		try {
@@ -241,17 +241,17 @@ public class ShardingJdbcUpdateImpl extends AbstractJdbcUpdate implements IShard
 	 * @param shardingKey
 	 *            路由因子
 	 */
-	private DB _getDbFromMaster(String tableName, IShardingKey<?> shardingKey) {
-		DB db = null;
+	private ShardingDBResource _getDbFromMaster(String tableName, IShardingKey<?> shardingKey) {
+		ShardingDBResource shardingDBResource = null;
 		try {
-			db = this.dbCluster.selectDbFromMaster(tableName, shardingKey);
+			shardingDBResource = (ShardingDBResource) this.dbCluster.selectDBResourceFromMaster(tableName, shardingKey);
 			if (LOG.isDebugEnabled()) {
-				LOG.debug("[" + db + "]");
+				LOG.debug("[" + shardingDBResource + "]");
 			}
 		} catch (DBClusterException e) {
 			throw new DBOperationException(e);
 		}
-		return db;
+		return shardingDBResource;
 	}
 
 }

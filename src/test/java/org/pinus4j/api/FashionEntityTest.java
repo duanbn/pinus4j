@@ -3,15 +3,13 @@ package org.pinus4j.api;
 import junit.framework.Assert;
 
 import org.junit.Test;
-import org.pinus4j.BaseTest;
-import org.pinus4j.api.IShardingKey;
-import org.pinus4j.api.ShardingKey;
+import org.pinus4j.ApiBaseTest;
 import org.pinus4j.api.query.Condition;
 import org.pinus4j.api.query.IQuery;
 import org.pinus4j.entity.TestEntity;
 import org.pinus4j.entity.TestGlobalEntity;
 
-public class FashionEntityTest extends BaseTest {
+public class FashionEntityTest extends ApiBaseTest {
 
 	@Test
 	public void testSharding() {

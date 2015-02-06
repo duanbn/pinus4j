@@ -16,35 +16,44 @@
 
 package org.pinus4j.cluster;
 
+import javax.sql.DataSource;
+
+import org.pinus4j.api.enums.EnumDBMasterSlave;
+
 /**
- * a static factory for create container.
- *
+ * database resource interface.
+ * 
  * @author duanbn
- * @since 1.0.0
+ * @since 1.1.0
  */
-public class DefaultContainerFactory {
+public interface IDBResource {
+	
+	/**
+	 * get database source.
+	 * 
+	 * @return
+	 */
+	DataSource getDatasource();
 
 	/**
-	 * create a new container instance.
-	 *
-	 * @param containerType
+	 * cluster name of database resource.
+	 * 
+	 * @return
 	 */
-	public static <E> IContainer<E> createContainer(ContainerType containerType) {
-		IContainer<E> instance = null;
+	String getClusterName();
 
-		switch (containerType) {
-		case MAP:
-			instance = new ConcurrentHashMapContainer<E>();
-			break;
-		default:
-			throw new IllegalArgumentException("unknow container type " + containerType);
-		}
+	/**
+	 * global is ture, sharding is false.
+	 * 
+	 * @return
+	 */
+	boolean isGlobal();
 
-		return instance;
-	}
-
-	public static enum ContainerType {
-		MAP;
-	}
+	/**
+	 * get master slave mode.
+	 * 
+	 * @return
+	 */
+	EnumDBMasterSlave getMasterSlave();
 
 }

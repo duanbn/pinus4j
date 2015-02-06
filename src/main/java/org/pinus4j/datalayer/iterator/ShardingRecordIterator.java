@@ -22,7 +22,7 @@ import org.pinus4j.api.query.Condition;
 import org.pinus4j.api.query.IQuery;
 import org.pinus4j.api.query.Order;
 import org.pinus4j.api.query.QueryImpl;
-import org.pinus4j.cluster.DB;
+import org.pinus4j.cluster.ShardingDBResource;
 import org.pinus4j.utils.ReflectUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,9 +37,9 @@ public class ShardingRecordIterator<E> extends AbstractRecordIterator<E> {
 
 	public static final Logger LOG = LoggerFactory.getLogger(ShardingRecordIterator.class);
 
-	private DB db;
+	private ShardingDBResource db;
 
-	public ShardingRecordIterator(DB db, Class<E> clazz) {
+	public ShardingRecordIterator(ShardingDBResource db, Class<E> clazz) {
 		super(clazz);
 
 		this.db = db;

@@ -41,13 +41,16 @@ import org.pinus4j.cache.ICacheBuilder;
 import org.pinus4j.cache.IPrimaryCache;
 import org.pinus4j.cache.ISecondCache;
 import org.pinus4j.cache.impl.MemCachedCacheBuilder;
-import org.pinus4j.cluster.DB;
+import org.pinus4j.cluster.IDBResource;
+import org.pinus4j.cluster.DBResourceCache;
 import org.pinus4j.cluster.DefaultContainerFactory;
 import org.pinus4j.cluster.DefaultContainerFactory.ContainerType;
+import org.pinus4j.cluster.GlobalDBResource;
 import org.pinus4j.cluster.IContainer;
 import org.pinus4j.cluster.IDBCluster;
 import org.pinus4j.cluster.ITableCluster;
 import org.pinus4j.cluster.ITableClusterBuilder;
+import org.pinus4j.cluster.ShardingDBResource;
 import org.pinus4j.cluster.beans.DBClusterInfo;
 import org.pinus4j.cluster.beans.DBClusterRegionInfo;
 import org.pinus4j.cluster.beans.DBInfo;
@@ -137,12 +140,12 @@ public abstract class AbstractDBCluster implements IDBCluster {
 	private IContainer<IClusterRouter> dbRouterC;
 
 	/**
-	 * cluster info. {clusterName, clusterInfo}
+	 * cluster info container.
 	 */
 	private IContainer<DBClusterInfo> dbClusterInfoC;
 
 	/**
-	 * 集群中的表集合. {集群名称, {分库下标, {表名, 分表数}}}
+	 * 集群中的表集合.
 	 */
 	private ITableCluster tableCluster;
 
@@ -344,12 +347,15 @@ public abstract class AbstractDBCluster implements IDBCluster {
 			throw new DBClusterException("关闭数据库集群失败", e);
 		}
 
+		// clear resource cache.
+		DBResourceCache.clear();
+
 		// close curator
 		CloseableUtils.closeQuietly(this.curatorClient);
 	}
 
 	@Override
-	public DBInfo getMasterGlobalConn(String clusterName) throws DBClusterException {
+	public IDBResource getMasterGlobalDBResource(String clusterName) throws DBClusterException {
 		DBClusterInfo dbClusterInfo = this.dbClusterInfoC.find(clusterName);
 		if (dbClusterInfo == null) {
 			throw new DBClusterException("没有找到集群信息, clustername=" + clusterName);
@@ -359,11 +365,14 @@ public abstract class AbstractDBCluster implements IDBCluster {
 		if (masterDBInfo == null) {
 			throw new DBClusterException("此集群没有配置全局主库, clustername=" + clusterName);
 		}
-		return masterDBInfo;
+
+		IDBResource masterDBResource = GlobalDBResource.valueOf(masterDBInfo);
+
+		return masterDBResource;
 	}
 
 	@Override
-	public DBInfo getSlaveGlobalDbConn(String clusterName, EnumDBMasterSlave slave) throws DBClusterException {
+	public IDBResource getSlaveGlobalDBResource(String clusterName, EnumDBMasterSlave slave) throws DBClusterException {
 		DBClusterInfo dbClusterInfo = this.dbClusterInfoC.find(clusterName);
 		if (dbClusterInfo == null) {
 			throw new DBClusterException("没有找到集群信息, clustername=" + clusterName);
@@ -373,12 +382,16 @@ public abstract class AbstractDBCluster implements IDBCluster {
 		if (slaveDbs == null || slaveDbs.isEmpty()) {
 			throw new DBClusterException("此集群没有配置全局从库, clustername=" + clusterName);
 		}
-		DBInfo slaveConnection = slaveDbs.get(slave.getValue());
-		return slaveConnection;
+		DBInfo slaveDBInfo = slaveDbs.get(slave.getValue());
+
+		IDBResource slaveDBResource = GlobalDBResource.valueOf(slaveDBInfo);
+
+		return slaveDBResource;
 	}
 
 	@Override
-	public DB selectDbFromMaster(String tableName, IShardingKey<?> value) throws DBClusterException {
+	public ShardingDBResource selectDBResourceFromMaster(String tableName, IShardingKey<?> value)
+			throws DBClusterException {
 
 		// 计算分库
 		// 计算路由信息
@@ -410,13 +423,13 @@ public abstract class AbstractDBCluster implements IDBCluster {
 		}
 
 		// 返回分库分表信息
-		DB db = DB.valueOf(dbInfo.getDatasource(), clusterName, dbInfo.getDbName(), tableName, tableIndex, regionInfo);
+		ShardingDBResource db = ShardingDBResource.valueOf(dbInfo, regionInfo, tableName, tableIndex);
 		return db;
 	}
 
 	@Override
-	public DB selectDbFromSlave(String tableName, IShardingKey<?> value, EnumDBMasterSlave slaveNum)
-			throws DBClusterException {
+	public ShardingDBResource selectDBResourceFromSlave(String tableName, IShardingKey<?> value,
+			EnumDBMasterSlave slaveNum) throws DBClusterException {
 
 		// 计算分库
 		// 计算路由信息
@@ -451,12 +464,12 @@ public abstract class AbstractDBCluster implements IDBCluster {
 		}
 
 		// 返回分库分表信息
-		DB db = DB.valueOf(dbInfo.getDatasource(), clusterName, dbInfo.getDbName(), tableName, tableIndex, regionInfo);
+		ShardingDBResource db = ShardingDBResource.valueOf(dbInfo, regionInfo, tableName, tableIndex);
 		return db;
 	}
 
 	@Override
-	public List<DB> getAllMasterShardingDB(Class<?> clazz) {
+	public List<IDBResource> getAllMasterShardingDBResource(Class<?> clazz) {
 		int tableNum = ReflectUtil.getTableNum(clazz);
 		if (tableNum == 0) {
 			throw new IllegalStateException("table number is 0");
@@ -465,7 +478,7 @@ public abstract class AbstractDBCluster implements IDBCluster {
 		String clusterName = ReflectUtil.getClusterName(clazz);
 		String tableName = ReflectUtil.getTableName(clazz);
 
-		return getAllMasterShardingDB(tableNum, clusterName, tableName);
+		return getAllMasterShardingDBResource(tableNum, clusterName, tableName);
 	}
 
 	/**
@@ -476,52 +489,50 @@ public abstract class AbstractDBCluster implements IDBCluster {
 	 * @param tableName
 	 * @return
 	 */
-	public List<DB> getAllMasterShardingDB(int tableNum, String clusterName, String tableName) {
-		List<DB> dbs = new ArrayList<DB>();
+	public List<IDBResource> getAllMasterShardingDBResource(int tableNum, String clusterName, String tableName) {
+		List<IDBResource> dbResources = new ArrayList<IDBResource>();
 
 		if (tableNum == 0) {
 			throw new IllegalStateException("table number is 0");
 		}
 
-		DB db = null;
+		IDBResource dbResource = null;
 		DBClusterInfo dbClusterInfo = this.getDBClusterInfo(clusterName);
 		for (DBClusterRegionInfo region : dbClusterInfo.getDbRegions()) {
 			for (DBInfo dbInfo : region.getMasterDBInfos()) {
 				for (int tableIndex = 0; tableIndex < tableNum; tableIndex++) {
-					db = DB.valueOf(dbInfo.getDatasource(), clusterName, dbInfo.getDbName(), tableName, tableIndex,
-							region);
-					dbs.add(db);
+					dbResource = ShardingDBResource.valueOf(dbInfo, region, tableName, tableIndex);
+					dbResources.add(dbResource);
 				}
 			}
 		}
 
-		return dbs;
+		return dbResources;
 	}
 
 	@Override
-	public List<DB> getAllSlaveShardingDB(Class<?> clazz, EnumDBMasterSlave slave) {
-		List<DB> dbs = new ArrayList<DB>();
+	public List<IDBResource> getAllSlaveShardingDBResource(Class<?> clazz, EnumDBMasterSlave slave) {
+		List<IDBResource> dbResources = new ArrayList<IDBResource>();
 
 		int tableNum = ReflectUtil.getTableNum(clazz);
 		if (tableNum == 0) {
 			throw new IllegalStateException("table number is 0");
 		}
 
-		DB db = null;
+		IDBResource dbResource = null;
 		String clusterName = ReflectUtil.getClusterName(clazz);
 		String tableName = ReflectUtil.getTableName(clazz);
 		DBClusterInfo dbClusterInfo = this.getDBClusterInfo(clusterName);
 		for (DBClusterRegionInfo region : dbClusterInfo.getDbRegions()) {
 			for (DBInfo dbInfo : region.getSlaveDBInfos().get(slave.getValue())) {
 				for (int tableIndex = 0; tableIndex < tableNum; tableIndex++) {
-					db = DB.valueOf(dbInfo.getDatasource(), clusterName, dbInfo.getDbName(), tableName, tableIndex,
-							region);
-					dbs.add(db);
+					dbResource = ShardingDBResource.valueOf(dbInfo, region, tableName, tableIndex);
+					dbResources.add(dbResource);
 				}
 			}
 		}
 
-		return dbs;
+		return dbResources;
 	}
 
 	@Override
@@ -711,7 +722,8 @@ public abstract class AbstractDBCluster implements IDBCluster {
 		this.dbClusterInfoC = DefaultContainerFactory.createContainer(ContainerType.MAP);
 
 		for (DBClusterInfo dbClusterInfo : dbClusterInfos) {
-            LOG.info("init db cluster " + dbClusterInfo.getClusterName() + ", router is [" + dbClusterInfo.getRouterClass().getName() + "]");
+			LOG.info("init db cluster " + dbClusterInfo.getClusterName() + ", router is ["
+					+ dbClusterInfo.getRouterClass().getName() + "]");
 
 			this.dbClusterInfoC.add(dbClusterInfo.getClusterName(), dbClusterInfo);
 
@@ -769,11 +781,6 @@ public abstract class AbstractDBCluster implements IDBCluster {
 
 	}
 
-	@Override
-	public IClusterRouter getDBRouter(String clusterName) {
-		return this.dbRouterC.find(clusterName);
-	}
-
 	/**
 	 * 读取配置.
 	 * 
@@ -813,11 +820,6 @@ public abstract class AbstractDBCluster implements IDBCluster {
 	}
 
 	@Override
-	public IDBGenerator getDBGenerator() {
-		return this.dbGenerator;
-	}
-
-	@Override
 	public IIdGenerator getIdGenerator() {
 		return this.idGenerator;
 	}
@@ -830,11 +832,6 @@ public abstract class AbstractDBCluster implements IDBCluster {
 	@Override
 	public ITableCluster getTableCluster() {
 		return this.tableCluster;
-	}
-
-	@Override
-	public IClusterConfig getClusterConfig() {
-		return this.config;
 	}
 
 }

@@ -25,7 +25,7 @@ import org.pinus4j.api.IShardingKey;
 import org.pinus4j.api.SQL;
 import org.pinus4j.api.enums.EnumDBMasterSlave;
 import org.pinus4j.api.query.IQuery;
-import org.pinus4j.cluster.DB;
+import org.pinus4j.cluster.ShardingDBResource;
 import org.pinus4j.cluster.IDBCluster;
 import org.pinus4j.cluster.beans.DBInfo;
 import org.pinus4j.datalayer.IShardingSlaveQuery;
@@ -52,7 +52,7 @@ public class ShardingJdbcSlaveQueryImpl extends AbstractJdbcQuery implements ISh
 	@Override
 	public Number getCountFromSlave(IShardingKey<?> shardingKey, Class<?> clazz, boolean useCache,
 			EnumDBMasterSlave slave) {
-		DB db = _getDbFromSlave(clazz, shardingKey, slave);
+		ShardingDBResource db = _getDbFromSlave(clazz, shardingKey, slave);
 
 		return selectCountWithCache(db, clazz, useCache);
 	}
@@ -60,7 +60,7 @@ public class ShardingJdbcSlaveQueryImpl extends AbstractJdbcQuery implements ISh
 	@Override
 	public <T> T findByPkFromSlave(Number pk, IShardingKey<?> shardingKey, Class<T> clazz, boolean useCache,
 			EnumDBMasterSlave slave) {
-		DB db = _getDbFromSlave(clazz, shardingKey, slave);
+		ShardingDBResource db = _getDbFromSlave(clazz, shardingKey, slave);
 
 		return selectByPkWithCache(db, pk, clazz, useCache);
 	}
@@ -86,7 +86,7 @@ public class ShardingJdbcSlaveQueryImpl extends AbstractJdbcQuery implements ISh
 	@Override
 	public <T> List<T> findByPksFromSlave(IShardingKey<?> shardingKey, Class<T> clazz, EnumDBMasterSlave slave,
 			boolean useCache, Number... pks) {
-		DB db = _getDbFromSlave(clazz, shardingKey, slave);
+		ShardingDBResource db = _getDbFromSlave(clazz, shardingKey, slave);
 
 		return selectByPksWithCache(db, clazz, pks, true);
 	}
@@ -94,7 +94,7 @@ public class ShardingJdbcSlaveQueryImpl extends AbstractJdbcQuery implements ISh
 	@Override
 	public <T> List<T> findByPkListFromSlave(List<? extends Number> pks, IShardingKey<?> shardingKey, Class<T> clazz,
 			boolean useCache, EnumDBMasterSlave slave) {
-		DB db = _getDbFromSlave(clazz, shardingKey, slave);
+		ShardingDBResource db = _getDbFromSlave(clazz, shardingKey, slave);
 
 		return selectByPksWithCache(db, clazz, pks.toArray(new Number[pks.size()]), useCache);
 	}
@@ -110,7 +110,7 @@ public class ShardingJdbcSlaveQueryImpl extends AbstractJdbcQuery implements ISh
 		List<T> result = new ArrayList<T>(pks.length);
 		IShardingKey<?> shardingKey = null;
 		Number pk = null;
-		DB db = null;
+		ShardingDBResource db = null;
 		T data = null;
 		for (int i = 0; i < pks.length; i++) {
 			shardingKey = shardingValues.get(i);
@@ -136,7 +136,7 @@ public class ShardingJdbcSlaveQueryImpl extends AbstractJdbcQuery implements ISh
 		List<T> result = new ArrayList<T>(pks.size());
 		IShardingKey<?> shardingKey = null;
 		Number pk = null;
-		DB db = null;
+		ShardingDBResource db = null;
 		T data = null;
 		for (int i = 0; i < pks.size(); i++) {
 			shardingKey = shardingValues.get(i);
@@ -154,9 +154,9 @@ public class ShardingJdbcSlaveQueryImpl extends AbstractJdbcQuery implements ISh
 
 	@Override
 	public List<Map<String, Object>> findBySqlFromSlave(SQL sql, IShardingKey<?> shardingKey, EnumDBMasterSlave slave) {
-		DB next = null;
+		ShardingDBResource next = null;
 		for (String tableName : sql.getTableNames()) {
-			DB cur = _getDbFromSlave(tableName, shardingKey, slave);
+			ShardingDBResource cur = _getDbFromSlave(tableName, shardingKey, slave);
 			if (next != null && (cur != next)) {
 				throw new DBOperationException("the tables in sql maybe not at the same database");
 			}
@@ -171,7 +171,7 @@ public class ShardingJdbcSlaveQueryImpl extends AbstractJdbcQuery implements ISh
 	@Override
 	public <T> List<T> findByQueryFromSlave(IQuery query, IShardingKey<?> shardingKey, Class<T> clazz,
 			boolean useCache, EnumDBMasterSlave slave) {
-		DB db = _getDbFromSlave(clazz, shardingKey, slave);
+		ShardingDBResource db = _getDbFromSlave(clazz, shardingKey, slave);
 
 		List<T> result = null;
 
@@ -216,31 +216,31 @@ public class ShardingJdbcSlaveQueryImpl extends AbstractJdbcQuery implements ISh
 	 * @param shardingKey
 	 *            路由因子
 	 */
-	private DB _getDbFromSlave(Class<?> clazz, IShardingKey<?> shardingKey, EnumDBMasterSlave slave) {
+	private ShardingDBResource _getDbFromSlave(Class<?> clazz, IShardingKey<?> shardingKey, EnumDBMasterSlave slave) {
 		String tableName = ReflectUtil.getTableName(clazz);
-		DB db = null;
+		ShardingDBResource shardingDBResource = null;
 		try {
-			db = this.dbCluster.selectDbFromSlave(tableName, shardingKey, slave);
+			shardingDBResource = (ShardingDBResource) this.dbCluster.selectDBResourceFromSlave(tableName, shardingKey, slave);
 			if (LOG.isDebugEnabled()) {
-				LOG.debug("[" + db + "]");
+				LOG.debug("[" + shardingDBResource + "]");
 			}
 		} catch (DBClusterException e) {
 			throw new DBOperationException(e);
 		}
-		return db;
+		return shardingDBResource;
 	}
 
-	private DB _getDbFromSlave(String tableName, IShardingKey<?> shardingKey, EnumDBMasterSlave slave) {
-		DB db = null;
+	private ShardingDBResource _getDbFromSlave(String tableName, IShardingKey<?> shardingKey, EnumDBMasterSlave slave) {
+		ShardingDBResource shardingDBResource = null;
 		try {
-			db = this.dbCluster.selectDbFromSlave(tableName, shardingKey, slave);
+			shardingDBResource = (ShardingDBResource) this.dbCluster.selectDBResourceFromSlave(tableName, shardingKey, slave);
 			if (LOG.isDebugEnabled()) {
-				LOG.debug("[" + db + "]");
+				LOG.debug("[" + shardingDBResource + "]");
 			}
 		} catch (DBClusterException e) {
 			throw new DBOperationException(e);
 		}
-		return db;
+		return shardingDBResource;
 	}
 
 }
