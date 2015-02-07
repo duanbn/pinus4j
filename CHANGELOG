@@ -1,11 +1,20 @@
 --version 1.1.0
-支持事务管理
-    添加事务管理器组件
-    支持手动显示开启、提交、回滚事务
-    支持四种类型的事务隔离级别：Read_Uncommited Read_Commited Repeatable_Read Serializable
+新智能支持事务管理特性
+    添加事务管理器
+        支持四种类型的事务隔离级别：Read_Uncommited Read_Commited Repeatable_Read Serializable
+        支持分布式事务
+        支持相同cluster中不同ShardingKey事务处理 (有可能也是本地事务)
+        支持不同cluster中Global事务处理
+        支持不同cluster中相同ShardingKey事务处理
+        支持不同cluster中不同ShardingKey事务处理
+        支持本地事务
+        支持相同cluster中Global事务处理
+        支持相同cluster中相同ShardingKey事务处理
 代码重构
-    将DB对象重构为ShardingDBResource
-    添加GlobalDBResource
+    添加DB资源对象
+        将DB对象重构为ShardingDBResource
+        添加GlobalDBResource
+    事务相关的操作交给ITransaction实现类完成
 性能优化
 	优化查找数据库资源的性能
 
