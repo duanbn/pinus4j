@@ -30,10 +30,18 @@ import org.pinus4j.cluster.resources.IResourceId;
  */
 public class LocalTransaction implements ITransaction {
 
+    /**
+     * db resource will do commit or rollback.
+     */
 	private Map<IResourceId, IDBResource> txRes = new LinkedHashMap<IResourceId, IDBResource>();
 
+    /**
+     * db resource will only close connection.
+     */
+    private Map<IResourceId, IDBResource> txResReadOnly = new LinkedHashMap<IResourceId, IDBResource>();
+
 	@Override
-	public void appendResource(IDBResource dbResource) {
+	public void append(IDBResource dbResource) {
 		IResourceId resId = dbResource.getId();
 
 		if (txRes.get(resId) == null) {
@@ -43,25 +51,51 @@ public class LocalTransaction implements ITransaction {
 				}
 			}
 		}
-
 	}
+
+    @Override
+    public void appendReadOnly(IDBResource dbResource) {
+        IResourceId resId = dbResource.getId();
+
+		if (txResReadOnly.get(resId) == null) {
+			synchronized (txResReadOnly) {
+				if (txResReadOnly.get(resId) == null) {
+					txResReadOnly.put(resId, dbResource);
+				}
+			}
+		}
+    }
 
 	/**
 	 * do commit.
 	 */
 	public void commit() {
+        // do commit
 		for (IDBResource dbResource : txRes.values()) {
 			dbResource.commit();
+            dbResource.close();
 		}
+
+        // close read only.
+        for (IDBResource dbResource : txResReadOnly.values()) {
+            dbResource.close();
+        }
 	}
 
 	/**
 	 * do rollback.
 	 */
 	public void rollback() {
+        // do rollback.
 		for (IDBResource dbResource : txRes.values()) {
 			dbResource.rollback();
+            dbResource.close();
 		}
+
+        // close read only.
+        for (IDBResource dbResource : txResReadOnly.values()) {
+            dbResource.close();
+        }
 	}
 
 }

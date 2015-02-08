@@ -48,58 +48,133 @@ public class ShardingJdbcMasterQueryImpl extends AbstractJdbcQuery implements IS
 
 	@Override
 	public Number getCountFromMaster(Class<?> clazz, boolean useCache) {
-        ITransaction tx = txManager.getTransaction();
-		List<IDBResource> dbResources;
+		ITransaction tx = txManager.getTransaction();
+		List<IDBResource> dbResources = null;
 		try {
 			dbResources = this.dbCluster.getAllMasterShardingDBResource(clazz);
-
-            long count = 0;
-            for (IDBResource dbResource : dbResources) {
-                count += selectCountWithCache((ShardingDBResource) dbResource, clazz, useCache).longValue();
-            }
-            return count;
+			long count = 0;
+			for (IDBResource dbResource : dbResources) {
+				if (tx != null) {
+					tx.appendReadOnly(dbResource);
+				}
+				count += selectCountWithCache((ShardingDBResource) dbResource, clazz, useCache).longValue();
+			}
+			return count;
 		} catch (SQLException e) {
+			if (tx != null) {
+				tx.rollback();
+			}
+
 			throw new DBOperationException(e);
 		} finally {
-            if (tx == null) {
-            }
-        }
+			if (tx == null && dbResources != null) {
+				for (IDBResource dbResource : dbResources) {
+					dbResource.close();
+				}
+			}
+		}
 	}
 
 	@Override
 	public Number getCountFromMaster(Class<?> clazz, IQuery query) {
-		List<IDBResource> dbResources;
+		ITransaction tx = txManager.getTransaction();
+		List<IDBResource> dbResources = null;
 		try {
 			dbResources = this.dbCluster.getAllMasterShardingDBResource(clazz);
+
+			long count = 0;
+			for (IDBResource dbResource : dbResources) {
+				if (tx != null) {
+					tx.appendReadOnly(dbResource);
+				}
+				count += selectCount((ShardingDBResource) dbResource, clazz, query).longValue();
+			}
+			return count;
 		} catch (SQLException e) {
+			if (tx != null) {
+				tx.rollback();
+			}
+
 			throw new DBOperationException(e);
+		} finally {
+			if (tx == null && dbResources != null) {
+				for (IDBResource dbResource : dbResources) {
+					dbResource.close();
+				}
+			}
 		}
-		long count = 0;
-		for (IDBResource dbResource : dbResources) {
-			count += selectCount((ShardingDBResource) dbResource, clazz, query).longValue();
-		}
-		return count;
+
 	}
 
 	@Override
 	public Number getCountFromMaster(IShardingKey<?> shardingKey, Class<?> clazz, boolean useCache) {
-		ShardingDBResource db = _getDbFromMaster(clazz, shardingKey);
+		ITransaction tx = txManager.getTransaction();
+		ShardingDBResource dbResource = null;
+		try {
+			dbResource = _getDbFromMaster(clazz, shardingKey);
+			if (tx != null) {
+				tx.appendReadOnly(dbResource);
+			}
+			Number count = selectCountWithCache(dbResource, clazz, useCache);
+			return count;
+		} catch (SQLException e) {
+			if (tx != null) {
+				tx.rollback();
+			}
 
-		return selectCountWithCache(db, clazz, useCache);
+			throw new DBOperationException(e);
+		} finally {
+			if (tx == null && dbResource != null) {
+				dbResource.close();
+			}
+		}
 	}
 
 	@Override
 	public Number getCountFromMaster(IQuery query, IShardingKey<?> shardingKey, Class<?> clazz) {
-		ShardingDBResource db = _getDbFromMaster(clazz, shardingKey);
+		ITransaction tx = txManager.getTransaction();
+		ShardingDBResource dbResource = null;
 
-		return selectCount(db, clazz, query);
+		try {
+			dbResource = _getDbFromMaster(clazz, shardingKey);
+			if (tx != null) {
+				tx.appendReadOnly(dbResource);
+			}
+			return selectCount(dbResource, clazz, query);
+		} catch (SQLException e) {
+			if (tx != null) {
+				tx.rollback();
+			}
+
+			throw new DBOperationException(e);
+		} finally {
+			if (tx == null && dbResource != null) {
+				dbResource.close();
+			}
+		}
 	}
 
 	@Override
 	public <T> T findByPkFromMaster(Number pk, IShardingKey<?> shardingKey, Class<T> clazz, boolean useCache) {
-		ShardingDBResource db = _getDbFromMaster(clazz, shardingKey);
+		ITransaction tx = txManager.getTransaction();
+		ShardingDBResource dbResource = null;
+		try {
+			dbResource = _getDbFromMaster(clazz, shardingKey);
+			if (tx != null) {
+				tx.appendReadOnly(dbResource);
+			}
+			return selectByPkWithCache(dbResource, pk, clazz, useCache);
+		} catch (SQLException e) {
+			if (tx != null) {
+				tx.rollback();
+			}
 
-		return selectByPkWithCache(db, pk, clazz, useCache);
+			throw new DBOperationException(e);
+		} finally {
+			if (tx == null && dbResource != null) {
+				dbResource.close();
+			}
+		}
 	}
 
 	@Override
@@ -134,72 +209,52 @@ public class ShardingJdbcMasterQueryImpl extends AbstractJdbcQuery implements IS
 
 	@Override
 	public <T> List<T> findByPksFromMaster(IShardingKey<?> shardingKey, Class<T> clazz, boolean useCache, Number... pks) {
-		ShardingDBResource db = _getDbFromMaster(clazz, shardingKey);
+		ITransaction tx = txManager.getTransaction();
+		ShardingDBResource dbResource = null;
 
-		return selectByPksWithCache(db, clazz, pks, useCache);
+		try {
+			dbResource = _getDbFromMaster(clazz, shardingKey);
+			if (tx != null) {
+				tx.appendReadOnly(dbResource);
+			}
+			return selectByPksWithCache(dbResource, clazz, pks, useCache);
+		} catch (SQLException e) {
+			if (tx != null) {
+				tx.rollback();
+			}
+
+			throw new DBOperationException(e);
+		} finally {
+			if (tx == null && dbResource != null) {
+				dbResource.close();
+			}
+		}
 	}
 
 	@Override
 	public <T> List<T> findByPkListFromMaster(List<? extends Number> pks, IShardingKey<?> shardingKey, Class<T> clazz,
 			boolean useCache) {
-		ShardingDBResource db = _getDbFromMaster(clazz, shardingKey);
+		ITransaction tx = txManager.getTransaction();
+		ShardingDBResource dbResource = null;
+		try {
+			dbResource = _getDbFromMaster(clazz, shardingKey);
+			if (tx != null) {
+				tx.appendReadOnly(dbResource);
+			}
+			return selectByPksWithCache(dbResource, clazz, pks.toArray(new Number[pks.size()]), useCache);
+		} catch (SQLException e) {
+			if (tx != null) {
+				tx.rollback();
+			}
 
-		return selectByPksWithCache(db, clazz, pks.toArray(new Number[pks.size()]), useCache);
-	}
-
-	@Deprecated
-	@Override
-	public <T> List<T> findByShardingPairFromMaster(List<IShardingKey<?>> shardingValues, Class<T> clazz, Number... pks) {
-		if (shardingValues.size() != pks.length) {
-			throw new DBOperationException("分库分表列表和主键数量不等");
-		}
-
-		List<T> result = new ArrayList<T>(pks.length);
-		IShardingKey<?> shardingKey = null;
-		Number pk = null;
-		ShardingDBResource db = null;
-		T data = null;
-		for (int i = 0; i < pks.length; i++) {
-			shardingKey = shardingValues.get(i);
-			pk = pks[i];
-			db = _getDbFromMaster(clazz, shardingKey);
-
-			data = selectByPkWithCache(db, pk, clazz, true);
-			if (data != null) {
-				result.add(data);
+			throw new DBOperationException(e);
+		} finally {
+			if (tx == null && dbResource != null) {
+				dbResource.close();
 			}
 		}
-
-		return result;
 	}
 
-	@Override
-	public <T> List<T> findByShardingPairFromMaster(List<? extends Number> pks, List<IShardingKey<?>> shardingValues,
-			Class<T> clazz, boolean useCache) {
-		if (shardingValues.size() != pks.size()) {
-			throw new DBOperationException("分库分表列表和主键数量不等");
-		}
-
-		List<T> result = new ArrayList<T>(pks.size());
-		IShardingKey<?> shardingKey = null;
-		Number pk = null;
-		ShardingDBResource db = null;
-		T data = null;
-		for (int i = 0; i < pks.size(); i++) {
-			shardingKey = shardingValues.get(i);
-			pk = pks.get(i);
-			db = _getDbFromMaster(clazz, shardingKey);
-
-			data = selectByPkWithCache(db, pk, clazz, useCache);
-			if (data != null) {
-				result.add(data);
-			}
-		}
-
-		return result;
-	}
-
-	@Override
 	public List<Map<String, Object>> findBySqlFromMaster(SQL sql, IShardingKey<?> shardingKey) {
 		ShardingDBResource next = null;
 		for (String tableName : sql.getTableNames()) {
@@ -210,48 +265,79 @@ public class ShardingJdbcMasterQueryImpl extends AbstractJdbcQuery implements IS
 			next = cur;
 		}
 
-		List<Map<String, Object>> result = selectBySql(next, sql);
+		ITransaction tx = txManager.getTransaction();
+		try {
+			if (tx != null) {
+				tx.appendReadOnly(next);
+			}
+			List<Map<String, Object>> result = selectBySql(next, sql);
+			return result;
+		} catch (SQLException e) {
+			if (tx != null) {
+				tx.rollback();
+			}
 
-		return result;
+			throw new DBOperationException(e);
+		} finally {
+			if (tx == null && next != null) {
+				next.close();
+			}
+		}
 	}
 
 	@Override
 	public <T> List<T> findByQueryFromMaster(IQuery query, IShardingKey<?> shardingKey, Class<T> clazz, boolean useCache) {
-		ShardingDBResource db = _getDbFromMaster(clazz, shardingKey);
-
-		List<T> result = null;
-
-		if (isSecondCacheAvailable(clazz, useCache)) {
-			result = (List<T>) secondCache.get(query, db);
-		}
-
-		if (result == null || result.isEmpty()) {
-			if (isCacheAvailable(clazz, useCache)) {
-				Number[] pkValues = selectPksByQuery(db, query, clazz);
-				result = selectByPksWithCache(db, clazz, pkValues, useCache);
-			} else {
-				result = selectByQuery(db, query, clazz);
+		ITransaction tx = txManager.getTransaction();
+		ShardingDBResource dbResource = null;
+		try {
+			dbResource = _getDbFromMaster(clazz, shardingKey);
+			if (tx != null) {
+				tx.appendReadOnly(dbResource);
 			}
+
+			List<T> result = null;
 
 			if (isSecondCacheAvailable(clazz, useCache)) {
-				secondCache.put(query, db, result);
+				result = (List<T>) secondCache.get(query, dbResource);
 			}
-		}
 
-		// 过滤从缓存结果, 将没有指定的字段设置为默认值.
-		List<T> filteResult = new ArrayList<T>(result.size());
-		if (query.hasQueryFields()) {
-			for (T obj : result) {
-				try {
-					filteResult.add((T) ReflectUtil.cloneWithGivenField(obj, query.getFields()));
-				} catch (Exception e) {
-					throw new DBOperationException(e);
+			if (result == null || result.isEmpty()) {
+				if (isCacheAvailable(clazz, useCache)) {
+					Number[] pkValues = selectPksByQuery(dbResource, query, clazz);
+					result = selectByPksWithCache(dbResource, clazz, pkValues, useCache);
+				} else {
+					result = selectByQuery(dbResource, query, clazz);
+				}
+
+				if (isSecondCacheAvailable(clazz, useCache)) {
+					secondCache.put(query, dbResource, result);
 				}
 			}
-			result = filteResult;
-		}
+			// 过滤从缓存结果, 将没有指定的字段设置为默认值.
+			List<T> filteResult = new ArrayList<T>(result.size());
+			if (query.hasQueryFields()) {
+				for (T obj : result) {
+					try {
+						filteResult.add((T) ReflectUtil.cloneWithGivenField(obj, query.getFields()));
+					} catch (Exception e) {
+						throw new DBOperationException(e);
+					}
+				}
+				result = filteResult;
+			}
 
-		return result;
+			return result;
+		} catch (SQLException e) {
+			if (tx != null) {
+				tx.rollback();
+			}
+
+			throw new DBOperationException(e);
+		} finally {
+			if (tx == null && dbResource != null) {
+				dbResource.close();
+			}
+		}
 	}
 
 	/**

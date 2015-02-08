@@ -63,9 +63,15 @@ public class GlobalJdbcSlaveQueryImpl extends AbstractJdbcQuery implements IGlob
 		IDBResource dbResource = null;
 		try {
 			dbResource = this.dbCluster.getSlaveGlobalDBResource(clusterName, ReflectUtil.getClusterName(clazz), slave);
+			if (tx != null) {
+				tx.appendReadOnly(dbResource);
+			}
 			long count = selectGlobalCountWithCache(dbResource, clusterName, clazz, useCache).longValue();
 			return count;
-		} catch (DBClusterException e) {
+		} catch (Exception e) {
+			if (tx != null) {
+				tx.rollback();
+			}
 			throw new DBOperationException(e);
 		} finally {
 			if (tx == null && dbResource != null) {
@@ -80,10 +86,16 @@ public class GlobalJdbcSlaveQueryImpl extends AbstractJdbcQuery implements IGlob
 		IDBResource dbResource = null;
 		try {
 			dbResource = this.dbCluster.getSlaveGlobalDBResource(clusterName, ReflectUtil.getClusterName(clazz), slave);
+			if (tx != null) {
+				tx.appendReadOnly(dbResource);
+			}
 			long count = selectGlobalCount(query, dbResource, clusterName, clazz).longValue();
 
 			return count;
-		} catch (DBClusterException e) {
+		} catch (Exception e) {
+			if (tx != null) {
+				tx.rollback();
+			}
 			throw new DBOperationException(e);
 		} finally {
 			if (tx == null && dbResource != null) {
@@ -99,8 +111,14 @@ public class GlobalJdbcSlaveQueryImpl extends AbstractJdbcQuery implements IGlob
 		IDBResource dbResource = null;
 		try {
 			dbResource = this.dbCluster.getSlaveGlobalDBResource(clusterName, ReflectUtil.getClusterName(clazz), slave);
+			if (tx != null) {
+				tx.appendReadOnly(dbResource);
+			}
 			return selectByPkWithCache(dbResource, clusterName, pk, clazz, useCache);
 		} catch (Exception e) {
+			if (tx != null) {
+				tx.rollback();
+			}
 			throw new DBOperationException(e);
 		} finally {
 			if (tx == null && dbResource != null) {
@@ -125,9 +143,15 @@ public class GlobalJdbcSlaveQueryImpl extends AbstractJdbcQuery implements IGlob
 		IDBResource dbResource = null;
 		try {
 			dbResource = this.dbCluster.getSlaveGlobalDBResource(clusterName, ReflectUtil.getClusterName(clazz), slave);
+			if (tx != null) {
+				tx.appendReadOnly(dbResource);
+			}
 
 			result.addAll(selectGlobalByPksWithCache(dbResource, clusterName, clazz, pks, useCache));
 		} catch (Exception e) {
+			if (tx != null) {
+				tx.rollback();
+			}
 			throw new DBOperationException(e);
 		} finally {
 			if (tx == null && dbResource != null) {
@@ -148,10 +172,16 @@ public class GlobalJdbcSlaveQueryImpl extends AbstractJdbcQuery implements IGlob
 		IDBResource dbResource = null;
 		try {
 			dbResource = this.dbCluster.getSlaveGlobalDBResource(clusterName, ReflectUtil.getClusterName(clazz), slave);
+			if (tx != null) {
+				tx.appendReadOnly(dbResource);
+			}
 
 			result.addAll(selectGlobalByPksWithCache(dbResource, clusterName, clazz,
 					pks.toArray(new Number[pks.size()]), useCache));
 		} catch (Exception e) {
+			if (tx != null) {
+				tx.rollback();
+			}
 			throw new DBOperationException(e);
 		} finally {
 			if (tx == null && dbResource != null) {
@@ -180,10 +210,16 @@ public class GlobalJdbcSlaveQueryImpl extends AbstractJdbcQuery implements IGlob
 
 		ITransaction tx = txManager.getTransaction();
 		try {
+			if (tx != null) {
+				tx.appendReadOnly(next);
+			}
 			List<Map<String, Object>> result = selectGlobalBySql(next, sql);
 
 			return result;
 		} catch (Exception e) {
+			if (tx != null) {
+				tx.rollback();
+			}
 			throw new DBOperationException(e);
 		} finally {
 			if (tx == null && next != null) {
@@ -199,6 +235,9 @@ public class GlobalJdbcSlaveQueryImpl extends AbstractJdbcQuery implements IGlob
 		IDBResource dbResource = null;
 		try {
 			dbResource = this.dbCluster.getSlaveGlobalDBResource(clusterName, ReflectUtil.getClusterName(clazz), slave);
+			if (tx != null) {
+				tx.appendReadOnly(dbResource);
+			}
 			List<T> result = null;
 
 			String tableName = ReflectUtil.getTableName(clazz);
@@ -230,6 +269,9 @@ public class GlobalJdbcSlaveQueryImpl extends AbstractJdbcQuery implements IGlob
 
 			return result;
 		} catch (Exception e) {
+			if (tx != null) {
+				tx.rollback();
+			}
 			throw new DBOperationException(e);
 		} finally {
 			if (tx == null && dbResource != null) {

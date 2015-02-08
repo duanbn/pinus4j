@@ -143,47 +143,6 @@ public interface IShardingMasterQuery extends IDataQuery {
 			Class<T> clazz, boolean useCache);
 
 	/**
-	 * 多个主分库分表, 多个主键查询, 一个主键对应一个分库分表.
-	 * <b>主键列表和分库分表因子的列表必须是一一对应，每一个分库分表只能查出一条记录</b> 当查询不到数据时返回空的List，不会返回null.
-	 * 
-	 * @param shardingValues
-	 *            分库分表因子列表
-	 * @param clazz
-	 *            数据对象类型
-	 * @param pks
-	 *            主键数组
-	 * 
-	 * @return 查询结果
-	 * 
-	 * @throws DBOperationException
-	 *             操作失败
-	 * @throws IllegalArgumentException
-	 *             输入参数错误
-	 */
-	@Deprecated
-	public <T> List<T> findByShardingPairFromMaster(List<IShardingKey<?>> shardingValues, Class<T> clazz, Number... pks);
-
-	/**
-	 * 多个主分库分表, 多个主键查询. 主键列表和分库分表因子的列表必须是一一对应, 当查询不到数据时返回空的List，不会返回null.
-	 * 
-	 * @param pks
-	 *            主键数组
-	 * @param shardingValues
-	 *            分库分表因子列表
-	 * @param clazz
-	 *            数据对象类型
-	 * 
-	 * @return 查询结果
-	 * 
-	 * @throws DBOperationException
-	 *             操作失败
-	 * @throws IllegalArgumentException
-	 *             输入参数错误
-	 */
-	public <T> List<T> findByShardingPairFromMaster(List<? extends Number> pks, List<IShardingKey<?>> shardingValues,
-			Class<T> clazz, boolean useCache);
-
-	/**
 	 * 一个主分库分表, 根据条件查询.当查询不到数据时返回空的List，不会返回null.
 	 * 
 	 * @param sql

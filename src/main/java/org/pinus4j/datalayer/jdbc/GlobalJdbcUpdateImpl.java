@@ -96,7 +96,7 @@ public class GlobalJdbcUpdateImpl extends AbstractJdbcUpdate implements IGlobalU
 			_saveBatchGlobal(conn, entities);
 
 			if (tx != null) {
-				tx.appendResource(dbResource);
+				tx.append(dbResource);
 			} else {
 				dbResource.commit();
 			}
@@ -151,7 +151,7 @@ public class GlobalJdbcUpdateImpl extends AbstractJdbcUpdate implements IGlobalU
 			_updateBatchGlobal(conn, entities);
 
 			if (tx != null) {
-				tx.appendResource(dbResource);
+				tx.append(dbResource);
 			} else {
 				dbResource.commit();
 			}
@@ -205,7 +205,7 @@ public class GlobalJdbcUpdateImpl extends AbstractJdbcUpdate implements IGlobalU
 			_removeByPksGlobal(conn, pks, clazz);
 
 			if (tx != null) {
-				tx.appendResource(dbResource);
+				tx.append(dbResource);
 			} else {
 				dbResource.commit();
 			}

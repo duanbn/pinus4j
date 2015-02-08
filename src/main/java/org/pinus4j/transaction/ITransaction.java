@@ -26,7 +26,16 @@ import org.pinus4j.cluster.resources.IDBResource;
  */
 public interface ITransaction {
 
-	void appendResource(IDBResource dbResource);
+    /**
+     * append db resource.
+     * these will do commit or rollback.
+     */
+	void append(IDBResource dbResource);
+
+    /**
+     * append read only db resource.
+     */
+    void appendReadOnly(IDBResource dbResource);
 
 	/**
 	 * do commit.

@@ -112,8 +112,6 @@ public class GlobalDBResource implements IDBResource {
 	public void commit() {
 		try {
 			this.conn.commit();
-            if (!this.conn.isClosed())
-                this.conn.close();
 		} catch (SQLException e) {
 			throw new DBOperationException(e);
 		}
@@ -123,8 +121,6 @@ public class GlobalDBResource implements IDBResource {
 	public void rollback() {
 		try {
 			this.conn.rollback();
-            if (!this.conn.isClosed())
-                this.conn.close();
 		} catch (SQLException e) {
 			throw new DBOperationException(e);
 		}

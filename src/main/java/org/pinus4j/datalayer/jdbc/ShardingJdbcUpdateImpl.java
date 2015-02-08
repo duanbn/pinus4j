@@ -79,7 +79,7 @@ public class ShardingJdbcUpdateImpl extends AbstractJdbcUpdate implements IShard
 			_saveBatch(conn, entities, dbResource.getTableIndex());
 
 			if (tx != null) {
-				tx.appendResource(dbResource);
+				tx.append(dbResource);
 			} else {
 				dbResource.commit();
 			}
@@ -161,7 +161,7 @@ public class ShardingJdbcUpdateImpl extends AbstractJdbcUpdate implements IShard
 			_saveBatch(conn, entities, dbResource.getTableIndex());
 
 			if (tx != null) {
-				tx.appendResource(dbResource);
+				tx.append(dbResource);
 			} else {
 				dbResource.commit();
 			}
@@ -214,7 +214,7 @@ public class ShardingJdbcUpdateImpl extends AbstractJdbcUpdate implements IShard
 			_updateBatch(conn, entities, dbResource.getTableIndex());
 
 			if (tx != null) {
-				tx.appendResource(dbResource);
+				tx.append(dbResource);
 			} else {
 				dbResource.commit();
 			}
@@ -269,7 +269,7 @@ public class ShardingJdbcUpdateImpl extends AbstractJdbcUpdate implements IShard
 			_removeByPks(conn, pks, clazz, dbResource.getTableIndex());
 
 			if (tx != null) {
-				tx.appendResource(dbResource);
+				tx.append(dbResource);
 			} else {
 				dbResource.commit();
 			}
