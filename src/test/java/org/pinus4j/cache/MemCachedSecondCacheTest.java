@@ -12,7 +12,7 @@ import org.pinus4j.api.IShardingKey;
 import org.pinus4j.api.ShardingKey;
 import org.pinus4j.api.query.Condition;
 import org.pinus4j.api.query.IQuery;
-import org.pinus4j.cluster.ShardingDBResource;
+import org.pinus4j.cluster.resources.ShardingDBResource;
 import org.pinus4j.exceptions.DBClusterException;
 
 public class MemCachedSecondCacheTest extends ApiBaseTest {

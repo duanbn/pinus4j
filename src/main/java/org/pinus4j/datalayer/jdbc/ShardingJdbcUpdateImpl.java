@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.pinus4j.api.IShardingKey;
-import org.pinus4j.cluster.ShardingDBResource;
+import org.pinus4j.cluster.resources.ShardingDBResource;
 import org.pinus4j.constant.Const;
 import org.pinus4j.datalayer.IShardingUpdate;
 import org.pinus4j.datalayer.SQLBuilder;

@@ -26,7 +26,7 @@ import net.spy.memcached.MemcachedClient;
 import net.spy.memcached.internal.OperationFuture;
 
 import org.pinus4j.cache.IPrimaryCache;
-import org.pinus4j.cluster.ShardingDBResource;
+import org.pinus4j.cluster.resources.ShardingDBResource;
 import org.pinus4j.utils.ReflectUtil;
 import org.pinus4j.utils.StringUtils;
 import org.slf4j.Logger;

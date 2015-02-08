@@ -14,28 +14,51 @@
  * limitations under the License.
  */
 
-package org.pinus4j.transaction;
+package org.pinus4j.cluster.resources;
 
-import java.sql.SQLException;
+import javax.sql.DataSource;
+
+import org.pinus4j.api.enums.EnumDBMasterSlave;
 
 /**
- * transaction interface.
- *
+ * database resource interface.
+ * 
  * @author duanbn
  * @since 1.1.0
  */
-public interface ITransaction {
-
-    void appendResource()
+public interface IDBResource {
 
     /**
-     * do commit.
+     * get resource id.
      */
-    void commit() throws SQLException;
+    IResourceId getId();
+	
+	/**
+	 * get database connection.
+	 * 
+	 * @return
+	 */
+	Connection getConnection();
 
-    /**
-     * do rollback.
-     */
-    void rollback() throws SQLException;
+	/**
+	 * cluster name of database resource.
+	 * 
+	 * @return
+	 */
+	String getClusterName();
+
+	/**
+	 * global is ture, sharding is false.
+	 * 
+	 * @return
+	 */
+	boolean isGlobal();
+
+	/**
+	 * get master slave mode.
+	 * 
+	 * @return
+	 */
+	EnumDBMasterSlave getMasterSlave();
 
 }

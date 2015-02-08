@@ -23,7 +23,7 @@ import java.util.Map;
 
 import org.pinus4j.api.SQL;
 import org.pinus4j.api.query.IQuery;
-import org.pinus4j.cluster.IDBResource;
+import org.pinus4j.cluster.resources.IDBResource;
 import org.pinus4j.datalayer.IGlobalMasterQuery;
 import org.pinus4j.datalayer.SQLBuilder;
 import org.pinus4j.exceptions.DBClusterException;

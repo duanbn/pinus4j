@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.pinus4j.cluster;
+package org.pinus4j.cluster.resources;
 
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
@@ -23,51 +23,24 @@ import java.sql.SQLException;
 import javax.sql.DataSource;
 
 import org.pinus4j.api.enums.EnumDBMasterSlave;
-import org.pinus4j.cluster.beans.DBClusterRegionInfo;
 import org.pinus4j.cluster.beans.DBInfo;
 import org.pinus4j.datalayer.SQLBuilder;
 
 /**
- * 表示一个数据分片资源.
+ * 全局数据资源.
  * 
  * @author duanbn
+ * @since 1.1.0
  */
-public class ShardingDBResource implements IDBResource {
+public class GlobalDBResource implements IDBResource {
 
-	/**
-	 * jdbc data source.
-	 */
-	private DataSource datasource;
+    private IResourceId resId;
 
-	/**
-	 * cluster name.
-	 */
+    private Connection conn;
+
 	private String clusterName;
 
-	/**
-	 * database name.
-	 */
 	private String dbName;
-
-	/**
-	 * table name without index.
-	 */
-	private String tableName;
-
-	/**
-	 * index of table
-	 */
-	private int tableIndex;
-
-	/**
-	 * region start
-	 */
-	private long regionStart;
-
-	/**
-	 * region end.
-	 */
-	private long regionEnd;
 
 	private EnumDBMasterSlave masterSlave;
 
@@ -78,27 +51,27 @@ public class ShardingDBResource implements IDBResource {
 	private String host;
 	private String catalog;
 
-	private ShardingDBResource() {
+	private GlobalDBResource() {
 	}
 
-	public static ShardingDBResource valueOf(DBInfo dbInfo, DBClusterRegionInfo regionInfo, String tableName,
-			int tableIndex) {
-		FindKey findKey = new FindKey(dbInfo.getClusterName(), dbInfo.getDbName(), tableName, tableIndex,
-				regionInfo.getStart(), regionInfo.getEnd());
+	/**
+	 * singleton
+	 * 
+	 * @param dbInfo
+	 * @return
+	 */
+	public static IDBResource valueOf(DBInfo dbInfo) {
+		FindKey findKey = new FindKey(dbInfo.getClusterName(), dbInfo.getDbName(), dbInfo.getMasterSlave());
 
-		ShardingDBResource instance = DBResourceCache.getShardingDBResource(findKey);
-
+		GlobalDBResource instance = DBResourceCache.getGlobalDBResource(findKey);
 		if (instance == null) {
-			synchronized (ShardingDBResource.class) {
+			synchronized (GlobalDBResource.class) {
 				if (instance == null) {
-					instance = new ShardingDBResource();
+					instance = new GlobalDBResource();
 
 					instance.setClusterName(dbInfo.getClusterName());
+					instance.setDatasource(dbInfo.getDatasource());
 					instance.setDbName(dbInfo.getDbName());
-					instance.setTableName(tableName);
-					instance.setTableIndex(tableIndex);
-					instance.setRegionStart(regionInfo.getStart());
-					instance.setRegionEnd(regionInfo.getEnd());
 					instance.setMasterSlave(dbInfo.getMasterSlave());
 
 					// get database meta info.
@@ -122,23 +95,22 @@ public class ShardingDBResource implements IDBResource {
 						SQLBuilder.close(dbConn);
 					}
 
-					DBResourceCache.putShardingDBResource(findKey, instance);
+					DBResourceCache.putGlobalDBResource(findKey, instance);
 				}
 			}
-
 		}
 
 		return instance;
 	}
 
 	@Override
-	public String getClusterName() {
-		return clusterName;
+	public DataSource getDatasource() {
+		return this.datasource;
 	}
 
 	@Override
 	public boolean isGlobal() {
-		return false;
+		return true;
 	}
 
 	@Override
@@ -147,22 +119,12 @@ public class ShardingDBResource implements IDBResource {
 	}
 
 	@Override
-	public String toString() {
-		StringBuilder info = new StringBuilder();
-		info.append(databaseProductName);
-		info.append(" host=" + host);
-		info.append(" db=").append(catalog);
-		info.append(" tableName=").append(this.tableName).append(this.tableIndex);
-		info.append(" start=").append(this.regionStart).append(" end=").append(this.regionEnd);
-		return info.toString();
+	public String getClusterName() {
+		return clusterName;
 	}
 
-	public DataSource getDatasource() {
-		return datasource;
-	}
-
-	public void setDatasource(DataSource datasource) {
-		this.datasource = datasource;
+	public void setClusterName(String clusterName) {
+		this.clusterName = clusterName;
 	}
 
 	public String getDbName() {
@@ -171,42 +133,6 @@ public class ShardingDBResource implements IDBResource {
 
 	public void setDbName(String dbName) {
 		this.dbName = dbName;
-	}
-
-	public String getTableName() {
-		return tableName;
-	}
-
-	public void setTableName(String tableName) {
-		this.tableName = tableName;
-	}
-
-	public int getTableIndex() {
-		return tableIndex;
-	}
-
-	public void setTableIndex(int tableIndex) {
-		this.tableIndex = tableIndex;
-	}
-
-	public void setClusterName(String clusterName) {
-		this.clusterName = clusterName;
-	}
-
-	public long getRegionStart() {
-		return regionStart;
-	}
-
-	public void setRegionStart(long regionStart) {
-		this.regionStart = regionStart;
-	}
-
-	public long getRegionEnd() {
-		return regionEnd;
-	}
-
-	public void setRegionEnd(long regionEnd) {
-		this.regionEnd = regionEnd;
 	}
 
 	public String getDatabaseProductName() {
@@ -233,6 +159,10 @@ public class ShardingDBResource implements IDBResource {
 		this.catalog = catalog;
 	}
 
+	public void setDatasource(DataSource datasource) {
+		this.datasource = datasource;
+	}
+
 	public void setMasterSlave(EnumDBMasterSlave masterSlave) {
 		this.masterSlave = masterSlave;
 	}
@@ -242,23 +172,13 @@ public class ShardingDBResource implements IDBResource {
 
 		private String dbName;
 
-		private String tableName;
+		private EnumDBMasterSlave masterSlave;
 
-		private int tableIndex;
-
-		private long regionStart;
-
-		private long regionEnd;
-
-		public FindKey(String clusterName, String dbName, String tableName, int tableIndex, long regionStart,
-				long regionEnd) {
+		public FindKey(String clusterName, String dbName, EnumDBMasterSlave masterSlave) {
 			super();
 			this.clusterName = clusterName;
 			this.dbName = dbName;
-			this.tableName = tableName;
-			this.tableIndex = tableIndex;
-			this.regionStart = regionStart;
-			this.regionEnd = regionEnd;
+			this.masterSlave = masterSlave;
 		}
 
 		@Override
@@ -267,10 +187,7 @@ public class ShardingDBResource implements IDBResource {
 			int result = 1;
 			result = prime * result + ((clusterName == null) ? 0 : clusterName.hashCode());
 			result = prime * result + ((dbName == null) ? 0 : dbName.hashCode());
-			result = prime * result + (int) (regionEnd ^ (regionEnd >>> 32));
-			result = prime * result + (int) (regionStart ^ (regionStart >>> 32));
-			result = prime * result + tableIndex;
-			result = prime * result + ((tableName == null) ? 0 : tableName.hashCode());
+			result = prime * result + ((masterSlave == null) ? 0 : masterSlave.hashCode());
 			return result;
 		}
 
@@ -293,20 +210,10 @@ public class ShardingDBResource implements IDBResource {
 					return false;
 			} else if (!dbName.equals(other.dbName))
 				return false;
-			if (regionEnd != other.regionEnd)
-				return false;
-			if (regionStart != other.regionStart)
-				return false;
-			if (tableIndex != other.tableIndex)
-				return false;
-			if (tableName == null) {
-				if (other.tableName != null)
-					return false;
-			} else if (!tableName.equals(other.tableName))
+			if (masterSlave != other.masterSlave)
 				return false;
 			return true;
 		}
-
 	}
 
 }

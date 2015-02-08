@@ -20,7 +20,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 
 import org.pinus4j.api.SQL;
-import org.pinus4j.cluster.ShardingDBResource;
+import org.pinus4j.cluster.resources.ShardingDBResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

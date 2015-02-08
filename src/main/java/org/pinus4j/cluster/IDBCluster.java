@@ -26,6 +26,7 @@ import org.pinus4j.api.enums.EnumSyncAction;
 import org.pinus4j.cache.IPrimaryCache;
 import org.pinus4j.cache.ISecondCache;
 import org.pinus4j.cluster.beans.DBClusterInfo;
+import org.pinus4j.cluster.resources.IDBResource;
 import org.pinus4j.datalayer.IDataLayerBuilder;
 import org.pinus4j.exceptions.DBClusterException;
 import org.pinus4j.generator.IIdGenerator;

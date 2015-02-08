@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.pinus4j.cluster;
+package org.pinus4j.cluster.resources;
 
 import java.util.Map;
 import java.util.WeakHashMap;

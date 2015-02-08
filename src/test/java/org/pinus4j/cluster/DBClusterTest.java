@@ -12,6 +12,7 @@ import org.pinus4j.api.ShardingKey;
 import org.pinus4j.api.enums.EnumDB;
 import org.pinus4j.api.enums.EnumDBMasterSlave;
 import org.pinus4j.cluster.impl.AppDBClusterImpl;
+import org.pinus4j.cluster.resources.IDBResource;
 import org.pinus4j.entity.TestEntity;
 import org.pinus4j.generator.beans.DBTable;
 

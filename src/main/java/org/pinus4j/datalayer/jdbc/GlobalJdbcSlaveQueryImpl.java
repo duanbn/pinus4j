@@ -24,7 +24,7 @@ import java.util.Map;
 import org.pinus4j.api.SQL;
 import org.pinus4j.api.enums.EnumDBMasterSlave;
 import org.pinus4j.api.query.IQuery;
-import org.pinus4j.cluster.IDBResource;
+import org.pinus4j.cluster.resources.IDBResource;
 import org.pinus4j.datalayer.IGlobalSlaveQuery;
 import org.pinus4j.datalayer.SQLBuilder;
 import org.pinus4j.exceptions.DBClusterException;

@@ -12,7 +12,7 @@ import org.pinus4j.ApiBaseTest;
 import org.pinus4j.api.IShardingKey;
 import org.pinus4j.api.ShardingKey;
 import org.pinus4j.cluster.IDBCluster;
-import org.pinus4j.cluster.ShardingDBResource;
+import org.pinus4j.cluster.resources.ShardingDBResource;
 import org.pinus4j.datalayer.iterator.ShardingRecordIterator;
 import org.pinus4j.entity.TestEntity;
 import org.pinus4j.exceptions.DBClusterException;

@@ -14,46 +14,21 @@
  * limitations under the License.
  */
 
-package org.pinus4j.cluster;
-
-import javax.sql.DataSource;
-
-import org.pinus4j.api.enums.EnumDBMasterSlave;
+package org.pinus4j.cluster.resources;
 
 /**
- * database resource interface.
- * 
+ * represent a id for a cluster resource.
+ *
  * @author duanbn
  * @since 1.1.0
+ *
  */
-public interface IDBResource {
-	
-	/**
-	 * get database source.
-	 * 
-	 * @return
-	 */
-	DataSource getDatasource();
+public interface IResourceId {
 
-	/**
-	 * cluster name of database resource.
-	 * 
-	 * @return
-	 */
-	String getClusterName();
-
-	/**
-	 * global is ture, sharding is false.
-	 * 
-	 * @return
-	 */
-	boolean isGlobal();
-
-	/**
-	 * get master slave mode.
-	 * 
-	 * @return
-	 */
-	EnumDBMasterSlave getMasterSlave();
+    /**
+     * get resource id as a string.
+     *
+     */
+    String value();
 
 }

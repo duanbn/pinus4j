@@ -4,10 +4,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.pinus4j.api.query.IQuery;
-import org.pinus4j.cluster.GlobalDBResource;
 import org.pinus4j.cluster.IDBCluster;
-import org.pinus4j.cluster.IDBResource;
-import org.pinus4j.cluster.ShardingDBResource;
+import org.pinus4j.cluster.resources.GlobalDBResource;
+import org.pinus4j.cluster.resources.IDBResource;
+import org.pinus4j.cluster.resources.ShardingDBResource;
 import org.pinus4j.datalayer.IRecordIterator;
 import org.pinus4j.datalayer.iterator.GlobalRecordIterator;
 import org.pinus4j.datalayer.iterator.ShardingRecordIterator;

@@ -21,7 +21,7 @@ import java.util.Collection;
 import java.util.List;
 
 import org.pinus4j.api.query.IQuery;
-import org.pinus4j.cluster.ShardingDBResource;
+import org.pinus4j.cluster.resources.ShardingDBResource;
 
 /**
  * 二级缓存接口. 二级缓存提供对条件查询的结果进行缓存. 二级缓存的key格式：[clusterName + dbIndex].[tableName +

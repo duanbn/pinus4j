@@ -22,7 +22,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.pinus4j.cluster.IDBResource;
+import org.pinus4j.cluster.resources.IDBResource;
 import org.pinus4j.constant.Const;
 import org.pinus4j.datalayer.IGlobalUpdate;
 import org.pinus4j.datalayer.SQLBuilder;
