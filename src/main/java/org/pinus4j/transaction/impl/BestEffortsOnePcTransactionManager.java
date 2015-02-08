@@ -16,10 +16,9 @@
 
 package org.pinus4j.transaction.impl;
 
-import org.pinus4j.exceptions.TransactionException;
-import org.pinus4j.transaction.DefaultTransaction;
 import org.pinus4j.transaction.ITransaction;
 import org.pinus4j.transaction.ITransactionManager;
+import org.pinus4j.transaction.LocalTransaction;
 
 /**
  * default transaction manager implements.
@@ -29,36 +28,56 @@ import org.pinus4j.transaction.ITransactionManager;
  */
 public class BestEffortsOnePcTransactionManager implements ITransactionManager {
 
-    /**
-     * hold current thread transaction object.
-     */
-    private final ThreadLocal<ITransaction> transactionLocal = new ThreadLocal<ITransaction>();
+	/**
+	 * hold current thread transaction object.
+	 */
+	private final ThreadLocal<ITransaction> transactionLocal = new ThreadLocal<ITransaction>();
 
-    @Override
-    public ITransaction beginTransaction() {
-        ITransaction transaction = transactionLocal.get();
+	private static final ITransactionManager instance = new BestEffortsOnePcTransactionManager();
 
-        if (transaction == null) {
-            synchronized (this) {
-                if (transaction == null) {
-                    transaction = new DefaultTransaction();
-                    transactionLocal.set(transaction);
-                }
-            }
-        }
+	public static ITransactionManager getInstance() {
+		return instance;
+	}
 
-        return transaction;
-    }
+	@Override
+	public ITransaction beginTransaction() {
+		ITransaction transaction = transactionLocal.get();
 
-    @Override
-    public void beginDoCommit() throws TransactionException {
-        // TODO:
-    }
+		if (transaction == null) {
+			synchronized (this) {
+				if (transaction == null) {
+					transaction = new LocalTransaction();
+					transactionLocal.set(transaction);
+				}
+			}
+		}
 
-    @Override
-    public void endDoCommit() {
-        // commit finished, remove transaction object from current thread.
-        transactionLocal.remove();
-    }
+		return transaction;
+	}
+
+	@Override
+	public ITransaction getTransaction() {
+		return transactionLocal.get();
+	}
+
+	@Override
+	public void commit() {
+		try {
+			transactionLocal.get().commit();
+		} finally {
+			// commit finished, remove transaction object from current thread.
+			transactionLocal.remove();
+		}
+	}
+
+	@Override
+	public void rollback() {
+		try {
+			transactionLocal.get().rollback();
+		} finally {
+			// commit finished, remove transaction object from current thread.
+			transactionLocal.remove();
+		}
+	}
 
 }

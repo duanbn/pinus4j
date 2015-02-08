@@ -16,6 +16,7 @@
 
 package org.pinus4j.cluster;
 
+import java.sql.SQLException;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.locks.Lock;
@@ -31,6 +32,7 @@ import org.pinus4j.datalayer.IDataLayerBuilder;
 import org.pinus4j.exceptions.DBClusterException;
 import org.pinus4j.generator.IIdGenerator;
 import org.pinus4j.generator.beans.DBTable;
+import org.pinus4j.transaction.ITransactionManager;
 
 /**
  * 数据库集群. 数据库集群主要类，持有所有的数据库集群信息，保存集群的数据库连接包括主库和从库。 初始化集群的方法，<br/>
@@ -47,6 +49,13 @@ import org.pinus4j.generator.beans.DBTable;
  * @author duanbn
  */
 public interface IDBCluster {
+
+	/**
+	 * get transaction manager.
+	 * 
+	 * @return
+	 */
+	public ITransactionManager getTransactionManager();
 
 	/**
 	 * get primary cache ref.
@@ -147,7 +156,7 @@ public interface IDBCluster {
 	 * @param clusterName
 	 * @return
 	 */
-	public IDBResource getMasterGlobalDBResource(String clusterName) throws DBClusterException;
+	public IDBResource getMasterGlobalDBResource(String clusterName, String tableName) throws DBClusterException;
 
 	/**
 	 * 获取从库的全局库连接
@@ -156,7 +165,8 @@ public interface IDBCluster {
 	 * @param slave
 	 * @return
 	 */
-	public IDBResource getSlaveGlobalDBResource(String clusterName, EnumDBMasterSlave slave) throws DBClusterException;
+	public IDBResource getSlaveGlobalDBResource(String clusterName, String tableName, EnumDBMasterSlave slave)
+			throws DBClusterException;
 
 	/**
 	 * 从主库集群中获取被操作的库表.
@@ -190,7 +200,7 @@ public interface IDBCluster {
 	 *            数据对象
 	 * @return
 	 */
-	public List<IDBResource> getAllMasterShardingDBResource(Class<?> clazz);
+	public List<IDBResource> getAllMasterShardingDBResource(Class<?> clazz) throws SQLException;
 
 	/**
 	 * get all master sharding info.
@@ -200,7 +210,8 @@ public interface IDBCluster {
 	 * @param tableName
 	 * @return
 	 */
-	public List<IDBResource> getAllMasterShardingDBResource(int tableNum, String clusterName, String tableName);
+	public List<IDBResource> getAllMasterShardingDBResource(int tableNum, String clusterName, String tableName)
+			throws SQLException;
 
 	/**
 	 * 获取集群从库列表.
@@ -210,7 +221,7 @@ public interface IDBCluster {
 	 * @param slave
 	 *            从库号
 	 */
-	public List<IDBResource> getAllSlaveShardingDBResource(Class<?> clazz, EnumDBMasterSlave slave);
+	public List<IDBResource> getAllSlaveShardingDBResource(Class<?> clazz, EnumDBMasterSlave slave) throws SQLException;
 
 	/**
 	 * 设置数据表同步动作.

@@ -17,7 +17,6 @@
 package org.pinus4j.datalayer.jdbc;
 
 import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -27,9 +26,9 @@ import org.pinus4j.api.IShardingKey;
 import org.pinus4j.cluster.resources.ShardingDBResource;
 import org.pinus4j.constant.Const;
 import org.pinus4j.datalayer.IShardingUpdate;
-import org.pinus4j.datalayer.SQLBuilder;
 import org.pinus4j.exceptions.DBClusterException;
 import org.pinus4j.exceptions.DBOperationException;
+import org.pinus4j.transaction.ITransaction;
 import org.pinus4j.utils.ReflectUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -69,26 +68,42 @@ public class ShardingJdbcUpdateImpl extends AbstractJdbcUpdate implements IShard
 		if (isCheckPrimaryKey)
 			this.idGenerator.checkAndSetPrimaryKey(pk.longValue(), shardingKey.getClusterName(), tableName);
 
-		ShardingDBResource db = _getDbFromMaster(tableName, shardingKey);
-
 		List<Object> entities = new ArrayList<Object>(1);
 		entities.add(entity);
-		Connection conn = null;
-		try {
-			conn = db.getDatasource().getConnection();
 
-			_saveBatch(conn, entities, db.getTableIndex());
+		ShardingDBResource dbResource = _getDbFromMaster(tableName, shardingKey);
+		ITransaction tx = txManager.getTransaction();
+		try {
+			Connection conn = dbResource.getConnection();
+
+			_saveBatch(conn, entities, dbResource.getTableIndex());
+
+			if (tx != null) {
+				tx.appendResource(dbResource);
+			} else {
+				dbResource.commit();
+			}
 
 			if (isCacheAvailable(clazz)) {
-				primaryCache.incrCount(db, 1);
+				primaryCache.incrCount(dbResource, 1);
 			}
 			if (isSecondCacheAvailable(clazz)) {
-				secondCache.remove(db);
+				secondCache.remove(dbResource);
 			}
 		} catch (Exception e) {
+			if (tx != null) {
+				tx.rollback();
+			} else {
+				if (dbResource != null) {
+					dbResource.rollback();
+				}
+			}
+
 			throw new DBOperationException(e);
 		} finally {
-			SQLBuilder.close(conn);
+			if (tx == null && dbResource != null) {
+				dbResource.close();
+			}
 		}
 
 		return pk;
@@ -98,8 +113,6 @@ public class ShardingJdbcUpdateImpl extends AbstractJdbcUpdate implements IShard
 	public Number[] saveBatch(List<? extends Object> entities, IShardingKey<?> shardingKey) {
 		Class<?> clazz = entities.get(0).getClass();
 		String tableName = ReflectUtil.getTableName(clazz);
-
-		ShardingDBResource db = _getDbFromMaster(tableName, shardingKey);
 
 		int entitySize = entities.size();
 		Number[] pks = new Number[entitySize];
@@ -121,8 +134,8 @@ public class ShardingJdbcUpdateImpl extends AbstractJdbcUpdate implements IShard
 		}
 		if (!map.isEmpty()) {
 			isCheckPrimaryKey = false;
-			int[] newPks = this.idGenerator.genClusterUniqueIntIdBatch(Const.ZK_PRIMARYKEY + "/" + db.getClusterName(),
-					tableName, map.size(), maxPk.longValue());
+			int[] newPks = this.idGenerator.genClusterUniqueIntIdBatch(
+					Const.ZK_PRIMARYKEY + "/" + shardingKey.getClusterName(), tableName, map.size(), maxPk.longValue());
 			int i = 0;
 			for (Map.Entry<Number, Object> entry : map.entrySet()) {
 				int pos = entry.getKey().intValue();
@@ -137,24 +150,42 @@ public class ShardingJdbcUpdateImpl extends AbstractJdbcUpdate implements IShard
 		}
 
 		if (isCheckPrimaryKey)
-			this.idGenerator.checkAndSetPrimaryKey(maxPk.longValue(), db.getClusterName(), tableName);
+			this.idGenerator.checkAndSetPrimaryKey(maxPk.longValue(), shardingKey.getClusterName(), tableName);
 
-		Connection conn = null;
+		ITransaction tx = txManager.getTransaction();
+		ShardingDBResource dbResource = null;
 		try {
-			conn = db.getDatasource().getConnection();
+			dbResource = _getDbFromMaster(tableName, shardingKey);
+			Connection conn = dbResource.getConnection();
 
-			_saveBatch(conn, entities, db.getTableIndex());
+			_saveBatch(conn, entities, dbResource.getTableIndex());
+
+			if (tx != null) {
+				tx.appendResource(dbResource);
+			} else {
+				dbResource.commit();
+			}
 
 			if (isCacheAvailable(clazz)) {
-				primaryCache.incrCount(db, pks.length);
+				primaryCache.incrCount(dbResource, pks.length);
 			}
 			if (isSecondCacheAvailable(clazz)) {
-				secondCache.remove(db);
+				secondCache.remove(dbResource);
 			}
 		} catch (Exception e) {
+			if (tx != null) {
+				tx.rollback();
+			} else {
+				if (dbResource != null) {
+					dbResource.rollback();
+				}
+			}
+
 			throw new DBOperationException(e);
 		} finally {
-			SQLBuilder.close(conn);
+			if (tx == null && dbResource != null) {
+				dbResource.close();
+			}
 		}
 
 		return pks;
@@ -173,12 +204,20 @@ public class ShardingJdbcUpdateImpl extends AbstractJdbcUpdate implements IShard
 		Class<?> clazz = entities.get(0).getClass();
 
 		String talbeName = ReflectUtil.getTableName(clazz);
-		ShardingDBResource db = _getDbFromMaster(talbeName, shardingKey);
-		Connection conn = null;
-		try {
-			conn = db.getDatasource().getConnection();
 
-			_updateBatch(conn, entities, db.getTableIndex());
+		ITransaction tx = txManager.getTransaction();
+		ShardingDBResource dbResource = null;
+		try {
+			dbResource = _getDbFromMaster(talbeName, shardingKey);
+			Connection conn = dbResource.getConnection();
+
+			_updateBatch(conn, entities, dbResource.getTableIndex());
+
+			if (tx != null) {
+				tx.appendResource(dbResource);
+			} else {
+				dbResource.commit();
+			}
 
 			// 清理缓存
 			if (isCacheAvailable(clazz)) {
@@ -186,15 +225,25 @@ public class ShardingJdbcUpdateImpl extends AbstractJdbcUpdate implements IShard
 				for (Object entity : entities) {
 					pks.add((Number) ReflectUtil.getPkValue(entity));
 				}
-				primaryCache.remove(db, pks);
+				primaryCache.remove(dbResource, pks);
 			}
 			if (isSecondCacheAvailable(clazz)) {
-				secondCache.remove(db);
+				secondCache.remove(dbResource);
 			}
-		} catch (SQLException e) {
+		} catch (Exception e) {
+			if (tx != null) {
+				tx.rollback();
+			} else {
+				if (dbResource != null) {
+					dbResource.rollback();
+				}
+			}
+
 			throw new DBOperationException(e);
 		} finally {
-			SQLBuilder.close(conn);
+			if (tx == null && dbResource != null) {
+				dbResource.close();
+			}
 		}
 
 	}
@@ -209,26 +258,44 @@ public class ShardingJdbcUpdateImpl extends AbstractJdbcUpdate implements IShard
 	@Override
 	public void removeByPks(List<? extends Number> pks, IShardingKey<?> shardingKey, Class<?> clazz) {
 		String talbeName = ReflectUtil.getTableName(clazz);
-		ShardingDBResource db = _getDbFromMaster(talbeName, shardingKey);
 
-		Connection conn = null;
+		ITransaction tx = txManager.getTransaction();
+		ShardingDBResource dbResource = null;
 		try {
-			conn = db.getDatasource().getConnection();
+			dbResource = _getDbFromMaster(talbeName, shardingKey);
 
-			_removeByPks(conn, pks, clazz, db.getTableIndex());
+			Connection conn = dbResource.getConnection();
+
+			_removeByPks(conn, pks, clazz, dbResource.getTableIndex());
+
+			if (tx != null) {
+				tx.appendResource(dbResource);
+			} else {
+				dbResource.commit();
+			}
 
 			// 删除缓存
 			if (isCacheAvailable(clazz)) {
-				primaryCache.remove(db, pks);
-				primaryCache.decrCount(db, pks.size());
+				primaryCache.remove(dbResource, pks);
+				primaryCache.decrCount(dbResource, pks.size());
 			}
 			if (isSecondCacheAvailable(clazz)) {
-				secondCache.remove(db);
+				secondCache.remove(dbResource);
 			}
-		} catch (SQLException e) {
+		} catch (Exception e) {
+			if (tx != null) {
+				tx.rollback();
+			} else {
+				if (dbResource != null) {
+					dbResource.rollback();
+				}
+			}
+
 			throw new DBOperationException(e);
 		} finally {
-			SQLBuilder.close(conn);
+			if (tx == null && dbResource != null) {
+				dbResource.close();
+			}
 		}
 
 	}

@@ -1,7 +1,5 @@
 package org.pinus4j.datalayer.iterator;
 
-import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.List;
 
 import org.pinus4j.api.query.Condition;
@@ -10,8 +8,6 @@ import org.pinus4j.api.query.Order;
 import org.pinus4j.api.query.QueryImpl;
 import org.pinus4j.cluster.resources.GlobalDBResource;
 import org.pinus4j.cluster.resources.IDBResource;
-import org.pinus4j.datalayer.SQLBuilder;
-import org.pinus4j.exceptions.DBOperationException;
 import org.pinus4j.utils.ReflectUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,12 +38,7 @@ public class GlobalRecordIterator<E> extends AbstractRecordIterator<E> {
 
 		IQuery query = new QueryImpl();
 		query.limit(1).orderBy(pkName, Order.DESC);
-		List<E> one = null;
-		try {
-			one = selectGlobalByQuery(this.dbResource.getDatasource().getConnection(), query, clazz);
-		} catch (SQLException e1) {
-			throw new DBOperationException("获取max id失败");
-		}
+		List<E> one = selectGlobalByQuery(this.dbResource, query, clazz);
 		if (!one.isEmpty()) {
 			E e = one.get(0);
 			maxId = ReflectUtil.getPkValue(e).longValue();
@@ -70,29 +61,14 @@ public class GlobalRecordIterator<E> extends AbstractRecordIterator<E> {
 			long high = this.latestId + step;
 			query.add(Condition.gte(pkName, latestId)).add(Condition.lt(pkName, high));
 			List<E> recrods;
-			Connection conn = null;
-			try {
-				conn = this.dbResource.getDatasource().getConnection();
-				recrods = selectGlobalByQuery(conn, query, clazz);
-			} catch (SQLException e) {
-				throw new DBOperationException(e);
-			} finally {
-				SQLBuilder.close(conn);
-			}
+			recrods = selectGlobalByQuery(this.dbResource, query, clazz);
 			this.latestId = high;
 
 			while (recrods.isEmpty() && this.latestId < maxId) {
 				query = this.query.clone();
 				high = this.latestId + step;
 				query.add(Condition.gte(pkName, this.latestId)).add(Condition.lt(pkName, high));
-				try {
-					conn = this.dbResource.getDatasource().getConnection();
-					recrods = selectGlobalByQuery(conn, query, clazz);
-				} catch (SQLException e) {
-					throw new DBOperationException(e);
-				} finally {
-					SQLBuilder.close(conn);
-				}
+				recrods = selectGlobalByQuery(this.dbResource, query, clazz);
 				this.latestId = high;
 			}
 			this.recordQ.addAll(recrods);

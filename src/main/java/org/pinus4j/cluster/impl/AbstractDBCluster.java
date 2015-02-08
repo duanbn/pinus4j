@@ -17,6 +17,7 @@
 package org.pinus4j.cluster.impl;
 
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -74,6 +75,8 @@ import org.pinus4j.generator.IDBGeneratorBuilder;
 import org.pinus4j.generator.IIdGenerator;
 import org.pinus4j.generator.beans.DBTable;
 import org.pinus4j.generator.impl.DistributedSequenceIdGeneratorImpl;
+import org.pinus4j.transaction.ITransactionManager;
+import org.pinus4j.transaction.impl.BestEffortsOnePcTransactionManager;
 import org.pinus4j.utils.CuratorDistributeedLock;
 import org.pinus4j.utils.IOUtil;
 import org.pinus4j.utils.ReflectUtil;
@@ -133,6 +136,8 @@ public abstract class AbstractDBCluster implements IDBCluster {
 	 * 二级缓存.
 	 */
 	private ISecondCache secondCache;
+
+	private ITransactionManager txManager;
 
 	/**
 	 * cluster router.
@@ -231,6 +236,9 @@ public abstract class AbstractDBCluster implements IDBCluster {
 
 		// find second cache
 		this.secondCache = cacheBuilder.buildSecondCache();
+
+		// init transaction manager
+		this.txManager = BestEffortsOnePcTransactionManager.getInstance();
 
 		//
 		// init db generator
@@ -355,7 +363,7 @@ public abstract class AbstractDBCluster implements IDBCluster {
 	}
 
 	@Override
-	public IDBResource getMasterGlobalDBResource(String clusterName) throws DBClusterException {
+	public IDBResource getMasterGlobalDBResource(String clusterName, String tableName) throws DBClusterException {
 		DBClusterInfo dbClusterInfo = this.dbClusterInfoC.find(clusterName);
 		if (dbClusterInfo == null) {
 			throw new DBClusterException("没有找到集群信息, clustername=" + clusterName);
@@ -366,13 +374,19 @@ public abstract class AbstractDBCluster implements IDBCluster {
 			throw new DBClusterException("此集群没有配置全局主库, clustername=" + clusterName);
 		}
 
-		IDBResource masterDBResource = GlobalDBResource.valueOf(masterDBInfo);
+		IDBResource masterDBResource;
+		try {
+			masterDBResource = GlobalDBResource.valueOf(masterDBInfo, tableName);
+		} catch (SQLException e) {
+			throw new DBClusterException(e);
+		}
 
 		return masterDBResource;
 	}
 
 	@Override
-	public IDBResource getSlaveGlobalDBResource(String clusterName, EnumDBMasterSlave slave) throws DBClusterException {
+	public IDBResource getSlaveGlobalDBResource(String clusterName, String tableName, EnumDBMasterSlave slave)
+			throws DBClusterException {
 		DBClusterInfo dbClusterInfo = this.dbClusterInfoC.find(clusterName);
 		if (dbClusterInfo == null) {
 			throw new DBClusterException("没有找到集群信息, clustername=" + clusterName);
@@ -384,7 +398,12 @@ public abstract class AbstractDBCluster implements IDBCluster {
 		}
 		DBInfo slaveDBInfo = slaveDbs.get(slave.getValue());
 
-		IDBResource slaveDBResource = GlobalDBResource.valueOf(slaveDBInfo);
+		IDBResource slaveDBResource;
+		try {
+			slaveDBResource = GlobalDBResource.valueOf(slaveDBInfo, tableName);
+		} catch (SQLException e) {
+			throw new DBClusterException(e);
+		}
 
 		return slaveDBResource;
 	}
@@ -423,7 +442,13 @@ public abstract class AbstractDBCluster implements IDBCluster {
 		}
 
 		// 返回分库分表信息
-		ShardingDBResource db = ShardingDBResource.valueOf(dbInfo, regionInfo, tableName, tableIndex);
+		ShardingDBResource db;
+		try {
+			db = ShardingDBResource.valueOf(dbInfo, regionInfo, tableName, tableIndex);
+		} catch (SQLException e) {
+			throw new DBClusterException(e);
+		}
+
 		return db;
 	}
 
@@ -464,12 +489,17 @@ public abstract class AbstractDBCluster implements IDBCluster {
 		}
 
 		// 返回分库分表信息
-		ShardingDBResource db = ShardingDBResource.valueOf(dbInfo, regionInfo, tableName, tableIndex);
+		ShardingDBResource db;
+		try {
+			db = ShardingDBResource.valueOf(dbInfo, regionInfo, tableName, tableIndex);
+		} catch (SQLException e) {
+			throw new DBClusterException(e);
+		}
 		return db;
 	}
 
 	@Override
-	public List<IDBResource> getAllMasterShardingDBResource(Class<?> clazz) {
+	public List<IDBResource> getAllMasterShardingDBResource(Class<?> clazz) throws SQLException {
 		int tableNum = ReflectUtil.getTableNum(clazz);
 		if (tableNum == 0) {
 			throw new IllegalStateException("table number is 0");
@@ -488,8 +518,10 @@ public abstract class AbstractDBCluster implements IDBCluster {
 	 * @param clusterName
 	 * @param tableName
 	 * @return
+	 * @throws SQLException
 	 */
-	public List<IDBResource> getAllMasterShardingDBResource(int tableNum, String clusterName, String tableName) {
+	public List<IDBResource> getAllMasterShardingDBResource(int tableNum, String clusterName, String tableName)
+			throws SQLException {
 		List<IDBResource> dbResources = new ArrayList<IDBResource>();
 
 		if (tableNum == 0) {
@@ -511,7 +543,7 @@ public abstract class AbstractDBCluster implements IDBCluster {
 	}
 
 	@Override
-	public List<IDBResource> getAllSlaveShardingDBResource(Class<?> clazz, EnumDBMasterSlave slave) {
+	public List<IDBResource> getAllSlaveShardingDBResource(Class<?> clazz, EnumDBMasterSlave slave) throws SQLException {
 		List<IDBResource> dbResources = new ArrayList<IDBResource>();
 
 		int tableNum = ReflectUtil.getTableNum(clazz);
@@ -533,6 +565,11 @@ public abstract class AbstractDBCluster implements IDBCluster {
 		}
 
 		return dbResources;
+	}
+
+	@Override
+	public ITransactionManager getTransactionManager() {
+		return this.txManager;
 	}
 
 	@Override

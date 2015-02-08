@@ -1,5 +1,6 @@
 package org.pinus4j.api;
 
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -71,7 +72,12 @@ public class TaskExecutor<E> {
 
 		IRecordIterator<E> reader = null;
 		if (ReflectUtil.isShardingEntity(clazz)) { // 分片情况
-			List<IDBResource> dbResources = this.dbCluster.getAllMasterShardingDBResource(clazz);
+			List<IDBResource> dbResources;
+			try {
+				dbResources = this.dbCluster.getAllMasterShardingDBResource(clazz);
+			} catch (SQLException e) {
+				throw new DBOperationException(e);
+			}
 
 			List<IRecordIterator<E>> readers = new ArrayList<IRecordIterator<E>>(dbResources.size());
 
@@ -97,7 +103,7 @@ public class TaskExecutor<E> {
 
 			IDBResource dbResource;
 			try {
-				dbResource = this.dbCluster.getMasterGlobalDBResource(clusterName);
+				dbResource = this.dbCluster.getMasterGlobalDBResource(clusterName, ReflectUtil.getTableName(clazz));
 			} catch (DBClusterException e) {
 				throw new DBOperationException(e);
 			}

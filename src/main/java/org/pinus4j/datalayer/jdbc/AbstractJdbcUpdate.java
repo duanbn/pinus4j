@@ -29,6 +29,7 @@ import org.pinus4j.datalayer.IDataUpdate;
 import org.pinus4j.datalayer.SQLBuilder;
 import org.pinus4j.exceptions.DBOperationException;
 import org.pinus4j.generator.IIdGenerator;
+import org.pinus4j.transaction.ITransactionManager;
 import org.pinus4j.utils.ReflectUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,6 +64,8 @@ public abstract class AbstractJdbcUpdate implements IDataUpdate {
 	 */
 	protected ISecondCache secondCache;
 
+	protected ITransactionManager txManager;
+
 	/**
 	 * 执行保存数据操作.
 	 *
@@ -76,12 +79,8 @@ public abstract class AbstractJdbcUpdate implements IDataUpdate {
 	protected void _saveBatch(Connection conn, List<? extends Object> entities, int tableIndex) {
 		Statement st = null;
 		try {
-			conn.setAutoCommit(false);
-
 			st = SQLBuilder.getInsert(conn, entities, tableIndex);
 			st.executeBatch();
-
-			conn.commit();
 		} catch (SQLException e) {
 			try {
 				conn.rollback();
@@ -101,10 +100,8 @@ public abstract class AbstractJdbcUpdate implements IDataUpdate {
 	protected void _removeByPks(Connection conn, List<? extends Number> pks, Class<?> clazz, int tableIndex) {
 		PreparedStatement ps = null;
 		try {
-			conn.setAutoCommit(false);
 			ps = conn.prepareStatement(SQLBuilder.buildDeleteByPks(clazz, tableIndex, pks));
 			ps.executeUpdate();
-			conn.commit();
 		} catch (SQLException e) {
 			try {
 				conn.rollback();
@@ -112,7 +109,7 @@ public abstract class AbstractJdbcUpdate implements IDataUpdate {
 				LOG.error(e1.getMessage());
 			}
 		} finally {
-			SQLBuilder.close(null, ps);
+			SQLBuilder.close(ps);
 		}
 	}
 
@@ -123,12 +120,8 @@ public abstract class AbstractJdbcUpdate implements IDataUpdate {
 	protected void _updateBatch(Connection conn, List<? extends Object> entities, int tableIndex) {
 		Statement st = null;
 		try {
-			conn.setAutoCommit(false);
-
 			st = SQLBuilder.getUpdate(conn, entities, tableIndex);
 			st.executeBatch();
-			conn.commit();
-
 		} catch (SQLException e) {
 			try {
 				conn.rollback();
@@ -197,5 +190,15 @@ public abstract class AbstractJdbcUpdate implements IDataUpdate {
 	@Override
 	public void setSecondCache(ISecondCache secondCache) {
 		this.secondCache = secondCache;
+	}
+
+	@Override
+	public void setTransactionManager(ITransactionManager txManager) {
+		this.txManager = txManager;
+	}
+
+	@Override
+	public ITransactionManager getTransactionManager() {
+		return this.txManager;
 	}
 }

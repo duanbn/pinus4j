@@ -42,22 +42,22 @@ public class JdbcDataLayerBuilder implements IDataLayerBuilder {
 
 	private ISecondCache secondCache;
 
-    private static JdbcDataLayerBuilder instance;
+	private static JdbcDataLayerBuilder instance;
 
 	private JdbcDataLayerBuilder() {
 	}
 
 	public static IDataLayerBuilder valueOf(IDBCluster dbCluster) {
-        if (instance == null) {
-            synchronized (JdbcDataLayerBuilder.class) {
-                if (instance == null) {
-                    instance = new JdbcDataLayerBuilder();
-                    instance.setDBCluster(dbCluster);
-                }
-            }
-        }
+		if (instance == null) {
+			synchronized (JdbcDataLayerBuilder.class) {
+				if (instance == null) {
+					instance = new JdbcDataLayerBuilder();
+					instance.setDBCluster(dbCluster);
+				}
+			}
+		}
 
-        return instance;
+		return instance;
 	}
 
 	public void setDBCluster(IDBCluster dbCluster) {
@@ -84,7 +84,8 @@ public class JdbcDataLayerBuilder implements IDataLayerBuilder {
 
 	@Override
 	public IGlobalUpdate buildGlobalUpdate(IIdGenerator idGenerator) {
-		IGlobalUpdate globalUpdate = new GlobalJdbcUpdateImpl();
+		GlobalJdbcUpdateImpl globalUpdate = new GlobalJdbcUpdateImpl();
+		globalUpdate.setTransactionManager(this.dbCluster.getTransactionManager());
 		globalUpdate.setIdGenerator(idGenerator);
 		globalUpdate.setDBCluster(this.dbCluster);
 		globalUpdate.setPrimaryCache(this.primaryCache);
@@ -94,7 +95,8 @@ public class JdbcDataLayerBuilder implements IDataLayerBuilder {
 
 	@Override
 	public IGlobalMasterQuery buildGlobalMasterQuery() {
-		IGlobalMasterQuery globalMasterQuery = new GlobalJdbcMasterQueryImpl();
+		GlobalJdbcMasterQueryImpl globalMasterQuery = new GlobalJdbcMasterQueryImpl();
+		globalMasterQuery.setTransactionManager(this.dbCluster.getTransactionManager());
 		globalMasterQuery.setDBCluster(this.dbCluster);
 		globalMasterQuery.setPrimaryCache(this.primaryCache);
 		globalMasterQuery.setSecondCache(this.secondCache);
@@ -103,7 +105,8 @@ public class JdbcDataLayerBuilder implements IDataLayerBuilder {
 
 	@Override
 	public IGlobalSlaveQuery buildGlobalSlaveQuery() {
-		IGlobalSlaveQuery globalSlaveQuery = new GlobalJdbcSlaveQueryImpl();
+		GlobalJdbcSlaveQueryImpl globalSlaveQuery = new GlobalJdbcSlaveQueryImpl();
+		globalSlaveQuery.setTransactionManager(this.dbCluster.getTransactionManager());
 		globalSlaveQuery.setDBCluster(this.dbCluster);
 		globalSlaveQuery.setPrimaryCache(this.primaryCache);
 		globalSlaveQuery.setSecondCache(this.secondCache);
@@ -112,7 +115,8 @@ public class JdbcDataLayerBuilder implements IDataLayerBuilder {
 
 	@Override
 	public IShardingUpdate buildShardingUpdate(IIdGenerator idGenerator) {
-		IShardingUpdate shardingUpdate = new ShardingJdbcUpdateImpl();
+		ShardingJdbcUpdateImpl shardingUpdate = new ShardingJdbcUpdateImpl();
+		shardingUpdate.setTransactionManager(this.dbCluster.getTransactionManager());
 		shardingUpdate.setIdGenerator(idGenerator);
 		shardingUpdate.setDBCluster(this.dbCluster);
 		shardingUpdate.setPrimaryCache(this.primaryCache);
@@ -122,7 +126,8 @@ public class JdbcDataLayerBuilder implements IDataLayerBuilder {
 
 	@Override
 	public IShardingMasterQuery buildShardingMasterQuery() {
-		IShardingMasterQuery shardingMasterQuery = new ShardingJdbcMasterQueryImpl();
+		ShardingJdbcMasterQueryImpl shardingMasterQuery = new ShardingJdbcMasterQueryImpl();
+		shardingMasterQuery.setTransactionManager(this.dbCluster.getTransactionManager());
 		shardingMasterQuery.setDBCluster(this.dbCluster);
 		shardingMasterQuery.setPrimaryCache(this.primaryCache);
 		shardingMasterQuery.setSecondCache(this.secondCache);
@@ -131,7 +136,8 @@ public class JdbcDataLayerBuilder implements IDataLayerBuilder {
 
 	@Override
 	public IShardingSlaveQuery buildShardingSlaveQuery() {
-		IShardingSlaveQuery shardingSlaveQuery = new ShardingJdbcSlaveQueryImpl();
+		ShardingJdbcSlaveQueryImpl shardingSlaveQuery = new ShardingJdbcSlaveQueryImpl();
+		shardingSlaveQuery.setTransactionManager(this.dbCluster.getTransactionManager());
 		shardingSlaveQuery.setDBCluster(this.dbCluster);
 		shardingSlaveQuery.setPrimaryCache(this.primaryCache);
 		shardingSlaveQuery.setSecondCache(this.secondCache);

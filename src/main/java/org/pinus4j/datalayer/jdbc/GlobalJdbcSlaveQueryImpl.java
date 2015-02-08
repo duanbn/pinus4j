@@ -16,7 +16,6 @@
 
 package org.pinus4j.datalayer.jdbc;
 
-import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -26,9 +25,9 @@ import org.pinus4j.api.enums.EnumDBMasterSlave;
 import org.pinus4j.api.query.IQuery;
 import org.pinus4j.cluster.resources.IDBResource;
 import org.pinus4j.datalayer.IGlobalSlaveQuery;
-import org.pinus4j.datalayer.SQLBuilder;
 import org.pinus4j.exceptions.DBClusterException;
 import org.pinus4j.exceptions.DBOperationException;
+import org.pinus4j.transaction.ITransaction;
 import org.pinus4j.utils.ReflectUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,41 +59,53 @@ public class GlobalJdbcSlaveQueryImpl extends AbstractJdbcQuery implements IGlob
 
 	@Override
 	public Number getGlobalCountFromSlave(String clusterName, Class<?> clazz, boolean useCache, EnumDBMasterSlave slave) {
+		ITransaction tx = txManager.getTransaction();
 		IDBResource dbResource = null;
 		try {
-			dbResource = this.dbCluster.getSlaveGlobalDBResource(clusterName, slave);
+			dbResource = this.dbCluster.getSlaveGlobalDBResource(clusterName, ReflectUtil.getClusterName(clazz), slave);
+			long count = selectGlobalCountWithCache(dbResource, clusterName, clazz, useCache).longValue();
+			return count;
 		} catch (DBClusterException e) {
 			throw new DBOperationException(e);
+		} finally {
+			if (tx == null && dbResource != null) {
+				dbResource.close();
+			}
 		}
-		long count = selectGlobalCountWithCache(dbResource, clusterName, clazz, useCache).longValue();
-
-		return count;
 	}
 
 	@Override
 	public Number getGlobalCountFromSlave(IQuery query, String clusterName, Class<?> clazz, EnumDBMasterSlave slave) {
-		IDBResource dbResource;
+		ITransaction tx = txManager.getTransaction();
+		IDBResource dbResource = null;
 		try {
-			dbResource = this.dbCluster.getSlaveGlobalDBResource(clusterName, slave);
+			dbResource = this.dbCluster.getSlaveGlobalDBResource(clusterName, ReflectUtil.getClusterName(clazz), slave);
+			long count = selectGlobalCount(query, dbResource, clusterName, clazz).longValue();
+
+			return count;
 		} catch (DBClusterException e) {
 			throw new DBOperationException(e);
+		} finally {
+			if (tx == null && dbResource != null) {
+				dbResource.close();
+			}
 		}
-		long count = selectGlobalCount(query, dbResource, clusterName, clazz).longValue();
-
-		return count;
 	}
 
 	@Override
 	public <T> T findGlobalByPkFromSlave(Number pk, String clusterName, Class<T> clazz, boolean useCache,
 			EnumDBMasterSlave slave) {
-		Connection conn = null;
+		ITransaction tx = txManager.getTransaction();
+		IDBResource dbResource = null;
 		try {
-			conn = this.dbCluster.getSlaveGlobalDBResource(clusterName, slave).getDatasource().getConnection();
-			return selectByPkWithCache(conn, clusterName, pk, clazz, useCache);
+			dbResource = this.dbCluster.getSlaveGlobalDBResource(clusterName, ReflectUtil.getClusterName(clazz), slave);
+			return selectByPkWithCache(dbResource, clusterName, pk, clazz, useCache);
 		} catch (Exception e) {
 			throw new DBOperationException(e);
 		} finally {
-			SQLBuilder.close(conn);
+			if (tx == null && dbResource != null) {
+				dbResource.close();
+			}
 		}
 	}
 
@@ -108,19 +119,20 @@ public class GlobalJdbcSlaveQueryImpl extends AbstractJdbcQuery implements IGlob
 	public <T> List<T> findGlobalByPksFromSlave(String clusterName, Class<T> clazz, EnumDBMasterSlave slave,
 			boolean useCache, Number... pks) {
 
+		ITransaction tx = txManager.getTransaction();
 		List<T> result = new ArrayList<T>();
 
-		Connection conn = null;
+		IDBResource dbResource = null;
 		try {
-			IDBResource dbResource = this.dbCluster.getSlaveGlobalDBResource(clusterName, slave);
+			dbResource = this.dbCluster.getSlaveGlobalDBResource(clusterName, ReflectUtil.getClusterName(clazz), slave);
 
-			conn = dbResource.getDatasource().getConnection();
-
-			result.addAll(selectGlobalByPksWithCache(conn, clusterName, clazz, pks, useCache));
+			result.addAll(selectGlobalByPksWithCache(dbResource, clusterName, clazz, pks, useCache));
 		} catch (Exception e) {
 			throw new DBOperationException(e);
 		} finally {
-			SQLBuilder.close(conn);
+			if (tx == null && dbResource != null) {
+				dbResource.close();
+			}
 		}
 
 		return result;
@@ -132,18 +144,19 @@ public class GlobalJdbcSlaveQueryImpl extends AbstractJdbcQuery implements IGlob
 			boolean useCache, EnumDBMasterSlave slave) {
 		List<T> result = new ArrayList<T>();
 
-		Connection conn = null;
+		ITransaction tx = txManager.getTransaction();
+		IDBResource dbResource = null;
 		try {
-			IDBResource dbResource = this.dbCluster.getSlaveGlobalDBResource(clusterName, slave);
+			dbResource = this.dbCluster.getSlaveGlobalDBResource(clusterName, ReflectUtil.getClusterName(clazz), slave);
 
-			conn = dbResource.getDatasource().getConnection();
-
-			result.addAll(selectGlobalByPksWithCache(conn, clusterName, clazz, pks.toArray(new Number[pks.size()]),
-					useCache));
+			result.addAll(selectGlobalByPksWithCache(dbResource, clusterName, clazz,
+					pks.toArray(new Number[pks.size()]), useCache));
 		} catch (Exception e) {
 			throw new DBOperationException(e);
 		} finally {
-			SQLBuilder.close(conn);
+			if (tx == null && dbResource != null) {
+				dbResource.close();
+			}
 		}
 
 		return result;
@@ -151,30 +164,41 @@ public class GlobalJdbcSlaveQueryImpl extends AbstractJdbcQuery implements IGlob
 
 	@Override
 	public List<Map<String, Object>> findGlobalBySqlFromSlave(SQL sql, String clusterName, EnumDBMasterSlave slave) {
-		Connection conn = null;
+		IDBResource next = null;
+		for (String tableName : sql.getTableNames()) {
+			IDBResource cur;
+			try {
+				cur = this.dbCluster.getSlaveGlobalDBResource(clusterName, tableName, slave);
+			} catch (DBClusterException e) {
+				throw new DBOperationException(e);
+			}
+			if (next != null && (cur != next)) {
+				throw new DBOperationException("the tables in sql maybe not at the same database");
+			}
+			next = cur;
+		}
+
+		ITransaction tx = txManager.getTransaction();
 		try {
-			IDBResource dbResource = this.dbCluster.getSlaveGlobalDBResource(clusterName, slave);
-
-			conn = dbResource.getDatasource().getConnection();
-
-			List<Map<String, Object>> result = selectGlobalBySql(conn, sql);
+			List<Map<String, Object>> result = selectGlobalBySql(next, sql);
 
 			return result;
 		} catch (Exception e) {
 			throw new DBOperationException(e);
 		} finally {
-			SQLBuilder.close(conn);
+			if (tx == null && next != null) {
+				next.close();
+			}
 		}
 	}
 
 	@Override
 	public <T> List<T> findGlobalByQueryFromSlave(IQuery query, String clusterName, Class<T> clazz, boolean useCache,
 			EnumDBMasterSlave slave) {
-		Connection conn = null;
+		ITransaction tx = txManager.getTransaction();
+		IDBResource dbResource = null;
 		try {
-			IDBResource dbResource = this.dbCluster.getSlaveGlobalDBResource(clusterName, slave);
-			conn = dbResource.getDatasource().getConnection();
-
+			dbResource = this.dbCluster.getSlaveGlobalDBResource(clusterName, ReflectUtil.getClusterName(clazz), slave);
 			List<T> result = null;
 
 			String tableName = ReflectUtil.getTableName(clazz);
@@ -184,10 +208,10 @@ public class GlobalJdbcSlaveQueryImpl extends AbstractJdbcQuery implements IGlob
 
 			if (result == null || result.isEmpty()) {
 				if (isCacheAvailable(clazz, useCache)) {
-					Number[] pkValues = selectGlobalPksByQuery(conn, query, clazz);
-					result = selectGlobalByPksWithCache(conn, clusterName, clazz, pkValues, useCache);
+					Number[] pkValues = selectGlobalPksByQuery(dbResource, query, clazz);
+					result = selectGlobalByPksWithCache(dbResource, clusterName, clazz, pkValues, useCache);
 				} else {
-					result = selectGlobalByQuery(conn, query, clazz);
+					result = selectGlobalByQuery(dbResource, query, clazz);
 				}
 
 				if (isSecondCacheAvailable(clazz, useCache)) {
@@ -208,8 +232,9 @@ public class GlobalJdbcSlaveQueryImpl extends AbstractJdbcQuery implements IGlob
 		} catch (Exception e) {
 			throw new DBOperationException(e);
 		} finally {
-			SQLBuilder.close(conn);
+			if (tx == null && dbResource != null) {
+				dbResource.close();
+			}
 		}
 	}
-
 }

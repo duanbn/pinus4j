@@ -158,7 +158,7 @@ public class DBMySqlGeneratorImpl extends AbstractDBGenerator {
 		} catch (SQLException e) {
 			throw new DDLException(e);
 		} finally {
-			SQLBuilder.close(null, ps, rs);
+			SQLBuilder.close(ps, rs);
 		}
 
 		return tables;

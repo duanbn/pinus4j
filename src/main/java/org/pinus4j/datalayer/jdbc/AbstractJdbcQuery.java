@@ -30,7 +30,6 @@ import org.pinus4j.api.query.IQuery;
 import org.pinus4j.cache.IPrimaryCache;
 import org.pinus4j.cache.ISecondCache;
 import org.pinus4j.cluster.IDBCluster;
-import org.pinus4j.cluster.beans.DBInfo;
 import org.pinus4j.cluster.resources.IDBResource;
 import org.pinus4j.cluster.resources.ShardingDBResource;
 import org.pinus4j.constant.Const;
@@ -38,6 +37,7 @@ import org.pinus4j.datalayer.IDataQuery;
 import org.pinus4j.datalayer.SQLBuilder;
 import org.pinus4j.datalayer.SlowQueryLogger;
 import org.pinus4j.exceptions.DBOperationException;
+import org.pinus4j.transaction.ITransactionManager;
 import org.pinus4j.utils.ReflectUtil;
 
 /**
@@ -61,6 +61,8 @@ public abstract class AbstractJdbcQuery implements IDataQuery {
 	 * 二级缓存.
 	 */
 	protected ISecondCache secondCache;
+
+	protected ITransactionManager txManager;
 
 	/**
 	 * 判断一级缓存是否可用
@@ -90,10 +92,12 @@ public abstract class AbstractJdbcQuery implements IDataQuery {
 	 * @param clazz
 	 * @return count数
 	 */
-	private Number _selectGlobalCount(Connection conn, Class<?> clazz) {
+	private Number _selectGlobalCount(IDBResource dbResource, Class<?> clazz) {
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 		try {
+            Connection conn = dbResource.getConnection();
+
 			String sql = SQLBuilder.buildSelectCountGlobalSql(clazz);
 			ps = conn.prepareStatement(sql);
 			long begin = System.currentTimeMillis();
@@ -111,17 +115,16 @@ public abstract class AbstractJdbcQuery implements IDataQuery {
 		} catch (SQLException e) {
 			throw new DBOperationException(e);
 		} finally {
-			SQLBuilder.close(null, ps, rs);
+			SQLBuilder.close(ps, rs);
 		}
 	}
 
 	protected Number selectGlobalCount(IQuery query, IDBResource dbResource, String clusterName, Class<?> clazz) {
 		long count = 0;
-		Connection conn = null;
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 		try {
-			conn = dbResource.getDatasource().getConnection();
+			Connection conn = dbResource.getConnection();
 			String sql = SQLBuilder.buildSelectCountGlobalSql(clazz, query);
 			ps = conn.prepareStatement(sql);
 			long begin = System.currentTimeMillis();
@@ -137,7 +140,7 @@ public abstract class AbstractJdbcQuery implements IDataQuery {
 		} catch (SQLException e) {
 			throw new DBOperationException(e);
 		} finally {
-			SQLBuilder.close(conn, ps, rs);
+			SQLBuilder.close(ps, rs);
 		}
 		return count;
 	}
@@ -163,15 +166,7 @@ public abstract class AbstractJdbcQuery implements IDataQuery {
 		}
 
 		long count = 0;
-		Connection conn = null;
-		try {
-			conn = dbResource.getDatasource().getConnection();
-			count = _selectGlobalCount(conn, clazz).longValue();
-		} catch (SQLException e) {
-			throw new DBOperationException(e);
-		} finally {
-			SQLBuilder.close(conn);
-		}
+		count = _selectGlobalCount(dbResource, clazz).longValue();
 
 		// 操作缓存
 		if (isCacheAvailable(clazz, useCache) && count > 0)
@@ -195,11 +190,10 @@ public abstract class AbstractJdbcQuery implements IDataQuery {
 	 *             输入参数错误
 	 */
 	private Number _selectCount(ShardingDBResource db, Class<?> clazz) {
-		Connection conn = null;
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 		try {
-			conn = db.getDatasource().getConnection();
+			Connection conn = db.getConnection();
 			String sql = SQLBuilder.buildSelectCountSql(clazz, db.getTableIndex());
 			ps = conn.prepareStatement(sql);
 			long begin = System.currentTimeMillis();
@@ -217,7 +211,7 @@ public abstract class AbstractJdbcQuery implements IDataQuery {
 		} catch (SQLException e) {
 			throw new DBOperationException(e);
 		} finally {
-			SQLBuilder.close(conn, ps, rs);
+			SQLBuilder.close(ps, rs);
 		}
 	}
 
@@ -259,11 +253,10 @@ public abstract class AbstractJdbcQuery implements IDataQuery {
 	 * @return 记录数
 	 */
 	protected Number selectCount(ShardingDBResource db, Class<?> clazz, IQuery query) {
-		Connection conn = null;
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 		try {
-			conn = db.getDatasource().getConnection();
+			Connection conn = db.getConnection();
 			String sql = SQLBuilder.buildSelectCountByQuery(clazz, db.getTableIndex(), query);
 			ps = conn.prepareStatement(sql);
 			long begin = System.currentTimeMillis();
@@ -279,7 +272,7 @@ public abstract class AbstractJdbcQuery implements IDataQuery {
 		} catch (SQLException e) {
 			throw new DBOperationException(e);
 		} finally {
-			SQLBuilder.close(conn, ps, rs);
+			SQLBuilder.close(ps, rs);
 		}
 
 		return -1;
@@ -288,10 +281,11 @@ public abstract class AbstractJdbcQuery implements IDataQuery {
 	// //////////////////////////////////////////////////////////////////////////////////////
 	// findByPk相关
 	// //////////////////////////////////////////////////////////////////////////////////////
-	private <T> T _selectGlobalByPk(Connection conn, Number pk, Class<T> clazz) {
+	private <T> T _selectGlobalByPk(IDBResource dbResource, Number pk, Class<T> clazz) {
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 		try {
+            Connection conn = dbResource.getConnection();
 			String sql = SQLBuilder.buildSelectByPk(pk, clazz, -1);
 			ps = conn.prepareStatement(sql);
 			long begin = System.currentTimeMillis();
@@ -308,26 +302,26 @@ public abstract class AbstractJdbcQuery implements IDataQuery {
 		} catch (SQLException e) {
 			throw new DBOperationException(e);
 		} finally {
-			SQLBuilder.close(null, ps, rs);
+			SQLBuilder.close(ps, rs);
 		}
 
 		return null;
 	}
 
-	protected <T> T selectByPkWithCache(Connection conn, String clusterName, Number pk, Class<T> clazz, boolean useCache) {
+	protected <T> T selectByPkWithCache(IDBResource dbResource, String clusterName, Number pk, Class<T> clazz, boolean useCache) {
 		String tableName = ReflectUtil.getTableName(clazz);
 
 		T data = null;
 		if (isCacheAvailable(clazz, useCache)) {
 			data = primaryCache.getGlobal(clusterName, tableName, pk);
 			if (data == null) {
-				data = _selectGlobalByPk(conn, pk, clazz);
+				data = _selectGlobalByPk(dbResource, pk, clazz);
 				if (data != null) {
 					primaryCache.putGlobal(clusterName, tableName, pk, data);
 				}
 			}
 		} else {
-			data = _selectGlobalByPk(conn, pk, clazz);
+			data = _selectGlobalByPk(dbResource, pk, clazz);
 		}
 
 		return data;
@@ -349,11 +343,10 @@ public abstract class AbstractJdbcQuery implements IDataQuery {
 	 *             输入参数错误
 	 */
 	private <T> T _selectByPk(ShardingDBResource db, Number pk, Class<T> clazz) {
-		Connection conn = null;
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 		try {
-			conn = db.getDatasource().getConnection();
+			Connection conn = db.getConnection();
 			String sql = SQLBuilder.buildSelectByPk(pk, clazz, db.getTableIndex());
 			ps = conn.prepareStatement(sql);
 			long begin = System.currentTimeMillis();
@@ -370,7 +363,7 @@ public abstract class AbstractJdbcQuery implements IDataQuery {
 		} catch (SQLException e) {
 			throw new DBOperationException(e);
 		} finally {
-			SQLBuilder.close(conn, ps, rs);
+			SQLBuilder.close(ps, rs);
 		}
 
 		return null;
@@ -404,12 +397,13 @@ public abstract class AbstractJdbcQuery implements IDataQuery {
 	// //////////////////////////////////////////////////////////////////////////////////////
 	// findByPks相关
 	// //////////////////////////////////////////////////////////////////////////////////////
-	private <T> List<T> _selectGlobalByPks(Connection conn, Class<T> clazz, Number[] pks) {
+	private <T> List<T> _selectGlobalByPks(IDBResource dbResource, Class<T> clazz, Number[] pks) {
 		List<T> result = new ArrayList<T>(1);
 
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 		try {
+            Connection conn = dbResource.getConnection();
 			String sql = SQLBuilder.buildSelectByPks(clazz, -1, pks);
 			ps = conn.prepareStatement(sql);
 			long begin = System.currentTimeMillis();
@@ -422,18 +416,19 @@ public abstract class AbstractJdbcQuery implements IDataQuery {
 		} catch (SQLException e) {
 			throw new DBOperationException(e);
 		} finally {
-			SQLBuilder.close(null, ps, rs);
+			SQLBuilder.close(ps, rs);
 		}
 
 		return result;
 	}
 
-	private <T> Map<Number, T> _selectGlobalByPksWithMap(Connection conn, Class<T> clazz, Number[] pks) {
+	private <T> Map<Number, T> _selectGlobalByPksWithMap(IDBResource dbResource, Class<T> clazz, Number[] pks) {
 		Map<Number, T> result = new HashMap<Number, T>();
 
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 		try {
+            Connection conn = dbResource.getConnection();
 			String sql = SQLBuilder.buildSelectByPks(clazz, -1, pks);
 			ps = conn.prepareStatement(sql);
 			long begin = System.currentTimeMillis();
@@ -446,13 +441,13 @@ public abstract class AbstractJdbcQuery implements IDataQuery {
 		} catch (SQLException e) {
 			throw new DBOperationException(e);
 		} finally {
-			SQLBuilder.close(null, ps, rs);
+			SQLBuilder.close(ps, rs);
 		}
 
 		return result;
 	}
 
-	protected <T> List<T> selectGlobalByPksWithCache(Connection conn, String clusterName, Class<T> clazz, Number[] pks,
+	protected <T> List<T> selectGlobalByPksWithCache(IDBResource dbResource, String clusterName, Class<T> clazz, Number[] pks,
 			boolean useCache) {
 		List<T> result = new ArrayList<T>();
 
@@ -479,7 +474,7 @@ public abstract class AbstractJdbcQuery implements IDataQuery {
 						Number[] noHitPks = noHitPkList.toArray(new Number[noHitPkList.size()]);
 
 						// 从数据库中查询没有命中缓存的数据
-						Map<Number, T> noHitMap = _selectGlobalByPksWithMap(conn, clazz, noHitPks);
+						Map<Number, T> noHitMap = _selectGlobalByPksWithMap(dbResource, clazz, noHitPks);
 						if (!noHitMap.isEmpty()) {
 							primaryCache.putGlobal(clusterName, tableName, noHitMap);
 						}
@@ -493,15 +488,15 @@ public abstract class AbstractJdbcQuery implements IDataQuery {
 							}
 						}
 					} catch (Exception e) {
-						result = _selectGlobalByPks(conn, clazz, pks);
+						result = _selectGlobalByPks(dbResource, clazz, pks);
 					}
 				}
 			} else {
-				result = _selectGlobalByPks(conn, clazz, pks);
+				result = _selectGlobalByPks(dbResource, clazz, pks);
 				primaryCache.putGlobal(clusterName, tableName, result);
 			}
 		} else {
-			result = _selectGlobalByPks(conn, clazz, pks);
+			result = _selectGlobalByPks(dbResource, clazz, pks);
 		}
 
 		return result;
@@ -527,11 +522,10 @@ public abstract class AbstractJdbcQuery implements IDataQuery {
 	private <T> List<T> _selectByPks(ShardingDBResource db, Class<T> clazz, Number[] pks) {
 		List<T> result = new ArrayList<T>(1);
 
-		Connection conn = null;
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 		try {
-			conn = db.getDatasource().getConnection();
+			Connection conn = db.getConnection();
 			String sql = SQLBuilder.buildSelectByPks(clazz, db.getTableIndex(), pks);
 			long begin = System.currentTimeMillis();
 			ps = conn.prepareStatement(sql);
@@ -544,7 +538,7 @@ public abstract class AbstractJdbcQuery implements IDataQuery {
 		} catch (SQLException e) {
 			throw new DBOperationException(e);
 		} finally {
-			SQLBuilder.close(conn, ps, rs);
+			SQLBuilder.close(ps, rs);
 		}
 
 		return result;
@@ -553,11 +547,10 @@ public abstract class AbstractJdbcQuery implements IDataQuery {
 	private <T> Map<Number, T> selectByPksWithMap(ShardingDBResource db, Class<T> clazz, Number[] pks) {
 		Map<Number, T> result = new HashMap<Number, T>();
 
-		Connection conn = null;
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 		try {
-			conn = db.getDatasource().getConnection();
+			Connection conn = db.getConnection();
 			String sql = SQLBuilder.buildSelectByPks(clazz, db.getTableIndex(), pks);
 			ps = conn.prepareStatement(sql);
 
@@ -573,7 +566,7 @@ public abstract class AbstractJdbcQuery implements IDataQuery {
 		} catch (SQLException e) {
 			throw new DBOperationException(e);
 		} finally {
-			SQLBuilder.close(conn, ps, rs);
+			SQLBuilder.close(ps, rs);
 		}
 
 		return result;
@@ -642,11 +635,12 @@ public abstract class AbstractJdbcQuery implements IDataQuery {
 	// //////////////////////////////////////////////////////////////////////////////////////
 	// findBySql相关
 	// //////////////////////////////////////////////////////////////////////////////////////
-	protected List<Map<String, Object>> selectGlobalBySql(Connection conn, SQL sql) {
+	protected List<Map<String, Object>> selectGlobalBySql(IDBResource dbResource, SQL sql) {
 		List<Map<String, Object>> result = new ArrayList<Map<String, Object>>();
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 		try {
+            Connection conn = dbResource.getConnection();
 			ps = SQLBuilder.buildSelectBySqlGlobal(conn, sql);
 			long begin = System.currentTimeMillis();
 			rs = ps.executeQuery();
@@ -658,7 +652,7 @@ public abstract class AbstractJdbcQuery implements IDataQuery {
 		} catch (SQLException e) {
 			throw new DBOperationException(e);
 		} finally {
-			SQLBuilder.close(null, ps, rs);
+			SQLBuilder.close(ps, rs);
 		}
 
 		return result;
@@ -681,11 +675,10 @@ public abstract class AbstractJdbcQuery implements IDataQuery {
 	 */
 	protected List<Map<String, Object>> selectBySql(ShardingDBResource db, SQL sql) {
 		List<Map<String, Object>> result = new ArrayList<Map<String, Object>>();
-		Connection conn = null;
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 		try {
-			conn = db.getDatasource().getConnection();
+			Connection conn = db.getConnection();
 			ps = SQLBuilder.buildSelectBySql(conn, sql, db.getTableIndex());
 
 			long begin = System.currentTimeMillis();
@@ -699,7 +692,7 @@ public abstract class AbstractJdbcQuery implements IDataQuery {
 		} catch (SQLException e) {
 			throw new DBOperationException(e);
 		} finally {
-			SQLBuilder.close(conn, ps, rs);
+			SQLBuilder.close(ps, rs);
 		}
 
 		return result;
@@ -708,12 +701,13 @@ public abstract class AbstractJdbcQuery implements IDataQuery {
 	// //////////////////////////////////////////////////////////////////////////////////////
 	// findByQuery相关
 	// //////////////////////////////////////////////////////////////////////////////////////
-	protected <T> List<T> selectGlobalByQuery(Connection conn, IQuery query, Class<T> clazz) {
+	protected <T> List<T> selectGlobalByQuery(IDBResource dbResource, IQuery query, Class<T> clazz) {
 		List<T> result = new ArrayList<T>();
 
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 		try {
+            Connection conn = dbResource.getConnection();
 			String sql = SQLBuilder.buildSelectByQuery(clazz, -1, query);
 			ps = conn.prepareStatement(sql);
 
@@ -729,7 +723,7 @@ public abstract class AbstractJdbcQuery implements IDataQuery {
 		} catch (SQLException e) {
 			throw new DBOperationException(e);
 		} finally {
-			SQLBuilder.close(null, ps, rs);
+			SQLBuilder.close(ps, rs);
 		}
 
 		return result;
@@ -753,11 +747,10 @@ public abstract class AbstractJdbcQuery implements IDataQuery {
 	protected <T> List<T> selectByQuery(ShardingDBResource db, IQuery query, Class<T> clazz) {
 		List<T> result = new ArrayList<T>();
 
-		Connection conn = null;
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 		try {
-			conn = db.getDatasource().getConnection();
+			Connection conn = db.getConnection();
 			String sql = SQLBuilder.buildSelectByQuery(clazz, db.getTableIndex(), query);
 			ps = conn.prepareStatement(sql);
 
@@ -773,7 +766,7 @@ public abstract class AbstractJdbcQuery implements IDataQuery {
 		} catch (SQLException e) {
 			throw new DBOperationException(e);
 		} finally {
-			SQLBuilder.close(conn, ps, rs);
+			SQLBuilder.close(ps, rs);
 		}
 
 		return result;
@@ -782,12 +775,13 @@ public abstract class AbstractJdbcQuery implements IDataQuery {
 	// //////////////////////////////////////////////////////////////////////////////////////
 	// getPk相关
 	// //////////////////////////////////////////////////////////////////////////////////////
-	protected <T> Number[] selectGlobalPksByQuery(Connection conn, IQuery query, Class<T> clazz) {
+	protected <T> Number[] selectGlobalPksByQuery(IDBResource dbResource, IQuery query, Class<T> clazz) {
 		List<Number> result = new ArrayList<Number>();
 
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 		try {
+            Connection conn = dbResource.getConnection();
 			String sql = SQLBuilder.buildSelectPkByQuery(clazz, -1, query);
 			ps = conn.prepareStatement(sql);
 
@@ -805,7 +799,7 @@ public abstract class AbstractJdbcQuery implements IDataQuery {
 		} catch (SQLException e) {
 			throw new DBOperationException(e);
 		} finally {
-			SQLBuilder.close(null, ps, rs);
+			SQLBuilder.close(ps, rs);
 		}
 
 		return result.toArray(new Number[result.size()]);
@@ -822,11 +816,10 @@ public abstract class AbstractJdbcQuery implements IDataQuery {
 	protected <T> Number[] selectPksByQuery(ShardingDBResource db, IQuery query, Class<T> clazz) {
 		List<Number> result = new ArrayList<Number>();
 
-		Connection conn = null;
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 		try {
-			conn = db.getDatasource().getConnection();
+			Connection conn = db.getConnection();
 
 			String sql = SQLBuilder.buildSelectPkByQuery(clazz, db.getTableIndex(), query);
 			ps = conn.prepareStatement(sql);
@@ -842,7 +835,7 @@ public abstract class AbstractJdbcQuery implements IDataQuery {
 		} catch (SQLException e) {
 			throw new DBOperationException(e);
 		} finally {
-			SQLBuilder.close(conn, ps, rs);
+			SQLBuilder.close(ps, rs);
 		}
 
 		return result.toArray(new Number[result.size()]);
@@ -896,5 +889,15 @@ public abstract class AbstractJdbcQuery implements IDataQuery {
 	@Override
 	public ISecondCache getSecondCache() {
 		return this.secondCache;
+	}
+
+	@Override
+	public void setTransactionManager(ITransactionManager txManager) {
+		this.txManager = txManager;
+	}
+
+	@Override
+	public ITransactionManager getTransactionManager() {
+		return this.txManager;
 	}
 }

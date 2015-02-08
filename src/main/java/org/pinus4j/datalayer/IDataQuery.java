@@ -19,6 +19,7 @@ package org.pinus4j.datalayer;
 import org.pinus4j.cache.IPrimaryCache;
 import org.pinus4j.cache.ISecondCache;
 import org.pinus4j.cluster.IDBCluster;
+import org.pinus4j.transaction.ITransactionManager;
 
 /**
  * base data query interface.
@@ -59,5 +60,9 @@ public interface IDataQuery {
      * get second cache.
      */
     public ISecondCache getSecondCache();
+    
+    public void setTransactionManager(ITransactionManager txManager);
+    
+    public ITransactionManager getTransactionManager();
     
 }

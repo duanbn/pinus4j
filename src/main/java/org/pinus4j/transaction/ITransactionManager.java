@@ -16,8 +16,6 @@
 
 package org.pinus4j.transaction;
 
-import org.pinus4j.exceptions.TransactionException;
-
 /**
  * transaction manager interface.
  *
@@ -26,20 +24,21 @@ import org.pinus4j.exceptions.TransactionException;
  */
 public interface ITransactionManager {
 
-    /**
-     * start a new transaction.
-     * current thread just has one transaction instance.
-     */
-    ITransaction beginTransaction();
+	/**
+	 * start a new transaction. current thread just has one transaction
+	 * instance.
+	 */
+	ITransaction beginTransaction();
 
-    /**
-     * begin to do commit action.
-     */
-    void beginDoCommit() throws TransactionException;
+	/**
+	 * get current thread transaction instance.
+	 * 
+	 * @return
+	 */
+	ITransaction getTransaction();
 
-    /**
-     * end do commit action.
-     */
-    void endDoCommit();
+	void commit();
+
+	void rollback();
 
 }

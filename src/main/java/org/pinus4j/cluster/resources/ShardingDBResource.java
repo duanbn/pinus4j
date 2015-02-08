@@ -20,12 +20,10 @@ import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 
-import javax.sql.DataSource;
-
 import org.pinus4j.api.enums.EnumDBMasterSlave;
 import org.pinus4j.cluster.beans.DBClusterRegionInfo;
 import org.pinus4j.cluster.beans.DBInfo;
-import org.pinus4j.datalayer.SQLBuilder;
+import org.pinus4j.exceptions.DBOperationException;
 
 /**
  * 表示一个数据分片资源.
@@ -33,6 +31,8 @@ import org.pinus4j.datalayer.SQLBuilder;
  * @author duanbn
  */
 public class ShardingDBResource implements IDBResource {
+
+	private IResourceId resId;
 
 	/**
 	 * jdbc data source.
@@ -82,53 +82,89 @@ public class ShardingDBResource implements IDBResource {
 	}
 
 	public static ShardingDBResource valueOf(DBInfo dbInfo, DBClusterRegionInfo regionInfo, String tableName,
-			int tableIndex) {
-		FindKey findKey = new FindKey(dbInfo.getClusterName(), dbInfo.getDbName(), tableName, tableIndex,
-				regionInfo.getStart(), regionInfo.getEnd());
+			int tableIndex) throws SQLException {
+		IResourceId resId = new DBResourceId(dbInfo.getClusterName(), dbInfo.getDbName(), regionInfo.getStart(),
+				regionInfo.getEnd(), tableName, tableIndex, dbInfo.getMasterSlave());
 
-		ShardingDBResource instance = DBResourceCache.getShardingDBResource(findKey);
+		ShardingDBResource instance = (ShardingDBResource) DBResourceCache.getShardingDBResource(resId);
+
+		Connection conn = dbInfo.getDatasource().getConnection();
+		conn.setAutoCommit(false);
 
 		if (instance == null) {
-			synchronized (ShardingDBResource.class) {
-				if (instance == null) {
-					instance = new ShardingDBResource();
+			instance = new ShardingDBResource();
 
-					instance.setClusterName(dbInfo.getClusterName());
-					instance.setDbName(dbInfo.getDbName());
-					instance.setTableName(tableName);
-					instance.setTableIndex(tableIndex);
-					instance.setRegionStart(regionInfo.getStart());
-					instance.setRegionEnd(regionInfo.getEnd());
-					instance.setMasterSlave(dbInfo.getMasterSlave());
+			instance.setId(resId);
+			instance.setClusterName(dbInfo.getClusterName());
+			instance.setDbName(dbInfo.getDbName());
+			instance.setTableName(tableName);
+			instance.setTableIndex(tableIndex);
+			instance.setRegionStart(regionInfo.getStart());
+			instance.setRegionEnd(regionInfo.getEnd());
+			instance.setMasterSlave(dbInfo.getMasterSlave());
 
-					// get database meta info.
-					DatabaseMetaData dbMeta;
-					Connection dbConn = null;
-					try {
-						dbConn = dbInfo.getDatasource().getConnection();
-						dbMeta = dbConn.getMetaData();
-						String databaseProductName = dbMeta.getDatabaseProductName();
-						String url = dbMeta.getURL().substring(13);
-						String host = url.substring(0, url.indexOf("/"));
-						String catalog = dbConn.getCatalog();
+			// get database meta info.
+			DatabaseMetaData dbMeta = conn.getMetaData();
+			String databaseProductName = dbMeta.getDatabaseProductName();
+			String url = dbMeta.getURL().substring(13);
+			String host = url.substring(0, url.indexOf("/"));
+			String catalog = conn.getCatalog();
 
-						instance.setDatabaseProductName(databaseProductName);
-						instance.setHost(host);
-						instance.setCatalog(catalog);
-						instance.setDatasource(dbInfo.getDatasource());
-					} catch (SQLException e) {
-						throw new RuntimeException(e);
-					} finally {
-						SQLBuilder.close(dbConn);
-					}
+			instance.setDatabaseProductName(databaseProductName);
+			instance.setHost(host);
+			instance.setCatalog(catalog);
 
-					DBResourceCache.putShardingDBResource(findKey, instance);
-				}
-			}
-
+			DBResourceCache.putShardingDBResource(resId, instance);
 		}
 
 		return instance;
+	}
+
+	public void setId(IResourceId resId) {
+		this.resId = resId;
+	}
+
+	@Override
+	public IResourceId getId() {
+		return this.resId;
+	}
+
+	@Override
+	public Connection getConnection() {
+		return this.conn;
+	}
+
+	@Override
+	public void commit() {
+		try {
+			this.conn.commit();
+			if (!this.conn.isClosed())
+				this.conn.close();
+		} catch (SQLException e) {
+			throw new DBOperationException(e);
+		}
+	}
+
+	@Override
+	public void rollback() {
+		try {
+			this.conn.rollback();
+			if (!this.conn.isClosed())
+				this.conn.close();
+		} catch (SQLException e) {
+			throw new DBOperationException(e);
+		}
+	}
+
+	@Override
+	public void close() {
+		try {
+			if (!this.conn.isClosed()) {
+				this.conn.close();
+			}
+		} catch (SQLException e) {
+			throw new DBOperationException(e);
+		}
 	}
 
 	@Override
@@ -155,14 +191,6 @@ public class ShardingDBResource implements IDBResource {
 		info.append(" tableName=").append(this.tableName).append(this.tableIndex);
 		info.append(" start=").append(this.regionStart).append(" end=").append(this.regionEnd);
 		return info.toString();
-	}
-
-	public DataSource getDatasource() {
-		return datasource;
-	}
-
-	public void setDatasource(DataSource datasource) {
-		this.datasource = datasource;
 	}
 
 	public String getDbName() {

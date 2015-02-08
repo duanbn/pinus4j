@@ -16,7 +16,7 @@
 
 package org.pinus4j.cluster.resources;
 
-import javax.sql.DataSource;
+import java.sql.Connection;
 
 import org.pinus4j.api.enums.EnumDBMasterSlave;
 
@@ -28,17 +28,32 @@ import org.pinus4j.api.enums.EnumDBMasterSlave;
  */
 public interface IDBResource {
 
-    /**
-     * get resource id.
-     */
-    IResourceId getId();
-	
+	/**
+	 * get resource id.
+	 */
+	IResourceId getId();
+
 	/**
 	 * get database connection.
 	 * 
 	 * @return
 	 */
 	Connection getConnection();
+	
+	/**
+	 * commit.
+	 */
+	void commit();
+
+	/**
+	 * rollback.
+	 */
+	void rollback();
+
+    /**
+     * close.
+     */
+    void close();
 
 	/**
 	 * cluster name of database resource.

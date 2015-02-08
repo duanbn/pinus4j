@@ -16,6 +16,7 @@
 
 package org.pinus4j.datalayer.jdbc;
 
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -28,6 +29,7 @@ import org.pinus4j.cluster.resources.ShardingDBResource;
 import org.pinus4j.datalayer.IShardingMasterQuery;
 import org.pinus4j.exceptions.DBClusterException;
 import org.pinus4j.exceptions.DBOperationException;
+import org.pinus4j.transaction.ITransaction;
 import org.pinus4j.utils.ReflectUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,17 +48,32 @@ public class ShardingJdbcMasterQueryImpl extends AbstractJdbcQuery implements IS
 
 	@Override
 	public Number getCountFromMaster(Class<?> clazz, boolean useCache) {
-		List<IDBResource> dbResources = this.dbCluster.getAllMasterShardingDBResource(clazz);
-		long count = 0;
-		for (IDBResource dbResource : dbResources) {
-			count += selectCountWithCache((ShardingDBResource) dbResource, clazz, useCache).longValue();
-		}
-		return count;
+        ITransaction tx = txManager.getTransaction();
+		List<IDBResource> dbResources;
+		try {
+			dbResources = this.dbCluster.getAllMasterShardingDBResource(clazz);
+
+            long count = 0;
+            for (IDBResource dbResource : dbResources) {
+                count += selectCountWithCache((ShardingDBResource) dbResource, clazz, useCache).longValue();
+            }
+            return count;
+		} catch (SQLException e) {
+			throw new DBOperationException(e);
+		} finally {
+            if (tx == null) {
+            }
+        }
 	}
 
 	@Override
 	public Number getCountFromMaster(Class<?> clazz, IQuery query) {
-		List<IDBResource> dbResources = this.dbCluster.getAllMasterShardingDBResource(clazz);
+		List<IDBResource> dbResources;
+		try {
+			dbResources = this.dbCluster.getAllMasterShardingDBResource(clazz);
+		} catch (SQLException e) {
+			throw new DBOperationException(e);
+		}
 		long count = 0;
 		for (IDBResource dbResource : dbResources) {
 			count += selectCount((ShardingDBResource) dbResource, clazz, query).longValue();

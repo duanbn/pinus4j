@@ -44,6 +44,7 @@ import org.pinus4j.datalayer.IShardingUpdate;
 import org.pinus4j.exceptions.DBClusterException;
 import org.pinus4j.exceptions.LoadConfigException;
 import org.pinus4j.generator.IIdGenerator;
+import org.pinus4j.transaction.ITransactionManager;
 import org.pinus4j.utils.CheckUtil;
 import org.pinus4j.utils.ReflectUtil;
 import org.pinus4j.utils.StringUtils;
@@ -107,17 +108,19 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 	 */
 	private IDBCluster dbCluster;
 
-    /**
-     * global updater.
-     */
+	private ITransactionManager txManager;
+
+	/**
+	 * global updater.
+	 */
 	private IGlobalUpdate globalUpdater;
-    /**
-     * global master queryer.
-     */
+	/**
+	 * global master queryer.
+	 */
 	private IGlobalMasterQuery globalMasterQuery;
-    /**
-     * global slave queryer.
-     */
+	/**
+	 * global slave queryer.
+	 */
 	private IGlobalSlaveQuery globalSlaveQuery;
 
 	/**
@@ -140,7 +143,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 		IClusterConfig clusterConfig = XmlClusterConfigImpl.getInstance();
 
 		EnumDbConnectionPoolCatalog enumDbCpCatalog = clusterConfig.getDbConnectionPoolCatalog();
-		
+
 		// 初始化集群
 		switch (enumDbCpCatalog) {
 		case APP:
@@ -163,8 +166,10 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 		} catch (DBClusterException e) {
 			throw new RuntimeException(e);
 		}
-		
+
 		this.idGenerator = this.dbCluster.getIdGenerator();
+
+		this.txManager = this.dbCluster.getTransactionManager();
 
 		//
 		// 初始化分库分表增删改查实现.
@@ -181,6 +186,24 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 
 		// FashionEntity dependency this.
 		instance = this;
+	}
+
+	// ////////////////////////////////////////////////////////
+	// 事务相关
+	// ////////////////////////////////////////////////////////
+	@Override
+	public void beginTransaction() {
+		this.txManager.beginTransaction();
+	}
+
+	@Override
+	public void commit() {
+		this.txManager.commit();
+	}
+
+	@Override
+	public void rollback() {
+		this.txManager.rollback();
 	}
 
 	// ////////////////////////////////////////////////////////

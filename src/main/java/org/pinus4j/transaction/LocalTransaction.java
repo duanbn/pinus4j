@@ -16,26 +16,52 @@
 
 package org.pinus4j.transaction;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 import org.pinus4j.cluster.resources.IDBResource;
+import org.pinus4j.cluster.resources.IResourceId;
 
 /**
- * transaction interface.
+ * default transaction impelemnt.
  *
  * @author duanbn
  * @since 1.1.0
  */
-public interface ITransaction {
+public class LocalTransaction implements ITransaction {
 
-	void appendResource(IDBResource dbResource);
+	private Map<IResourceId, IDBResource> txRes = new LinkedHashMap<IResourceId, IDBResource>();
+
+	@Override
+	public void appendResource(IDBResource dbResource) {
+		IResourceId resId = dbResource.getId();
+
+		if (txRes.get(resId) == null) {
+			synchronized (txRes) {
+				if (txRes.get(resId) == null) {
+					txRes.put(resId, dbResource);
+				}
+			}
+		}
+
+	}
 
 	/**
 	 * do commit.
 	 */
-	void commit();
+	public void commit() {
+		for (IDBResource dbResource : txRes.values()) {
+			dbResource.commit();
+		}
+	}
 
 	/**
 	 * do rollback.
 	 */
-	void rollback();
+	public void rollback() {
+		for (IDBResource dbResource : txRes.values()) {
+			dbResource.rollback();
+		}
+	}
 
 }

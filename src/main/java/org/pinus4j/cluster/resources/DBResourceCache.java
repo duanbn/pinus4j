@@ -30,27 +30,27 @@ public class DBResourceCache {
 	/**
 	 * global db resource cache container.
 	 */
-	private static final Map<GlobalDBResource.FindKey, GlobalDBResource> globalDBResourceCache = new WeakHashMap<GlobalDBResource.FindKey, GlobalDBResource>();
+	private static final Map<IResourceId, IDBResource> globalDBResourceCache = new WeakHashMap<IResourceId, IDBResource>();
 
 	/**
 	 * sharding db resource cache container.
 	 */
-	private static final Map<ShardingDBResource.FindKey, ShardingDBResource> shardingDBResourceCache = new WeakHashMap<ShardingDBResource.FindKey, ShardingDBResource>();
+	private static final Map<IResourceId, IDBResource> shardingDBResourceCache = new WeakHashMap<IResourceId, IDBResource>();
 
-	public static GlobalDBResource getGlobalDBResource(GlobalDBResource.FindKey findKey) {
-		return globalDBResourceCache.get(findKey);
+	public static IDBResource getGlobalDBResource(IResourceId resId) {
+		return globalDBResourceCache.get(resId);
 	}
 
-	public static void putGlobalDBResource(GlobalDBResource.FindKey findKey, GlobalDBResource globalDBResource) {
-		globalDBResourceCache.put(findKey, globalDBResource);
+	public static void putGlobalDBResource(IResourceId resId, IDBResource globalDBResource) {
+		globalDBResourceCache.put(resId, globalDBResource);
 	}
 
-	public static ShardingDBResource getShardingDBResource(ShardingDBResource.FindKey findKey) {
-		return shardingDBResourceCache.get(findKey);
+	public static IDBResource getShardingDBResource(IResourceId resId) {
+		return shardingDBResourceCache.get(resId);
 	}
 
-	public static void putShardingDBResource(ShardingDBResource.FindKey findKey, ShardingDBResource shardingDBResource) {
-		shardingDBResourceCache.put(findKey, shardingDBResource);
+	public static void putShardingDBResource(IResourceId resId, IDBResource shardingDBResource) {
+		shardingDBResourceCache.put(resId, shardingDBResource);
 	}
 
 	/**

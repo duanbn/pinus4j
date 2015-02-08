@@ -27,6 +27,7 @@ import org.pinus4j.constant.Const;
 import org.pinus4j.datalayer.IGlobalUpdate;
 import org.pinus4j.datalayer.SQLBuilder;
 import org.pinus4j.exceptions.DBOperationException;
+import org.pinus4j.transaction.ITransaction;
 import org.pinus4j.utils.ReflectUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -86,13 +87,19 @@ public class GlobalJdbcUpdateImpl extends AbstractJdbcUpdate implements IGlobalU
 		if (isCheckPrimaryKey)
 			this.idGenerator.checkAndSetPrimaryKey(maxPk.longValue(), clusterName, tableName);
 
-		Connection conn = null;
+		ITransaction tx = txManager.getTransaction();
+		IDBResource dbResource = null;
 		try {
-			IDBResource dbResource = this.dbCluster.getMasterGlobalDBResource(clusterName);
-
-			conn = dbResource.getDatasource().getConnection();
+			dbResource = this.dbCluster.getMasterGlobalDBResource(clusterName, ReflectUtil.getTableName(clazz));
+			Connection conn = dbResource.getConnection();
 
 			_saveBatchGlobal(conn, entities);
+
+			if (tx != null) {
+				tx.appendResource(dbResource);
+			} else {
+				dbResource.commit();
+			}
 
 			if (isCacheAvailable(clazz)) {
 				primaryCache.incrCountGlobal(clusterName, tableName, entities.size());
@@ -102,9 +109,19 @@ public class GlobalJdbcUpdateImpl extends AbstractJdbcUpdate implements IGlobalU
 				secondCache.removeGlobal(clusterName, tableName);
 			}
 		} catch (Exception e1) {
+			if (tx != null) {
+				tx.rollback();
+			} else {
+				if (dbResource != null) {
+					dbResource.rollback();
+				}
+			}
+
 			throw new DBOperationException(e1);
 		} finally {
-			SQLBuilder.close(conn);
+			if (tx == null && dbResource != null) {
+                dbResource.close();
+			}
 		}
 
 		return pks;
@@ -123,13 +140,21 @@ public class GlobalJdbcUpdateImpl extends AbstractJdbcUpdate implements IGlobalU
 		Class<?> clazz = entities.get(0).getClass();
 		String tableName = ReflectUtil.getTableName(clazz);
 
-		Connection conn = null;
+		ITransaction tx = txManager.getTransaction();
+        IDBResource dbResource = null;
 		try {
-			IDBResource dbResource = this.dbCluster.getMasterGlobalDBResource(clusterName);
+			dbResource = this.dbCluster.getMasterGlobalDBResource(clusterName,
+					ReflectUtil.getTableName(clazz));
 
-			conn = dbResource.getDatasource().getConnection();
+			Connection conn = dbResource.getConnection();
 
 			_updateBatchGlobal(conn, entities);
+
+			if (tx != null) {
+				tx.appendResource(dbResource);
+			} else {
+				dbResource.commit();
+			}
 
 			// 删除缓存
 			if (isCacheAvailable(clazz)) {
@@ -143,9 +168,19 @@ public class GlobalJdbcUpdateImpl extends AbstractJdbcUpdate implements IGlobalU
 				secondCache.removeGlobal(clusterName, tableName);
 			}
 		} catch (Exception e) {
+			if (tx != null) {
+				tx.rollback();
+			} else {
+				if (dbResource != null) {
+                    dbResource.rollback();
+				}
+			}
+
 			throw new DBOperationException(e);
 		} finally {
-			SQLBuilder.close(conn);
+			if (tx == null && dbResource != null) {
+                dbResource.close();
+			}
 		}
 	}
 
@@ -159,13 +194,21 @@ public class GlobalJdbcUpdateImpl extends AbstractJdbcUpdate implements IGlobalU
 	@Override
 	public void globalRemoveByPks(List<? extends Number> pks, Class<?> clazz, String clusterName) {
 
-		Connection conn = null;
+		ITransaction tx = txManager.getTransaction();
+        IDBResource dbResource = null;
 		try {
-			IDBResource dbResource = this.dbCluster.getMasterGlobalDBResource(clusterName);
+			dbResource = this.dbCluster.getMasterGlobalDBResource(clusterName,
+					ReflectUtil.getTableName(clazz));
 
-			conn = dbResource.getDatasource().getConnection();
+			Connection conn = dbResource.getConnection();
 
 			_removeByPksGlobal(conn, pks, clazz);
+
+			if (tx != null) {
+				tx.appendResource(dbResource);
+			} else {
+				dbResource.commit();
+			}
 
 			// 删除缓存
 			String tableName = ReflectUtil.getTableName(clazz);
@@ -177,9 +220,19 @@ public class GlobalJdbcUpdateImpl extends AbstractJdbcUpdate implements IGlobalU
 				secondCache.removeGlobal(clusterName, tableName);
 			}
 		} catch (Exception e) {
+			if (tx != null) {
+				tx.rollback();
+			} else {
+				if (dbResource != null) {
+					dbResource.rollback();
+				}
+			}
+
 			throw new DBOperationException(e);
 		} finally {
-			SQLBuilder.close(conn);
+			if (tx == null && dbResource != null) {
+                dbResource.close();
+			}
 		}
 	}
 

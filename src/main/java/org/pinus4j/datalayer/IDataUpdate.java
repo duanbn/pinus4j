@@ -20,6 +20,7 @@ import org.pinus4j.cache.IPrimaryCache;
 import org.pinus4j.cache.ISecondCache;
 import org.pinus4j.cluster.IDBCluster;
 import org.pinus4j.generator.IIdGenerator;
+import org.pinus4j.transaction.ITransactionManager;
 
 /**
  * base data update interface.
@@ -72,5 +73,9 @@ public interface IDataUpdate {
      * get second cache.
      */
     public ISecondCache getSecondCache();
+    
+    public void setTransactionManager(ITransactionManager txManager);
+    
+    public ITransactionManager getTransactionManager();
 
 }
