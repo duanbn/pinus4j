@@ -16,6 +16,7 @@
 
 package org.pinus4j.datalayer.iterator;
 
+import java.sql.SQLException;
 import java.util.List;
 
 import org.pinus4j.api.query.Condition;
@@ -23,6 +24,7 @@ import org.pinus4j.api.query.IQuery;
 import org.pinus4j.api.query.Order;
 import org.pinus4j.api.query.QueryImpl;
 import org.pinus4j.cluster.resources.ShardingDBResource;
+import org.pinus4j.exceptions.DBOperationException;
 import org.pinus4j.utils.ReflectUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,7 +54,12 @@ public class ShardingRecordIterator<E> extends AbstractRecordIterator<E> {
 
 		IQuery query = new QueryImpl();
 		query.limit(1).orderBy(pkName, Order.DESC);
-		List<E> one = selectByQuery(db, query, clazz);
+		List<E> one;
+		try {
+			one = selectByQuery(db, query, clazz);
+		} catch (SQLException e1) {
+			throw new DBOperationException(e1);
+		}
 		if (!one.isEmpty()) {
 			E e = one.get(0);
 			maxId = ReflectUtil.getPkValue(e).longValue();
@@ -65,7 +72,11 @@ public class ShardingRecordIterator<E> extends AbstractRecordIterator<E> {
 
 	@Override
 	public long getCount() {
-		return selectCount(db, clazz, query).longValue();
+		try {
+			return selectCount(db, clazz, query).longValue();
+		} catch (SQLException e) {
+			throw new DBOperationException(e);
+		}
 	}
 
 	@Override
@@ -74,17 +85,21 @@ public class ShardingRecordIterator<E> extends AbstractRecordIterator<E> {
 			IQuery query = this.query.clone();
 			long high = this.latestId + step;
 			query.add(Condition.gte(pkName, latestId)).add(Condition.lt(pkName, high));
-			List<E> recrods = selectByQuery(db, query, clazz);
-			this.latestId = high;
-
-			while (recrods.isEmpty() && this.latestId < maxId) {
-				query = this.query.clone();
-				high = this.latestId + step;
-				query.add(Condition.gte(pkName, this.latestId)).add(Condition.lt(pkName, high));
-				recrods = selectByQuery(db, query, clazz);
+			try {
+				List<E> recrods = selectByQuery(db, query, clazz);
 				this.latestId = high;
+
+				while (recrods.isEmpty() && this.latestId < maxId) {
+					query = this.query.clone();
+					high = this.latestId + step;
+					query.add(Condition.gte(pkName, this.latestId)).add(Condition.lt(pkName, high));
+					recrods = selectByQuery(db, query, clazz);
+					this.latestId = high;
+				}
+				this.recordQ.addAll(recrods);
+			} catch (SQLException e) {
+				throw new DBOperationException(e);
 			}
-			this.recordQ.addAll(recrods);
 		}
 
 		return !this.recordQ.isEmpty();

@@ -18,7 +18,6 @@ package org.pinus4j.transaction.impl;
 
 import org.pinus4j.transaction.ITransaction;
 import org.pinus4j.transaction.ITransactionManager;
-import org.pinus4j.transaction.LocalTransaction;
 
 /**
  * default transaction manager implements.

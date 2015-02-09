@@ -26,8 +26,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-import javax.sql.DataSource;
-
 import jline.Completor;
 import jline.ConsoleReader;
 import net.sf.jsqlparser.parser.CCJSqlParserUtil;
@@ -43,6 +41,7 @@ import org.pinus4j.cluster.impl.AppDBClusterImpl;
 import org.pinus4j.cluster.resources.IDBResource;
 import org.pinus4j.cluster.resources.ShardingDBResource;
 import org.pinus4j.exceptions.DBClusterException;
+import org.pinus4j.exceptions.DBOperationException;
 import org.pinus4j.generator.beans.DBTable;
 
 /**
@@ -116,10 +115,10 @@ public class App {
 			//
 			String cluster = dbTable.getCluster();
 
-			IDBResource connInfo = this.dbCluster.getMasterGlobalDBResource(cluster);
+			IDBResource dbResource = this.dbCluster.getMasterGlobalDBResource(cluster, dbTable.getName());
 
 			SqlNode sqlNode = new SqlNode();
-			sqlNode.setDs(connInfo.getDatasource());
+			sqlNode.setConn(dbResource.getConnection());
 			sqlNode.setSql(sql);
 
 			return sqlNode;
@@ -163,7 +162,7 @@ public class App {
 			sql = sql.replaceAll(tableName, db.getTableName() + db.getTableIndex());
 
 			SqlNode sqlNode = new SqlNode();
-			sqlNode.setDs(db.getDatasource());
+			sqlNode.setConn(db.getConnection());
 			sqlNode.setSql(sql);
 
 			return sqlNode;
@@ -178,19 +177,23 @@ public class App {
 
 		int tableNum = dbTable.getShardingNum();
 		String clusterName = dbTable.getCluster();
-		List<IDBResource> dbResources = this.dbCluster.getAllMasterShardingDBResource(tableNum, clusterName, tableName);
+		List<IDBResource> dbResources;
+		try {
+			dbResources = this.dbCluster.getAllMasterShardingDBResource(tableNum, clusterName, tableName);
+		} catch (SQLException e1) {
+			throw new DBOperationException(e1);
+		}
 
 		long totalCount = 0;
 		ShardingDBResource shardingDBResource = null;
 		for (IDBResource dbResource : dbResources) {
 			shardingDBResource = (ShardingDBResource) dbResource;
 
-			DataSource ds = shardingDBResource.getDatasource();
 			Connection conn = null;
 			PreparedStatement ps = null;
 			ResultSet rs = null;
 			try {
-				conn = ds.getConnection();
+				conn = shardingDBResource.getConnection();
 				ps = conn.prepareStatement("select count(*) from " + shardingDBResource.getTableName()
 						+ shardingDBResource.getTableIndex());
 				rs = ps.executeQuery();
@@ -233,12 +236,11 @@ public class App {
 
 		String sql = sqlNode.getSql();
 
-		DataSource ds = sqlNode.getDs();
 		Connection conn = null;
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 		try {
-			conn = ds.getConnection();
+			conn = sqlNode.getConn();
 			ps = conn.prepareStatement(sql);
 			rs = ps.executeQuery();
 
@@ -441,15 +443,15 @@ public class App {
 	}
 
 	private class SqlNode {
-		private DataSource ds;
+		private Connection conn;
 		private String sql;
 
-		public DataSource getDs() {
-			return ds;
+		public Connection getConn() {
+			return conn;
 		}
 
-		public void setDs(DataSource ds) {
-			this.ds = ds;
+		public void setConn(Connection conn) {
+			this.conn = conn;
 		}
 
 		public String getSql() {

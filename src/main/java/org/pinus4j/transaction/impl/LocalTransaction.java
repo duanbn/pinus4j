@@ -14,13 +14,14 @@
  * limitations under the License.
  */
 
-package org.pinus4j.transaction;
+package org.pinus4j.transaction.impl;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.pinus4j.cluster.resources.IDBResource;
 import org.pinus4j.cluster.resources.IResourceId;
+import org.pinus4j.transaction.ITransaction;
 
 /**
  * default transaction impelemnt.

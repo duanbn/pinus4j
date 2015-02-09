@@ -133,51 +133,6 @@ public interface IShardingSlaveQuery extends IDataQuery {
 			boolean useCache, EnumDBMasterSlave slave);
 
 	/**
-	 * 多个从分库分表, 根据多个主键查询.
-	 * 
-	 * @param shardingValues
-	 *            分库分表因子
-	 * @param clazz
-	 *            数据对象类型
-	 * @param slave
-	 *            主从库枚举
-	 * @param pks
-	 *            主键
-	 * 
-	 * @return 查询结果
-	 * 
-	 * @throws DBOperationException
-	 *             操作失败
-	 * @throws IllegalArgumentException
-	 *             输入参数错误
-	 */
-	@Deprecated
-	public <T> List<T> findByShardingPairFromSlave(List<IShardingKey<?>> shardingValues, Class<T> clazz,
-			EnumDBMasterSlave slave, Number... pks);
-
-	/**
-	 * 多个从分库分表, 根据多个主键查询.
-	 * 
-	 * @param pks
-	 *            主键
-	 * @param shardingValues
-	 *            分库分表因子
-	 * @param clazz
-	 *            数据对象类型
-	 * @param slave
-	 *            主从库枚举
-	 * 
-	 * @return 查询结果
-	 * 
-	 * @throws DBOperationException
-	 *             操作失败
-	 * @throws IllegalArgumentException
-	 *             输入参数错误
-	 */
-	public <T> List<T> findByShardingPairFromSlave(List<? extends Number> pks, List<IShardingKey<?>> shardingValues,
-			Class<T> clazz, boolean useCache, EnumDBMasterSlave slave);
-
-	/**
 	 * 一个从分库分表, 根据条件查询.
 	 * 
 	 * @param sql
