@@ -12,6 +12,8 @@ import org.pinus4j.ApiBaseTest;
 import org.pinus4j.api.query.Condition;
 import org.pinus4j.api.query.IQuery;
 import org.pinus4j.entity.TestGlobalEntity;
+import org.pinus4j.task.ITask;
+import org.pinus4j.task.TaskFuture;
 
 public class GlobalTaskTest extends ApiBaseTest {
 

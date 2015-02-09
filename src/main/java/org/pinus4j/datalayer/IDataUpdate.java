@@ -16,11 +16,12 @@
 
 package org.pinus4j.datalayer;
 
+import javax.transaction.TransactionManager;
+
 import org.pinus4j.cache.IPrimaryCache;
 import org.pinus4j.cache.ISecondCache;
 import org.pinus4j.cluster.IDBCluster;
 import org.pinus4j.generator.IIdGenerator;
-import org.pinus4j.transaction.ITransactionManager;
 
 /**
  * base data update interface.
@@ -74,8 +75,8 @@ public interface IDataUpdate {
      */
     public ISecondCache getSecondCache();
     
-    public void setTransactionManager(ITransactionManager txManager);
+    public void setTransactionManager(TransactionManager txManager);
     
-    public ITransactionManager getTransactionManager();
+    public TransactionManager getTransactionManager();
 
 }

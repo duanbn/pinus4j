@@ -16,7 +16,9 @@
 
 package org.pinus4j.transaction;
 
-import org.pinus4j.cluster.resources.IDBResource;
+import javax.transaction.Transaction;
+
+import org.pinus4j.transaction.enums.EnumTransactionIsolationLevel;
 
 /**
  * transaction interface.
@@ -24,27 +26,13 @@ import org.pinus4j.cluster.resources.IDBResource;
  * @author duanbn
  * @since 1.1.0
  */
-public interface ITransaction {
-
-    /**
-     * append db resource.
-     * these will do commit or rollback.
-     */
-	void append(IDBResource dbResource);
-
-    /**
-     * append read only db resource.
-     */
-    void appendReadOnly(IDBResource dbResource);
+public interface ITransaction extends Transaction {
 
 	/**
-	 * do commit.
+	 * set isolation level for this transaction.
+	 * 
+	 * @param txLevel
 	 */
-	void commit();
-
-	/**
-	 * do rollback.
-	 */
-	void rollback();
+	void setIsolationLevel(EnumTransactionIsolationLevel txLevel);
 
 }

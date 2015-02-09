@@ -25,6 +25,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.transaction.TransactionManager;
+
 import org.pinus4j.api.SQL;
 import org.pinus4j.api.query.IQuery;
 import org.pinus4j.cache.IPrimaryCache;
@@ -37,7 +39,6 @@ import org.pinus4j.datalayer.IDataQuery;
 import org.pinus4j.datalayer.SQLBuilder;
 import org.pinus4j.datalayer.SlowQueryLogger;
 import org.pinus4j.exceptions.DBOperationException;
-import org.pinus4j.transaction.ITransactionManager;
 import org.pinus4j.utils.ReflectUtil;
 
 /**
@@ -62,7 +63,7 @@ public abstract class AbstractJdbcQuery implements IDataQuery {
 	 */
 	protected ISecondCache secondCache;
 
-	protected ITransactionManager txManager;
+	protected TransactionManager txManager;
 
 	/**
 	 * 判断一级缓存是否可用
@@ -865,12 +866,12 @@ public abstract class AbstractJdbcQuery implements IDataQuery {
 	}
 
 	@Override
-	public void setTransactionManager(ITransactionManager txManager) {
+	public void setTransactionManager(TransactionManager txManager) {
 		this.txManager = txManager;
 	}
 
 	@Override
-	public ITransactionManager getTransactionManager() {
+	public TransactionManager getTransactionManager() {
 		return this.txManager;
 	}
 }

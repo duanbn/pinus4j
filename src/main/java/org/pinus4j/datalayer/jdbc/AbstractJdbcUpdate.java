@@ -22,6 +22,8 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.List;
 
+import javax.transaction.TransactionManager;
+
 import org.pinus4j.cache.IPrimaryCache;
 import org.pinus4j.cache.ISecondCache;
 import org.pinus4j.cluster.IDBCluster;
@@ -29,7 +31,6 @@ import org.pinus4j.datalayer.IDataUpdate;
 import org.pinus4j.datalayer.SQLBuilder;
 import org.pinus4j.exceptions.DBOperationException;
 import org.pinus4j.generator.IIdGenerator;
-import org.pinus4j.transaction.ITransactionManager;
 import org.pinus4j.utils.ReflectUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,7 +65,7 @@ public abstract class AbstractJdbcUpdate implements IDataUpdate {
 	 */
 	protected ISecondCache secondCache;
 
-	protected ITransactionManager txManager;
+	protected TransactionManager txManager;
 
 	/**
 	 * 执行保存数据操作.
@@ -193,12 +194,12 @@ public abstract class AbstractJdbcUpdate implements IDataUpdate {
 	}
 
 	@Override
-	public void setTransactionManager(ITransactionManager txManager) {
+	public void setTransactionManager(TransactionManager txManager) {
 		this.txManager = txManager;
 	}
 
 	@Override
-	public ITransactionManager getTransactionManager() {
+	public TransactionManager getTransactionManager() {
 		return this.txManager;
 	}
 }

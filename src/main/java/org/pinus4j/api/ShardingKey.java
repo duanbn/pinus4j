@@ -46,14 +46,14 @@ public class ShardingKey<T> implements IShardingKey<T> {
 		this.value = value;
 	}
 
-    /**
-     * 构造方法
-     */
-    public static final ShardingKey valueOf(String clusterName, Object value) {
-        ShardingKey<?> sk = new ShardingKey(clusterName, value);
-        return sk;
-    }
-	
+	/**
+	 * 构造方法
+	 */
+	public static final <T> ShardingKey<T> valueOf(String clusterName, T value) {
+		ShardingKey<T> sk = new ShardingKey<T>(clusterName, value);
+		return sk;
+	}
+
 	@Override
 	public String getClusterName() {
 		return this.clusterName;
@@ -63,7 +63,7 @@ public class ShardingKey<T> implements IShardingKey<T> {
 	public T getValue() {
 		return this.value;
 	}
-	
+
 	@Override
 	public void setValue(T value) {
 		this.value = value;

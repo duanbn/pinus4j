@@ -38,12 +38,14 @@ public class BestEffortsTransactionTest extends ApiBaseTest {
 
 	@Test
 	public void testRollback() {
+		long globalId = 1;
+		long shardingId = 1;
 		TestGlobalEntity testGlobalEntity = createGlobalEntity();
+		testGlobalEntity.setId(globalId);
 		TestEntity testEntity = createEntity();
+		testEntity.setId(shardingId);
 
 		cacheClient.beginTransaction();
-		long globalId = 0;
-		long shardingId = 0;
 		try {
 			globalId = cacheClient.globalSave(testGlobalEntity).longValue();
 			shardingId = cacheClient.save(testEntity).longValue();

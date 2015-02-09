@@ -20,17 +20,22 @@ import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 
+import javax.transaction.xa.XAException;
+import javax.transaction.xa.XAResource;
+import javax.transaction.xa.Xid;
+
 import org.pinus4j.api.enums.EnumDBMasterSlave;
 import org.pinus4j.cluster.beans.DBClusterRegionInfo;
 import org.pinus4j.cluster.beans.DBInfo;
 import org.pinus4j.exceptions.DBOperationException;
+import org.pinus4j.transaction.enums.EnumTransactionIsolationLevel;
 
 /**
  * 表示一个数据分片资源.
  * 
  * @author duanbn
  */
-public class ShardingDBResource implements IDBResource {
+public class ShardingDBResource implements IDBResource, XAResource {
 
 	private IResourceId resId;
 
@@ -116,7 +121,7 @@ public class ShardingDBResource implements IDBResource {
 
 			DBResourceCache.putShardingDBResource(resId, instance);
 		}
-		
+
 		instance.setConnection(conn);
 
 		return instance;
@@ -129,6 +134,15 @@ public class ShardingDBResource implements IDBResource {
 	@Override
 	public IResourceId getId() {
 		return this.resId;
+	}
+
+	@Override
+	public void setTransactionIsolationLevel(EnumTransactionIsolationLevel txLevel) {
+		try {
+			this.connection.setTransactionIsolation(txLevel.getLevel());
+		} catch (SQLException e) {
+			throw new DBOperationException(e);
+		}
 	}
 
 	@Override
@@ -267,76 +281,64 @@ public class ShardingDBResource implements IDBResource {
 		this.masterSlave = masterSlave;
 	}
 
-	public static class FindKey {
-		private String clusterName;
+	@Override
+	public void commit(Xid xid, boolean onePhase) throws XAException {
+		// TODO Auto-generated method stub
+		
+	}
 
-		private String dbName;
+	@Override
+	public void end(Xid xid, int flags) throws XAException {
+		// TODO Auto-generated method stub
+		
+	}
 
-		private String tableName;
+	@Override
+	public void forget(Xid xid) throws XAException {
+		// TODO Auto-generated method stub
+		
+	}
 
-		private int tableIndex;
+	@Override
+	public int getTransactionTimeout() throws XAException {
+		// TODO Auto-generated method stub
+		return 0;
+	}
 
-		private long regionStart;
+	@Override
+	public boolean isSameRM(XAResource xares) throws XAException {
+		// TODO Auto-generated method stub
+		return false;
+	}
 
-		private long regionEnd;
+	@Override
+	public int prepare(Xid xid) throws XAException {
+		// TODO Auto-generated method stub
+		return 0;
+	}
 
-		public FindKey(String clusterName, String dbName, String tableName, int tableIndex, long regionStart,
-				long regionEnd) {
-			super();
-			this.clusterName = clusterName;
-			this.dbName = dbName;
-			this.tableName = tableName;
-			this.tableIndex = tableIndex;
-			this.regionStart = regionStart;
-			this.regionEnd = regionEnd;
-		}
+	@Override
+	public Xid[] recover(int flag) throws XAException {
+		// TODO Auto-generated method stub
+		return null;
+	}
 
-		@Override
-		public int hashCode() {
-			final int prime = 31;
-			int result = 1;
-			result = prime * result + ((clusterName == null) ? 0 : clusterName.hashCode());
-			result = prime * result + ((dbName == null) ? 0 : dbName.hashCode());
-			result = prime * result + (int) (regionEnd ^ (regionEnd >>> 32));
-			result = prime * result + (int) (regionStart ^ (regionStart >>> 32));
-			result = prime * result + tableIndex;
-			result = prime * result + ((tableName == null) ? 0 : tableName.hashCode());
-			return result;
-		}
+	@Override
+	public void rollback(Xid xid) throws XAException {
+		// TODO Auto-generated method stub
+		
+	}
 
-		@Override
-		public boolean equals(Object obj) {
-			if (this == obj)
-				return true;
-			if (obj == null)
-				return false;
-			if (getClass() != obj.getClass())
-				return false;
-			FindKey other = (FindKey) obj;
-			if (clusterName == null) {
-				if (other.clusterName != null)
-					return false;
-			} else if (!clusterName.equals(other.clusterName))
-				return false;
-			if (dbName == null) {
-				if (other.dbName != null)
-					return false;
-			} else if (!dbName.equals(other.dbName))
-				return false;
-			if (regionEnd != other.regionEnd)
-				return false;
-			if (regionStart != other.regionStart)
-				return false;
-			if (tableIndex != other.tableIndex)
-				return false;
-			if (tableName == null) {
-				if (other.tableName != null)
-					return false;
-			} else if (!tableName.equals(other.tableName))
-				return false;
-			return true;
-		}
+	@Override
+	public boolean setTransactionTimeout(int seconds) throws XAException {
+		// TODO Auto-generated method stub
+		return false;
+	}
 
+	@Override
+	public void start(Xid xid, int flags) throws XAException {
+		// TODO Auto-generated method stub
+		
 	}
 
 }

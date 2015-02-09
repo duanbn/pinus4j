@@ -16,6 +16,8 @@
 
 package org.pinus4j.transaction;
 
+import org.pinus4j.transaction.enums.EnumTransactionIsolationLevel;
+
 /**
  * transaction manager interface.
  *
@@ -27,8 +29,11 @@ public interface ITransactionManager {
 	/**
 	 * start a new transaction. current thread just has one transaction
 	 * instance.
+	 * 
+	 * @param txLevel
+	 *            isolation level
 	 */
-	ITransaction beginTransaction();
+	ITransaction beginTransaction(EnumTransactionIsolationLevel txLevel);
 
 	/**
 	 * get current thread transaction instance.

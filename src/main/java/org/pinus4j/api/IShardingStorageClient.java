@@ -28,6 +28,9 @@ import org.pinus4j.cluster.IDBCluster;
 import org.pinus4j.exceptions.DBOperationException;
 import org.pinus4j.exceptions.LoadConfigException;
 import org.pinus4j.generator.IIdGenerator;
+import org.pinus4j.task.ITask;
+import org.pinus4j.task.TaskFuture;
+import org.pinus4j.transaction.enums.EnumTransactionIsolationLevel;
 
 /**
  * Pinus存储中间件用户调用接口. 所有分布式存储的操作都有此接口提供.
@@ -39,7 +42,12 @@ public interface IShardingStorageClient {
 	// ////////////////////////////////////////////////////////
 	// 事务相关
 	// ////////////////////////////////////////////////////////
+	/**
+	 * default transaction isolation level is read_commited
+	 */
 	public void beginTransaction();
+
+	public void beginTransaction(EnumTransactionIsolationLevel txLevel);
 
 	public void commit();
 

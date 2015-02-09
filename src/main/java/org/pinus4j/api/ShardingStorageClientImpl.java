@@ -22,6 +22,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.locks.Lock;
 
+import javax.transaction.TransactionManager;
+
 import org.pinus4j.api.enums.EnumDB;
 import org.pinus4j.api.enums.EnumDBMasterSlave;
 import org.pinus4j.api.enums.EnumDbConnectionPoolCatalog;
@@ -42,9 +44,14 @@ import org.pinus4j.datalayer.IShardingMasterQuery;
 import org.pinus4j.datalayer.IShardingSlaveQuery;
 import org.pinus4j.datalayer.IShardingUpdate;
 import org.pinus4j.exceptions.DBClusterException;
+import org.pinus4j.exceptions.DBOperationException;
 import org.pinus4j.exceptions.LoadConfigException;
 import org.pinus4j.generator.IIdGenerator;
-import org.pinus4j.transaction.ITransactionManager;
+import org.pinus4j.task.ITask;
+import org.pinus4j.task.TaskExecutor;
+import org.pinus4j.task.TaskFuture;
+import org.pinus4j.transaction.enums.EnumTransactionIsolationLevel;
+import org.pinus4j.transaction.impl.BestEffortsOnePCJtaTransactionManager;
 import org.pinus4j.utils.CheckUtil;
 import org.pinus4j.utils.ReflectUtil;
 import org.pinus4j.utils.StringUtils;
@@ -108,7 +115,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 	 */
 	private IDBCluster dbCluster;
 
-	private ITransactionManager txManager;
+	private TransactionManager txManager;
 
 	/**
 	 * global updater.
@@ -193,17 +200,35 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 	// ////////////////////////////////////////////////////////
 	@Override
 	public void beginTransaction() {
-		this.txManager.beginTransaction();
+		beginTransaction(EnumTransactionIsolationLevel.READ_COMMITTED);
+	}
+
+	@Override
+	public void beginTransaction(EnumTransactionIsolationLevel txLevel) {
+		((BestEffortsOnePCJtaTransactionManager) this.txManager).setTransactionIsolationLevel(txLevel);
+		try {
+			this.txManager.begin();
+		} catch (Exception e) {
+			throw new DBOperationException(e);
+		}
 	}
 
 	@Override
 	public void commit() {
-		this.txManager.commit();
+		try {
+			this.txManager.commit();
+		} catch (Exception e) {
+			throw new DBOperationException(e);
+		}
 	}
 
 	@Override
 	public void rollback() {
-		this.txManager.rollback();
+		try {
+			this.txManager.rollback();
+		} catch (Exception e) {
+			throw new DBOperationException(e);
+		}
 	}
 
 	// ////////////////////////////////////////////////////////

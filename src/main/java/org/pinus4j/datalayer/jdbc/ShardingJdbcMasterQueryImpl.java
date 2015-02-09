@@ -16,10 +16,11 @@
 
 package org.pinus4j.datalayer.jdbc;
 
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+
+import javax.transaction.Transaction;
 
 import org.pinus4j.api.IShardingKey;
 import org.pinus4j.api.SQL;
@@ -29,7 +30,6 @@ import org.pinus4j.cluster.resources.ShardingDBResource;
 import org.pinus4j.datalayer.IShardingMasterQuery;
 import org.pinus4j.exceptions.DBClusterException;
 import org.pinus4j.exceptions.DBOperationException;
-import org.pinus4j.transaction.ITransaction;
 import org.pinus4j.utils.ReflectUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,21 +48,26 @@ public class ShardingJdbcMasterQueryImpl extends AbstractJdbcQuery implements IS
 
 	@Override
 	public Number getCountFromMaster(Class<?> clazz, boolean useCache) {
-		ITransaction tx = txManager.getTransaction();
+		Transaction tx = null;
 		List<IDBResource> dbResources = null;
 		try {
+			tx = txManager.getTransaction();
 			dbResources = this.dbCluster.getAllMasterShardingDBResource(clazz);
 			long count = 0;
 			for (IDBResource dbResource : dbResources) {
 				if (tx != null) {
-					tx.appendReadOnly(dbResource);
+					tx.enlistResource((ShardingDBResource) dbResource);
 				}
 				count += selectCountWithCache((ShardingDBResource) dbResource, clazz, useCache).longValue();
 			}
 			return count;
-		} catch (SQLException e) {
+		} catch (Exception e) {
 			if (tx != null) {
-				tx.rollback();
+				try {
+					tx.rollback();
+				} catch (Exception e1) {
+					throw new DBOperationException(e1);
+				}
 			}
 
 			throw new DBOperationException(e);
@@ -77,22 +82,27 @@ public class ShardingJdbcMasterQueryImpl extends AbstractJdbcQuery implements IS
 
 	@Override
 	public Number getCountFromMaster(Class<?> clazz, IQuery query) {
-		ITransaction tx = txManager.getTransaction();
+		Transaction tx = null;
 		List<IDBResource> dbResources = null;
 		try {
+			tx = txManager.getTransaction();
 			dbResources = this.dbCluster.getAllMasterShardingDBResource(clazz);
 
 			long count = 0;
 			for (IDBResource dbResource : dbResources) {
 				if (tx != null) {
-					tx.appendReadOnly(dbResource);
+					tx.enlistResource((ShardingDBResource) dbResource);
 				}
 				count += selectCount((ShardingDBResource) dbResource, clazz, query).longValue();
 			}
 			return count;
-		} catch (SQLException e) {
+		} catch (Exception e) {
 			if (tx != null) {
-				tx.rollback();
+				try {
+					tx.rollback();
+				} catch (Exception e1) {
+					throw new DBOperationException(e1);
+				}
 			}
 
 			throw new DBOperationException(e);
@@ -108,18 +118,23 @@ public class ShardingJdbcMasterQueryImpl extends AbstractJdbcQuery implements IS
 
 	@Override
 	public Number getCountFromMaster(IShardingKey<?> shardingKey, Class<?> clazz, boolean useCache) {
-		ITransaction tx = txManager.getTransaction();
+		Transaction tx = null;
 		ShardingDBResource dbResource = null;
 		try {
+			tx = txManager.getTransaction();
 			dbResource = _getDbFromMaster(clazz, shardingKey);
 			if (tx != null) {
-				tx.appendReadOnly(dbResource);
+				tx.enlistResource(dbResource);
 			}
 			Number count = selectCountWithCache(dbResource, clazz, useCache);
 			return count;
-		} catch (SQLException e) {
+		} catch (Exception e) {
 			if (tx != null) {
-				tx.rollback();
+				try {
+					tx.rollback();
+				} catch (Exception e1) {
+					throw new DBOperationException(e1);
+				}
 			}
 
 			throw new DBOperationException(e);
@@ -132,18 +147,23 @@ public class ShardingJdbcMasterQueryImpl extends AbstractJdbcQuery implements IS
 
 	@Override
 	public Number getCountFromMaster(IQuery query, IShardingKey<?> shardingKey, Class<?> clazz) {
-		ITransaction tx = txManager.getTransaction();
+		Transaction tx = null;
 		ShardingDBResource dbResource = null;
 
 		try {
+			tx = txManager.getTransaction();
 			dbResource = _getDbFromMaster(clazz, shardingKey);
 			if (tx != null) {
-				tx.appendReadOnly(dbResource);
+				tx.enlistResource(dbResource);
 			}
 			return selectCount(dbResource, clazz, query);
-		} catch (SQLException e) {
+		} catch (Exception e) {
 			if (tx != null) {
-				tx.rollback();
+				try {
+					tx.rollback();
+				} catch (Exception e1) {
+					throw new DBOperationException(e1);
+				}
 			}
 
 			throw new DBOperationException(e);
@@ -156,17 +176,22 @@ public class ShardingJdbcMasterQueryImpl extends AbstractJdbcQuery implements IS
 
 	@Override
 	public <T> T findByPkFromMaster(Number pk, IShardingKey<?> shardingKey, Class<T> clazz, boolean useCache) {
-		ITransaction tx = txManager.getTransaction();
+		Transaction tx = null;
 		ShardingDBResource dbResource = null;
 		try {
+			tx = txManager.getTransaction();
 			dbResource = _getDbFromMaster(clazz, shardingKey);
 			if (tx != null) {
-				tx.appendReadOnly(dbResource);
+				tx.enlistResource(dbResource);
 			}
 			return selectByPkWithCache(dbResource, pk, clazz, useCache);
-		} catch (SQLException e) {
+		} catch (Exception e) {
 			if (tx != null) {
-				tx.rollback();
+				try {
+					tx.rollback();
+				} catch (Exception e1) {
+					throw new DBOperationException(e1);
+				}
 			}
 
 			throw new DBOperationException(e);
@@ -209,18 +234,23 @@ public class ShardingJdbcMasterQueryImpl extends AbstractJdbcQuery implements IS
 
 	@Override
 	public <T> List<T> findByPksFromMaster(IShardingKey<?> shardingKey, Class<T> clazz, boolean useCache, Number... pks) {
-		ITransaction tx = txManager.getTransaction();
+		Transaction tx = null;
 		ShardingDBResource dbResource = null;
 
 		try {
+			tx = txManager.getTransaction();
 			dbResource = _getDbFromMaster(clazz, shardingKey);
 			if (tx != null) {
-				tx.appendReadOnly(dbResource);
+				tx.enlistResource(dbResource);
 			}
 			return selectByPksWithCache(dbResource, clazz, pks, useCache);
-		} catch (SQLException e) {
+		} catch (Exception e) {
 			if (tx != null) {
-				tx.rollback();
+				try {
+					tx.rollback();
+				} catch (Exception e1) {
+					throw new DBOperationException(e1);
+				}
 			}
 
 			throw new DBOperationException(e);
@@ -234,17 +264,22 @@ public class ShardingJdbcMasterQueryImpl extends AbstractJdbcQuery implements IS
 	@Override
 	public <T> List<T> findByPkListFromMaster(List<? extends Number> pks, IShardingKey<?> shardingKey, Class<T> clazz,
 			boolean useCache) {
-		ITransaction tx = txManager.getTransaction();
+		Transaction tx = null;
 		ShardingDBResource dbResource = null;
 		try {
+			tx = txManager.getTransaction();
 			dbResource = _getDbFromMaster(clazz, shardingKey);
 			if (tx != null) {
-				tx.appendReadOnly(dbResource);
+				tx.enlistResource(dbResource);
 			}
 			return selectByPksWithCache(dbResource, clazz, pks.toArray(new Number[pks.size()]), useCache);
-		} catch (SQLException e) {
+		} catch (Exception e) {
 			if (tx != null) {
-				tx.rollback();
+				try {
+					tx.rollback();
+				} catch (Exception e1) {
+					throw new DBOperationException(e1);
+				}
 			}
 
 			throw new DBOperationException(e);
@@ -265,16 +300,21 @@ public class ShardingJdbcMasterQueryImpl extends AbstractJdbcQuery implements IS
 			next = cur;
 		}
 
-		ITransaction tx = txManager.getTransaction();
+		Transaction tx = null;
 		try {
+			tx = txManager.getTransaction();
 			if (tx != null) {
-				tx.appendReadOnly(next);
+				tx.enlistResource(next);
 			}
 			List<Map<String, Object>> result = selectBySql(next, sql);
 			return result;
-		} catch (SQLException e) {
+		} catch (Exception e) {
 			if (tx != null) {
-				tx.rollback();
+				try {
+					tx.rollback();
+				} catch (Exception e1) {
+					throw new DBOperationException(e1);
+				}
 			}
 
 			throw new DBOperationException(e);
@@ -287,12 +327,13 @@ public class ShardingJdbcMasterQueryImpl extends AbstractJdbcQuery implements IS
 
 	@Override
 	public <T> List<T> findByQueryFromMaster(IQuery query, IShardingKey<?> shardingKey, Class<T> clazz, boolean useCache) {
-		ITransaction tx = txManager.getTransaction();
+		Transaction tx = null;
 		ShardingDBResource dbResource = null;
 		try {
+			tx = txManager.getTransaction();
 			dbResource = _getDbFromMaster(clazz, shardingKey);
 			if (tx != null) {
-				tx.appendReadOnly(dbResource);
+				tx.enlistResource(dbResource);
 			}
 
 			List<T> result = null;
@@ -327,9 +368,13 @@ public class ShardingJdbcMasterQueryImpl extends AbstractJdbcQuery implements IS
 			}
 
 			return result;
-		} catch (SQLException e) {
+		} catch (Exception e) {
 			if (tx != null) {
-				tx.rollback();
+				try {
+					tx.rollback();
+				} catch (Exception e1) {
+					throw new DBOperationException(e1);
+				}
 			}
 
 			throw new DBOperationException(e);

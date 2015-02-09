@@ -19,84 +19,107 @@ package org.pinus4j.transaction.impl;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import javax.transaction.RollbackException;
+import javax.transaction.Synchronization;
+import javax.transaction.SystemException;
+import javax.transaction.xa.XAResource;
+
 import org.pinus4j.cluster.resources.IDBResource;
 import org.pinus4j.cluster.resources.IResourceId;
 import org.pinus4j.transaction.ITransaction;
+import org.pinus4j.transaction.enums.EnumTransactionIsolationLevel;
 
 /**
- * default transaction impelemnt.
+ * local transaction impelemnt.
  *
  * @author duanbn
  * @since 1.1.0
  */
 public class LocalTransaction implements ITransaction {
 
-    /**
-     * db resource will do commit or rollback.
-     */
+	/**
+	 * db resource will do commit or rollback.
+	 */
 	private Map<IResourceId, IDBResource> txRes = new LinkedHashMap<IResourceId, IDBResource>();
 
-    /**
-     * db resource will only close connection.
-     */
-    private Map<IResourceId, IDBResource> txResReadOnly = new LinkedHashMap<IResourceId, IDBResource>();
+	/**
+	 * isolation level of transaction.
+	 */
+	private EnumTransactionIsolationLevel txLevel;
+
+	private int status;
 
 	@Override
-	public void append(IDBResource dbResource) {
-		IResourceId resId = dbResource.getId();
-
-		if (txRes.get(resId) == null) {
-			synchronized (txRes) {
-				if (txRes.get(resId) == null) {
-					txRes.put(resId, dbResource);
-				}
-			}
-		}
+	public void setIsolationLevel(EnumTransactionIsolationLevel txLevel) {
+		this.txLevel = txLevel;
 	}
-
-    @Override
-    public void appendReadOnly(IDBResource dbResource) {
-        IResourceId resId = dbResource.getId();
-
-		if (txResReadOnly.get(resId) == null) {
-			synchronized (txResReadOnly) {
-				if (txResReadOnly.get(resId) == null) {
-					txResReadOnly.put(resId, dbResource);
-				}
-			}
-		}
-    }
 
 	/**
 	 * do commit.
 	 */
+	@Override
 	public void commit() {
-        // do commit
+		// do commit
 		for (IDBResource dbResource : txRes.values()) {
 			dbResource.commit();
-            dbResource.close();
+			dbResource.close();
 		}
-
-        // close read only.
-        for (IDBResource dbResource : txResReadOnly.values()) {
-            dbResource.close();
-        }
 	}
 
 	/**
 	 * do rollback.
 	 */
+	@Override
 	public void rollback() {
-        // do rollback.
+		// do rollback.
 		for (IDBResource dbResource : txRes.values()) {
 			dbResource.rollback();
-            dbResource.close();
+			dbResource.close();
+		}
+	}
+
+	// jta implements.
+	@Override
+	public boolean delistResource(XAResource xaResource, int arg1) throws IllegalStateException, SystemException {
+		IDBResource dbResource = (IDBResource) xaResource;
+		IResourceId resId = dbResource.getId();
+
+		txRes.remove(resId);
+		return true;
+	}
+
+	@Override
+	public boolean enlistResource(XAResource xaResource) throws RollbackException, IllegalStateException,
+			SystemException {
+		IDBResource dbResource = (IDBResource) xaResource;
+		IResourceId resId = dbResource.getId();
+
+		if (txRes.get(resId) == null) {
+			synchronized (txRes) {
+				if (txRes.get(resId) == null) {
+					dbResource.setTransactionIsolationLevel(txLevel);
+					txRes.put(resId, dbResource);
+				}
+			}
 		}
 
-        // close read only.
-        for (IDBResource dbResource : txResReadOnly.values()) {
-            dbResource.close();
-        }
+		return true;
+	}
+
+	@Override
+	public int getStatus() throws SystemException {
+		return status;
+	}
+
+	@Override
+	public void registerSynchronization(Synchronization arg0) throws RollbackException, IllegalStateException,
+			SystemException {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void setRollbackOnly() throws IllegalStateException, SystemException {
+		// do nothing...
 	}
 
 }

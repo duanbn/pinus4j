@@ -19,6 +19,7 @@ package org.pinus4j.cluster.resources;
 import java.sql.Connection;
 
 import org.pinus4j.api.enums.EnumDBMasterSlave;
+import org.pinus4j.transaction.enums.EnumTransactionIsolationLevel;
 
 /**
  * database resource interface.
@@ -34,12 +35,20 @@ public interface IDBResource {
 	IResourceId getId();
 
 	/**
+	 * set transaction isolation level.
+	 * 
+	 * @param txLevel
+	 *            isolation level
+	 */
+	void setTransactionIsolationLevel(EnumTransactionIsolationLevel txLevel);
+
+	/**
 	 * get database connection.
 	 * 
 	 * @return
 	 */
 	Connection getConnection();
-	
+
 	/**
 	 * commit.
 	 */
@@ -50,10 +59,10 @@ public interface IDBResource {
 	 */
 	void rollback();
 
-    /**
-     * close.
-     */
-    void close();
+	/**
+	 * close.
+	 */
+	void close();
 
 	/**
 	 * cluster name of database resource.

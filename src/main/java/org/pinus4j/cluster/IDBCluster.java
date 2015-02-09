@@ -21,6 +21,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.locks.Lock;
 
+import javax.transaction.TransactionManager;
+
 import org.pinus4j.api.IShardingKey;
 import org.pinus4j.api.enums.EnumDBMasterSlave;
 import org.pinus4j.api.enums.EnumSyncAction;
@@ -32,7 +34,6 @@ import org.pinus4j.datalayer.IDataLayerBuilder;
 import org.pinus4j.exceptions.DBClusterException;
 import org.pinus4j.generator.IIdGenerator;
 import org.pinus4j.generator.beans.DBTable;
-import org.pinus4j.transaction.ITransactionManager;
 
 /**
  * 数据库集群. 数据库集群主要类，持有所有的数据库集群信息，保存集群的数据库连接包括主库和从库。 初始化集群的方法，<br/>
@@ -55,7 +56,7 @@ public interface IDBCluster {
 	 * 
 	 * @return
 	 */
-	public ITransactionManager getTransactionManager();
+	public TransactionManager getTransactionManager();
 
 	/**
 	 * get primary cache ref.

@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.concurrent.locks.Lock;
 
 import javax.sql.DataSource;
+import javax.transaction.TransactionManager;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
@@ -75,8 +76,7 @@ import org.pinus4j.generator.IDBGeneratorBuilder;
 import org.pinus4j.generator.IIdGenerator;
 import org.pinus4j.generator.beans.DBTable;
 import org.pinus4j.generator.impl.DistributedSequenceIdGeneratorImpl;
-import org.pinus4j.transaction.ITransactionManager;
-import org.pinus4j.transaction.impl.BestEffortsOnePcTransactionManager;
+import org.pinus4j.transaction.impl.BestEffortsOnePCJtaTransactionManager;
 import org.pinus4j.utils.CuratorDistributeedLock;
 import org.pinus4j.utils.IOUtil;
 import org.pinus4j.utils.ReflectUtil;
@@ -137,7 +137,7 @@ public abstract class AbstractDBCluster implements IDBCluster {
 	 */
 	private ISecondCache secondCache;
 
-	private ITransactionManager txManager;
+	private TransactionManager txManager;
 
 	/**
 	 * cluster router.
@@ -238,7 +238,7 @@ public abstract class AbstractDBCluster implements IDBCluster {
 		this.secondCache = cacheBuilder.buildSecondCache();
 
 		// init transaction manager
-		this.txManager = BestEffortsOnePcTransactionManager.getInstance();
+		this.txManager = BestEffortsOnePCJtaTransactionManager.getInstance();
 
 		//
 		// init db generator
@@ -568,7 +568,7 @@ public abstract class AbstractDBCluster implements IDBCluster {
 	}
 
 	@Override
-	public ITransactionManager getTransactionManager() {
+	public TransactionManager getTransactionManager() {
 		return this.txManager;
 	}
 

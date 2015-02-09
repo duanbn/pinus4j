@@ -20,13 +20,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import javax.transaction.Transaction;
+import javax.transaction.xa.XAResource;
+
 import org.pinus4j.api.SQL;
 import org.pinus4j.api.query.IQuery;
 import org.pinus4j.cluster.resources.IDBResource;
 import org.pinus4j.datalayer.IGlobalMasterQuery;
 import org.pinus4j.exceptions.DBClusterException;
 import org.pinus4j.exceptions.DBOperationException;
-import org.pinus4j.transaction.ITransaction;
 import org.pinus4j.utils.ReflectUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,18 +66,23 @@ public class GlobalJdbcMasterQueryImpl extends AbstractJdbcQuery implements IGlo
 
 	@Override
 	public Number getGlobalCountFromMaster(String clusterName, Class<?> clazz, boolean useCache) {
-		ITransaction tx = txManager.getTransaction();
+		Transaction tx = null;
 		IDBResource dbResource = null;
 		try {
+			tx = txManager.getTransaction();
 			dbResource = this.dbCluster.getMasterGlobalDBResource(clusterName, ReflectUtil.getTableName(clazz));
 			if (tx != null) {
-				tx.appendReadOnly(dbResource);
+				tx.enlistResource((XAResource) dbResource);
 			}
 			long count = selectGlobalCountWithCache(dbResource, clusterName, clazz, useCache).longValue();
 			return count;
 		} catch (Exception e) {
 			if (tx != null) {
-				tx.rollback();
+				try {
+					tx.rollback();
+				} catch (Exception e1) {
+					throw new DBOperationException(e1);
+				}
 			}
 			throw new DBOperationException(e);
 		} finally {
@@ -87,19 +94,24 @@ public class GlobalJdbcMasterQueryImpl extends AbstractJdbcQuery implements IGlo
 
 	@Override
 	public Number getGlobalCountFromMaster(IQuery query, String clusterName, Class<?> clazz) {
-		ITransaction tx = txManager.getTransaction();
+		Transaction tx = null;
 		IDBResource dbResource = null;
 		try {
+			tx = txManager.getTransaction();
 			dbResource = this.dbCluster.getMasterGlobalDBResource(clusterName, ReflectUtil.getTableName(clazz));
 			if (tx != null) {
-				tx.appendReadOnly(dbResource);
+				tx.enlistResource((XAResource) dbResource);
 			}
 			long count = selectGlobalCount(query, dbResource, clusterName, clazz).longValue();
 
 			return count;
 		} catch (Exception e) {
 			if (tx != null) {
-				tx.rollback();
+				try {
+					tx.rollback();
+				} catch (Exception e1) {
+					throw new DBOperationException(e1);
+				}
 			}
 			throw new DBOperationException(e);
 		} finally {
@@ -116,17 +128,22 @@ public class GlobalJdbcMasterQueryImpl extends AbstractJdbcQuery implements IGlo
 
 	@Override
 	public <T> T findGlobalByPkFromMaster(Number pk, String clusterName, Class<T> clazz, boolean useCache) {
-		ITransaction tx = txManager.getTransaction();
+		Transaction tx = null;
 		IDBResource dbResource = null;
 		try {
+			tx = txManager.getTransaction();
 			dbResource = this.dbCluster.getMasterGlobalDBResource(clusterName, ReflectUtil.getTableName(clazz));
 			if (tx != null) {
-				tx.appendReadOnly(dbResource);
+				tx.enlistResource((XAResource) dbResource);
 			}
 			return selectByPkWithCache(dbResource, clusterName, pk, clazz, useCache);
 		} catch (Exception e) {
 			if (tx != null) {
-				tx.rollback();
+				try {
+					tx.rollback();
+				} catch (Exception e1) {
+					throw new DBOperationException(e1);
+				}
 			}
 			throw new DBOperationException(e);
 		} finally {
@@ -143,17 +160,22 @@ public class GlobalJdbcMasterQueryImpl extends AbstractJdbcQuery implements IGlo
 
 	@Override
 	public <T> List<T> findGlobalByPksFromMaster(String clusterName, Class<T> clazz, boolean useCache, Number... pks) {
-		ITransaction tx = txManager.getTransaction();
+		Transaction tx = null;
 		IDBResource dbResource = null;
 		try {
+			tx = txManager.getTransaction();
 			dbResource = this.dbCluster.getMasterGlobalDBResource(clusterName, ReflectUtil.getTableName(clazz));
 			if (tx != null) {
-				tx.appendReadOnly(dbResource);
+				tx.enlistResource((XAResource) dbResource);
 			}
 			return selectGlobalByPksWithCache(dbResource, clusterName, clazz, pks, useCache);
 		} catch (Exception e) {
 			if (tx != null) {
-				tx.rollback();
+				try {
+					tx.rollback();
+				} catch (Exception e1) {
+					throw new DBOperationException(e1);
+				}
 			}
 			throw new DBOperationException(e);
 		} finally {
@@ -166,18 +188,23 @@ public class GlobalJdbcMasterQueryImpl extends AbstractJdbcQuery implements IGlo
 	@Override
 	public <T> List<T> findGlobalByPkListFromMaster(List<? extends Number> pks, String clusterName, Class<T> clazz,
 			boolean useCache) {
-		ITransaction tx = txManager.getTransaction();
+		Transaction tx = null;
 		IDBResource dbResource = null;
 		try {
+			tx = txManager.getTransaction();
 			dbResource = this.dbCluster.getMasterGlobalDBResource(clusterName, ReflectUtil.getTableName(clazz));
 			if (tx != null) {
-				tx.appendReadOnly(dbResource);
+				tx.enlistResource((XAResource) dbResource);
 			}
 			return selectGlobalByPksWithCache(dbResource, clusterName, clazz, pks.toArray(new Number[pks.size()]),
 					useCache);
 		} catch (Exception e) {
 			if (tx != null) {
-				tx.rollback();
+				try {
+					tx.rollback();
+				} catch (Exception e1) {
+					throw new DBOperationException(e1);
+				}
 			}
 			throw new DBOperationException(e);
 		} finally {
@@ -203,16 +230,21 @@ public class GlobalJdbcMasterQueryImpl extends AbstractJdbcQuery implements IGlo
 			next = cur;
 		}
 
-		ITransaction tx = txManager.getTransaction();
+		Transaction tx = null;
 		try {
+			tx = txManager.getTransaction();
 			if (tx != null) {
-				tx.appendReadOnly(next);
+				tx.enlistResource((XAResource) next);
 			}
 			List<Map<String, Object>> result = selectGlobalBySql(next, sql);
 			return result;
 		} catch (Exception e) {
 			if (tx != null) {
-				tx.rollback();
+				try {
+					tx.rollback();
+				} catch (Exception e1) {
+					throw new DBOperationException(e1);
+				}
 			}
 			throw new DBOperationException(e);
 		} finally {
@@ -224,12 +256,14 @@ public class GlobalJdbcMasterQueryImpl extends AbstractJdbcQuery implements IGlo
 
 	@Override
 	public <T> List<T> findGlobalByQueryFromMaster(IQuery query, String clusterName, Class<T> clazz, boolean useCache) {
-		ITransaction tx = txManager.getTransaction();
+		Transaction tx = null;
 		IDBResource dbResource = null;
 		try {
+			tx = txManager.getTransaction();
+
 			dbResource = this.dbCluster.getMasterGlobalDBResource(clusterName, ReflectUtil.getTableName(clazz));
 			if (tx != null) {
-				tx.appendReadOnly(dbResource);
+				tx.enlistResource((XAResource) dbResource);
 			}
 
 			List<T> result = null;
@@ -264,7 +298,11 @@ public class GlobalJdbcMasterQueryImpl extends AbstractJdbcQuery implements IGlo
 			return result;
 		} catch (Exception e) {
 			if (tx != null) {
-				tx.rollback();
+				try {
+					tx.rollback();
+				} catch (Exception e1) {
+					throw new DBOperationException(e1);
+				}
 			}
 			throw new DBOperationException(e);
 		} finally {

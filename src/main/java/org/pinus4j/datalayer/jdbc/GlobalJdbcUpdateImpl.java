@@ -22,12 +22,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.transaction.Transaction;
+import javax.transaction.xa.XAResource;
+
 import org.pinus4j.cluster.resources.IDBResource;
 import org.pinus4j.constant.Const;
 import org.pinus4j.datalayer.IGlobalUpdate;
-import org.pinus4j.datalayer.SQLBuilder;
 import org.pinus4j.exceptions.DBOperationException;
-import org.pinus4j.transaction.ITransaction;
 import org.pinus4j.utils.ReflectUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -87,16 +88,17 @@ public class GlobalJdbcUpdateImpl extends AbstractJdbcUpdate implements IGlobalU
 		if (isCheckPrimaryKey)
 			this.idGenerator.checkAndSetPrimaryKey(maxPk.longValue(), clusterName, tableName);
 
-		ITransaction tx = txManager.getTransaction();
+		Transaction tx = null;
 		IDBResource dbResource = null;
 		try {
+			tx = txManager.getTransaction();
 			dbResource = this.dbCluster.getMasterGlobalDBResource(clusterName, ReflectUtil.getTableName(clazz));
 			Connection conn = dbResource.getConnection();
 
 			_saveBatchGlobal(conn, entities);
 
 			if (tx != null) {
-				tx.append(dbResource);
+				tx.enlistResource((XAResource) dbResource);
 			} else {
 				dbResource.commit();
 			}
@@ -110,7 +112,11 @@ public class GlobalJdbcUpdateImpl extends AbstractJdbcUpdate implements IGlobalU
 			}
 		} catch (Exception e1) {
 			if (tx != null) {
-				tx.rollback();
+				try {
+					tx.rollback();
+				} catch (Exception e) {
+					throw new DBOperationException(e);
+				}
 			} else {
 				if (dbResource != null) {
 					dbResource.rollback();
@@ -120,7 +126,7 @@ public class GlobalJdbcUpdateImpl extends AbstractJdbcUpdate implements IGlobalU
 			throw new DBOperationException(e1);
 		} finally {
 			if (tx == null && dbResource != null) {
-                dbResource.close();
+				dbResource.close();
 			}
 		}
 
@@ -140,18 +146,18 @@ public class GlobalJdbcUpdateImpl extends AbstractJdbcUpdate implements IGlobalU
 		Class<?> clazz = entities.get(0).getClass();
 		String tableName = ReflectUtil.getTableName(clazz);
 
-		ITransaction tx = txManager.getTransaction();
-        IDBResource dbResource = null;
+		Transaction tx = null;
+		IDBResource dbResource = null;
 		try {
-			dbResource = this.dbCluster.getMasterGlobalDBResource(clusterName,
-					ReflectUtil.getTableName(clazz));
+			tx = txManager.getTransaction();
+			dbResource = this.dbCluster.getMasterGlobalDBResource(clusterName, ReflectUtil.getTableName(clazz));
 
 			Connection conn = dbResource.getConnection();
 
 			_updateBatchGlobal(conn, entities);
 
 			if (tx != null) {
-				tx.append(dbResource);
+				tx.enlistResource((XAResource) dbResource);
 			} else {
 				dbResource.commit();
 			}
@@ -169,17 +175,21 @@ public class GlobalJdbcUpdateImpl extends AbstractJdbcUpdate implements IGlobalU
 			}
 		} catch (Exception e) {
 			if (tx != null) {
-				tx.rollback();
+				try {
+					tx.rollback();
+				} catch (Exception e1) {
+					throw new DBOperationException(e1);
+				}
 			} else {
 				if (dbResource != null) {
-                    dbResource.rollback();
+					dbResource.rollback();
 				}
 			}
 
 			throw new DBOperationException(e);
 		} finally {
 			if (tx == null && dbResource != null) {
-                dbResource.close();
+				dbResource.close();
 			}
 		}
 	}
@@ -194,18 +204,18 @@ public class GlobalJdbcUpdateImpl extends AbstractJdbcUpdate implements IGlobalU
 	@Override
 	public void globalRemoveByPks(List<? extends Number> pks, Class<?> clazz, String clusterName) {
 
-		ITransaction tx = txManager.getTransaction();
-        IDBResource dbResource = null;
+		Transaction tx = null;
+		IDBResource dbResource = null;
 		try {
-			dbResource = this.dbCluster.getMasterGlobalDBResource(clusterName,
-					ReflectUtil.getTableName(clazz));
+			tx = txManager.getTransaction();
+			dbResource = this.dbCluster.getMasterGlobalDBResource(clusterName, ReflectUtil.getTableName(clazz));
 
 			Connection conn = dbResource.getConnection();
 
 			_removeByPksGlobal(conn, pks, clazz);
 
 			if (tx != null) {
-				tx.append(dbResource);
+				tx.enlistResource((XAResource) dbResource);
 			} else {
 				dbResource.commit();
 			}
@@ -221,7 +231,11 @@ public class GlobalJdbcUpdateImpl extends AbstractJdbcUpdate implements IGlobalU
 			}
 		} catch (Exception e) {
 			if (tx != null) {
-				tx.rollback();
+				try {
+					tx.rollback();
+				} catch (Exception e1) {
+					throw new DBOperationException(e1);
+				}
 			} else {
 				if (dbResource != null) {
 					dbResource.rollback();
@@ -231,7 +245,7 @@ public class GlobalJdbcUpdateImpl extends AbstractJdbcUpdate implements IGlobalU
 			throw new DBOperationException(e);
 		} finally {
 			if (tx == null && dbResource != null) {
-                dbResource.close();
+				dbResource.close();
 			}
 		}
 	}

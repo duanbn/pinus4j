@@ -11,10 +11,10 @@
 
 	<!-- <category name="com.koala.storage.cache"> <level value="debug" /> <appender-ref 
 		ref="console" /> </category> -->
-	<category name="com.pinus.jdbc.SlowQueryLogger">
+	<category name="org.pinus4j.datalayer.SlowQueryLogger">
 		<level value="warn" />
 	</category>
-	<category name="com.pinus">
+	<category name="org.pinus4j">
 		<level value="debug" />
 	</category>
 
