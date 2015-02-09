@@ -37,7 +37,7 @@ public class ShardingDBResource implements IDBResource {
 	/**
 	 * jdbc data source.
 	 */
-	private Connection conn;
+	private Connection connection;
 
 	/**
 	 * cluster name.
@@ -116,6 +116,8 @@ public class ShardingDBResource implements IDBResource {
 
 			DBResourceCache.putShardingDBResource(resId, instance);
 		}
+		
+		instance.setConnection(conn);
 
 		return instance;
 	}
@@ -131,13 +133,17 @@ public class ShardingDBResource implements IDBResource {
 
 	@Override
 	public Connection getConnection() {
-		return this.conn;
+		return this.connection;
+	}
+
+	public void setConnection(Connection conn) {
+		this.connection = conn;
 	}
 
 	@Override
 	public void commit() {
 		try {
-			this.conn.commit();
+			this.connection.commit();
 		} catch (SQLException e) {
 			throw new DBOperationException(e);
 		}
@@ -146,7 +152,7 @@ public class ShardingDBResource implements IDBResource {
 	@Override
 	public void rollback() {
 		try {
-			this.conn.rollback();
+			this.connection.rollback();
 		} catch (SQLException e) {
 			throw new DBOperationException(e);
 		}
@@ -155,8 +161,8 @@ public class ShardingDBResource implements IDBResource {
 	@Override
 	public void close() {
 		try {
-			if (!this.conn.isClosed()) {
-				this.conn.close();
+			if (!this.connection.isClosed()) {
+				this.connection.close();
 			}
 		} catch (SQLException e) {
 			throw new DBOperationException(e);

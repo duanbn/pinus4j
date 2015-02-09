@@ -71,9 +71,10 @@ public class ShardingJdbcUpdateImpl extends AbstractJdbcUpdate implements IShard
 		List<Object> entities = new ArrayList<Object>(1);
 		entities.add(entity);
 
-		ShardingDBResource dbResource = _getDbFromMaster(tableName, shardingKey);
 		ITransaction tx = txManager.getTransaction();
+		ShardingDBResource dbResource = null;
 		try {
+			dbResource = _getDbFromMaster(tableName, shardingKey);
 			Connection conn = dbResource.getConnection();
 
 			_saveBatch(conn, entities, dbResource.getTableIndex());

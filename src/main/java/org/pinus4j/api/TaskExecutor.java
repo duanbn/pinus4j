@@ -78,7 +78,6 @@ public class TaskExecutor<E> {
 			} catch (SQLException e) {
 				throw new DBOperationException(e);
 			}
-
 			List<IRecordIterator<E>> readers = new ArrayList<IRecordIterator<E>>(dbResources.size());
 
 			// 计算总数
@@ -94,6 +93,7 @@ public class TaskExecutor<E> {
 			}
 
 			future = new TaskFuture(total, threadPool, task);
+			future.addDBResource(dbResources);
 
 			for (IRecordIterator<E> r : readers) {
 				threadPool.submit(new RecrodReaderThread<E>(r, threadPool, task, future));
@@ -114,6 +114,7 @@ public class TaskExecutor<E> {
 			reader.setQuery(query);
 
 			future = new TaskFuture(reader.getCount(), threadPool, task);
+			future.addDBResource(dbResource);
 
 			while (reader.hasNext()) {
 				List<E> record = reader.nextMore();

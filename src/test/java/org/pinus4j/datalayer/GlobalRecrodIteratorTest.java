@@ -27,6 +27,8 @@ public class GlobalRecrodIteratorTest extends ApiBaseTest {
 
 	private static final int SIZE = 2100;
 
+	private IDBResource dbResource = null;
+
 	@Before
 	public void before() {
 		// save more
@@ -43,7 +45,6 @@ public class GlobalRecrodIteratorTest extends ApiBaseTest {
 		Assert.assertEquals(SIZE, entities.size());
 
 		IDBCluster dbCluster = cacheClient.getDBCluster();
-		IDBResource dbResource = null;
 		try {
 			dbResource = dbCluster.getMasterGlobalDBResource(CLUSTER_KLSTORAGE,
 					ReflectUtil.getTableName(TestGlobalEntity.class));
@@ -57,6 +58,7 @@ public class GlobalRecrodIteratorTest extends ApiBaseTest {
 	public void after() {
 		// remove more
 		cacheClient.globalRemoveByPks(CLUSTER_KLSTORAGE, TestGlobalEntity.class, pks);
+		dbResource.close();
 	}
 
 	@Test

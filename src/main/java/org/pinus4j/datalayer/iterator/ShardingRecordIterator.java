@@ -39,12 +39,12 @@ public class ShardingRecordIterator<E> extends AbstractRecordIterator<E> {
 
 	public static final Logger LOG = LoggerFactory.getLogger(ShardingRecordIterator.class);
 
-	private ShardingDBResource db;
+	private ShardingDBResource dbResource;
 
-	public ShardingRecordIterator(ShardingDBResource db, Class<E> clazz) {
+	public ShardingRecordIterator(ShardingDBResource dbResource, Class<E> clazz) {
 		super(clazz);
 
-		this.db = db;
+		this.dbResource = dbResource;
 
 		this.maxId = getMaxId();
 	}
@@ -56,7 +56,7 @@ public class ShardingRecordIterator<E> extends AbstractRecordIterator<E> {
 		query.limit(1).orderBy(pkName, Order.DESC);
 		List<E> one;
 		try {
-			one = selectByQuery(db, query, clazz);
+			one = selectByQuery(dbResource, query, clazz);
 		} catch (SQLException e1) {
 			throw new DBOperationException(e1);
 		}
@@ -65,7 +65,7 @@ public class ShardingRecordIterator<E> extends AbstractRecordIterator<E> {
 			maxId = ReflectUtil.getPkValue(e).longValue();
 		}
 
-		LOG.info("clazz " + clazz + " DB " + db + " maxId=" + maxId);
+		LOG.info("clazz " + clazz + " DB " + dbResource + " maxId=" + maxId);
 
 		return maxId;
 	}
@@ -73,7 +73,7 @@ public class ShardingRecordIterator<E> extends AbstractRecordIterator<E> {
 	@Override
 	public long getCount() {
 		try {
-			return selectCount(db, clazz, query).longValue();
+			return selectCount(dbResource, clazz, query).longValue();
 		} catch (SQLException e) {
 			throw new DBOperationException(e);
 		}
@@ -86,14 +86,14 @@ public class ShardingRecordIterator<E> extends AbstractRecordIterator<E> {
 			long high = this.latestId + step;
 			query.add(Condition.gte(pkName, latestId)).add(Condition.lt(pkName, high));
 			try {
-				List<E> recrods = selectByQuery(db, query, clazz);
+				List<E> recrods = selectByQuery(dbResource, query, clazz);
 				this.latestId = high;
 
 				while (recrods.isEmpty() && this.latestId < maxId) {
 					query = this.query.clone();
 					high = this.latestId + step;
 					query.add(Condition.gte(pkName, this.latestId)).add(Condition.lt(pkName, high));
-					recrods = selectByQuery(db, query, clazz);
+					recrods = selectByQuery(dbResource, query, clazz);
 					this.latestId = high;
 				}
 				this.recordQ.addAll(recrods);

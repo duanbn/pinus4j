@@ -29,6 +29,8 @@ public class ShardingRecrodIteratorTest extends ApiBaseTest {
 
 	private static final int SIZE = 2100;
 
+	private ShardingDBResource dbResource;
+
 	@Before
 	public void before() {
 		// save more
@@ -45,19 +47,19 @@ public class ShardingRecrodIteratorTest extends ApiBaseTest {
 		Assert.assertEquals(SIZE, entities.size());
 
 		IDBCluster dbCluster = cacheClient.getDBCluster();
-		ShardingDBResource db = null;
 		try {
-			db = (ShardingDBResource) dbCluster.selectDBResourceFromMaster("test_entity", moreKey);
+			dbResource = (ShardingDBResource) dbCluster.selectDBResourceFromMaster("test_entity", moreKey);
 		} catch (DBClusterException e) {
 			e.printStackTrace();
 		}
-		this.reader = new ShardingRecordIterator<TestEntity>(db, TestEntity.class);
+		this.reader = new ShardingRecordIterator<TestEntity>(dbResource, TestEntity.class);
 	}
 
 	@After
 	public void after() {
 		// remove more
 		cacheClient.removeByPks(moreKey, TestEntity.class, pks);
+		dbResource.close();
 	}
 
 	@Test
