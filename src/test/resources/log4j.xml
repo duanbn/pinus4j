@@ -17,6 +17,9 @@
 	<category name="org.pinus4j">
 		<level value="debug" />
 	</category>
+	<category name="org.springframework">
+		<level value="debug" />
+	</category>
 
 	<root>
 		<priority value="info" />

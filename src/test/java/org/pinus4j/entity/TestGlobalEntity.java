@@ -14,7 +14,7 @@ import org.pinus4j.generator.annotations.Table;
 import org.pinus4j.generator.annotations.UpdateTime;
 
 @Table(cluster = "pinus", cache = true)
-@Indexes({ @Index(field = "testInt", isUnique = true) })
+@Indexes({ @Index(field = "testInt") })
 public class TestGlobalEntity extends FashionEntity implements Serializable {
 
 	private static final long serialVersionUID = 1L;

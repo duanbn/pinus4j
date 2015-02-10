@@ -18,8 +18,10 @@ package org.pinus4j.transaction.impl;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.transaction.RollbackException;
+import javax.transaction.Status;
 import javax.transaction.Synchronization;
 import javax.transaction.SystemException;
 import javax.transaction.xa.XAResource;
@@ -47,7 +49,7 @@ public class LocalTransaction implements ITransaction {
 	 */
 	private EnumTransactionIsolationLevel txLevel;
 
-	private int status;
+	private AtomicInteger status = new AtomicInteger(Status.STATUS_ACTIVE);
 
 	@Override
 	public void setIsolationLevel(EnumTransactionIsolationLevel txLevel) {
@@ -59,11 +61,13 @@ public class LocalTransaction implements ITransaction {
 	 */
 	@Override
 	public void commit() {
+		status.set(Status.STATUS_COMMITTING);
 		// do commit
 		for (IDBResource dbResource : txRes.values()) {
 			dbResource.commit();
 			dbResource.close();
 		}
+		status.set(Status.STATUS_NO_TRANSACTION);
 	}
 
 	/**
@@ -71,11 +75,13 @@ public class LocalTransaction implements ITransaction {
 	 */
 	@Override
 	public void rollback() {
+		status.set(Status.STATUS_ROLLING_BACK);
 		// do rollback.
 		for (IDBResource dbResource : txRes.values()) {
 			dbResource.rollback();
 			dbResource.close();
 		}
+		status.set(Status.STATUS_NO_TRANSACTION);
 	}
 
 	// jta implements.
@@ -108,7 +114,7 @@ public class LocalTransaction implements ITransaction {
 
 	@Override
 	public int getStatus() throws SystemException {
-		return status;
+		return status.get();
 	}
 
 	@Override

@@ -15,14 +15,14 @@
 		<property name="syncAction" value="UPDATE" />
 	</bean>
 
-	<bean id="pinusTx" class="org.pinus4j.transaction.impl.UserTransactionImpl" />
-	<bean id="pinusTm"
+	<bean id="userTx" class="org.pinus4j.transaction.impl.UserTransactionImpl" />
+	<bean id="tm"
 		class="org.pinus4j.transaction.impl.BestEffortsOnePCJtaTransactionManager" />
 
 	<bean id="transactionManager"
 		class="org.springframework.transaction.jta.JtaTransactionManager">
-		<property name="userTransaction" ref="pinusTx" />
-		<property name="transactionManager" ref="pinusTm" />
+		<property name="userTransaction" ref="userTx" />
+		<property name="transactionManager" ref="tm" />
 	</bean>
 
 	<tx:annotation-driven transaction-manager="transactionManager" />

@@ -47,8 +47,8 @@ public class BestEffortsTransactionTest extends ApiBaseTest {
 
 		cacheClient.beginTransaction();
 		try {
-			globalId = cacheClient.globalSave(testGlobalEntity).longValue();
-			shardingId = cacheClient.save(testEntity).longValue();
+			cacheClient.globalSave(testGlobalEntity).longValue();
+			cacheClient.save(testEntity).longValue();
 
 			throw new RuntimeException();
 		} catch (Exception e) {

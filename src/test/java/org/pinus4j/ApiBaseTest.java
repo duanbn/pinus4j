@@ -16,10 +16,6 @@ import org.pinus4j.exceptions.LoadConfigException;
 
 public class ApiBaseTest extends BaseTest {
 
-	public static final String CLUSTER_KLSTORAGE = "pinus";
-
-	public static final String CACHE_HOST = "127.0.0.1:11211";
-
 	protected static IShardingStorageClient cacheClient = new ShardingStorageClientImpl();
 
 	protected static IPrimaryCache primaryCache;

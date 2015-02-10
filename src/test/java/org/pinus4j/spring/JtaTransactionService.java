@@ -1,6 +1,9 @@
 package org.pinus4j.spring;
 
+import org.pinus4j.BaseTest;
+import org.pinus4j.api.IShardingKey;
 import org.pinus4j.api.IShardingStorageClient;
+import org.pinus4j.api.ShardingKey;
 import org.pinus4j.entity.TestEntity;
 import org.pinus4j.entity.TestGlobalEntity;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,29 +17,47 @@ public class JtaTransactionService {
 	private IShardingStorageClient storageClient;
 
 	@Transactional
-	public void saveData() {
+	public void saveData(long globalId, long shardingId) {
 		TestGlobalEntity testGlobalEntity = new TestGlobalEntity();
-		testGlobalEntity.setId(10);
+		testGlobalEntity.setId(globalId);
 		TestEntity testEntity = new TestEntity();
-		testEntity.setId(10);
+		testEntity.setId(shardingId);
 		testEntity.setTestInt(10);
 
 		storageClient.globalSave(testGlobalEntity);
 		storageClient.save(testEntity);
 	}
 
+	@Transactional(readOnly = true)
+	public TestGlobalEntity getGlobalById(long globalId) {
+		return storageClient.findGlobalByPk(globalId, BaseTest.CLUSTER_KLSTORAGE, TestGlobalEntity.class);
+	}
+
+	@Transactional(readOnly = true)
+	public TestEntity getShardingById(long shardingId) {
+		ShardingKey<Integer> sk = new ShardingKey<Integer>(BaseTest.CLUSTER_KLSTORAGE, 10);
+		return storageClient.findByPk(shardingId, sk, TestEntity.class);
+	}
+
 	@Transactional
-	public void saveDataWithException() {
+	public void saveDataWithException(long globalId, long shardingId) {
 		TestGlobalEntity testGlobalEntity = new TestGlobalEntity();
-		testGlobalEntity.setId(10);
+		testGlobalEntity.setId(globalId);
 		TestEntity testEntity = new TestEntity();
-		testEntity.setId(10);
+		testEntity.setId(shardingId);
 		testEntity.setTestInt(10);
 
 		storageClient.globalSave(testGlobalEntity);
 		storageClient.save(testEntity);
 
 		throw new RuntimeException();
+	}
+
+	@Transactional
+	public void removeData(long globalId, long shardingId) {
+		storageClient.globalRemoveByPk(globalId, TestGlobalEntity.class, BaseTest.CLUSTER_KLSTORAGE);
+		IShardingKey<Integer> sk = new ShardingKey<Integer>(BaseTest.CLUSTER_KLSTORAGE, 10);
+		storageClient.removeByPk(shardingId, sk, TestEntity.class);
 	}
 
 }

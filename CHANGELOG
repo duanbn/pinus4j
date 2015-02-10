@@ -1,15 +1,7 @@
 --version 1.1.0
-新智能支持事务管理特性
-    添加事务管理器
-        支持四种类型的事务隔离级别：Read_Uncommited Read_Commited Repeatable_Read Serializable
-        支持分布式事务
-        支持相同cluster中不同ShardingKey事务处理 (有可能也是本地事务)
-        支持不同cluster中Global事务处理
-        支持不同cluster中相同ShardingKey事务处理
-        支持不同cluster中不同ShardingKey事务处理
-        支持本地事务
-        支持相同cluster中Global事务处理
-        支持相同cluster中相同ShardingKey事务处理
+支持事务处理
+    使用best efforts 1pc事务处理
+    支持设置本地事务的隔离级别
 代码重构
     添加DB资源对象
         将DB对象重构为ShardingDBResource

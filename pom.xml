@@ -37,6 +37,7 @@
 		<jsqlparser.version>0.9</jsqlparser.version>
 		<dbcp.version>1.4</dbcp.version>
 		<slf4j.version>1.7.7</slf4j.version>
+		<jta.version>1.2</jta.version>
 	</properties>
 
 	<dependencies>
@@ -70,13 +71,12 @@
 			<artifactId>slf4j-api</artifactId>
 			<version>${slf4j.version}</version>
 		</dependency>
-
 		<dependency>
 			<groupId>javax.transaction</groupId>
 			<artifactId>javax.transaction-api</artifactId>
-			<version>1.2</version>
-			<scope>test</scope>
+			<version>${jta.version}</version>
 		</dependency>
+
 		<dependency>
 			<groupId>commons-lang</groupId>
 			<artifactId>commons-lang</artifactId>

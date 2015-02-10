@@ -8,6 +8,10 @@ import org.pinus4j.entity.TestEntity;
 import org.pinus4j.entity.TestGlobalEntity;
 
 public class BaseTest {
+	
+	public static final String CLUSTER_KLSTORAGE = "pinus";
+
+	public static final String CACHE_HOST = "127.0.0.1:11211";
 
 	protected Random r = new Random();
 

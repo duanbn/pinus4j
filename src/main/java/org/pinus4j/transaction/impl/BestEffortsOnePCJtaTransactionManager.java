@@ -1,10 +1,29 @@
+/**
+ * Copyright 2014 Duan Bingnan
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *   
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.pinus4j.transaction.impl;
+
+import java.util.function.Supplier;
 
 import javax.transaction.HeuristicMixedException;
 import javax.transaction.HeuristicRollbackException;
 import javax.transaction.InvalidTransactionException;
 import javax.transaction.NotSupportedException;
 import javax.transaction.RollbackException;
+import javax.transaction.Status;
 import javax.transaction.SystemException;
 import javax.transaction.Transaction;
 import javax.transaction.TransactionManager;
@@ -21,7 +40,13 @@ public class BestEffortsOnePCJtaTransactionManager implements TransactionManager
 
 	private static final TransactionManager instance = new BestEffortsOnePCJtaTransactionManager();
 
-	private static final ThreadLocal<EnumTransactionIsolationLevel> txLevelLocal = new ThreadLocal<EnumTransactionIsolationLevel>();
+	private static final ThreadLocal<EnumTransactionIsolationLevel> txLevelLocal = ThreadLocal
+			.withInitial(new Supplier<EnumTransactionIsolationLevel>() {
+				@Override
+				public EnumTransactionIsolationLevel get() {
+					return EnumTransactionIsolationLevel.READ_COMMITTED;
+				}
+			});
 
 	private static final ThreadLocal<Transaction> txLocal = new ThreadLocal<Transaction>();
 
@@ -72,7 +97,11 @@ public class BestEffortsOnePCJtaTransactionManager implements TransactionManager
 
 	@Override
 	public int getStatus() throws SystemException {
-		return 0;
+		if (txLocal.get() != null) {
+			return txLocal.get().getStatus();
+		} else {
+			return Status.STATUS_NO_TRANSACTION;
+		}
 	}
 
 	@Override
