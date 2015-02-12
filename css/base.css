@@ -1,0 +1,56 @@
+@charset "utf-8";
+
+/* base */
+* { font-family:Arial,Microsoft YaHei; font-size:14px; padding:0; margin:0; border:0;}
+.clear { clear:both; font-size:0; line-height:0; height:0; overflow:hidden;}
+ul,li { list-style:none;}
+img { vertical-align:top;}
+/* a */
+a { text-decoration:none; blr:expression(this.onFocus=this.blur());/*针对 IE*/ outline:none;/*针对firefox等*/}
+.a-img1:hover { color:#fff; opacity:0.9;}
+
+/* header */
+.header { width:100%; height:100px; background:#f8f8f8; border-bottom:1px #dddddd solid;}
+.headerContainer { width:1000px; height:100px; margin-left:auto; margin-right:auto;}
+.logo { float:left; height:60px; padding-top:20px; line-height:60px;}
+.logo a { font-size:35px; font-weight:bold; color:#706f6f; letter-spacing:-1px;}
+.logo img { padding-right:12px;}
+.version { float:right; height:100px; line-height:100px; color:#aaaaaa;}
+.version span { color:#e3e3e3; padding-left:2px; padding-right:2px;}
+
+/* main */
+.main { width:1000px; margin:25px auto 25px auto;}
+
+/* nav */
+.navBox { float:left; width:250px; margin-right:25px; border-left:#ddd 1px solid; border-top:#ddd 1px solid; border-right:#ddd 1px solid;}
+/* nav - 标注 */
+.navNote { width:238px; padding-left:12px; height:30px; line-height:30px; border-bottom:#ddd 1px solid; font-size:13px; color:#aaa; background:#f8f8f8;}
+/* nav - 一级 */
+.nav { width:250px; border-bottom:#ddd 1px solid;}
+.nav:hover { background:#eee; -webkit-transition:background .2s ease-in-out; -moz-transition:background .2s ease-in-out; -o-transition:background .2s ease-in-out; -ms-transition:background .2s ease-in-out; transition:background .2s ease-in-out;}
+.nav_item { display:block; padding-left:12px; width:238px; height:45px; line-height:45px; font-size:15px; color:#333;}
+.arrow { background:url(../img/arrow-close.png) 229px no-repeat;}
+.arrow_current { background:#eee url(../img/arrow-open.png) 229px no-repeat;} 
+.subNav { display:none; border-top:#ddd 1px solid;}
+.subNav_item { display:block; width:238px; padding-left:12px; height:35px; line-height:35px; font-size:14px; color:#777; background:#eee;}
+.subNav_item:hover { color:#555; background:#f2f2f2;}
+
+
+
+
+
+/*.li-link:hover { background:#eee; -webkit-transition:background .2s ease-in-out; -moz-transition:background .2s ease-in-out; -o-transition:background .2s ease-in-out; -ms-transition:background .2s ease-in-out; transition:background .2s ease-in-out;}
+.li-link a { padding-left:12px; display:block; width:228px; margin-right:9px; height:45px; line-height:45px; font-size:15px; color:#333;}
+.open { background:url(../img/arrow-open.png) right no-repeat;}
+.close { background:url(../img/arrow-close.png) right no-repeat;}
+.li-link li{ width:237px; padding-left:12px; height:35px; line-height:35px; font-size:14px; color:#777; background:#eee;}
+*/
+
+
+
+
+
+
+
+
+
