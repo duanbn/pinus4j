@@ -7,20 +7,15 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge" />
 <title>Pinus - Pinus 1.0.1</title>
 <link rel="icon" type="image/x-icon" href="{{site.baseurl}}/img/icon.ico">
-<link rel="stylesheet" href="/css/base.css">
-<script type="text/javascript" src="/js/jquery-1.8.3.min.js"></script>
-<script type="text/javascript" src="/js/base.js"></script>
+<link rel="stylesheet" href="{{site.base}}/css/base.css">
+<script type="text/javascript" src="{{site.base}}/js/jquery-1.8.3.min.js"></script>
+<script type="text/javascript" src="{{site.base}}/js/base.js"></script>
 <!--[if lt IE 7]>
     <script type="Text/Javascript" src="js/pngfix.js"></script>
     <script type="text/javascript">  
 		DD_belatedPNG.fix('img,a,div,span, li');
 	</script>
 <![endif]-->
-<script type="text/javascript">
-    function load(pageName) {
-        $("#content").load("_posts/" + pageName + ".html");
-    }
-</script>
 </head>
 
 <body>
@@ -28,7 +23,7 @@
 <div class="header">
 	<div class="headerContainer">
     	<div class="logo">
-        	<a href="index.shtml"><img src="/img/logo.png" width="60" height="60">Pinus</a>
+        	<a href="index.shtml"><img src="/{{site.base}}img/logo.png" width="60" height="60">Pinus</a>
         </div>
         <div class="version">
         	最近更新：3 Feb 2014 <span>|</span> 版本：1.0.1
