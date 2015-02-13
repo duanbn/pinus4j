@@ -44,7 +44,7 @@ a { text-decoration:none; blr:expression(this.onFocus=this.blur());/*针对 IE*/
 .content a { color:#5a91c0; font-size:14px; text-decoration:none;}
 .content a:hover { color:#4f88b8; text-decoration:underline;}
 .content .highlight { white-space:normal; width:691px; padding:10px 15px; border-radius:5px; background:#f5f5f5; border:#dddddd 1px solid; margin-bottom:10px;}
-.content code { width:691px; font-family:Monaco,Menlo,Consolas,monospace; color:#777; font-size:14px; line-height:24px;}
+.content code { white-space:normal; word-break:break-all; width:691px; font-family:Monaco,Menlo,Consolas,monospace; color:#777; font-size:14px; line-height:24px;}
 .content .highlight span { font-family:Monaco,Menlo,Consolas,monospace; color:#777; font-size:14px; line-height:24px;}
 
 /* footer */
