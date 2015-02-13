@@ -3,6 +3,7 @@ layout: default
 ---
 # 配置说明
 pinus在启动时候时候会读取classpath根路径的storage-config.xml文件，此文件是pinus的核心配置文件，所有的配置信息都包含在此文件中
+
 {% highlight xml %}
 <?xml version="1.0" encoding="UTF-8" ?>
 <storage-config>
@@ -116,7 +117,7 @@ pinus在启动时候时候会读取classpath根路径的storage-config.xml文件
 以上是一个完整的配置文件内容，定义了一个名为pinus的集群，集群中包含一个一个全局库，两个region，第一个region包括的ShardingKey范围是1-30000000，第二个region的范围是30000001-60000000，每一个region中包含两组数据库信息，master表示主库支持读写操作，slave表示从库支持只读操作，主从同步需要依靠数据库本身的机制来实现。\\
 db-connection-pool表示数据库连接池的信息，pinus使用的是apache-dbcp连接池，目前不支持替换，数据库连接池分为两种一种是应用程序，一种是容器，当使用容器的连接池时只需要将<db-connection-pool catalog="env">，同时<master>和<slave>的内容替换为容器的jni名字，示例如下
 
-{% highlight %}
+{% highlight xml %}
 <storage-config>
     <!-- text hash algo -->
     <!-- additive | rotating | oneByOne | bernstein | fnv | rs | js | pjw | 
@@ -193,7 +194,7 @@ storageClient.setSyncAction(EnumSyncAction.UPDATE);
 storageClient.init();
 {% endhighlight %}
 
-当应用程序结束时需要调用{% highlight java %}storageClient.destroy(){% endhighlight %}方法
+当应用程序结束时需要调用storageClient.destroy()方法
 #集成Spring框架
 如果你的系统使用了spring框架，则需要将ShardingStorageClientImpl交给spring管理即可
 {% highlight java %}
@@ -220,6 +221,7 @@ try {
 {% endhighlight %}
 ## 声明式事务
 需要在spring配置文件中加入如下配置，
+
 {% highlight xml %}
 <bean id="userTx" class="org.pinus4j.transaction.impl.UserTransactionImpl" />
 <bean id="tm"
