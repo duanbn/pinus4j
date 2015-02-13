@@ -1,9 +1,9 @@
 ---
 layout: default
 ---
-====配置说明====
-pinus在启动时候时候会读取classpath根路径的storage-config.xml文件，此文件是pinus的核心配置文件，所有的配置信息都包含在此文件中\\
-<file xml app.xml>
+# 配置说明
+pinus在启动时候时候会读取classpath根路径的storage-config.xml文件，此文件是pinus的核心配置文件，所有的配置信息都包含在此文件中
+{% highlight xml %}
 <?xml version="1.0" encoding="UTF-8" ?>
 <storage-config>
     <!-- text hash algo -->
@@ -111,10 +111,12 @@ pinus在启动时候时候会读取classpath根路径的storage-config.xml文件
 	</region>
     </cluster>
 </storage-config>
-</file>
+{% endhighlight %}
+
 以上是一个完整的配置文件内容，定义了一个名为pinus的集群，集群中包含一个一个全局库，两个region，第一个region包括的ShardingKey范围是1-30000000，第二个region的范围是30000001-60000000，每一个region中包含两组数据库信息，master表示主库支持读写操作，slave表示从库支持只读操作，主从同步需要依靠数据库本身的机制来实现。\\
 db-connection-pool表示数据库连接池的信息，pinus使用的是apache-dbcp连接池，目前不支持替换，数据库连接池分为两种一种是应用程序，一种是容器，当使用容器的连接池时只需要将<db-connection-pool catalog="env">，同时<master>和<slave>的内容替换为容器的jni名字，示例如下
-<file xml env.xml>
+
+{% highlight %}
 <storage-config>
     <!-- text hash algo -->
     <!-- additive | rotating | oneByOne | bernstein | fnv | rs | js | pjw | 
@@ -166,43 +168,48 @@ db-connection-pool表示数据库连接池的信息，pinus使用的是apache-db
         </region>
     </cluster>
 </storage-config>
-</file>
-====自动生成数据表====
-pinus根据配置的:数据库信息、实体对象、@Table中shardingNum的值来生成相关的数据表，生成规则如下:\\
-  *根据@Table中的cluster判断实体对象所在的集群
-  *根据@Table中的shardingNum来判断是全局表还是分片表，值为0或不填表示全局表
-  *根据@Table中的name表示表名，如果是分片表则创建shardingNum个表，并且下标以0开始
-  *集群中每一个库中都会生成shardingNum个数据表
+{% endhighlight %}
+
+# 自动生成数据表
+pinus根据配置的:数据库信息、实体对象、@Table中shardingNum的值来生成相关的数据表，生成规则如下:
+  * 根据@Table中的cluster判断实体对象所在的集群
+  * 根据@Table中的shardingNum来判断是全局表还是分片表，值为0或不填表示全局表
+  * 根据@Table中的name表示表名，如果是分片表则创建shardingNum个表，并且下标以0开始
+  * 集群中每一个库中都会生成shardingNum个数据表
 以上配置完之后还需要调用api来告诉pinus创建表的规则
-<code java>
+
+{% highlight java %}
 IShardingStorageClient storageClient = new ShardingStorageClientImpl();
-// 表示如果库中不存在则创建，如果存在则同步，但是pinus只会做增量同步
+//表示如果库中不存在则创建，如果存在则同步，但是pinus只会做增量同步
 storageClient.setSyncAction(EnumSyncAction.UPDATE); 
-</code>
-====使用Api开发====
+{% endhighlight %}
+
+#使用Api开发
 如果使用pinus提供的api进行开发，则需要创建ShardingStorageClientImpl对象实例，创建方法如下:\\
-<code java>
+{% highlight java %}
 IShardingStorageClient storageClient = new ShardingStorageClientImpl();
 storageClient.setScanPackage("org.pinus4j"); // 需要扫描多个包时使用英文半角逗号分隔
 storageClient.setSyncAction(EnumSyncAction.UPDATE);
 storageClient.init();
-</code>
-当应用程序结束时需要调用<code java>storageClient.destroy()</code>方法
-====集成Spring框架====
+{% endhighlight %}
+
+当应用程序结束时需要调用{% highlight java %}storageClient.destroy(){% endhighlight %}方法
+#集成Spring框架
 如果你的系统使用了spring框架，则需要将ShardingStorageClientImpl交给spring管理即可
-<code xml>
+{% highlight java %}
 <bean id="shardingStorageClient" class="org.pinus4j.api.ShardingStorageClientImpl"
     init-method="init" destroy-method="destroy">
     <!-- 扫描多个包使用英文半角逗号分隔 -->
     <property name="scanPackage" value="org.pinus4j.entity" />
     <property name="syncAction" value="UPDATE" />
 </bean>
-</code>
-====事务处理====
+{% endhighlight %}
+## 事务处理
 pinus目前支持编程式事务处理和声明式事务处理，其中声明式事务处理需要依赖spring框架
-===编程式事务===
+
+## 编程式事务
 直接调用pinus提供的api
-<code java>
+{% highlight java %}
 storageClient.beginTransaction();
 try {
     //do something...
@@ -210,10 +217,10 @@ try {
 } catch (Exceptioin e) {
     storageClient.rollback();
 }
-</code>
-===声明式事务===
+{% endhighlight %}
+## 声明式事务
 需要在spring配置文件中加入如下配置，
-<code xml>
+{% highlight xml %}
 <bean id="userTx" class="org.pinus4j.transaction.impl.UserTransactionImpl" />
 <bean id="tm"
     class="org.pinus4j.transaction.impl.BestEffortsOnePCJtaTransactionManager" />
@@ -225,22 +232,24 @@ try {
 </bean>
 
 <tx:annotation-driven transaction-manager="transactionManager" />
-</code>
+{% endhighlight %}
+
 以上配置表示让spring使用pinus的事务管理器来管理事务，剩下的请参考spring文档
-====日志====
+# 日志
 pinus使用slf4j日志接口来输出日志，用户可以自己选择相关的日志工具
-===SQL日志===
+## SQL日志
 如果想要在日志文件中打印sql语句，可以将org.pinus4j.datalayer.SQLBuilder的输出级别设置为debug
-这里引入一段log4j的配置方法
-<code xml>
+
+{% highlight xml%}
 <category name="org.pinus4j.datalayer.SQLBuilder">
     <level value="debug" />
 </category>
-</code>
-===慢日志===
+{% endhighlight %}
+## 慢日志
 pinus会将响应比较慢的sql语句输出到日志中，配置方式如下
-<code xml>
+
+{% highlight xml%}
 <category name="org.pinus4j.datalayer.SlowQueryLogger">
     <level value="warn" />
 </category>
-</code>
+{% endhighlight %}
