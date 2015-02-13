@@ -62,12 +62,3 @@ a { text-decoration:none; blr:expression(this.onFocus=this.blur());/*针对 IE*/
 .toTop{width:48px; height:48px; background:url(../img/top.gif) no-repeat;cursor:pointer;position:fixed;right:40px;bottom:100px;}
 *html .toTop{position:absolute;bottom:auto;top:expression(eval(document.documentElement.scrollTop+document.documentElement.clientHeight-this.offsetHeight-(parseInt(this.currentStyle.marginTop,10)||0)-(parseInt(this.currentStyle.marginBottom,10)||0)));margin-bottom:80px;}
 .toTop:hover { background:url(../img/toph.gif) no-repeat;}
-
-
-
-
-
-
-
-
-
