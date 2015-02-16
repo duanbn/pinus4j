@@ -10,7 +10,7 @@ Pinus 有两个依赖，ZooKeeper 和 MYSQL （安装配置查询 MYSQL 相关�
 
 * 下载 ZooKeeper ：[下载链接](http://www.apache.org/dyn/closer.cgi/zookeeper/)
 * 解压 ZooKeeper 包
-* `$ZOOKEEPER_HOME/bin/zkServer.sh start` 启动
+* $ZOOKEEPER_HOME/bin/zkServer.sh start 启动
 * 使用 Maven 构建项目，需要在 `pom.xml` 中加入下边的引用：
 
 {% highlight xml %}
