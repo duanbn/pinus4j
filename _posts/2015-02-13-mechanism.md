@@ -2,15 +2,15 @@
 layout: default
 ---
 
-## 框架机制
+# 框架机制
 
-# 数据库水平切分模型
+## 数据库水平切分模型
 
-Pinus 的水平切分模型分为几个层级，这个层级关系被配置在 storage-config.xml 文件中，配置文件中的节点名称为 cluster。cluster 可以配置多个，具体请参考[入门教程]({% post_url 2015-02-13-induction %})中的配置文件信息。水平切分模型如下图所示：
+Pinus 的水平切分模型分为几个层级，这个层级关系被配置在 `storage-config.xml` 文件中，配置文件中的节点名称为 cluster。cluster 可以配置多个，具体请参考 [入门教程]({% post_url 2015-02-13-induction %}) 中的配置文件信息。水平切分模型如下图所示：
 
 ![]({{site.baseurl}}/img/sharding_arch.png)
 
-* ShardingKey：分片因子。数据的增、删、改都需要通过这个因子来定位最终会存储在哪个库的哪张表中，ShardingKey 的值在路由选择时会变成一个数字，如果是字符串也会通过 hash 算法变成一个数字。
+* ### ShardingKey：###分片因子。数据的增、删、改都需要通过这个因子来定位最终会存储在哪个库的哪张表中，ShardingKey 的值在路由选择时会变成一个数字，如果是字符串也会通过 hash 算法变成一个数字。
 
 * cluster：表示一个数据库集群，每个集群在配置的时候需要指定一个集群名称。
 
