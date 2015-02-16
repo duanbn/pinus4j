@@ -38,8 +38,9 @@ a { text-decoration:none; blr:expression(this.onFocus=this.blur());/*针对 IE*/
 
 /* content */
 .content { float:left; width:723px; height:auto;}
-.content h2 { width:723px; margin-bottom:10px; margin-top:10px; line-height:50px; margin-bottom:20px; border-bottom:#ddd 1px solid; font-size:25px; font-weight:bold; color:#333;}
-.content h1 { line-height:35px; margin-bottom:10px; font-size:22px; font-weight:bold; color:#333;}
+.content h1 { width:723px; margin-bottom:10px; margin-top:10px; line-height:50px; margin-bottom:20px; border-bottom:#ddd 1px solid; font-size:25px; font-weight:bold; color:#333;}
+.content h2 { line-height:35px; margin-bottom:10px; font-size:20px; font-weight:bold; color:#333;}
+.content h3 { line-height:30px; margin-bottom:5px; font-size:16px; font-weight:bold; color:#333;}
 .content p { line-height:24px; font-size:14px; color:#333; margin-bottom:10px;}
 .content a { color:#5a91c0; font-size:14px; text-decoration:none;}
 .content a:hover { color:#4f88b8; text-decoration:underline;}
@@ -48,7 +49,7 @@ a { text-decoration:none; blr:expression(this.onFocus=this.blur());/*针对 IE*/
 .content .highlight span { font-family:Monaco,Menlo,Consolas,monospace; color:#777; font-size:14px; line-height:24px;}
 .content tt { font-size:12px; font-family:Monaco,Menlo,Consolas,"Courier New",monospace; border-radius:3px; background:#f6e2bc; padding:1px 3px; margin-left:5px; margin-right:5px;}
 .content ul { margin-left:25px; color:#333; font-size:14px; margin-bottom:10px;}
-.content li { line-height:24px; list-style-type:disc; font-size:14px; color:#333;}
+.content li { line-height:24px; font-size:14px; color:#333;}
 
 
 /* footer */
