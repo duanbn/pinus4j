@@ -27,16 +27,13 @@ import javax.transaction.TransactionManager;
 import org.pinus4j.api.query.IQuery;
 import org.pinus4j.api.query.QueryImpl;
 import org.pinus4j.cluster.IDBCluster;
+import org.pinus4j.cluster.IDBClusterBuilder;
 import org.pinus4j.cluster.beans.IShardingKey;
 import org.pinus4j.cluster.beans.ShardingKey;
-import org.pinus4j.cluster.config.IClusterConfig;
-import org.pinus4j.cluster.config.impl.XmlClusterConfigImpl;
 import org.pinus4j.cluster.enums.EnumDB;
 import org.pinus4j.cluster.enums.EnumDBMasterSlave;
-import org.pinus4j.cluster.enums.EnumDbConnectionPoolCatalog;
 import org.pinus4j.cluster.enums.EnumSyncAction;
-import org.pinus4j.cluster.impl.AppDBClusterImpl;
-import org.pinus4j.cluster.impl.EnvDBClusterImpl;
+import org.pinus4j.cluster.impl.DefaultDBCluster;
 import org.pinus4j.constant.Const;
 import org.pinus4j.datalayer.IDataLayerBuilder;
 import org.pinus4j.datalayer.IGlobalMasterQuery;
@@ -48,7 +45,6 @@ import org.pinus4j.datalayer.IShardingUpdate;
 import org.pinus4j.datalayer.jdbc.JdbcDataLayerBuilder;
 import org.pinus4j.exceptions.DBClusterException;
 import org.pinus4j.exceptions.DBOperationException;
-import org.pinus4j.exceptions.LoadConfigException;
 import org.pinus4j.generator.IIdGenerator;
 import org.pinus4j.task.ITask;
 import org.pinus4j.task.TaskExecutor;
@@ -149,33 +145,12 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 	/**
 	 * 初始化方法
 	 */
-	public void init() throws LoadConfigException {
-		IClusterConfig clusterConfig = XmlClusterConfigImpl.getInstance();
-
-		EnumDbConnectionPoolCatalog enumDbCpCatalog = clusterConfig.getDbConnectionPoolCatalog();
-
-		// 初始化集群
-		switch (enumDbCpCatalog) {
-		case APP:
-			this.dbCluster = new AppDBClusterImpl(enumDb);
-			break;
-		case ENV:
-			this.dbCluster = new EnvDBClusterImpl(enumDb);
-			break;
-		default:
-			this.dbCluster = new AppDBClusterImpl(enumDb);
-			break;
-		}
-		// 设置是否生成数据库表
-		this.dbCluster.setSyncAction(syncAction);
-		// 设置扫描对象的包
-		this.dbCluster.setScanPackage(this.scanPackage);
-		// 启动集群
-		try {
-			this.dbCluster.startup();
-		} catch (DBClusterException e) {
-			throw new RuntimeException(e);
-		}
+	public void init() {
+		IDBClusterBuilder dbClusterBuilder = new DefaultDBCluster();
+		dbClusterBuilder.setScanPackage(this.scanPackage);
+		dbClusterBuilder.setSyncAction(this.syncAction);
+		dbClusterBuilder.setDbType(this.enumDb);
+		this.dbCluster = dbClusterBuilder.build();
 
 		this.idGenerator = this.dbCluster.getIdGenerator();
 
