@@ -18,7 +18,7 @@ package org.pinus4j.datalayer.jdbc;
 
 import java.sql.Connection;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -126,7 +126,7 @@ public class ShardingJdbcUpdateImpl extends AbstractJdbcUpdate implements IShard
 		boolean isCheckPrimaryKey = true;
 
 		// 如果主键为0，则设置主键
-		Map<Number, Object> map = new HashMap<Number, Object>(entitySize);
+		Map<Number, Object> map = new LinkedHashMap<Number, Object>(entitySize);
 		Number pk = null, maxPk = 0;
 		Object entity = null;
 		for (int i = 0; i < entitySize; i++) {

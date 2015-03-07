@@ -1,5 +1,6 @@
 --version 1.1.1
 拆分出两个项目，将cluster会让orm分开
+fix bug
 
 --version 1.1.0
 支持事务处理

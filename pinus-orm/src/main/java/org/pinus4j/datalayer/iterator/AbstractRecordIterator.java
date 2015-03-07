@@ -68,7 +68,6 @@ public abstract class AbstractRecordIterator<E> extends AbstractJdbcQuery implem
 		throw new UnsupportedOperationException("this iterator cann't doing remove");
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
 	public List<E> nextMore() {
 		List<E> data = new ArrayList<E>(this.recordQ);
