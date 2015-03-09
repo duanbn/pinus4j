@@ -143,8 +143,16 @@ public class PinusMain {
         client.init();
 
         TestEntity testEntity = new TestEntity();
-        long id = client.save(testEntity).longValue();
-        System.out.println("save test entity done, new pk is " + id);
+        client.beginTransaction();
+        try {
+            long id = client.save(testEntity).longValue();
+
+            client.commit();
+
+            System.out.println("save test entity done, new pk is " + id);
+        } catch (Exception) {
+            client.rollback();
+        }
     }
 }
 {% endhighlight %}
