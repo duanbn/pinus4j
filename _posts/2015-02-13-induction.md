@@ -2,16 +2,16 @@
 layout: default
 ---
 
-##入门
+# 入门
 
 Pinus 有两个依赖，ZooKeeper 和 MYSQL （安装配置查询 MYSQL 相关文档）。
 
-#第一步 ：安装
+## 第一步 ：安装
 
-*   下载 ZooKeeper ：[下载链接](http://www.apache.org/dyn/closer.cgi/zookeeper/)
-*   解压 ZooKeeper 包
-*   $ZOOKEEPER_HOME/bin/zkServer.sh start 启动
-*   使用 Maven 构建项目，需要在 pom.xml 中加入下边的引用：
+* 下载 ZooKeeper ：[下载链接](http://www.apache.org/dyn/closer.cgi/zookeeper/)
+* 解压 ZooKeeper 包
+* $ZOOKEEPER_HOME/bin/zkServer.sh start 启动
+* 使用 Maven 构建项目，需要在 `pom.xml` 中加入下边的引用：
 
 {% highlight xml %}
 <dependency>
@@ -21,9 +21,9 @@ Pinus 有两个依赖，ZooKeeper 和 MYSQL （安装配置查询 MYSQL 相关�
 </dependency>
 {% endhighlight %}
 
-#第二步：编写Pinus配置文件
+## 第二步：编写 Pinus 配置文件
 
-在 classpath 根路径编写 storage-config.xml 配置文件（这个是 Pinus 的核心配置文件）。
+在 classpath 根路径编写 `storage-config.xml` 配置文件（这个是 Pinus 的核心配置文件）。
 
 {% highlight xml %}
 <?xml version="1.0" encoding="UTF-8" ?>
@@ -66,7 +66,7 @@ Pinus 有两个依赖，ZooKeeper 和 MYSQL （安装配置查询 MYSQL 相关�
 </storage-config>
 {% endhighlight %}
 
-#第三步：编写一个实体对象
+## 第三步：编写一个实体对象
 
 {% highlight java %}
 package org.pinus.entitys;
@@ -127,12 +127,12 @@ public class TestEntity extends FashionEntity implements Serializable {
 
 这里有几点注意事项需要说明：
 
-*   实体对象必须使用@Table进行注解，否则框架不会识别此对象
-*   实体对象需要实现java.io.Serializable接口
-*   实体对象必须包含一个数字类型的主键字段并且使用@PrimaryKey标注
-*   实体对象中至少包含一个字段
+* 实体对象必须使用@Table进行注解，否则框架不会识别此对象
+* 实体对象需要实现java.io.Serializable接口
+* 实体对象必须包含一个数字类型的主键字段并且使用@PrimaryKey标注
+* 实体对象中至少包含一个字段
 
-#第四步：编写 Main 程序
+## 第四步：编写 Main 程序
 
 {% highlight java %}
 public class PinusMain {
