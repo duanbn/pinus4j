@@ -8,16 +8,31 @@ import java.util.concurrent.locks.Lock;
 
 import junit.framework.Assert;
 
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Test;
+import org.pinus4j.api.IShardingStorageClient;
 import org.pinus4j.cluster.beans.IShardingKey;
 import org.pinus4j.cluster.beans.ShardingKey;
 import org.pinus4j.entity.TestEntity;
 
-public class LoadTest extends ApiBaseTest {
+public class LoadTest extends BaseTest {
 
 	private static final CountDownLatch cdl = new CountDownLatch(99999999);
 
 	private static int counter;
+
+	private static IShardingStorageClient storageClient;
+
+	@BeforeClass
+	public static void before() {
+		storageClient = getStorageClient();
+	}
+
+	@AfterClass
+	public void after() {
+		storageClient.destroy();
+	}
 
 	public void loadTest() throws Exception {
 		for (int i = 0; i < 200; i++) {
@@ -25,10 +40,10 @@ public class LoadTest extends ApiBaseTest {
 				public void run() {
 					while (true) {
 						TestEntity entity = createEntity();
-						Number id = cacheClient.save(entity);
+						Number id = storageClient.save(entity);
 
 						IShardingKey<Number> key = new ShardingKey<Number>(CLUSTER_KLSTORAGE, id);
-						cacheClient.removeByPk(id, key, TestEntity.class);
+						storageClient.removeByPk(id, key, TestEntity.class);
 
 						cdl.countDown();
 					}
@@ -52,7 +67,7 @@ public class LoadTest extends ApiBaseTest {
 			Thread t = new Thread() {
 				public void run() {
 					for (int i = 0; i < maxCount; i++) {
-						Lock lock = cacheClient.createLock("junittest");
+						Lock lock = storageClient.createLock("junittest");
 						try {
 							lock.lock();
 							System.out.println(counter++);

@@ -52,10 +52,20 @@ public class QueryImpl implements IQuery, Cloneable {
 	 */
 	private int limit = -1;
 
-    @Override
-    public boolean hasQueryFields() {
-        return this.fields != null && this.fields.length > 0;
-    }
+	@Override
+	public int getStart() {
+		return this.start;
+	}
+
+	@Override
+	public int getLimit() {
+		return this.limit;
+	}
+
+	@Override
+	public boolean hasQueryFields() {
+		return this.fields != null && this.fields.length > 0;
+	}
 
 	@Override
 	public IQuery clone() {
@@ -104,7 +114,7 @@ public class QueryImpl implements IQuery, Cloneable {
 			SQL.deleteCharAt(SQL.length() - 1);
 		}
 		// 添加分页
-		if (start != -1 && limit != -1) {
+		if (start > -1 && limit > -1) {
 			SQL.append(" LIMIT ").append(start).append(",").append(limit);
 		} else if (limit != -1) {
 			SQL.append(" LIMIT ").append(limit);

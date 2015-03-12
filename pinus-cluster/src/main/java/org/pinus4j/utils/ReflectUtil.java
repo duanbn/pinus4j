@@ -422,8 +422,8 @@ public class ReflectUtil {
 	 * @return
 	 * @throws Exception
 	 */
-	public static Map<String, Object> describe(Object obj, boolean isFilteDefault) throws Exception {
-		return describe(obj, isFilteDefault, false);
+	public static Map<String, Object> describe(Object obj, boolean isFilteNull) throws Exception {
+		return describe(obj, isFilteNull, false);
 	}
 
 	/**
@@ -438,7 +438,7 @@ public class ReflectUtil {
 	 * 
 	 * @return {属性名, 属性值}
 	 */
-	public static Map<String, Object> describe(Object obj, boolean isFilteDefault, boolean isFilteUpdateTime)
+	public static Map<String, Object> describe(Object obj, boolean isFilteNull, boolean isFilteUpdateTime)
 			throws Exception {
 		if (obj == null) {
 			throw new IllegalArgumentException("参数错误, obj=null");
@@ -460,58 +460,35 @@ public class ReflectUtil {
 			value = f.get(obj);
 			Class<?> fTypeClazz = f.getType();
 
-			org.pinus4j.generator.annotations.Field annoField = f.getAnnotation(org.pinus4j.generator.annotations.Field.class);
+			org.pinus4j.generator.annotations.Field annoField = f
+					.getAnnotation(org.pinus4j.generator.annotations.Field.class);
 			if (fTypeClazz == String.class && annoField != null && annoField.length() > Const.COLUMN_TEXT_LENGTH
 					&& value == null) {
 				value = "";
 			}
 
 			// 过滤默认值
-			if (isFilteDefault) {
+			if (isFilteNull) {
 				if (value == null) {
 					continue;
 				}
-				// if (fTypeClazz == Boolean.TYPE || fTypeClazz ==
-				// Boolean.class) {
-				// if (!(Boolean) value) {
-				// continue;
-				// }
-				// } else if (fTypeClazz == Byte.TYPE || fTypeClazz ==
-				// Byte.class) {
-				// if ((Byte) value == 0) {
-				// continue;
-				// }
-				// } else if (fTypeClazz == Character.TYPE || fTypeClazz ==
-				// Character.class) {
-				// if ((Character) value == 0) {
-				// continue;
-				// }
-				// } else if (fTypeClazz == Short.TYPE || fTypeClazz ==
-				// Short.class) {
-				// if ((Short) value == 0) {
-				// continue;
-				// }
-				// } else if (fTypeClazz == Integer.TYPE || fTypeClazz ==
-				// Integer.class) {
-				// if ((Integer) value == 0) {
-				// continue;
-				// }
-				// } else if (fTypeClazz == Long.TYPE || fTypeClazz ==
-				// Long.class) {
-				// if ((Long) value == 0l) {
-				// continue;
-				// }
-				// } else if (fTypeClazz == Float.TYPE || fTypeClazz ==
-				// Float.class) {
-				// if ((Float) value == 0.0f) {
-				// continue;
-				// }
-				// } else if (fTypeClazz == Double.TYPE || fTypeClazz ==
-				// Double.class) {
-				// if ((Double) value == 0.0) {
-				// continue;
-				// }
-				// }
+				/*
+				 * if (fTypeClazz == Boolean.TYPE || fTypeClazz ==
+				 * Boolean.class) { if (!(Boolean) value) { continue; } } else
+				 * if (fTypeClazz == Byte.TYPE || fTypeClazz == Byte.class) { if
+				 * ((Byte) value == 0) { continue; } } else if (fTypeClazz ==
+				 * Character.TYPE || fTypeClazz == Character.class) { if
+				 * ((Character) value == 0) { continue; } } else if (fTypeClazz
+				 * == Short.TYPE || fTypeClazz == Short.class) { if ((Short)
+				 * value == 0) { continue; } } else if (fTypeClazz ==
+				 * Integer.TYPE || fTypeClazz == Integer.class) { if ((Integer)
+				 * value == 0) { continue; } } else if (fTypeClazz == Long.TYPE
+				 * || fTypeClazz == Long.class) { if ((Long) value == 0l) {
+				 * continue; } } else if (fTypeClazz == Float.TYPE || fTypeClazz
+				 * == Float.class) { if ((Float) value == 0.0f) { continue; } }
+				 * else if (fTypeClazz == Double.TYPE || fTypeClazz ==
+				 * Double.class) { if ((Double) value == 0.0) { continue; } }
+				 */
 			}
 
 			map.put(f.getName(), value);

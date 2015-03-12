@@ -1,30 +1,35 @@
 package org.pinus4j.api;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import junit.framework.Assert;
 
-import org.junit.After;
-import org.junit.Before;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Test;
-import org.pinus4j.ApiBaseTest;
+import org.pinus4j.BaseTest;
 import org.pinus4j.api.query.Condition;
 import org.pinus4j.api.query.IQuery;
 import org.pinus4j.entity.TestGlobalEntity;
 import org.pinus4j.task.ITask;
 import org.pinus4j.task.TaskFuture;
 
-public class GlobalTaskTest extends ApiBaseTest {
+public class GlobalTaskTest extends BaseTest {
 
-	private Number[] pks;
+	private static Number[] pks;
 
-	private List<TestGlobalEntity> entities;
+	private static List<TestGlobalEntity> entities;
 
 	private static final int SIZE = 2100;
 
-	@Before
-	public void before() {
+	private static IShardingStorageClient storageClient;
+
+	@BeforeClass
+	public static void before() {
+		storageClient = getStorageClient();
+
 		// save more
 		entities = new ArrayList<TestGlobalEntity>(SIZE);
 		TestGlobalEntity entity = null;
@@ -33,23 +38,25 @@ public class GlobalTaskTest extends ApiBaseTest {
 			entity.setTestString("i am pinus");
 			entities.add(entity);
 		}
-		pks = cacheClient.globalSaveBatch(entities, CLUSTER_KLSTORAGE);
+		pks = storageClient.globalSaveBatch(entities, CLUSTER_KLSTORAGE);
 		// check save more
-		entities = cacheClient.findGlobalByPks(CLUSTER_KLSTORAGE, TestGlobalEntity.class, pks);
+		entities = storageClient.findByPkList(Arrays.asList(pks), TestGlobalEntity.class);
 		Assert.assertEquals(SIZE, entities.size());
 	}
 
-	@After
-	public void after() {
+	@AfterClass
+	public static void after() {
 		// remove more
-		cacheClient.globalRemoveByPks(CLUSTER_KLSTORAGE, TestGlobalEntity.class, pks);
+		storageClient.globalRemoveByPks(CLUSTER_KLSTORAGE, TestGlobalEntity.class, pks);
+
+		storageClient.destroy();
 	}
 
 	@Test
 	public void testSubmit() throws InterruptedException {
 		ITask<TestGlobalEntity> task = new SimpleGlobalTask();
 
-		TaskFuture future = cacheClient.submit(task, TestGlobalEntity.class);
+		TaskFuture future = storageClient.submit(task, TestGlobalEntity.class);
 		while (!future.isDone()) {
 			System.out.println(future.getProgress());
 		}
@@ -60,10 +67,10 @@ public class GlobalTaskTest extends ApiBaseTest {
 	@Test
 	public void testSubmitQuery() throws InterruptedException {
 		ITask<TestGlobalEntity> task = new SimpleGlobalTask();
-		IQuery query = cacheClient.createQuery();
+		IQuery query = storageClient.createQuery();
 		query.add(Condition.gt("testInt", 100));
 
-		TaskFuture future = cacheClient.submit(task, TestGlobalEntity.class, query);
+		TaskFuture future = storageClient.submit(task, TestGlobalEntity.class, query);
 		future.await();
 
 		System.out.println(future);

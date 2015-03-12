@@ -74,7 +74,7 @@ public abstract class FashionEntity {
 			IShardingKey<Object> sk = new ShardingKey<Object>(clusterName, shardingValue);
 			obj = storageClient.findByPk(pk, sk, clazz);
 		} else {
-			obj = storageClient.findGlobalByPk(pk, clusterName, clazz);
+			obj = storageClient.findByPk(pk, clazz);
 		}
 
 		if (obj != null) {

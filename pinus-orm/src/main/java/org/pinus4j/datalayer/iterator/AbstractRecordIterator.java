@@ -8,7 +8,7 @@ import java.util.Queue;
 import org.pinus4j.api.query.IQuery;
 import org.pinus4j.api.query.QueryImpl;
 import org.pinus4j.datalayer.IRecordIterator;
-import org.pinus4j.datalayer.jdbc.AbstractJdbcQuery;
+import org.pinus4j.datalayer.query.jdbc.AbstractJdbcQuery;
 import org.pinus4j.exceptions.DBOperationException;
 import org.pinus4j.utils.ReflectUtil;
 

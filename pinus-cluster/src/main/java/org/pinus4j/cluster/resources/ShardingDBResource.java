@@ -20,7 +20,7 @@ import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 
-import org.pinus4j.cluster.beans.DBClusterRegionInfo;
+import org.pinus4j.cluster.beans.DBRegionInfo;
 import org.pinus4j.cluster.beans.DBInfo;
 import org.pinus4j.cluster.enums.EnumDBMasterSlave;
 import org.pinus4j.exceptions.DBOperationException;
@@ -60,15 +60,7 @@ public class ShardingDBResource extends AbstractXADBResource {
 	 */
 	private int tableIndex;
 
-	/**
-	 * region start
-	 */
-	private long regionStart;
-
-	/**
-	 * region end.
-	 */
-	private long regionEnd;
+	private String regionCapacity;
 
 	private EnumDBMasterSlave masterSlave;
 
@@ -82,10 +74,10 @@ public class ShardingDBResource extends AbstractXADBResource {
 	private ShardingDBResource() {
 	}
 
-	public static ShardingDBResource valueOf(DBInfo dbInfo, DBClusterRegionInfo regionInfo, String tableName,
-			int tableIndex) throws SQLException {
-		IResourceId resId = new DBResourceId(dbInfo.getClusterName(), dbInfo.getDbName(), regionInfo.getStart(),
-				regionInfo.getEnd(), tableName, tableIndex, dbInfo.getMasterSlave());
+	public static ShardingDBResource valueOf(DBInfo dbInfo, DBRegionInfo regionInfo, String tableName, int tableIndex)
+			throws SQLException {
+		IResourceId resId = new DBResourceId(dbInfo.getClusterName(), dbInfo.getDbName(), regionInfo.getCapacity(),
+				tableName, tableIndex, dbInfo.getMasterSlave());
 
 		ShardingDBResource instance = (ShardingDBResource) DBResourceCache.getShardingDBResource(resId);
 
@@ -98,10 +90,9 @@ public class ShardingDBResource extends AbstractXADBResource {
 			instance.setId(resId);
 			instance.setClusterName(dbInfo.getClusterName());
 			instance.setDbName(dbInfo.getDbName());
+			instance.setRegionCapacity(regionInfo.getCapacity());
 			instance.setTableName(tableName);
 			instance.setTableIndex(tableIndex);
-			instance.setRegionStart(regionInfo.getStart());
-			instance.setRegionEnd(regionInfo.getEnd());
 			instance.setMasterSlave(dbInfo.getMasterSlave());
 
 			// get database meta info.
@@ -194,17 +185,6 @@ public class ShardingDBResource extends AbstractXADBResource {
 		return this.masterSlave;
 	}
 
-	@Override
-	public String toString() {
-		StringBuilder info = new StringBuilder();
-		info.append(databaseProductName);
-		info.append(" host=" + host);
-		info.append(" db=").append(catalog);
-		info.append(" tableName=").append(this.tableName).append(this.tableIndex);
-		info.append(" start=").append(this.regionStart).append(" end=").append(this.regionEnd);
-		return info.toString();
-	}
-
 	public String getDbName() {
 		return dbName;
 	}
@@ -233,20 +213,12 @@ public class ShardingDBResource extends AbstractXADBResource {
 		this.clusterName = clusterName;
 	}
 
-	public long getRegionStart() {
-		return regionStart;
+	public String getRegionCapacity() {
+		return regionCapacity;
 	}
 
-	public void setRegionStart(long regionStart) {
-		this.regionStart = regionStart;
-	}
-
-	public long getRegionEnd() {
-		return regionEnd;
-	}
-
-	public void setRegionEnd(long regionEnd) {
-		this.regionEnd = regionEnd;
+	public void setRegionCapacity(String regionCapacity) {
+		this.regionCapacity = regionCapacity;
 	}
 
 	public String getDatabaseProductName() {
@@ -275,6 +247,13 @@ public class ShardingDBResource extends AbstractXADBResource {
 
 	public void setMasterSlave(EnumDBMasterSlave masterSlave) {
 		this.masterSlave = masterSlave;
+	}
+
+	@Override
+	public String toString() {
+		return "ShardingDBResource [clusterName=" + clusterName + ", dbName=" + dbName + ", tableName=" + tableName
+				+ ", tableIndex=" + tableIndex + ", regionCapacity=" + regionCapacity + ", masterSlave=" + masterSlave
+				+ ", databaseProductName=" + databaseProductName + ", host=" + host + ", catalog=" + catalog + "]";
 	}
 
 }

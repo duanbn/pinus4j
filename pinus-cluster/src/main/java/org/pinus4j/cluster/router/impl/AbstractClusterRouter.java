@@ -21,11 +21,12 @@ import java.util.List;
 import org.pinus4j.cluster.IDBCluster;
 import org.pinus4j.cluster.ITableCluster;
 import org.pinus4j.cluster.beans.DBClusterInfo;
-import org.pinus4j.cluster.beans.DBClusterRegionInfo;
+import org.pinus4j.cluster.beans.DBRegionInfo;
 import org.pinus4j.cluster.beans.DBInfo;
 import org.pinus4j.cluster.beans.IShardingKey;
 import org.pinus4j.cluster.enums.EnumDBMasterSlave;
 import org.pinus4j.cluster.enums.HashAlgoEnum;
+import org.pinus4j.cluster.impl.AbstractDBCluster;
 import org.pinus4j.cluster.router.IClusterRouter;
 import org.pinus4j.cluster.router.RouteInfo;
 import org.pinus4j.exceptions.DBRouteException;
@@ -83,7 +84,7 @@ public abstract class AbstractClusterRouter implements IClusterRouter {
 	}
 
 	@Override
-	public RouteInfo select(EnumDBMasterSlave clusterType, String tableName, IShardingKey<?> value)
+	public RouteInfo select(EnumDBMasterSlave masterSlave, String tableName, IShardingKey<?> value)
 			throws DBRouteException {
 		RouteInfo dbRouteInfo = new RouteInfo();
 
@@ -97,15 +98,15 @@ public abstract class AbstractClusterRouter implements IClusterRouter {
 		}
 
 		// compute and find cluster region info.
-		List<DBClusterRegionInfo> regionInfos = dbClusterInfo.getDbRegions();
+		List<DBRegionInfo> regionInfos = dbClusterInfo.getDbRegions();
 		if (regionInfos == null || regionInfos.isEmpty()) {
 			throw new DBRouteException("查找集群失败, clustername=" + clusterName);
 		}
 
-		DBClusterRegionInfo regionInfo = null;
+		DBRegionInfo regionInfo = null;
 		int regionIndex = 0;
-		for (DBClusterRegionInfo region : regionInfos) {
-			if (region.getStart() <= shardingValue && region.getEnd() >= shardingValue) {
+		for (DBRegionInfo region : regionInfos) {
+			if (region.isMatch(shardingValue)) {
 				regionInfo = region;
 				break;
 			}
@@ -118,17 +119,26 @@ public abstract class AbstractClusterRouter implements IClusterRouter {
 
 		// compute and find database instance.
 		List<DBInfo> dbInfos = null;
-		switch (clusterType) {
+		switch (masterSlave) {
 		case MASTER:
 			dbInfos = regionInfo.getMasterDBInfos();
 			break;
-		default:
+		case AUTO:
 			// get multi slave info.
 			List<List<DBInfo>> multiSlaveDBInfos = regionInfo.getSlaveDBInfos();
 			if (multiSlaveDBInfos == null || multiSlaveDBInfos.isEmpty()) {
 				throw new DBRouteException("find slave db cluster failure cluster name is " + clusterName);
 			}
-			int slaveIndex = clusterType.getValue();
+			int slaveIndex = AbstractDBCluster.r.nextInt(multiSlaveDBInfos.size() - 1);
+			dbInfos = multiSlaveDBInfos.get(slaveIndex);
+			break;
+		default:
+			// get multi slave info.
+			multiSlaveDBInfos = regionInfo.getSlaveDBInfos();
+			if (multiSlaveDBInfos == null || multiSlaveDBInfos.isEmpty()) {
+				throw new DBRouteException("find slave db cluster failure cluster name is " + clusterName);
+			}
+			slaveIndex = masterSlave.getValue();
 			dbInfos = multiSlaveDBInfos.get(slaveIndex);
 			break;
 		}
@@ -169,7 +179,8 @@ public abstract class AbstractClusterRouter implements IClusterRouter {
 	 * @param mod
 	 * @return
 	 */
-	protected long getShardingValue(IShardingKey<?> value) {
+	@Override
+	public long getShardingValue(IShardingKey<?> value) {
 		Object shardingValue = value.getValue();
 
 		if (shardingValue instanceof String) {

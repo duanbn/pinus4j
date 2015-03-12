@@ -57,7 +57,7 @@ public class DBClusterInfo {
     /**
      * sharding database info.
      */
-	private List<DBClusterRegionInfo> dbRegions;
+	private List<DBRegionInfo> dbRegions;
 
 	@Override
 	public String toString() {
@@ -106,11 +106,11 @@ public class DBClusterInfo {
 		this.slaveGlobalDBInfo = slaveGlobalDBInfo;
 	}
 
-	public List<DBClusterRegionInfo> getDbRegions() {
+	public List<DBRegionInfo> getDbRegions() {
 		return dbRegions;
 	}
 
-	public void setDbRegions(List<DBClusterRegionInfo> dbRegions) {
+	public void setDbRegions(List<DBRegionInfo> dbRegions) {
 		this.dbRegions = dbRegions;
 	}
 

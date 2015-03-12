@@ -51,32 +51,47 @@ import org.pinus4j.generator.beans.DBTable;
 public interface IDBCluster {
 
 	/**
+	 * judge this cluster have global slave.
+	 * 
+	 * @return
+	 */
+	boolean isGlobalSlaveExist(String clusterName);
+
+	/**
+	 * judege this cluster have sharding slave.
+	 * 
+	 * @param shardingKey
+	 * @return
+	 */
+	boolean isShardingSlaveExist(String clusterName);
+
+	/**
 	 * get transaction manager.
 	 * 
 	 * @return
 	 */
-	public TransactionManager getTransactionManager();
+	TransactionManager getTransactionManager();
 
 	/**
 	 * get primary cache ref.
 	 * 
 	 * @return primary cache instance.
 	 */
-	public IPrimaryCache getPrimaryCache();
+	IPrimaryCache getPrimaryCache();
 
 	/**
 	 * get second cache ref.
 	 * 
 	 * @return second cache instance.
 	 */
-	public ISecondCache getSecondCache();
+	ISecondCache getSecondCache();
 
 	/**
 	 * create a destribute lock by give name.
 	 *
 	 * @return destirbute lock.
 	 */
-	public Lock createLock(String name);
+	Lock createLock(String name);
 
 	/**
 	 * 设置此集群是否从zookeeper中加载分片信息.
@@ -84,28 +99,28 @@ public interface IDBCluster {
 	 * @param value
 	 *            true:是， false:否.
 	 */
-	public void setShardInfoFromZk(boolean value);
+	void setShardInfoFromZk(boolean value);
 
 	/**
 	 * 从Zookeeper中获取分片信息.
 	 *
 	 * @return 分片信息.
 	 */
-	public List<DBTable> getDBTableFromZk();
+	List<DBTable> getDBTableFromZk();
 
 	/**
 	 * 从Jvm中获取分片信息.
 	 *
 	 * @return 分片信息.
 	 */
-	public List<DBTable> getDBTableFromJvm();
+	List<DBTable> getDBTableFromJvm();
 
 	/**
 	 * Get all info about this cluster.
 	 *
 	 * @return all cluster info.
 	 */
-	public Collection<DBClusterInfo> getDBClusterInfo();
+	Collection<DBClusterInfo> getDBClusterInfo();
 
 	/**
 	 * 获取集群信息.
@@ -114,7 +129,7 @@ public interface IDBCluster {
 	 *            集群名
 	 * @return 集群信息
 	 */
-	public DBClusterInfo getDBClusterInfo(String clusterName);
+	DBClusterInfo getDBClusterInfo(String clusterName);
 
 	/**
 	 * 启动集群. 调用数据库集群前需要调用此方法，为了初始化集群连接.
@@ -122,7 +137,7 @@ public interface IDBCluster {
 	 * @throws DBClusterException
 	 *             初始化失败
 	 */
-	public void startup() throws DBClusterException;
+	void startup() throws DBClusterException;
 
 	/**
 	 * 启动集群. 调用数据库集群前需要调用此方法，为了初始化集群连接.
@@ -133,7 +148,7 @@ public interface IDBCluster {
 	 * @throws DBClusterException
 	 *             初始化失败
 	 */
-	public void startup(String xmlFilePath) throws DBClusterException;
+	void startup(String xmlFilePath) throws DBClusterException;
 
 	/**
 	 * 关闭集群. 系统停止时关闭数据库集群.
@@ -141,7 +156,7 @@ public interface IDBCluster {
 	 * @throws DBClusterException
 	 *             关闭失败
 	 */
-	public void shutdown() throws DBClusterException;
+	void shutdown() throws DBClusterException;
 
 	/**
 	 * 获取主全局库连接.
@@ -149,7 +164,7 @@ public interface IDBCluster {
 	 * @param clusterName
 	 * @return
 	 */
-	public IDBResource getMasterGlobalDBResource(String clusterName, String tableName) throws DBClusterException;
+	IDBResource getMasterGlobalDBResource(String clusterName, String tableName) throws DBClusterException;
 
 	/**
 	 * 获取从库的全局库连接
@@ -158,7 +173,7 @@ public interface IDBCluster {
 	 * @param slave
 	 * @return
 	 */
-	public IDBResource getSlaveGlobalDBResource(String clusterName, String tableName, EnumDBMasterSlave slave)
+	IDBResource getSlaveGlobalDBResource(String clusterName, String tableName, EnumDBMasterSlave slave)
 			throws DBClusterException;
 
 	/**
@@ -170,7 +185,7 @@ public interface IDBCluster {
 	 *            分库分表因子.
 	 * @return 被操作的库表
 	 */
-	public IDBResource selectDBResourceFromMaster(String tableName, IShardingKey<?> value) throws DBClusterException;
+	IDBResource selectDBResourceFromMaster(String tableName, IShardingKey<?> value) throws DBClusterException;
 
 	/**
 	 * 从从库集群中获取被操作的库表.
@@ -183,7 +198,7 @@ public interface IDBCluster {
 	 *            分库分表因子
 	 * @return 被操作的库表
 	 */
-	public IDBResource selectDBResourceFromSlave(String tableName, IShardingKey<?> value, EnumDBMasterSlave slave)
+	IDBResource selectDBResourceFromSlave(String tableName, IShardingKey<?> value, EnumDBMasterSlave slave)
 			throws DBClusterException;
 
 	/**
@@ -193,7 +208,7 @@ public interface IDBCluster {
 	 *            数据对象
 	 * @return
 	 */
-	public List<IDBResource> getAllMasterShardingDBResource(Class<?> clazz) throws SQLException;
+	List<IDBResource> getAllMasterShardingDBResource(Class<?> clazz) throws SQLException, DBClusterException;
 
 	/**
 	 * get all master sharding info.
@@ -203,8 +218,8 @@ public interface IDBCluster {
 	 * @param tableName
 	 * @return
 	 */
-	public List<IDBResource> getAllMasterShardingDBResource(int tableNum, String clusterName, String tableName)
-			throws SQLException;
+	List<IDBResource> getAllMasterShardingDBResource(int tableNum, String clusterName, String tableName)
+			throws SQLException, DBClusterException;
 
 	/**
 	 * 获取集群从库列表.
@@ -214,21 +229,22 @@ public interface IDBCluster {
 	 * @param slave
 	 *            从库号
 	 */
-	public List<IDBResource> getAllSlaveShardingDBResource(Class<?> clazz, EnumDBMasterSlave slave) throws SQLException;
+	List<IDBResource> getAllSlaveShardingDBResource(Class<?> clazz, EnumDBMasterSlave slave) throws SQLException,
+			DBClusterException;
 
 	/**
 	 * 设置数据表同步动作.
 	 * 
 	 * @param syncAction
 	 */
-	public void setSyncAction(EnumSyncAction syncAction);
+	void setSyncAction(EnumSyncAction syncAction);
 
 	/**
 	 * 获取id生成器.
 	 * 
 	 * @return
 	 */
-	public IIdGenerator getIdGenerator();
+	IIdGenerator getIdGenerator();
 
 	/**
 	 * 设置需要扫描的实体对象包.
@@ -236,13 +252,13 @@ public interface IDBCluster {
 	 * @param scanPackage
 	 *            包名
 	 */
-	public void setScanPackage(String scanPackage);
+	void setScanPackage(String scanPackage);
 
 	/**
 	 * 获取集群表集合.
 	 * 
 	 * @return 集群表集合
 	 */
-	public ITableCluster getTableCluster();
+	ITableCluster getTableCluster();
 
 }

@@ -30,7 +30,7 @@ public class JtaTransactionService {
 
 	@Transactional(readOnly = true)
 	public TestGlobalEntity getGlobalById(long globalId) {
-		return storageClient.findGlobalByPk(globalId, BaseTest.CLUSTER_KLSTORAGE, TestGlobalEntity.class);
+		return storageClient.findByPk(globalId, TestGlobalEntity.class);
 	}
 
 	@Transactional(readOnly = true)

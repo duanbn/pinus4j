@@ -5,20 +5,36 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
-import org.pinus4j.ApiBaseTest;
+import org.pinus4j.BaseTest;
+import org.pinus4j.api.IShardingStorageClient;
 import org.pinus4j.constant.Const;
+import org.springframework.context.annotation.Bean;
 
-public class IdSequnceGeneratorImplTest extends ApiBaseTest {
+public class IdSequnceGeneratorImplTest extends BaseTest {
 
 	public static final Set<Integer> ids = new HashSet<Integer>();
 	public static final Set<Long> longIds = new HashSet<Long>();
 
 	private static final String TABLE_NAME = "test_entity";
 
+	private IShardingStorageClient storageClient;
+
+	@Before
+	public void before() {
+		this.storageClient = getStorageClient();
+	}
+
+	@After
+	public void after() {
+		this.storageClient.destroy();
+	}
+
 	@Test
 	public void testBatchGen() throws Exception {
-		IIdGenerator idGenerator = cacheClient.getIdGenerator();
+		IIdGenerator idGenerator = storageClient.getIdGenerator();
 
 		int[] intIds = idGenerator.genClusterUniqueIntIdBatch(Const.ZK_PRIMARYKEY + "/" + CLUSTER_KLSTORAGE,
 				TABLE_NAME, 10);
@@ -36,7 +52,7 @@ public class IdSequnceGeneratorImplTest extends ApiBaseTest {
 
 	@Test
 	public void testGen() throws Exception {
-		IIdGenerator idGenerator = cacheClient.getIdGenerator();
+		IIdGenerator idGenerator = storageClient.getIdGenerator();
 
 		for (int i = 0; i < 10; i++) {
 			System.out.println(idGenerator.genClusterUniqueLongId(Const.ZK_PRIMARYKEY + "/" + CLUSTER_KLSTORAGE,
@@ -46,7 +62,7 @@ public class IdSequnceGeneratorImplTest extends ApiBaseTest {
 
 	@Test
 	public void testConcurrent() throws Exception {
-		IIdGenerator idGenerator = cacheClient.getIdGenerator();
+		IIdGenerator idGenerator = storageClient.getIdGenerator();
 		long start = System.currentTimeMillis();
 		Thread th = null;
 		List<Thread> ts = new ArrayList<Thread>();

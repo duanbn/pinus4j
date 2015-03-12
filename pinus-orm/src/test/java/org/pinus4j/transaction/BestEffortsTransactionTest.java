@@ -2,37 +2,52 @@ package org.pinus4j.transaction;
 
 import junit.framework.Assert;
 
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Test;
-import org.pinus4j.ApiBaseTest;
+import org.pinus4j.BaseTest;
+import org.pinus4j.api.IShardingStorageClient;
 import org.pinus4j.cluster.beans.IShardingKey;
 import org.pinus4j.cluster.beans.ShardingKey;
 import org.pinus4j.entity.TestEntity;
 import org.pinus4j.entity.TestGlobalEntity;
 
-public class BestEffortsTransactionTest extends ApiBaseTest {
+public class BestEffortsTransactionTest extends BaseTest {
+
+	private static IShardingStorageClient storageClient;
+
+	@BeforeClass
+	public static void before() {
+		storageClient = getStorageClient();
+	}
+
+	@AfterClass
+	public static void after() {
+		storageClient.destroy();
+	}
 
 	@Test
 	public void testCommit() {
 		TestGlobalEntity testGlobalEntity = createGlobalEntity();
 		TestEntity testEntity = createEntity();
 
-		cacheClient.beginTransaction();
+		storageClient.beginTransaction();
 		try {
-			long globalId = cacheClient.globalSave(testGlobalEntity).longValue();
-			long shardingId = cacheClient.save(testEntity).longValue();
+			long globalId = storageClient.globalSave(testGlobalEntity).longValue();
+			long shardingId = storageClient.save(testEntity).longValue();
 
-			cacheClient.commit();
+			storageClient.commit();
 
-			TestGlobalEntity a = cacheClient.findGlobalByPk(globalId, CLUSTER_KLSTORAGE, TestGlobalEntity.class);
+			TestGlobalEntity a = storageClient.findByPk(globalId, TestGlobalEntity.class);
 			IShardingKey<Integer> sk = new ShardingKey<Integer>(CLUSTER_KLSTORAGE, testEntity.getTestInt());
-			TestEntity b = cacheClient.findByPk(shardingId, sk, TestEntity.class);
+			TestEntity b = storageClient.findByPk(shardingId, sk, TestEntity.class);
 			Assert.assertEquals(testGlobalEntity, a);
 			Assert.assertEquals(testEntity, b);
 
-			cacheClient.globalRemoveByPk(globalId, TestGlobalEntity.class, CLUSTER_KLSTORAGE);
-			cacheClient.removeByPk(shardingId, sk, TestEntity.class);
+			storageClient.globalRemoveByPk(globalId, TestGlobalEntity.class, CLUSTER_KLSTORAGE);
+			storageClient.removeByPk(shardingId, sk, TestEntity.class);
 		} catch (Exception e) {
-			cacheClient.rollback();
+			storageClient.rollback();
 		}
 	}
 
@@ -45,19 +60,19 @@ public class BestEffortsTransactionTest extends ApiBaseTest {
 		TestEntity testEntity = createEntity();
 		testEntity.setId(shardingId);
 
-		cacheClient.beginTransaction();
+		storageClient.beginTransaction();
 		try {
-			cacheClient.globalSave(testGlobalEntity).longValue();
-			cacheClient.save(testEntity).longValue();
+			storageClient.globalSave(testGlobalEntity).longValue();
+			storageClient.save(testEntity).longValue();
 
 			throw new RuntimeException();
 		} catch (Exception e) {
-			cacheClient.rollback();
+			storageClient.rollback();
 		}
 
-		TestGlobalEntity a = cacheClient.findGlobalByPk(globalId, CLUSTER_KLSTORAGE, TestGlobalEntity.class);
+		TestGlobalEntity a = storageClient.findByPk(globalId, TestGlobalEntity.class);
 		IShardingKey<Integer> sk = new ShardingKey<Integer>(CLUSTER_KLSTORAGE, testEntity.getTestInt());
-		TestEntity b = cacheClient.findByPk(shardingId, sk, TestEntity.class);
+		TestEntity b = storageClient.findByPk(shardingId, sk, TestEntity.class);
 
 		Assert.assertNull(a);
 		Assert.assertNull(b);

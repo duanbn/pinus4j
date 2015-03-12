@@ -4,8 +4,6 @@ import java.io.Serializable;
 import java.sql.Timestamp;
 import java.util.Date;
 
-import org.apache.commons.lang.builder.ToStringBuilder;
-import org.apache.commons.lang.builder.ToStringStyle;
 import org.pinus4j.api.FashionEntity;
 import org.pinus4j.generator.annotations.DateTime;
 import org.pinus4j.generator.annotations.Field;
@@ -72,7 +70,12 @@ public class TestEntity extends FashionEntity implements Serializable {
 
 	@Override
 	public String toString() {
-		return ToStringBuilder.reflectionToString(this, ToStringStyle.SHORT_PREFIX_STYLE);
+		return "TestEntity [id=" + id + ", testByte=" + testByte + ", oTestByte=" + oTestByte + ", testBool="
+				+ testBool + ", oTestBool=" + oTestBool + ", testChar=" + testChar + ", oTestChar=" + oTestChar
+				+ ", testShort=" + testShort + ", oTestShort=" + oTestShort + ", testInt=" + testInt + ", oTestInt="
+				+ oTestInt + ", testLong=" + testLong + ", oTestLong=" + oTestLong + ", testFloat=" + testFloat
+				+ ", oTestFloat=" + oTestFloat + ", testDouble=" + testDouble + ", oTestDouble=" + oTestDouble
+				+ ", testString=" + testString + ", testDate=" + testDate + ", testTime=" + testTime + "]";
 	}
 
 	@Override

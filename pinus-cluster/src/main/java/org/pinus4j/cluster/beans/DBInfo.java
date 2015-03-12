@@ -16,6 +16,8 @@
 
 package org.pinus4j.cluster.beans;
 
+import java.util.Map;
+
 import javax.sql.DataSource;
 
 import org.pinus4j.cluster.enums.EnumDBMasterSlave;
@@ -48,6 +50,11 @@ public abstract class DBInfo {
 	 * 主从中的角色.
 	 */
 	protected EnumDBMasterSlave masterSlave;
+	
+	/**
+	 * custom properties.
+	 */
+	protected Map<String, String> customProperties;
 
 	public abstract boolean check() throws LoadConfigException;
 
@@ -81,5 +88,13 @@ public abstract class DBInfo {
 
 	public void setDbName(String dbName) {
 		this.dbName = dbName;
+	}
+
+	public Map<String, String> getCustomProperties() {
+		return customProperties;
+	}
+
+	public void setCustomProperties(Map<String, String> customProperties) {
+		this.customProperties = customProperties;
 	}
 }

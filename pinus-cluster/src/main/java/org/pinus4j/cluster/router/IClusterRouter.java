@@ -31,46 +31,53 @@ import org.pinus4j.exceptions.DBRouteException;
  * @author duanbn
  */
 public interface IClusterRouter {
+	
+	/**
+	 * 
+	 * @param value
+	 * @return
+	 */
+	long getShardingValue(IShardingKey<?> value);
 
 	/**
 	 * 设置hash算法
 	 * 
 	 * @param algoEnum
 	 */
-	public void setHashAlgo(HashAlgoEnum algoEnum);
+	void setHashAlgo(HashAlgoEnum algoEnum);
 
 	/**
 	 * 获取hash算法
 	 * 
 	 * @return
 	 */
-	public HashAlgoEnum getHashAlgo();
+	HashAlgoEnum getHashAlgo();
 
 	/**
 	 * set db cluster.
      *
      * @param dbCluster cluster info.
 	 */
-	public void setDBCluster(IDBCluster dbCluster);
+	void setDBCluster(IDBCluster dbCluster);
 
     /**
      * get db cluster.
      */
-    public IDBCluster getDBCluster();
+    IDBCluster getDBCluster();
 
 	/**
 	 * 设置数据表集群.
 	 * 
 	 * @param tableCluster
 	 */
-	public void setTableCluster(ITableCluster tableCluster);
+	void setTableCluster(ITableCluster tableCluster);
 
 	/**
 	 * 获取数据表集群.
 	 * 
 	 * @return 数据表集群信息
 	 */
-	public ITableCluster getTableCluster();
+	ITableCluster getTableCluster();
 
 	/**
 	 * 选择需要操作的数据库表.
@@ -87,7 +94,7 @@ public interface IClusterRouter {
 	 * @throws DBRouteException
 	 *             路由操作失败
 	 */
-	public RouteInfo select(EnumDBMasterSlave clusterType, String tableName, IShardingKey<?> value)
+	RouteInfo select(EnumDBMasterSlave clusterType, String tableName, IShardingKey<?> value)
 			throws DBRouteException;
 
 }

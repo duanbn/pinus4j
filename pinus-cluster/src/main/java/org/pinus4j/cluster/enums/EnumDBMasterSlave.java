@@ -45,7 +45,12 @@ public enum EnumDBMasterSlave {
 	/**
 	 * 第四个从库.
 	 */
-	SLAVE3(3);
+	SLAVE3(3),
+
+	/**
+	 * auto select.
+	 */
+	AUTO(0);
 
 	private static final Map<Integer, EnumDBMasterSlave> masterMap = new HashMap<Integer, EnumDBMasterSlave>();
 	private static final Map<Integer, EnumDBMasterSlave> slaveMap = new HashMap<Integer, EnumDBMasterSlave>();
@@ -68,7 +73,7 @@ public enum EnumDBMasterSlave {
 	public int getValue() {
 		return this.value;
 	}
-
+	
 	public static EnumDBMasterSlave getMasterEnum(int value) {
 		return masterMap.get(value);
 	}

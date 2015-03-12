@@ -440,7 +440,7 @@ public class MemCachedPrimaryCacheImpl extends AbstractMemCachedCache implements
 		StringBuilder key = new StringBuilder();
 		key.append(shardingDBResource.getClusterName()).append(shardingDBResource.getDbName());
 		key.append(".");
-		key.append(shardingDBResource.getRegionStart()).append(shardingDBResource.getRegionEnd());
+		key.append(shardingDBResource.getRegionCapacity());
 		key.append(".");
 		key.append(shardingDBResource.getTableName()).append(shardingDBResource.getTableIndex());
 		key.append(".c");
@@ -465,7 +465,7 @@ public class MemCachedPrimaryCacheImpl extends AbstractMemCachedCache implements
 		StringBuilder key = new StringBuilder();
 		key.append(shardingDBResource.getClusterName()).append(shardingDBResource.getDbName());
 		key.append(".");
-		key.append(shardingDBResource.getRegionStart()).append(shardingDBResource.getRegionEnd());
+		key.append(shardingDBResource.getRegionCapacity());
 		key.append(".");
 		key.append(shardingDBResource.getTableName()).append(shardingDBResource.getTableIndex());
 		key.append(".");

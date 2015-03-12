@@ -137,7 +137,7 @@ public class CheckUtil {
 	 * @throws IllegalArgumentException
 	 *             校验失败
 	 */
-	public static void checkShardingValue(IShardingKey<?> shardingKey) {
+	public static void checkShardingKey(IShardingKey<?> shardingKey) {
 		if (shardingKey == null || StringUtils.isBlank(shardingKey.getClusterName())) {
 			throw new IllegalArgumentException("参数错误, shardingKey=" + shardingKey);
 		}

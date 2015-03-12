@@ -19,6 +19,14 @@ package org.pinus4j.datalayer;
 import org.pinus4j.cache.IPrimaryCache;
 import org.pinus4j.cache.ISecondCache;
 import org.pinus4j.cluster.IDBCluster;
+import org.pinus4j.datalayer.query.IGlobalMasterQuery;
+import org.pinus4j.datalayer.query.IGlobalQuery;
+import org.pinus4j.datalayer.query.IGlobalSlaveQuery;
+import org.pinus4j.datalayer.query.IShardingMasterQuery;
+import org.pinus4j.datalayer.query.IShardingQuery;
+import org.pinus4j.datalayer.query.IShardingSlaveQuery;
+import org.pinus4j.datalayer.update.IGlobalUpdate;
+import org.pinus4j.datalayer.update.IShardingUpdate;
 import org.pinus4j.generator.IIdGenerator;
 
 /**
@@ -29,44 +37,62 @@ import org.pinus4j.generator.IIdGenerator;
  */
 public interface IDataLayerBuilder {
 
-    /**
-     * set primary cache.
-     */
-    public IDataLayerBuilder setPrimaryCache(IPrimaryCache primaryCache);
+	/**
+	 * set primary cache.
+	 */
+	public IDataLayerBuilder setPrimaryCache(IPrimaryCache primaryCache);
 
-    /**
-     * set second cache.
-     */
-    public IDataLayerBuilder setSecondCache(ISecondCache secondCache);
+	/**
+	 * set second cache.
+	 */
+	public IDataLayerBuilder setSecondCache(ISecondCache secondCache);
+	
+	/**
+	 * build global query.
+	 * 
+	 * @return
+	 */
+	IGlobalQuery buildGlobalQuery();
 
-    /**
-     * build global update.
-     */
-    public IGlobalUpdate buildGlobalUpdate(IIdGenerator idGenerator);
+	/**
+	 * build sharding query.
+	 * 
+	 * @return
+	 */
+	IShardingQuery buildShardingQuery();
 
-    /**
-     * build global master query.
-     */
-    public IGlobalMasterQuery buildGlobalMasterQuery();
+	/**
+	 * build global update.
+	 */
+	public IGlobalUpdate buildGlobalUpdate(IIdGenerator idGenerator);
 
-    /**
-     * build global slave query.
-     */
-    public IGlobalSlaveQuery buildGlobalSlaveQuery();
+	/**
+	 * build global master query.
+	 */
+	@Deprecated
+	public IGlobalMasterQuery buildGlobalMasterQuery();
 
-    /**
-     * build sharding update.
-     */
-    public IShardingUpdate buildShardingUpdate(IIdGenerator idGenerator);
+	/**
+	 * build global slave query.
+	 */
+	@Deprecated
+	public IGlobalSlaveQuery buildGlobalSlaveQuery();
 
-    /**
-     * build sharding master query.
-     */
-    public IShardingMasterQuery buildShardingMasterQuery();
+	/**
+	 * build sharding update.
+	 */
+	public IShardingUpdate buildShardingUpdate(IIdGenerator idGenerator);
 
-    /**
-     * build sharding slave query.
-     */
-    public IShardingSlaveQuery buildShardingSlaveQuery();
+	/**
+	 * build sharding master query.
+	 */
+	@Deprecated
+	public IShardingMasterQuery buildShardingMasterQuery();
+
+	/**
+	 * build sharding slave query.
+	 */
+	@Deprecated
+	public IShardingSlaveQuery buildShardingSlaveQuery();
 
 }

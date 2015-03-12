@@ -27,8 +27,9 @@ import org.pinus4j.cache.IPrimaryCache;
 import org.pinus4j.cache.ISecondCache;
 import org.pinus4j.cluster.beans.AppDBInfo;
 import org.pinus4j.cluster.beans.DBClusterInfo;
-import org.pinus4j.cluster.beans.DBClusterRegionInfo;
 import org.pinus4j.cluster.beans.DBInfo;
+import org.pinus4j.cluster.beans.DBRegionInfo;
+import org.pinus4j.cluster.beans.DBRegionInfo.Value;
 import org.pinus4j.cluster.beans.EnvDBInfo;
 import org.pinus4j.cluster.config.IClusterConfig;
 import org.pinus4j.cluster.enums.EnumClusterCatalog;
@@ -42,6 +43,7 @@ import org.pinus4j.utils.StringUtils;
 import org.pinus4j.utils.XmlUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
@@ -70,9 +72,9 @@ public class XmlClusterConfigImpl implements IClusterConfig {
 	 */
 	private static HashAlgoEnum hashAlgo;
 
-    /**
-     * cache config param.
-     */
+	/**
+	 * cache config param.
+	 */
 	private static boolean isCacheEnabled;
 	private static Class<IPrimaryCache> primaryCacheClass;
 	private static int primaryCacheExpire;
@@ -202,37 +204,45 @@ public class XmlClusterConfigImpl implements IClusterConfig {
 		return map;
 	}
 
-	private long[] _parseCapacity(String clusterName, String regionCapacity) throws LoadConfigException {
-		long[] capacity = new long[2];
-		String[] strCapacity = regionCapacity.split("\\-");
-		if (strCapacity.length != 2) {
-			throw new LoadConfigException("解析集群容量错误");
+	private List<Value> _parseCapacity(String clusterName, String regionCapacity) throws LoadConfigException {
+		List<Value> values = new ArrayList<Value>();
+
+		String[] aa = regionCapacity.split("\\,");
+		Value value = null;
+		for (String bb : aa) {
+			String[] cc = bb.split("\\-");
+			if (cc.length != 2) {
+				throw new LoadConfigException("解析集群容量错误");
+			}
+
+			long start = -1, end = -1;
+			try {
+				start = Long.parseLong(cc[0]);
+				end = Long.parseLong(cc[1]);
+			} catch (Exception e) {
+				throw new LoadConfigException("解析集群容量错误, clusterName=" + clusterName, e);
+			}
+
+			if (start < 0 || end < 0 || end <= start) {
+				throw new LoadConfigException("集群容量参数有误, clusterName=" + clusterName + ", start=" + start + ", end="
+						+ end);
+			}
+
+			value = new Value();
+			value.start = start;
+			value.end = end;
+
+			values.add(value);
 		}
 
-		long start = -1, end = -1;
-		try {
-			start = Long.parseLong(strCapacity[0]);
-			end = Long.parseLong(strCapacity[1]);
-		} catch (Exception e) {
-			throw new LoadConfigException("解析集群容量错误, clusterName=" + clusterName, e);
-		}
-
-		if (start < 0 || end < 0 || end <= start) {
-			throw new LoadConfigException("集群容量参数有误, clusterName=" + clusterName + ", start=" + start + ", end=" + end);
-		}
-
-		capacity[0] = start;
-		capacity[1] = end;
-
-		return capacity;
+		return values;
 	}
 
 	/**
 	 * load db info.
 	 */
-	private DBInfo _getDBConnInfo(String clusterName, Node node, EnumDBMasterSlave masterSlave)
-			throws LoadConfigException {
-		DBInfo dbConnInfo = null;
+	private DBInfo _getDBInfo(String clusterName, Node node, EnumDBMasterSlave masterSlave) throws LoadConfigException {
+		DBInfo dbInfo = null;
 
 		Node root = xmlUtil.getRoot();
 		if (root == null) {
@@ -253,52 +263,65 @@ public class XmlClusterConfigImpl implements IClusterConfig {
 
 		switch (enumCpCatalog) {
 		case ENV:
-			dbConnInfo = new EnvDBInfo();
-			dbConnInfo.setClusterName(clusterName);
-			dbConnInfo.setMasterSlave(masterSlave);
+			dbInfo = new EnvDBInfo();
+			dbInfo.setClusterName(clusterName);
+			dbInfo.setMasterSlave(masterSlave);
 
 			String envDsName = node.getTextContent().trim();
-			((EnvDBInfo) dbConnInfo).setEnvDsName(envDsName);
+			((EnvDBInfo) dbInfo).setEnvDsName(envDsName);
 			break;
 		case APP:
-			dbConnInfo = new AppDBInfo();
-			dbConnInfo.setClusterName(clusterName);
-			dbConnInfo.setMasterSlave(masterSlave);
+			dbInfo = new AppDBInfo();
+			dbInfo.setClusterName(clusterName);
+			dbInfo.setMasterSlave(masterSlave);
 
 			String username = xmlUtil.getFirstChildByName(node, "db.username").getTextContent().trim();
 			String password = xmlUtil.getFirstChildByName(node, "db.password").getTextContent().trim();
 			String url = xmlUtil.getFirstChildByName(node, "db.url").getTextContent().trim();
-			((AppDBInfo) dbConnInfo).setUsername(username);
-			((AppDBInfo) dbConnInfo).setPassword(password);
-			((AppDBInfo) dbConnInfo).setUrl(url);
-			((AppDBInfo) dbConnInfo).setConnPoolInfo(_loadDbConnectInfo(connPoolNode));
+			((AppDBInfo) dbInfo).setUsername(username);
+			((AppDBInfo) dbInfo).setPassword(password);
+			((AppDBInfo) dbInfo).setUrl(url);
+			((AppDBInfo) dbInfo).setConnPoolInfo(_loadDbConnectInfo(connPoolNode));
 			break;
 		default:
 			throw new LoadConfigException("catalog attribute of db-connection-pool config error, catalog = "
 					+ cpCatalog + " you should be select in \"env\" or \"app\"");
 		}
 
-		dbConnInfo.check();
+		// set custom property
+		NamedNodeMap attrMap = node.getAttributes();
+		Map<String, String> propMap = new HashMap<String, String>(attrMap.getLength());
+		Node attr = null;
+		for (int i = 0; i < attrMap.getLength(); i++) {
+			attr = attrMap.item(i);
+			propMap.put(attr.getNodeName(), attr.getNodeValue());
+		}
+		dbInfo.setCustomProperties(propMap);
 
-		return dbConnInfo;
+		dbInfo.check();
+
+		return dbInfo;
 	}
 
 	private DBClusterInfo _getDBClusterInfo(String clusterName, Node clusterNode) throws LoadConfigException {
 		DBClusterInfo dbClusterInfo = new DBClusterInfo();
-        // set cluster name
+		// set cluster name
 		dbClusterInfo.setClusterName(clusterName);
-        // set router class
-        try {
-            String classFullPath = xmlUtil.getAttributeValue(clusterNode, "router");
-            if (StringUtils.isBlank(classFullPath)) {
-                classFullPath = DEFAULT_CLUSTER_ROUTER_CLASS;
-            }
-            Class<IClusterRouter> clazz = (Class<IClusterRouter>) Class.forName(classFullPath);
-            dbClusterInfo.setRouterClass(clazz);
-        } catch (Exception e) {
-            throw new LoadConfigException(e);
-        }
-        String catalog = xmlUtil.getAttributeValue(clusterNode, "catalog");
+
+		// set router class
+		try {
+			String classFullPath = xmlUtil.getAttributeValue(clusterNode, "router");
+			if (StringUtils.isBlank(classFullPath)) {
+				classFullPath = DEFAULT_CLUSTER_ROUTER_CLASS;
+			}
+			Class<IClusterRouter> clazz = (Class<IClusterRouter>) Class.forName(classFullPath);
+			dbClusterInfo.setRouterClass(clazz);
+		} catch (Exception e) {
+			throw new LoadConfigException(e);
+		}
+
+		// set cluster catalog
+		String catalog = xmlUtil.getAttributeValue(clusterNode, "catalog");
 		dbClusterInfo.setCatalog(EnumClusterCatalog.getEnum(catalog));
 
 		//
@@ -308,8 +331,7 @@ public class XmlClusterConfigImpl implements IClusterConfig {
 		if (global != null) {
 			// load master global
 			Node masterGlobal = xmlUtil.getFirstChildByName(global, "master");
-			DBInfo masterGlobalConnection = _getDBConnInfo(clusterName, masterGlobal,
-					EnumDBMasterSlave.MASTER);
+			DBInfo masterGlobalConnection = _getDBInfo(clusterName, masterGlobal, EnumDBMasterSlave.MASTER);
 			dbClusterInfo.setMasterGlobalDBInfo(masterGlobalConnection);
 
 			// load slave global
@@ -319,7 +341,7 @@ public class XmlClusterConfigImpl implements IClusterConfig {
 
 				int slaveIndex = 0;
 				for (Node slaveGlobal : slaveGlobalList) {
-					slaveGlobalConnection.add(_getDBConnInfo(clusterName, slaveGlobal,
+					slaveGlobalConnection.add(_getDBInfo(clusterName, slaveGlobal,
 							EnumDBMasterSlave.getSlaveEnum(slaveIndex++)));
 				}
 
@@ -330,27 +352,27 @@ public class XmlClusterConfigImpl implements IClusterConfig {
 		//
 		// load region
 		//
-		List<DBClusterRegionInfo> dbRegions = new ArrayList<DBClusterRegionInfo>();
+		List<DBRegionInfo> dbRegions = new ArrayList<DBRegionInfo>();
 		List<Node> regionNodeList = xmlUtil.getChildByName(clusterNode, "region");
-		DBClusterRegionInfo regionInfo = null;
+		DBRegionInfo regionInfo = null;
 		for (Node regionNode : regionNodeList) {
-			regionInfo = new DBClusterRegionInfo();
+			regionInfo = new DBRegionInfo();
 
 			// load cluster capacity
 			String regionCapacity = xmlUtil.getAttributeValue(regionNode, "capacity");
 			if (regionCapacity == null) {
 				throw new LoadConfigException("<region>需要配置capacity属性");
 			}
-			long[] capacity = _parseCapacity(clusterName, regionCapacity);
-			regionInfo.setStart(capacity[0]);
-			regionInfo.setEnd(capacity[1]);
+			List<Value> values = _parseCapacity(clusterName, regionCapacity);
+			regionInfo.setValues(values);
+			regionInfo.setCapacity(regionCapacity);
 
 			// load region master
 			List<DBInfo> regionMasterConnection = new ArrayList<DBInfo>();
 			Node master = xmlUtil.getFirstChildByName(regionNode, "master");
 			List<Node> shardingNodeList = xmlUtil.getChildByName(master, "sharding");
 			for (Node shardingNode : shardingNodeList) {
-				regionMasterConnection.add(_getDBConnInfo(clusterName, shardingNode, EnumDBMasterSlave.MASTER));
+				regionMasterConnection.add(_getDBInfo(clusterName, shardingNode, EnumDBMasterSlave.MASTER));
 			}
 			regionInfo.setMasterDBInfos(regionMasterConnection);
 
@@ -363,7 +385,7 @@ public class XmlClusterConfigImpl implements IClusterConfig {
 
 				List<DBInfo> slaveConnections = new ArrayList<DBInfo>();
 				for (Node shardingNode : shardingNodeList) {
-					slaveConnections.add(_getDBConnInfo(clusterName, shardingNode,
+					slaveConnections.add(_getDBInfo(clusterName, shardingNode,
 							EnumDBMasterSlave.getSlaveEnum(slaveIndex)));
 				}
 
@@ -407,20 +429,20 @@ public class XmlClusterConfigImpl implements IClusterConfig {
 			if (this.isCacheEnabled) {
 				Node primaryNode = xmlUtil.getFirstChildByName(dbClusterCacheNode, Const.PROP_DB_CLUSTER_CACHE_PRIMARY);
 				primaryCacheExpire = Integer.parseInt(xmlUtil.getAttributeValue(primaryNode, "expire"));
-                String classFullPath = xmlUtil.getAttributeValue(primaryNode, "class");
-                if (StringUtils.isBlank(classFullPath)) {
-                    classFullPath = DEFAULT_PRIMARY_CACHE_CLASS;
-                }
+				String classFullPath = xmlUtil.getAttributeValue(primaryNode, "class");
+				if (StringUtils.isBlank(classFullPath)) {
+					classFullPath = DEFAULT_PRIMARY_CACHE_CLASS;
+				}
 				primaryCacheClass = (Class<IPrimaryCache>) Class.forName(classFullPath);
 				Node primaryAddressNode = xmlUtil.getFirstChildByName(primaryNode, Const.PROP_DB_CLUSTER_CACHE_ADDRESS);
 				primaryCacheAddress = primaryAddressNode.getTextContent().trim();
 
 				Node secondNode = xmlUtil.getFirstChildByName(dbClusterCacheNode, Const.PROP_DB_CLUSTER_CACHE_SECOND);
 				secondCacheExpire = Integer.parseInt(xmlUtil.getAttributeValue(secondNode, "expire"));
-                classFullPath = xmlUtil.getAttributeValue(secondNode, "class");
-                if (StringUtils.isBlank(classFullPath)) {
-                    classFullPath = DEFAULT_SECOND_CACHE_CLASS;
-                }
+				classFullPath = xmlUtil.getAttributeValue(secondNode, "class");
+				if (StringUtils.isBlank(classFullPath)) {
+					classFullPath = DEFAULT_SECOND_CACHE_CLASS;
+				}
 				secondCacheClass = (Class<ISecondCache>) Class.forName(classFullPath);
 				Node secondAddressNode = xmlUtil.getFirstChildByName(secondNode, Const.PROP_DB_CLUSTER_CACHE_ADDRESS);
 				secondCacheAddress = secondAddressNode.getTextContent().trim();

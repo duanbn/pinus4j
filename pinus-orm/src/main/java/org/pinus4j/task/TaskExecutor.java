@@ -75,7 +75,7 @@ public class TaskExecutor<E> {
 			List<IDBResource> dbResources;
 			try {
 				dbResources = this.dbCluster.getAllMasterShardingDBResource(clazz);
-			} catch (SQLException e) {
+			} catch (Exception e) {
 				throw new DBOperationException(e);
 			}
 			List<IRecordIterator<E>> readers = new ArrayList<IRecordIterator<E>>(dbResources.size());

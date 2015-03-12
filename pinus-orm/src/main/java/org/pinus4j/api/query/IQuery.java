@@ -24,6 +24,20 @@ package org.pinus4j.api.query;
 public interface IQuery {
 
 	/**
+	 * get value of start.
+	 * 
+	 * @return
+	 */
+	public int getStart();
+
+	/**
+	 * get value of limit
+	 * 
+	 * @return
+	 */
+	public int getLimit();
+
+	/**
 	 * 判断是否有查询字段.
 	 */
 	public boolean hasQueryFields();

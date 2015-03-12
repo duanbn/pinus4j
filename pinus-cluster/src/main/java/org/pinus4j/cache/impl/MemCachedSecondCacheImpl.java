@@ -184,7 +184,7 @@ public class MemCachedSecondCacheImpl extends AbstractMemCachedCache implements 
 		StringBuilder versionKey = new StringBuilder("sec.version.");
 		versionKey.append(shardingDBResource.getClusterName()).append(shardingDBResource.getDbName());
 		versionKey.append(".");
-		versionKey.append(shardingDBResource.getRegionStart()).append(shardingDBResource.getRegionEnd());
+		versionKey.append(shardingDBResource.getRegionCapacity());
 		versionKey.append(".");
 		versionKey.append(shardingDBResource.getTableName()).append(shardingDBResource.getTableIndex());
 		return versionKey.toString();
@@ -210,7 +210,7 @@ public class MemCachedSecondCacheImpl extends AbstractMemCachedCache implements 
 		StringBuilder cacheKey = new StringBuilder("sec.");
 		cacheKey.append(shardingDBResource.getClusterName()).append(shardingDBResource.getDbName());
 		cacheKey.append(".");
-		cacheKey.append(shardingDBResource.getRegionStart()).append(shardingDBResource.getRegionEnd());
+		cacheKey.append(shardingDBResource.getRegionCapacity());
 		cacheKey.append(".");
 		cacheKey.append(shardingDBResource.getTableName()).append(shardingDBResource.getTableIndex());
 		cacheKey.append(".");

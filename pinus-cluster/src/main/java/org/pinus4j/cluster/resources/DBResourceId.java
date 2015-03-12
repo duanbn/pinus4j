@@ -26,118 +26,98 @@ import org.pinus4j.cluster.enums.EnumDBMasterSlave;
  */
 public class DBResourceId implements IResourceId {
 
-    private String clusterName;
+	private String clusterName;
 
-    private String dbName;
+	private String dbName;
 
-    private long regionStart;
+	private String regionCapacity;
 
-    private long regionEnd;
+	private String tableName;
 
-    private String tableName;
+	private int tableIndex;
 
-    private int tableIndex;
+	private EnumDBMasterSlave masterSlave;
 
-    private EnumDBMasterSlave masterSlave;
+	public DBResourceId(String clusterName, String dbName, String tableName, EnumDBMasterSlave masterSlave) {
+		this(clusterName, dbName, "", tableName, -1, masterSlave);
+	}
 
-    public DBResourceId(String clusterName, String dbName, String tableName, EnumDBMasterSlave masterSlave) {
-        this(clusterName, dbName, -1, -1, tableName, -1, masterSlave);
-    }
+	public DBResourceId(String clusterName, String dbName, String regionCapacity, String tableName, int tableIndex,
+			EnumDBMasterSlave masterSlave) {
+		this.clusterName = clusterName;
+		this.dbName = dbName;
+		this.regionCapacity = regionCapacity;
+		this.tableName = tableName;
+		this.tableIndex = tableIndex;
+		this.masterSlave = masterSlave;
+	}
 
-    public DBResourceId(String clusterName, String dbName, long regionStart, long regionEnd, String tableName, int tableIndex,
-            EnumDBMasterSlave masterSlave) {
-        this.clusterName = clusterName;
-        this.dbName = dbName;
-        this.regionStart = regionStart;
-        this.regionEnd = regionEnd;
-        this.tableName = tableName;
-        this.tableIndex = tableIndex;
-        this.masterSlave = masterSlave;
-    }
+	@Override
+	public String value() {
+		StringBuilder value = new StringBuilder();
+		value.append(this.clusterName);
+		value.append(this.dbName);
+		value.append(this.regionCapacity);
+		value.append(this.tableName);
+		value.append(this.tableIndex);
+		value.append(this.masterSlave.getValue());
+		return value.toString();
+	}
 
-    @Override
-    public String value() {
-        StringBuilder value = new StringBuilder();
-        value.append(this.clusterName);
-        value.append(this.dbName);
-        value.append(this.regionStart);
-        value.append(this.regionEnd);
-        value.append(this.tableName);
-        value.append(this.tableIndex);
-        value.append(this.masterSlave.getValue());
-        return value.toString();
-    }
+	public String getClusterName() {
+		return clusterName;
+	}
 
-    public String getClusterName() {
-        return clusterName;
-    }
-    
-    public void setClusterName(String clusterName) {
-        this.clusterName = clusterName;
-    }
-    
-    public String getDbName() {
-        return dbName;
-    }
-    
-    public void setDbName(String dbName) {
-        this.dbName = dbName;
-    }
-    
-    public long getRegionStart() {
-        return regionStart;
-    }
-    
-    public void setRegionStart(long regionStart) {
-        this.regionStart = regionStart;
-    }
-    
-    public long getRegionEnd() {
-        return regionEnd;
-    }
-    
-    public void setRegionEnd(long regionEnd) {
-        this.regionEnd = regionEnd;
-    }
-    
-    public String getTableName() {
-        return tableName;
-    }
-    
-    public void setTableName(String tableName) {
-        this.tableName = tableName;
-    }
-    
-    public int getTableIndex() {
-        return tableIndex;
-    }
-    
-    public void setTableIndex(int tableIndex) {
-        this.tableIndex = tableIndex;
-    }
-    
-    public EnumDBMasterSlave getMasterSlave() {
-        return masterSlave;
-    }
-    
-    public void setMasterSlave(EnumDBMasterSlave masterSlave) {
-        this.masterSlave = masterSlave;
-    }
+	public void setClusterName(String clusterName) {
+		this.clusterName = clusterName;
+	}
+
+	public String getDbName() {
+		return dbName;
+	}
+
+	public void setDbName(String dbName) {
+		this.dbName = dbName;
+	}
+
+	public String getRegionCapacity() {
+		return this.regionCapacity;
+	}
+
+	public String getTableName() {
+		return tableName;
+	}
+
+	public void setTableName(String tableName) {
+		this.tableName = tableName;
+	}
+
+	public int getTableIndex() {
+		return tableIndex;
+	}
+
+	public void setTableIndex(int tableIndex) {
+		this.tableIndex = tableIndex;
+	}
+
+	public EnumDBMasterSlave getMasterSlave() {
+		return masterSlave;
+	}
+
+	public void setMasterSlave(EnumDBMasterSlave masterSlave) {
+		this.masterSlave = masterSlave;
+	}
 
 	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result
-				+ ((clusterName == null) ? 0 : clusterName.hashCode());
+		result = prime * result + ((clusterName == null) ? 0 : clusterName.hashCode());
 		result = prime * result + ((dbName == null) ? 0 : dbName.hashCode());
-		result = prime * result
-				+ ((masterSlave == null) ? 0 : masterSlave.hashCode());
-		result = prime * result + (int) (regionEnd ^ (regionEnd >>> 32));
-		result = prime * result + (int) (regionStart ^ (regionStart >>> 32));
+		result = prime * result + ((masterSlave == null) ? 0 : masterSlave.hashCode());
+		result = prime * result + ((regionCapacity == null) ? 0 : regionCapacity.hashCode());
 		result = prime * result + tableIndex;
-		result = prime * result
-				+ ((tableName == null) ? 0 : tableName.hashCode());
+		result = prime * result + ((tableName == null) ? 0 : tableName.hashCode());
 		return result;
 	}
 
@@ -162,9 +142,10 @@ public class DBResourceId implements IResourceId {
 			return false;
 		if (masterSlave != other.masterSlave)
 			return false;
-		if (regionEnd != other.regionEnd)
-			return false;
-		if (regionStart != other.regionStart)
+		if (regionCapacity == null) {
+			if (other.regionCapacity != null)
+				return false;
+		} else if (!regionCapacity.equals(other.regionCapacity))
 			return false;
 		if (tableIndex != other.tableIndex)
 			return false;
@@ -175,4 +156,5 @@ public class DBResourceId implements IResourceId {
 			return false;
 		return true;
 	}
+
 }

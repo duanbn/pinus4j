@@ -8,9 +8,11 @@ import java.util.List;
 
 import junit.framework.Assert;
 
-import org.junit.Before;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Test;
-import org.pinus4j.ApiBaseTest;
+import org.pinus4j.BaseTest;
+import org.pinus4j.api.IShardingStorageClient;
 import org.pinus4j.cluster.beans.IShardingKey;
 import org.pinus4j.cluster.beans.ShardingKey;
 import org.pinus4j.cluster.resources.ShardingDBResource;
@@ -18,20 +20,31 @@ import org.pinus4j.entity.TestEntity;
 import org.pinus4j.entity.TestGlobalEntity;
 import org.pinus4j.exceptions.DBClusterException;
 
-public class MemCachePrimaryCacheTest extends ApiBaseTest {
+public class MemCachePrimaryCacheTest extends BaseTest {
 
-	private String tableName = "test_entity";
+	private static String tableName = "test_entity";
 
-	private ShardingDBResource db;
+	private static ShardingDBResource db;
 
-	@Before
-	public void before() {
+	private static IShardingStorageClient storageClient;
+	private static IPrimaryCache primaryCache;
+
+	@BeforeClass
+	public static void before() {
+		storageClient = getStorageClient();
+		primaryCache = storageClient.getDBCluster().getPrimaryCache();
+
 		IShardingKey<?> shardingValue = new ShardingKey<Integer>(CLUSTER_KLSTORAGE, 1);
 		try {
-			db = (ShardingDBResource) cacheClient.getDBCluster().selectDBResourceFromMaster(tableName, shardingValue);
+			db = (ShardingDBResource) storageClient.getDBCluster().selectDBResourceFromMaster(tableName, shardingValue);
 		} catch (DBClusterException e) {
 			e.printStackTrace();
 		}
+	}
+
+	@AfterClass
+	public static void after() {
+		storageClient.destroy();
 	}
 
 	@Test
