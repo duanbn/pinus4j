@@ -36,7 +36,7 @@ public class ShardingRecrodIteratorTest extends BaseTest {
 	private static IShardingStorageClient storageClient;
 
 	@BeforeClass
-	public void before() {
+	public static void before() {
 		storageClient = getStorageClient();
 
 		// save more
@@ -58,11 +58,11 @@ public class ShardingRecrodIteratorTest extends BaseTest {
 		} catch (DBClusterException e) {
 			e.printStackTrace();
 		}
-		this.reader = new ShardingRecordIterator<TestEntity>(dbResource, TestEntity.class);
+		reader = new ShardingRecordIterator<TestEntity>(dbResource, TestEntity.class);
 	}
 
 	@AfterClass
-	public void after() {
+	public static void after() {
 		// remove more
 		storageClient.removeByPks(moreKey, TestEntity.class, pks);
 		dbResource.close();

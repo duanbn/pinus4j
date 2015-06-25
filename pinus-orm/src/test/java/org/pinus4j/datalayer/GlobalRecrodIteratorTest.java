@@ -61,7 +61,7 @@ public class GlobalRecrodIteratorTest extends BaseTest {
 	}
 
 	@AfterClass
-	public void after() {
+	public static void after() {
 		// remove more
 		storageClient.globalRemoveByPks(CLUSTER_KLSTORAGE, TestGlobalEntity.class, pks);
 		dbResource.close();

@@ -34,9 +34,9 @@ import org.slf4j.LoggerFactory;
  * @author duanbn
  * @since 0.7.1
  */
-public class MemCachedCacheBuilder implements ICacheBuilder {
+public class DefaultCacheBuilder implements ICacheBuilder {
 
-	public static final Logger LOG = LoggerFactory.getLogger(MemCachedCacheBuilder.class);
+	public static final Logger LOG = LoggerFactory.getLogger(DefaultCacheBuilder.class);
 
 	private boolean isCacheEnabled;
 
@@ -52,11 +52,11 @@ public class MemCachedCacheBuilder implements ICacheBuilder {
 
 	private int secondCacheExpire;
 
-	private MemCachedCacheBuilder() {
+	private DefaultCacheBuilder() {
 	}
 
 	public static ICacheBuilder valueOf(IClusterConfig config) {
-		MemCachedCacheBuilder builder = new MemCachedCacheBuilder();
+		DefaultCacheBuilder builder = new DefaultCacheBuilder();
 
 		builder.setCacheEnabled(config.isCacheEnabled());
 

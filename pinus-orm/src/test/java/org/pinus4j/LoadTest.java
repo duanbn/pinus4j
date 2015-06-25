@@ -30,7 +30,7 @@ public class LoadTest extends BaseTest {
 	}
 
 	@AfterClass
-	public void after() {
+	public static void after() {
 		storageClient.destroy();
 	}
 

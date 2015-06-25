@@ -39,7 +39,7 @@ import org.apache.zookeeper.data.Stat;
 import org.pinus4j.cache.ICacheBuilder;
 import org.pinus4j.cache.IPrimaryCache;
 import org.pinus4j.cache.ISecondCache;
-import org.pinus4j.cache.impl.MemCachedCacheBuilder;
+import org.pinus4j.cache.impl.DefaultCacheBuilder;
 import org.pinus4j.cluster.DefaultContainerFactory;
 import org.pinus4j.cluster.DefaultContainerFactory.ContainerType;
 import org.pinus4j.cluster.IContainer;
@@ -231,7 +231,7 @@ public abstract class AbstractDBCluster implements IDBCluster {
 		//
 		// init db cache
 		//
-		ICacheBuilder cacheBuilder = MemCachedCacheBuilder.valueOf(config);
+		ICacheBuilder cacheBuilder = DefaultCacheBuilder.valueOf(config);
 		// find primary cache
 		this.primaryCache = cacheBuilder.buildPrimaryCache();
 
