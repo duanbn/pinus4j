@@ -6,6 +6,10 @@ layout: default
 
 ### version 1.1.1
 
+* 添加对Redis缓存的支持 (TODO)
+
+* 引入hsqldb来完善测试 (TODO)
+
 * 增强定制路由特性
 
 配置中的 sharding 节点上添加自定义属性，自定义属性在 Pinus 启动时会被加载到 DBInfo 对象中，当用户在定制集群路由器时可以通过自定义属性更灵活的进行分库。
@@ -19,6 +23,8 @@ layout: default
 * 新增集群查询接口
 
 添加 findByPk、findByPkList、findBySql、findByQuery 接口，当实体对象保存在全局库中时效果等同于 findGlobalXXX 接口，当实体对象保存在分片库中时，会查询所有分片并将结果集合并。
+
+* 修复不分bug
 
 ### version 1.1.0
 * 支持事务处理
