@@ -15,6 +15,9 @@
  */
 package org.pinus4j.cache;
 
+import java.net.SocketAddress;
+import java.util.Collection;
+
 /**
  * database cache interface.
  *
@@ -24,15 +27,20 @@ package org.pinus4j.cache;
 public interface ICache {
 
     /**
-	 * 获取过期时间
-	 * 
-	 * @return
-	 */
-	public int getExpire();
+     * 获取可以用的服务链接.
+     */
+    public Collection<SocketAddress> getAvailableServers();
 
-	/**
-	 * 销毁对象
-	 */
-	public void close();
+    /**
+     * 获取过期时间
+     * 
+     * @return
+     */
+    public int getExpire();
+
+    /**
+     * 销毁对象
+     */
+    public void close();
 
 }

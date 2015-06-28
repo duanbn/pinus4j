@@ -16,8 +16,6 @@
 
 package org.pinus4j.cache;
 
-import java.net.SocketAddress;
-import java.util.Collection;
 import java.util.List;
 
 import org.pinus4j.cluster.resources.ShardingDBResource;
@@ -30,68 +28,51 @@ import org.pinus4j.cluster.resources.ShardingDBResource;
  */
 public interface ISecondCache extends ICache {
 
-	/**
-	 * 获取可以用的服务链接.
-	 */
-	public Collection<SocketAddress> getAvailableServers();
+    /**
+     * 添加到全局缓存
+     *
+     * @param query 查询条件
+     * @param clusterName 集群名
+     * @param clazz 对象class
+     */
+    public void putGlobal(String whereSql, String clusterName, String tableName, List data);
 
-	/**
-	 * 添加到全局缓存
-	 *
-	 * @param query
-	 *            查询条件
-	 * @param clusterName
-	 *            集群名
-	 * @param clazz
-	 *            对象class
-	 */
-	public void putGlobal(String whereSql, String clusterName, String tableName, List data);
+    /**
+     * 读取全局缓存
+     *
+     * @param query 查询条件
+     * @param clusterName 集群名
+     * @param clazz 对象class
+     * @return 结果集
+     */
+    public List getGlobal(String whereSql, String clusterName, String tableName);
 
-	/**
-	 * 读取全局缓存
-	 *
-	 * @param query
-	 *            查询条件
-	 * @param clusterName
-	 *            集群名
-	 * @param clazz
-	 *            对象class
-	 *
-	 * @return 结果集
-	 */
-	public List getGlobal(String whereSql, String clusterName, String tableName);
+    /**
+     * 清除全局缓存.
+     */
+    public void removeGlobal(String clusterName, String tableName);
 
-	/**
-	 * 清除全局缓存.
-	 */
-	public void removeGlobal(String clusterName, String tableName);
+    /**
+     * 添加到分片缓存.
+     *
+     * @param query 查询条件
+     * @param data 结果集
+     */
+    public void put(String whereSql, ShardingDBResource db, List data);
 
-	/**
-	 * 添加到分片缓存.
-	 *
-	 * @param query
-	 *            查询条件
-	 * @param data
-	 *            结果集
-	 */
-	public void put(String whereSql, ShardingDBResource db, List data);
+    /**
+     * 读取分片缓存.
+     *
+     * @param query 查询条件
+     * @return 结果集.
+     */
+    public List get(String whereSql, ShardingDBResource db);
 
-	/**
-	 * 读取分片缓存.
-	 *
-	 * @param query
-	 *            查询条件
-	 *
-	 * @return 结果集.
-	 */
-	public List get(String whereSql, ShardingDBResource db);
-
-	/**
-	 * 清除分片缓存.
-	 *
-	 * @param query
-	 *            查询条件.
-	 */
-	public void remove(ShardingDBResource db);
+    /**
+     * 清除分片缓存.
+     *
+     * @param query 查询条件.
+     */
+    public void remove(ShardingDBResource db);
 
 }

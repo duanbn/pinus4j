@@ -39,6 +39,7 @@
     <properties>
         <curator.version>2.7.0</curator.version>
         <spymemcached.version>2.8.4</spymemcached.version>
+        <jedis.version>2.7.2</jedis.version>
         <jsqlparser.version>0.9</jsqlparser.version>
         <dbcp.version>1.4</dbcp.version>
         <slf4j.version>1.7.7</slf4j.version>
@@ -72,6 +73,11 @@
                 <groupId>com.google.code.simple-spring-memcached</groupId>
                 <artifactId>spymemcached</artifactId>
                 <version>${spymemcached.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>redis.clients</groupId>
+                <artifactId>jedis</artifactId>
+                <version>${jedis.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.slf4j</groupId>

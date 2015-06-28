@@ -39,7 +39,7 @@
 	</db-connection-pool>
 
     <!-- cluster config -->
-	<cluster name="pinus" catalog="mysql">
+	<cluster name="pinus" catalog="mysql" class="">
 		<global>
 			<master>
 				<db.username>root</db.username>

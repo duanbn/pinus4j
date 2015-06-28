@@ -18,62 +18,59 @@ package org.pinus4j.cache.impl;
 
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-
-import net.spy.memcached.MemcachedClient;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * base cache implmenets.
- *
- * @author duanbn
- * @since 0.7.1
- */
-public abstract class AbstractMemCachedCache extends AbstractCache {
+import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisShardInfo;
+import redis.clients.jedis.ShardedJedis;
 
-    public static final Logger LOG = LoggerFactory.getLogger(AbstractMemCachedCache.class);
+import com.google.common.collect.Lists;
 
-    protected MemcachedClient  memClient;
+public abstract class AbstractRedisCache extends AbstractCache {
 
-    public AbstractMemCachedCache(String address, int expire) {
+    public static final Logger LOG = LoggerFactory.getLogger(AbstractRedisCache.class);
+
+    protected ShardedJedis     redisClient;
+
+    public AbstractRedisCache(String address, int expire) {
         super(address, expire);
 
         try {
-            List<InetSocketAddress> servers = new ArrayList<InetSocketAddress>();
-
             String[] addresses = address.split(",");
 
-            InetSocketAddress socketAddress = null;
+            List<JedisShardInfo> shardInfos = Lists.newArrayListWithCapacity(addresses.length);
             for (String addr : addresses) {
                 String[] pair = addr.split(":");
-                socketAddress = new InetSocketAddress(pair[0], Integer.parseInt(pair[1]));
-                servers.add(socketAddress);
+                shardInfos.add(new JedisShardInfo(pair[0], Integer.parseInt(pair[1])));
             }
 
-            this.memClient = new MemcachedClient(servers);
+            this.redisClient = new ShardedJedis(shardInfos);
         } catch (Exception e) {
-            throw new RuntimeException("连接memcached服务器失败", e);
+            throw new RuntimeException("connect redis server failure", e);
         }
     }
-
+    
     @Override
     public Collection<SocketAddress> getAvailableServers() {
-        if (this.memClient == null) {
-            return null;
+        List<SocketAddress> servers = Lists.newArrayList();
+
+        Collection<Jedis> alives = redisClient.getAllShards();
+        for (Jedis alive : alives) {
+            String host = alive.getClient().getHost();
+            int port = alive.getClient().getPort();
+            servers.add(new InetSocketAddress(host, port));
         }
-        return this.memClient.getAvailableServers();
+
+        return servers;
     }
 
-    /**
-     * 销毁对象
-     */
     @Override
     public void close() {
-        this.memClient.shutdown();
+        this.redisClient.close();
     }
 
 }

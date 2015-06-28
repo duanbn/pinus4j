@@ -1,53 +1,23 @@
-/**
- * Copyright 2014 Duan Bingnan
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * 
- *   http://www.apache.org/licenses/LICENSE-2.0
- *   
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.pinus4j.cache.impl;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import net.spy.memcached.internal.OperationFuture;
-
 import org.pinus4j.cache.IPrimaryCache;
 import org.pinus4j.cluster.resources.ShardingDBResource;
+import org.pinus4j.utils.IOUtil;
 import org.pinus4j.utils.ReflectUtil;
 import org.pinus4j.utils.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * memcached缓存实现. Pinus存储主缓存的实现. 缓存中的数据不设置过期时间，Pinus存储负责缓存与数据库之间的数据一致性.
- * 
- * @author duanbn
- */
-public class MemCachedPrimaryCacheImpl extends AbstractMemCachedCache implements IPrimaryCache {
+public class RedisPrimaryCacheImpl extends AbstractRedisCache implements IPrimaryCache {
 
-    /**
-     * 日志.
-     */
-    public static final Logger LOG = LoggerFactory.getLogger(MemCachedPrimaryCacheImpl.class);
+    public static final Logger LOG = LoggerFactory.getLogger(RedisPrimaryCacheImpl.class);
 
-    /**
-     * 构造方法.
-     * 
-     * @param servers ip:port,ip:port
-     */
-    public MemCachedPrimaryCacheImpl(String s, int expire) {
-        super(s, expire);
+    public RedisPrimaryCacheImpl(String address, int expire) {
+        super(address, expire);
     }
 
     @Override
@@ -251,7 +221,7 @@ public class MemCachedPrimaryCacheImpl extends AbstractMemCachedCache implements
     private void _setCount(String key, long count) {
         try {
             _removeCount(key);
-            this.memClient.incr(key, 0, count);
+            redisClient.incrBy(key, count);
 
             if (LOG.isDebugEnabled()) {
                 LOG.debug("[PRIMARY CACHE] - " + key + " set count=" + count);
@@ -263,7 +233,7 @@ public class MemCachedPrimaryCacheImpl extends AbstractMemCachedCache implements
 
     private void _removeCount(String key) {
         try {
-            this.memClient.delete(key);
+            redisClient.del(key);
             if (LOG.isDebugEnabled()) {
                 LOG.debug("[PRIMARY CACHE] - delete " + key);
             }
@@ -274,8 +244,8 @@ public class MemCachedPrimaryCacheImpl extends AbstractMemCachedCache implements
 
     private long _decrCount(String key, long delta) {
         try {
-            if (memClient.get(key) != null) {
-                long count = memClient.decr(key, delta);
+            if (redisClient.get(key) != null) {
+                long count = redisClient.decrBy(key, delta);
                 if (LOG.isDebugEnabled()) {
                     LOG.debug("[PRIMARY CACHE] - decr " + key + " " + delta);
                 }
@@ -290,8 +260,8 @@ public class MemCachedPrimaryCacheImpl extends AbstractMemCachedCache implements
 
     private long _incrCount(String key, long delta) {
         try {
-            if (memClient.get(key) != null) {
-                long count = memClient.incr(key, delta);
+            if (redisClient.get(key) != null) {
+                long count = redisClient.incrBy(key, delta);
                 if (LOG.isDebugEnabled()) {
                     LOG.debug("[PRIMARY CACHE] - incr " + key + " " + delta);
                 }
@@ -306,7 +276,7 @@ public class MemCachedPrimaryCacheImpl extends AbstractMemCachedCache implements
 
     private long _getCount(String key) {
         try {
-            String count = (String) memClient.get(key);
+            String count = (String) redisClient.get(key);
             if (StringUtils.isNotBlank(count)) {
                 if (LOG.isDebugEnabled()) {
                     LOG.debug("[PRIMARY CACHE] - get " + key + " " + count);
@@ -322,13 +292,10 @@ public class MemCachedPrimaryCacheImpl extends AbstractMemCachedCache implements
 
     private void _put(String key, Object data) {
         try {
-            OperationFuture<Boolean> rst = memClient.set(key, expire, data);
-            if (!rst.get()) {
-                LOG.warn("操作缓存失败");
-            } else {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("[PRIMARY CACHE] - put " + key + " value=" + data);
-                }
+            redisClient.set(key.getBytes(), IOUtil.getBytes(data));
+            redisClient.expire(key, expire);
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("[PRIMARY CACHE] - put " + key + " value=" + data);
             }
         } catch (Exception e) {
             LOG.warn("操作缓存失败:" + e.getMessage());
@@ -338,7 +305,7 @@ public class MemCachedPrimaryCacheImpl extends AbstractMemCachedCache implements
     private void _put(List<String> keys, List<? extends Object> data) {
         try {
             for (int i = 0; i < keys.size(); i++) {
-                memClient.set(keys.get(i), expire, data.get(i));
+                _put(keys.get(i), data.get(i));
             }
         } catch (Exception e) {
             LOG.warn("操作缓存失败:" + e.getMessage());
@@ -349,9 +316,10 @@ public class MemCachedPrimaryCacheImpl extends AbstractMemCachedCache implements
         }
     }
 
+    @SuppressWarnings("unchecked")
     private <T> T _get(String key) {
         try {
-            T obj = (T) memClient.get(key);
+            T obj = (T) IOUtil.getObject(redisClient.get(key.getBytes()), Object.class);
             if (LOG.isDebugEnabled()) {
                 int hit = 0;
                 if (obj != null) {
@@ -370,14 +338,8 @@ public class MemCachedPrimaryCacheImpl extends AbstractMemCachedCache implements
     private List<Object> _get(List<String> keys) {
         List<Object> datas = new ArrayList<Object>();
         try {
-            Map<String, Object> dataMap = memClient.getBulk(keys);
-            if (dataMap != null) {
-                Object data = null;
-                for (String key : keys) {
-                    data = dataMap.get(key);
-                    if (data != null)
-                        datas.add(data);
-                }
+            for (String key : keys) {
+                datas.add(_get(key));
             }
         } catch (Exception e) {
             LOG.warn("操作缓存失败:" + e.getMessage());
@@ -392,7 +354,7 @@ public class MemCachedPrimaryCacheImpl extends AbstractMemCachedCache implements
 
     private void _remove(String key) {
         try {
-            memClient.delete(key);
+            redisClient.del(key);
             if (LOG.isDebugEnabled()) {
                 LOG.debug("[PRIMARY CACHE] - remove " + key);
             }
