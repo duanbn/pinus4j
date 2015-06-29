@@ -6,9 +6,7 @@ layout: default
 
 ### version 1.1.1
 
-* 添加对Redis缓存的支持 (TODO)
-
-* 引入hsqldb来完善测试 (TODO)
+* 添加对Redis缓存的支持
 
 * 增强定制路由特性
 
