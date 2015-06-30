@@ -6,7 +6,9 @@ layout: default
 
 ### version 1.1.1
 
-* 添加对Redis缓存的支持
+* 新增Field别名识别，@Field(name = "alias")
+
+* 新增对Redis缓存的支持
 
 * 增强定制路由特性
 
