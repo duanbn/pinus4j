@@ -23,7 +23,7 @@
         </second>
     </db.cluster.cache>
     -->
-    <db.cluster.cache enabled="true">
+    <db.cluster.cache enabled="false">
         <primary expire="300" class="org.pinus4j.cache.impl.RedisPrimaryCacheImpl">
             <address>127.0.0.1:6379</address>
         </primary>

@@ -34,8 +34,10 @@ import java.lang.annotation.Target;
  */
 public @interface PrimaryKey {
 
-	/**
-	 * 注释
-	 */
-	String comment() default "";
+    String name() default "";
+
+    /**
+     * 注释
+     */
+    String comment() default "";
 }

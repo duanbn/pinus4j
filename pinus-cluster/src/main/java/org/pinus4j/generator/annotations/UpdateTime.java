@@ -31,6 +31,8 @@ import java.lang.annotation.Target;
  * @author duanbn
  */
 public @interface UpdateTime {
+    
+    String name() default "";
 	
 	/**
 	 * 注释

@@ -26,7 +26,7 @@ public class TestGlobalEntity implements Serializable {
 	@Field
 	private Byte oTestByte;
 
-	@Field
+	@Field(name = "test_bool")
 	private boolean testBool;
 	@Field
 	private Boolean oTestBool;

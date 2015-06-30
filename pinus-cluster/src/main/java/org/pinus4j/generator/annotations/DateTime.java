@@ -31,6 +31,8 @@ import java.lang.annotation.Target;
  * @author duanbn
  */
 public @interface DateTime {
+    
+    String name() default "";
 
     /**
      * 是否为null

@@ -34,6 +34,8 @@ import java.lang.annotation.Target;
  */
 public @interface Field {
 
+    String name() default "";
+
 	/**
 	 * 字段是否为null
 	 */
