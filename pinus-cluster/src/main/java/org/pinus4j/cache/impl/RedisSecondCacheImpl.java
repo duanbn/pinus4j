@@ -1,5 +1,7 @@
 package org.pinus4j.cache.impl;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import org.pinus4j.cache.ISecondCache;
@@ -7,6 +9,8 @@ import org.pinus4j.cluster.resources.ShardingDBResource;
 import org.pinus4j.utils.IOUtil;
 import org.pinus4j.utils.SecurityUtil;
 import org.pinus4j.utils.StringUtils;
+
+import redis.clients.jedis.Jedis;
 
 public class RedisSecondCacheImpl extends AbstractRedisCache implements ISecondCache {
 
@@ -40,6 +44,7 @@ public class RedisSecondCacheImpl extends AbstractRedisCache implements ISecondC
 
             return data;
         } catch (Exception e) {
+            e.printStackTrace();
             LOG.warn("operate second cache failure");
         }
 
@@ -49,8 +54,14 @@ public class RedisSecondCacheImpl extends AbstractRedisCache implements ISecondC
     @Override
     public void removeGlobal(String clusterName, String tableName) {
         try {
+            List<String> keys = new ArrayList<String>();
+            Collection<Jedis> shards = this.redisClient.getAllShards();
             String cacheKey = _buildGlobalCacheKey(null, clusterName, tableName);
-            this.redisClient.del(cacheKey);
+            for (Jedis shard : shards) {
+                keys.addAll(shard.keys(cacheKey));
+
+                shard.del(keys.toArray(new String[0]));
+            }
 
             if (LOG.isDebugEnabled()) {
                 LOG.debug("[SECOND CACHE] - " + cacheKey + " clean");
@@ -95,8 +106,14 @@ public class RedisSecondCacheImpl extends AbstractRedisCache implements ISecondC
     @Override
     public void remove(ShardingDBResource db) {
         try {
+            List<String> keys = new ArrayList<String>();
+            Collection<Jedis> shards = this.redisClient.getAllShards();
             String cacheKey = _buildShardingCacheKey(null, db);
-            this.redisClient.del(cacheKey);
+            for (Jedis shard : shards) {
+                keys.addAll(shard.keys(cacheKey));
+
+                shard.del(keys.toArray(new String[0]));
+            }
 
             if (LOG.isDebugEnabled()) {
                 LOG.debug("[SECOND CACHE] - " + cacheKey + " clean");
@@ -107,7 +124,7 @@ public class RedisSecondCacheImpl extends AbstractRedisCache implements ISecondC
     }
 
     /**
-     * global second cache key. sec.[clustername].[tablename].[version].hashCode
+     * global second cache key. sec.[clustername].[tablename].hashCode
      */
     private String _buildGlobalCacheKey(String whereSql, String clusterName, String tableName) {
         StringBuilder cacheKey = new StringBuilder("sec.");
@@ -122,11 +139,13 @@ public class RedisSecondCacheImpl extends AbstractRedisCache implements ISecondC
 
     /**
      * sharding second cache key. sec.[clustername].[startend].[tablename +
-     * tableIndex].[version].hashCode
+     * tableIndex].hashCode
      */
     private String _buildShardingCacheKey(String whereSql, ShardingDBResource shardingDBResource) {
         StringBuilder cacheKey = new StringBuilder("sec.");
-        cacheKey.append(shardingDBResource.getClusterName()).append(shardingDBResource.getDbName());
+        cacheKey.append(shardingDBResource.getClusterName());
+        cacheKey.append(".");
+        cacheKey.append(shardingDBResource.getDbName());
         cacheKey.append(".");
         cacheKey.append(shardingDBResource.getRegionCapacity());
         cacheKey.append(".");

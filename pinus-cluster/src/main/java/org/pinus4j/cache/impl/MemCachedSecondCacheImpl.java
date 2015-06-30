@@ -19,8 +19,6 @@ package org.pinus4j.cache.impl;
 import java.util.List;
 import java.util.Random;
 
-import net.spy.memcached.MemcachedClient;
-
 import org.pinus4j.cache.ISecondCache;
 import org.pinus4j.cluster.resources.ShardingDBResource;
 import org.pinus4j.utils.SecurityUtil;
@@ -171,7 +169,9 @@ public class MemCachedSecondCacheImpl extends AbstractMemCachedCache implements 
 
     public String _buildShardingVersion(ShardingDBResource shardingDBResource) {
         StringBuilder versionKey = new StringBuilder("sec.version.");
-        versionKey.append(shardingDBResource.getClusterName()).append(shardingDBResource.getDbName());
+        versionKey.append(shardingDBResource.getClusterName());
+        versionKey.append(".");
+        versionKey.append(shardingDBResource.getDbName());
         versionKey.append(".");
         versionKey.append(shardingDBResource.getRegionCapacity());
         versionKey.append(".");
@@ -197,7 +197,9 @@ public class MemCachedSecondCacheImpl extends AbstractMemCachedCache implements 
      */
     private String _buildShardingCacheKey(String whereSql, ShardingDBResource shardingDBResource, int version) {
         StringBuilder cacheKey = new StringBuilder("sec.");
-        cacheKey.append(shardingDBResource.getClusterName()).append(shardingDBResource.getDbName());
+        cacheKey.append(shardingDBResource.getClusterName());
+        cacheKey.append(".");
+        cacheKey.append(shardingDBResource.getDbName());
         cacheKey.append(".");
         cacheKey.append(shardingDBResource.getRegionCapacity());
         cacheKey.append(".");

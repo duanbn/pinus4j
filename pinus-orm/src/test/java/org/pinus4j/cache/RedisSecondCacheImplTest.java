@@ -16,7 +16,7 @@ import org.pinus4j.cluster.beans.ShardingKey;
 import org.pinus4j.cluster.resources.ShardingDBResource;
 import org.pinus4j.exceptions.DBClusterException;
 
-public class MemCachedSecondCacheTest extends BaseTest {
+public class RedisSecondCacheImplTest extends BaseTest {
 
     private static IQuery                 query;
     private static ShardingDBResource     db;
@@ -78,7 +78,7 @@ public class MemCachedSecondCacheTest extends BaseTest {
 
         secondCache.remove(db);
 
-        data = secondCache.get(query.getWhereSql(), db);
+        data = secondCache.getGlobal(query.getWhereSql(), CLUSTER_KLSTORAGE, "testglobalentity");
         Assert.assertNull(data);
     }
 

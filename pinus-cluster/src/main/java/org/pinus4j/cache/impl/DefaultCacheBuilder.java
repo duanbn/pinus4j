@@ -29,7 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * cache builder for memcached.
+ * default cache builder.
  *
  * @author duanbn
  * @since 0.7.1
@@ -99,7 +99,7 @@ public class DefaultCacheBuilder implements ICacheBuilder {
 				memcachedAddressInfo.append(",");
 			}
 			memcachedAddressInfo.deleteCharAt(memcachedAddressInfo.length() - 1);
-			LOG.info("find primary cache, expire " + this.primaryCacheExpire + " seconds, memcached server - "
+			LOG.info("find primary cache[" + this.primaryCacheClass +  "], expire " + this.primaryCacheExpire + " seconds, cache server - "
 					+ memcachedAddressInfo.toString());
 		}
 
@@ -134,7 +134,7 @@ public class DefaultCacheBuilder implements ICacheBuilder {
 				memcachedAddressInfo.append(",");
 			}
 			memcachedAddressInfo.deleteCharAt(memcachedAddressInfo.length() - 1);
-			LOG.info("find second cache, expire " + this.secondCacheExpire + " seconds, memcached server - "
+			LOG.info("find second cache[" + this.secondCacheClass + "], expire " + this.secondCacheExpire + " seconds, cache server - "
 					+ memcachedAddressInfo.toString());
 		}
 
