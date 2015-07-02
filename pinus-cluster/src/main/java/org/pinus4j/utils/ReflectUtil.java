@@ -344,20 +344,23 @@ public class ReflectUtil {
         }
         f.setAccessible(true);
 
-        if (f.getType() == Boolean.TYPE || f.getType() == Boolean.class) {
+        // 这里不能支持装箱类型，否则反射会报错
+        if (f.getType() == Boolean.TYPE) {
             f.setBoolean(obj, ((Boolean) value).booleanValue());
-        } else if (f.getType() == Integer.TYPE || f.getType() == Integer.class) {
+        } else if (f.getType() == Integer.TYPE) {
             f.setInt(obj, ((Number) value).intValue());
-        } else if (f.getType() == Byte.TYPE || f.getType() == Byte.class) {
+        } else if (f.getType() == Byte.TYPE) {
             f.setByte(obj, ((Number) value).byteValue());
-        } else if (f.getType() == Long.TYPE || f.getType() == Long.class) {
+        } else if (f.getType() == Long.TYPE) {
             f.setLong(obj, ((Number) value).longValue());
-        } else if (f.getType() == Short.TYPE || f.getType() == Short.class) {
+        } else if (f.getType() == Short.TYPE) {
             f.setShort(obj, ((Number) value).shortValue());
-        } else if (f.getType() == Float.TYPE || f.getType() == Short.class) {
+        } else if (f.getType() == Float.TYPE) {
             f.setFloat(obj, ((Number) value).floatValue());
-        } else if (f.getType() == Double.TYPE || f.getType() == Double.class) {
+        } else if (f.getType() == Double.TYPE) {
             f.setDouble(obj, ((Number) value).doubleValue());
+        } else if (f.getType() == Character.TYPE) {
+            f.setChar(obj, ((Character) value).charValue());
         } else {
             f.set(obj, value);
         }

@@ -11,47 +11,50 @@ import org.pinus4j.utils.ReflectUtil;
 
 public class ReflectUtilTest extends BaseTest {
 
-	@Test
-	public void testGetPropery() throws Exception {
-		TestEntity entity = createEntity();
-		Assert.assertEquals('a', ReflectUtil.getProperty(entity, "testChar"));
-	}
+    @Test
+    public void testGetPropery() throws Exception {
+        TestEntity entity = createEntity();
+        Assert.assertEquals('a', ReflectUtil.getProperty(entity, "testChar"));
+    }
 
-	@Test
-	public void testSetProperty() throws Exception {
-		TestEntity entity = new TestEntity();
-		ReflectUtil.setProperty(entity, "testString", "test name");
-		Assert.assertEquals("test name", entity.getTestString());
-	}
+    @Test
+    public void testSetProperty() throws Exception {
+        TestEntity entity = new TestEntity();
+        ReflectUtil.setProperty(entity, "testString", "test name");
+        Assert.assertEquals("test name", entity.getTestString());
 
-	@Test
-	public void testDescribe() throws Exception {
-		TestEntity entity = createEntity();
-		entity.setTestString(null);
-		entity.setTestInt(0);
-		Map<String, Object> map = ReflectUtil.describe(entity);
-		map.remove("testByte");
-		Assert.assertNull(map.get("testByte"));
-		Assert.assertTrue(map.containsKey("testString"));
-		Assert.assertTrue(map.containsKey("testInt"));
+        ReflectUtil.setProperty(entity, "oTestInt", 1);
+        Assert.assertEquals(1, entity.getOTestInt().intValue());
+    }
 
-		map = ReflectUtil.describe(entity, true, false);
-		Assert.assertTrue(!map.containsKey("testString"));
-		Assert.assertTrue(map.containsKey("testTime"));
+    @Test
+    public void testDescribe() throws Exception {
+        TestEntity entity = createEntity();
+        entity.setTestString(null);
+        entity.setTestInt(0);
+        Map<String, Object> map = ReflectUtil.describe(entity);
+        map.remove("testByte");
+        Assert.assertNull(map.get("testByte"));
+        Assert.assertTrue(map.containsKey("testString"));
+        Assert.assertTrue(map.containsKey("testInt"));
 
-		map = ReflectUtil.describe(entity, true, true);
-		Assert.assertTrue(!map.containsKey("testTime"));
-	}
+        map = ReflectUtil.describe(entity, true, false);
+        Assert.assertTrue(!map.containsKey("testString"));
+        Assert.assertTrue(map.containsKey("testTime"));
 
-	@Test
-	public void testCloneWithGivenFieldObjectString() throws Exception {
-		TestEntity entity = createEntity();
-		TestEntity clone = (TestEntity) ReflectUtil.cloneWithGivenField(entity, "testInt", "testDouble");
-		Assert.assertEquals(entity.getTestInt(), clone.getTestInt());
-		Assert.assertEquals(entity.getTestDouble(), clone.getTestDouble());
-		Assert.assertEquals(0.0f, clone.getTestFloat());
-		Assert.assertNotNull(entity.getTestString());
-		Assert.assertNull(clone.getTestString());
-	}
+        map = ReflectUtil.describe(entity, true, true);
+        Assert.assertTrue(!map.containsKey("testTime"));
+    }
+
+    @Test
+    public void testCloneWithGivenFieldObjectString() throws Exception {
+        TestEntity entity = createEntity();
+        TestEntity clone = (TestEntity) ReflectUtil.cloneWithGivenField(entity, "testInt", "testDouble");
+        Assert.assertEquals(entity.getTestInt(), clone.getTestInt());
+        Assert.assertEquals(entity.getTestDouble(), clone.getTestDouble());
+        Assert.assertEquals(0.0f, clone.getTestFloat());
+        Assert.assertNotNull(entity.getTestString());
+        Assert.assertNull(clone.getTestString());
+    }
 
 }
