@@ -310,18 +310,21 @@ public class SQLBuilder {
 
     private static Object _getRsValue(ResultSet rs, Field f, int i) throws SQLException {
         Object value = rs.getObject(i);
-        if (f.getType() == Boolean.TYPE || f.getType() == Boolean.class) {
-            value = rs.getString(i).equals(Const.TRUE) ? true : false;
-        } else if (f.getType() == Byte.TYPE || f.getType() == Byte.class) {
-            value = rs.getByte(i);
-        } else if (f.getType() == Character.TYPE || f.getType() == Character.class) {
-            String s = rs.getString(i);
-            if (s.length() > 0)
-                value = rs.getString(i).charAt(0);
-            else
-                value = new Character('\u0000');
-        } else if (f.getType() == Short.TYPE || f.getType() == Short.class) {
-            value = rs.getShort(i);
+
+        if (value != null) {
+            if (f.getType() == Boolean.TYPE || f.getType() == Boolean.class) {
+                value = rs.getString(i).equals(Const.TRUE) ? true : false;
+            } else if (f.getType() == Byte.TYPE || f.getType() == Byte.class) {
+                value = rs.getByte(i);
+            } else if (f.getType() == Character.TYPE || f.getType() == Character.class) {
+                String s = rs.getString(i);
+                if (s.length() > 0)
+                    value = rs.getString(i).charAt(0);
+                else
+                    value = new Character('\u0000');
+            } else if (f.getType() == Short.TYPE || f.getType() == Short.class) {
+                value = rs.getShort(i);
+            }
         }
 
         return value;

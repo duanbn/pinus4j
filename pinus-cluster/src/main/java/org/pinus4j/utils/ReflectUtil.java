@@ -322,9 +322,6 @@ public class ReflectUtil {
      */
     public static Object getProperty(Object obj, String propertyName) throws Exception {
         Field f = getField(obj.getClass(), propertyName);
-        if (f == null) {
-            f = obj.getClass().getDeclaredField(propertyName);
-        }
         f.setAccessible(true);
         return f.get(obj);
     }
@@ -339,10 +336,12 @@ public class ReflectUtil {
      */
     public static void setProperty(Object obj, String propertyName, Object value) throws Exception {
         Field f = getField(obj.getClass(), propertyName);
-        if (f == null) {
-            f = obj.getClass().getDeclaredField(propertyName);
-        }
         f.setAccessible(true);
+
+        if (value == null) {
+            f.set(obj, null);
+            return;
+        }
 
         // 这里不能支持装箱类型，否则反射会报错
         if (f.getType() == Boolean.TYPE) {
@@ -495,7 +494,16 @@ public class ReflectUtil {
      * @return
      */
     public static Field getField(Class<?> clazz, String fieldName) {
-        return _aliasFieldCache.get(clazz.getName() + fieldName);
+        Field field = _aliasFieldCache.get(clazz.getName() + fieldName);
+        if (field == null) {
+            try {
+                field = clazz.getDeclaredField(fieldName);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        return field;
     }
 
     /**
