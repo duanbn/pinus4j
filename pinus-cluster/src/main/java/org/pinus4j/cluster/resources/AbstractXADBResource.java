@@ -24,66 +24,57 @@ import javax.transaction.xa.Xid;
  * xa database resource.
  * 
  * @author duanbn
- *
  */
 public abstract class AbstractXADBResource implements IDBResource, XAResource {
 
-	@Override
-	public void commit(Xid xid, boolean onePhase) throws XAException {
-		if (!onePhase) {
-			commit();
-		}
-	}
+    @Override
+    public void commit(Xid xid, boolean onePhase) throws XAException {
+        if (!onePhase) {
+            commit();
+        }
+    }
 
-	@Override
-	public void end(Xid xid, int flags) throws XAException {
-		// TODO Auto-generated method stub
+    @Override
+    public void end(Xid xid, int flags) throws XAException {
+    }
 
-	}
+    @Override
+    public void forget(Xid xid) throws XAException {
+    }
 
-	@Override
-	public void forget(Xid xid) throws XAException {
-		// TODO Auto-generated method stub
+    @Override
+    public int getTransactionTimeout() throws XAException {
+        return 0;
+    }
 
-	}
+    @Override
+    public boolean isSameRM(XAResource xares) throws XAException {
+        return false;
+    }
 
-	@Override
-	public int getTransactionTimeout() throws XAException {
-		// TODO Auto-generated method stub
-		return 0;
-	}
+    @Override
+    public int prepare(Xid xid) throws XAException {
+        return 0;
+    }
 
-	@Override
-	public boolean isSameRM(XAResource xares) throws XAException {
-		// TODO Auto-generated method stub
-		return false;
-	}
+    @Override
+    public Xid[] recover(int flag) throws XAException {
+        return null;
+    }
 
-	@Override
-	public int prepare(Xid xid) throws XAException {
-		// TODO Auto-generated method stub
-		return 0;
-	}
+    @Override
+    public void rollback(Xid xid) throws XAException {
+        rollback();
+    }
 
-	@Override
-	public Xid[] recover(int flag) throws XAException {
-		// TODO Auto-generated method stub
-		return null;
-	}
+    @Override
+    public boolean setTransactionTimeout(int seconds) throws XAException {
+        return false;
+    }
 
-	@Override
-	public void rollback(Xid xid) throws XAException {
-		rollback();
-	}
-
-	@Override
-	public boolean setTransactionTimeout(int seconds) throws XAException {
-		return false;
-	}
-
-	@Override
-	public void start(Xid xid, int flags) throws XAException {
-		// do nothing...
-	}
+    @Override
+    public void start(Xid xid, int flags) throws XAException {
+        // do nothing...
+    }
 
 }

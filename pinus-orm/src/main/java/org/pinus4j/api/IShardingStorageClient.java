@@ -269,6 +269,9 @@ public interface IShardingStorageClient {
 	//
 	// global and sharding
 	//
+    /**
+     * 查询实体的count数，如果是分片实体会遍历所有的分片求总数.
+     */
 	Number getCount(Class<?> clazz);
 
 	Number getCount(Class<?> clazz, boolean useCache);
