@@ -338,8 +338,11 @@ public class RedisPrimaryCacheImpl extends AbstractRedisCache implements IPrimar
     private List<Object> _get(List<String> keys) {
         List<Object> datas = new ArrayList<Object>();
         try {
+            Object value = null;
             for (String key : keys) {
-                datas.add(_get(key));
+                value = _get(key);
+                if (value != null)
+                    datas.add(value);
             }
         } catch (Exception e) {
             LOG.warn("操作缓存失败:" + e.getMessage());

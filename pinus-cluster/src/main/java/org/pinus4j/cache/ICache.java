@@ -17,6 +17,7 @@ package org.pinus4j.cache;
 
 import java.net.SocketAddress;
 import java.util.Collection;
+import java.util.Map;
 
 /**
  * database cache interface.
@@ -25,6 +26,16 @@ import java.util.Collection;
  * @since 0.7.1
  */
 public interface ICache {
+
+    /**
+     * 初始化缓存
+     */
+    public void init();
+
+    /**
+     * 销毁对象
+     */
+    public void close();
 
     /**
      * 获取可以用的服务链接.
@@ -39,8 +50,17 @@ public interface ICache {
     public int getExpire();
 
     /**
-     * 销毁对象
+     * 设置缓存属性. 属性值来自<primary>和<second>节点的属性
+     * 
+     * @param properties
      */
-    public void close();
+    public void setProperties(Map<String, String> properties);
+
+    /**
+     * 获取缓存属性
+     * 
+     * @return
+     */
+    public Map<String, String> getProperties();
 
 }

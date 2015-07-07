@@ -10,6 +10,12 @@ import org.pinus4j.api.query.QueryImpl;
 
 public class QueryImplTest {
 
+    @Test
+    public void testEmpty() {
+        IQuery query = new QueryImpl();
+        Assert.assertEquals("", query.getWhereSql());
+    }
+
 	@Test
 	public void testClone() throws Exception {
 		IQuery query = new QueryImpl();

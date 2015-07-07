@@ -20,6 +20,7 @@ import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,7 +39,10 @@ public abstract class AbstractRedisCache extends AbstractCache {
 
     public AbstractRedisCache(String address, int expire) {
         super(address, expire);
+    }
 
+    @Override
+    public void init() {
         try {
             String[] addresses = address.split(",");
 
@@ -49,11 +53,20 @@ public abstract class AbstractRedisCache extends AbstractCache {
             }
 
             this.redisClient = new ShardedJedis(shardInfos);
+
+            // TODO: 通过这个属性map来创建jedispool
+            Map<String, String> properties = getProperties();
+            System.out.println(properties);
         } catch (Exception e) {
             throw new RuntimeException("connect redis server failure", e);
         }
     }
-    
+
+    @Override
+    public void close() {
+        this.redisClient.close();
+    }
+
     @Override
     public Collection<SocketAddress> getAvailableServers() {
         List<SocketAddress> servers = Lists.newArrayList();
@@ -66,11 +79,6 @@ public abstract class AbstractRedisCache extends AbstractCache {
         }
 
         return servers;
-    }
-
-    @Override
-    public void close() {
-        this.redisClient.close();
     }
 
 }

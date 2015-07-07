@@ -25,6 +25,7 @@ import javax.transaction.xa.XAResource;
 
 import org.pinus4j.api.SQL;
 import org.pinus4j.api.query.IQuery;
+import org.pinus4j.api.query.QueryImpl;
 import org.pinus4j.cluster.enums.EnumDBMasterSlave;
 import org.pinus4j.cluster.resources.IDBResource;
 import org.pinus4j.datalayer.query.IGlobalQuery;
@@ -296,6 +297,10 @@ public class GlobalJdbcQueryImpl extends AbstractJdbcQuery implements IGlobalQue
 
 	@Override
 	public <T> List<T> findByQuery(IQuery query, Class<T> clazz, boolean useCache, EnumDBMasterSlave masterSlave) {
+        if (query == null) {
+            query = new QueryImpl();
+        }
+
 		String clusterName = ReflectUtil.getClusterName(clazz);
 		String tableName = ReflectUtil.getTableName(clazz);
 

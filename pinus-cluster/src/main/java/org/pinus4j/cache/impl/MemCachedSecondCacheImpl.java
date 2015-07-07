@@ -22,6 +22,7 @@ import java.util.Random;
 import org.pinus4j.cache.ISecondCache;
 import org.pinus4j.cluster.resources.ShardingDBResource;
 import org.pinus4j.utils.SecurityUtil;
+import org.pinus4j.utils.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,6 +46,10 @@ public class MemCachedSecondCacheImpl extends AbstractMemCachedCache implements 
 
     @Override
     public void putGlobal(String whereSql, String clusterName, String tableName, List data) {
+        if (StringUtils.isBlank(whereSql)) {
+            return;
+        }
+
         try {
             String versionKey = _buildGlobalVersion(clusterName, tableName);
             int version = r.nextInt(10000);
@@ -67,6 +72,10 @@ public class MemCachedSecondCacheImpl extends AbstractMemCachedCache implements 
 
     @Override
     public List getGlobal(String whereSql, String clusterName, String tableName) {
+        if (StringUtils.isBlank(whereSql)) {
+            return null;
+        }
+
         try {
             String versionKey = _buildGlobalVersion(clusterName, tableName);
             if (_exists(versionKey)) {
@@ -101,6 +110,10 @@ public class MemCachedSecondCacheImpl extends AbstractMemCachedCache implements 
 
     @Override
     public void put(String whereSql, ShardingDBResource db, List data) {
+        if (StringUtils.isBlank(whereSql)) {
+            return;
+        }
+
         try {
             String versionKey = _buildShardingVersion(db);
             int version = r.nextInt(10000);
@@ -123,6 +136,10 @@ public class MemCachedSecondCacheImpl extends AbstractMemCachedCache implements 
 
     @Override
     public List get(String whereSql, ShardingDBResource db) {
+        if (StringUtils.isBlank(whereSql)) {
+            return null;
+        }
+
         try {
             String versionKey = _buildShardingVersion(db);
 

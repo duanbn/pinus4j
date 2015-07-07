@@ -41,7 +41,10 @@ public abstract class AbstractMemCachedCache extends AbstractCache {
 
     public AbstractMemCachedCache(String address, int expire) {
         super(address, expire);
+    }
 
+    @Override
+    public void init() {
         try {
             List<InetSocketAddress> servers = new ArrayList<InetSocketAddress>();
 
@@ -60,20 +63,20 @@ public abstract class AbstractMemCachedCache extends AbstractCache {
         }
     }
 
-    @Override
-    public Collection<SocketAddress> getAvailableServers() {
-        if (this.memClient == null) {
-            return null;
-        }
-        return this.memClient.getAvailableServers();
-    }
-
     /**
      * 销毁对象
      */
     @Override
     public void close() {
         this.memClient.shutdown();
+    }
+
+    @Override
+    public Collection<SocketAddress> getAvailableServers() {
+        if (this.memClient == null) {
+            return null;
+        }
+        return this.memClient.getAvailableServers();
     }
 
 }

@@ -24,6 +24,8 @@ import java.util.Collection;
 import org.pinus4j.cache.ICacheBuilder;
 import org.pinus4j.cache.IPrimaryCache;
 import org.pinus4j.cache.ISecondCache;
+import org.pinus4j.cache.beans.PrimaryCacheInfo;
+import org.pinus4j.cache.beans.SecondCacheInfo;
 import org.pinus4j.cluster.config.IClusterConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,110 +38,109 @@ import org.slf4j.LoggerFactory;
  */
 public class DefaultCacheBuilder implements ICacheBuilder {
 
-	public static final Logger LOG = LoggerFactory.getLogger(DefaultCacheBuilder.class);
+    public static final Logger LOG = LoggerFactory.getLogger(DefaultCacheBuilder.class);
 
-	private boolean isCacheEnabled;
+    private boolean            isCacheEnabled;
 
-	private Class<IPrimaryCache> primaryCacheClass;
+    private PrimaryCacheInfo   primaryCacheInfo;
 
-	private String primaryCacheAddress;
+    private SecondCacheInfo    secondCacheInfo;
 
-	private int primaryCacheExpire;
+    private DefaultCacheBuilder() {
+    }
 
-	private Class<ISecondCache> secondCacheClass;
+    public static ICacheBuilder valueOf(IClusterConfig config) {
+        DefaultCacheBuilder builder = new DefaultCacheBuilder();
 
-	private String secondCacheAddress;
+        builder.setCacheEnabled(config.isCacheEnabled());
 
-	private int secondCacheExpire;
+        builder.setPrimaryCacheInfo(config.getPrimaryCacheInfo());
+        builder.setSecondCacheInfo(config.getSecondCacheInfo());
 
-	private DefaultCacheBuilder() {
-	}
+        return builder;
+    }
 
-	public static ICacheBuilder valueOf(IClusterConfig config) {
-		DefaultCacheBuilder builder = new DefaultCacheBuilder();
+    /**
+     * build primary cache.
+     */
+    public IPrimaryCache buildPrimaryCache() {
+        if (!this.isCacheEnabled) {
+            return null;
+        }
 
-		builder.setCacheEnabled(config.isCacheEnabled());
+        Constructor<IPrimaryCache> c;
+        IPrimaryCache instance = null;
+        try {
+            Class<IPrimaryCache> primaryCacheClass = primaryCacheInfo.getPrimaryCacheClass();
+            c = primaryCacheClass.getDeclaredConstructor(String.class, Integer.TYPE);
 
-		builder.setPrimaryCacheClass(config.getPrimaryCacheClass());
-		builder.setPrimaryCacheAddress(config.getPrimaryCacheAddress());
-		builder.setPrimaryCacheExpire(config.getPrimaryCacheExpire());
-
-		builder.setSecondCacheClass(config.getSecondCacheClass());
-		builder.setSecondCacheAddress(config.getSecondCacheAddress());
-		builder.setSecondCacheExpire(config.getSecondCacheExpire());
-
-		return builder;
-	}
-
-	/**
-	 * build primary cache.
-	 */
-	public IPrimaryCache buildPrimaryCache() {
-		if (!this.isCacheEnabled) {
-			return null;
-		}
-
-		Constructor<IPrimaryCache> c;
-		IPrimaryCache instance = null;
-		try {
-			c = this.primaryCacheClass.getDeclaredConstructor(String.class, Integer.TYPE);
-			instance = c.newInstance(this.primaryCacheAddress, this.primaryCacheExpire);
-		} catch (Exception e) {
-			throw new RuntimeException("create primary cache instance failure", e);
-		}
+            instance = c.newInstance(primaryCacheInfo.getPrimaryCacheAddress(),
+                    primaryCacheInfo.getPrimaryCacheExpire());
+            instance.setProperties(primaryCacheInfo.getPrimaryCacheAttr());
+            instance.init();
+        } catch (Exception e) {
+            throw new RuntimeException("create primary cache instance failure", e);
+        }
 
         _sleep(100);
 
-		StringBuilder memcachedAddressInfo = new StringBuilder();
-		Collection<SocketAddress> servers = instance.getAvailableServers();
-		if (servers != null && !servers.isEmpty()) {
-			for (SocketAddress server : servers) {
-				memcachedAddressInfo.append(((InetSocketAddress) server).getAddress().getHostAddress() + ":"
-						+ ((InetSocketAddress) server).getPort());
-				memcachedAddressInfo.append(",");
-			}
-			memcachedAddressInfo.deleteCharAt(memcachedAddressInfo.length() - 1);
-			LOG.info("find primary cache[" + this.primaryCacheClass +  "], expire " + this.primaryCacheExpire + " seconds, cache server - "
-					+ memcachedAddressInfo.toString());
-		}
+        StringBuilder memcachedAddressInfo = new StringBuilder();
+        Collection<SocketAddress> servers = instance.getAvailableServers();
+        if (servers != null && !servers.isEmpty()) {
+            for (SocketAddress server : servers) {
+                memcachedAddressInfo.append(((InetSocketAddress) server).getAddress().getHostAddress() + ":"
+                        + ((InetSocketAddress) server).getPort());
+                memcachedAddressInfo.append(",");
+            }
+            memcachedAddressInfo.deleteCharAt(memcachedAddressInfo.length() - 1);
+            LOG.info("find primary cache[" + this.primaryCacheInfo.getPrimaryCacheClass() + "], expire "
+                    + this.primaryCacheInfo.getPrimaryCacheExpire() + " seconds, cache server - "
+                    + memcachedAddressInfo.toString());
+        }
 
-		return instance;
-	}
+        return instance;
+    }
 
-	/**
-	 * build second cache.
-	 */
-	public ISecondCache buildSecondCache() {
-		if (!this.isCacheEnabled) {
-			return null;
-		}
+    /**
+     * build second cache.
+     */
+    public ISecondCache buildSecondCache() {
+        if (!this.isCacheEnabled) {
+            return null;
+        }
 
-		Constructor<ISecondCache> c;
-		ISecondCache instance = null;
-		try {
-			c = this.secondCacheClass.getDeclaredConstructor(String.class, Integer.TYPE);
-			instance = c.newInstance(this.secondCacheAddress, this.secondCacheExpire);
-		} catch (Exception e) {
-			throw new RuntimeException("create second cache instance failure", e);
-		}
+        Constructor<ISecondCache> c;
+        ISecondCache instance = null;
+        try {
+            Class<ISecondCache> secondCacheClass = secondCacheInfo.getSecondCacheClass();
+            c = secondCacheClass.getDeclaredConstructor(String.class, Integer.TYPE);
+
+            instance = c.newInstance(this.secondCacheInfo.getSecondCacheAddress(),
+                    this.secondCacheInfo.getSecondCacheExpire());
+            instance.setProperties(this.secondCacheInfo.getSecondCacheAttr());
+            instance.init();
+        } catch (Exception e) {
+            throw new RuntimeException("create second cache instance failure", e);
+        }
 
         _sleep(100);
 
-		StringBuilder memcachedAddressInfo = new StringBuilder();
-		Collection<SocketAddress> servers = instance.getAvailableServers();
-		if (servers != null && !servers.isEmpty()) {
-			for (SocketAddress server : servers) {
-				memcachedAddressInfo.append(((InetSocketAddress) server).getAddress().getHostAddress() + ":"
-						+ ((InetSocketAddress) server).getPort());
-				memcachedAddressInfo.append(",");
-			}
-			memcachedAddressInfo.deleteCharAt(memcachedAddressInfo.length() - 1);
-			LOG.info("find second cache[" + this.secondCacheClass + "], expire " + this.secondCacheExpire + " seconds, cache server - "
-					+ memcachedAddressInfo.toString());
-		}
+        StringBuilder memcachedAddressInfo = new StringBuilder();
+        Collection<SocketAddress> servers = instance.getAvailableServers();
+        if (servers != null && !servers.isEmpty()) {
+            for (SocketAddress server : servers) {
+                memcachedAddressInfo.append(((InetSocketAddress) server).getAddress().getHostAddress() + ":"
+                        + ((InetSocketAddress) server).getPort());
+                memcachedAddressInfo.append(",");
+            }
+            memcachedAddressInfo.deleteCharAt(memcachedAddressInfo.length() - 1);
+            LOG.info("find second cache[" + this.secondCacheInfo.getSecondCacheClass() + "], expire "
+                    + this.secondCacheInfo.getSecondCacheExpire() + " seconds, cache server - "
+                    + memcachedAddressInfo.toString());
+        }
 
-		return instance;
-	}
+        return instance;
+    }
 
     private void _sleep(int time) {
         try {
@@ -148,59 +149,27 @@ public class DefaultCacheBuilder implements ICacheBuilder {
         }
     }
 
-	public void setPrimaryCacheClass(Class<IPrimaryCache> clazz) {
-		this.primaryCacheClass = clazz;
-	}
+    public PrimaryCacheInfo getPrimaryCacheInfo() {
+        return primaryCacheInfo;
+    }
 
-	public Class<IPrimaryCache> getPrimaryCacheClass() {
-		return this.primaryCacheClass;
-	}
+    public void setPrimaryCacheInfo(PrimaryCacheInfo primaryCacheInfo) {
+        this.primaryCacheInfo = primaryCacheInfo;
+    }
 
-	public void setSecondCacheClass(Class<ISecondCache> clazz) {
-		this.secondCacheClass = clazz;
-	}
+    public SecondCacheInfo getSecondCacheInfo() {
+        return secondCacheInfo;
+    }
 
-	public Class<ISecondCache> getSecondCacheClass() {
-		return this.secondCacheClass;
-	}
+    public void setSecondCacheInfo(SecondCacheInfo secondCacheInfo) {
+        this.secondCacheInfo = secondCacheInfo;
+    }
 
-	public String getPrimaryCacheAddress() {
-		return primaryCacheAddress;
-	}
+    public boolean isCacheEnabled() {
+        return isCacheEnabled;
+    }
 
-	public void setPrimaryCacheAddress(String primaryCacheAddress) {
-		this.primaryCacheAddress = primaryCacheAddress;
-	}
-
-	public int getPrimaryCacheExpire() {
-		return primaryCacheExpire;
-	}
-
-	public void setPrimaryCacheExpire(int primaryCacheExpire) {
-		this.primaryCacheExpire = primaryCacheExpire;
-	}
-
-	public String getSecondCacheAddress() {
-		return secondCacheAddress;
-	}
-
-	public void setSecondCacheAddress(String secondCacheAddress) {
-		this.secondCacheAddress = secondCacheAddress;
-	}
-
-	public int getSecondCacheExpire() {
-		return secondCacheExpire;
-	}
-
-	public void setSecondCacheExpire(int secondCacheExpire) {
-		this.secondCacheExpire = secondCacheExpire;
-	}
-
-	public boolean isCacheEnabled() {
-		return isCacheEnabled;
-	}
-
-	public void setCacheEnabled(boolean isCacheEnabled) {
-		this.isCacheEnabled = isCacheEnabled;
-	}
+    public void setCacheEnabled(boolean isCacheEnabled) {
+        this.isCacheEnabled = isCacheEnabled;
+    }
 }

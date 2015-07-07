@@ -20,6 +20,10 @@ public class RedisSecondCacheImpl extends AbstractRedisCache implements ISecondC
 
     @Override
     public void putGlobal(String whereSql, String clusterName, String tableName, List data) {
+        if (StringUtils.isBlank(whereSql)) {
+            return;
+        }
+
         try {
             String cacheKey = _buildGlobalCacheKey(whereSql, clusterName, tableName);
             this.redisClient.set(cacheKey.getBytes(), IOUtil.getBytes(data));
@@ -34,6 +38,10 @@ public class RedisSecondCacheImpl extends AbstractRedisCache implements ISecondC
 
     @Override
     public List getGlobal(String whereSql, String clusterName, String tableName) {
+        if (StringUtils.isBlank(whereSql)) {
+            return null;
+        }
+
         try {
             String cacheKey = _buildGlobalCacheKey(whereSql, clusterName, tableName);
             List data = IOUtil.getObject(this.redisClient.get(cacheKey.getBytes()), List.class);
@@ -73,6 +81,10 @@ public class RedisSecondCacheImpl extends AbstractRedisCache implements ISecondC
 
     @Override
     public void put(String whereSql, ShardingDBResource db, List data) {
+        if (StringUtils.isBlank(whereSql)) {
+            return;
+        }
+
         try {
             String cacheKey = _buildShardingCacheKey(whereSql, db);
             this.redisClient.set(cacheKey.getBytes(), IOUtil.getBytes(data));
@@ -87,6 +99,10 @@ public class RedisSecondCacheImpl extends AbstractRedisCache implements ISecondC
 
     @Override
     public List get(String whereSql, ShardingDBResource db) {
+        if (StringUtils.isBlank(whereSql)) {
+            return null;
+        }
+
         try {
             String cacheKey = _buildShardingCacheKey(whereSql, db);
             List data = IOUtil.getObject(this.redisClient.get(cacheKey.getBytes()), List.class);

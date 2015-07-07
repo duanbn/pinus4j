@@ -24,10 +24,10 @@
     </db.cluster.cache>
     -->
     <db.cluster.cache enabled="true">
-        <primary expire="300" class="org.pinus4j.cache.impl.RedisPrimaryCacheImpl">
+        <primary expire="300" class="org.pinus4j.cache.impl.RedisPrimaryCacheImpl" maxTotal="10">
             <address>127.0.0.1:6379</address>
         </primary>
-        <second expire="300" class="org.pinus4j.cache.impl.RedisSecondCacheImpl">
+        <second expire="300" class="org.pinus4j.cache.impl.RedisSecondCacheImpl" maxTotal="10">
             <address>127.0.0.1:6379</address>
         </second>
     </db.cluster.cache>

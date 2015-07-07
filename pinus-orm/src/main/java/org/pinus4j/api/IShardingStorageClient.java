@@ -330,6 +330,11 @@ public interface IShardingStorageClient {
 
 	<T> T findOneByQuery(IQuery query, Class<T> clazz, boolean useCache, EnumDBMasterSlave masterSlave);
 
+    /**
+     * 根据IQuery条件进行查询
+     *
+     * @param query 查询条件，null表示查询整张表.
+     */
 	<T> List<T> findByQuery(IQuery query, Class<T> clazz);
 
 	<T> List<T> findByQuery(IQuery query, Class<T> clazz, boolean useCache);

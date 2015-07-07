@@ -1,5 +1,7 @@
 package org.pinus4j.cache.impl;
 
+import java.util.Map;
+
 import org.pinus4j.cache.ICache;
 import org.pinus4j.cluster.resources.ShardingDBResource;
 
@@ -8,9 +10,15 @@ import org.pinus4j.cluster.resources.ShardingDBResource;
  */
 public abstract class AbstractCache implements ICache {
 
-    protected int expire = 30;
+    protected String              address;
+
+    protected int                 expire = 30;
+
+    protected Map<String, String> properties;
 
     public AbstractCache(String address, int expire) {
+        this.address = address;
+
         if (expire > 0) {
             this.expire = expire;
         }
@@ -19,6 +27,16 @@ public abstract class AbstractCache implements ICache {
     @Override
     public int getExpire() {
         return this.expire;
+    }
+
+    @Override
+    public void setProperties(Map<String, String> properties) {
+        this.properties = properties;
+    }
+
+    @Override
+    public Map<String, String> getProperties() {
+        return this.properties;
     }
 
     /**
