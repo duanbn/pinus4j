@@ -26,8 +26,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisPoolConfig;
 import redis.clients.jedis.JedisShardInfo;
 import redis.clients.jedis.ShardedJedis;
+import redis.clients.jedis.ShardedJedisPool;
 
 import com.google.common.collect.Lists;
 
@@ -35,7 +37,9 @@ public abstract class AbstractRedisCache extends AbstractCache {
 
     public static final Logger LOG = LoggerFactory.getLogger(AbstractRedisCache.class);
 
-    protected ShardedJedis     redisClient;
+    //    protected ShardedJedis     redisClient;
+
+    protected ShardedJedisPool jedisPool;
 
     public AbstractRedisCache(String address, int expire) {
         super(address, expire);
@@ -52,11 +56,31 @@ public abstract class AbstractRedisCache extends AbstractCache {
                 shardInfos.add(new JedisShardInfo(pair[0], Integer.parseInt(pair[1])));
             }
 
-            this.redisClient = new ShardedJedis(shardInfos);
+            //            this.redisClient = new ShardedJedis(shardInfos);
 
-            // TODO: 通过这个属性map来创建jedispool
             Map<String, String> properties = getProperties();
-            System.out.println(properties);
+
+            JedisPoolConfig poolConfig = new JedisPoolConfig();
+            poolConfig.setTestWhileIdle(true);
+            poolConfig.setMaxIdle(6);
+            if (properties.containsKey("maxIdle")) {
+                poolConfig.setMaxIdle(Integer.parseInt(properties.get("maxIdle")));
+            }
+            poolConfig.setMaxTotal(2000);
+            if (properties.containsKey("maxTotal")) {
+                poolConfig.setMaxTotal(Integer.parseInt(properties.get("maxTotal")));
+            }
+            poolConfig.setMinEvictableIdleTimeMillis(60000);
+            if (properties.containsKey("minEvictableIdleTimeMillis")) {
+                poolConfig.setMinEvictableIdleTimeMillis(Long.parseLong("minEvictableIdleTimeMillis"));
+            }
+            poolConfig.setTimeBetweenEvictionRunsMillis(30000);
+            if (properties.containsKey("timeBetweenEvictionRunsMillis")) {
+                poolConfig.setTimeBetweenEvictionRunsMillis(Long.parseLong("timeBetweenEvictionRunsMillis"));
+            }
+            poolConfig.setNumTestsPerEvictionRun(-1);
+
+            this.jedisPool = new ShardedJedisPool(poolConfig, shardInfos);
         } catch (Exception e) {
             throw new RuntimeException("connect redis server failure", e);
         }
@@ -64,18 +88,29 @@ public abstract class AbstractRedisCache extends AbstractCache {
 
     @Override
     public void close() {
-        this.redisClient.close();
+        //        this.redisClient.close();
+        this.jedisPool.close();
     }
 
     @Override
     public Collection<SocketAddress> getAvailableServers() {
         List<SocketAddress> servers = Lists.newArrayList();
 
-        Collection<Jedis> alives = redisClient.getAllShards();
-        for (Jedis alive : alives) {
-            String host = alive.getClient().getHost();
-            int port = alive.getClient().getPort();
-            servers.add(new InetSocketAddress(host, port));
+        ShardedJedis redisClient = null;
+        try {
+            redisClient = jedisPool.getResource();
+            Collection<Jedis> alives = redisClient.getAllShards();
+            for (Jedis alive : alives) {
+                String host = alive.getClient().getHost();
+                int port = alive.getClient().getPort();
+                servers.add(new InetSocketAddress(host, port));
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        } finally {
+            if (redisClient != null) {
+                redisClient.close();
+            }
         }
 
         return servers;
