@@ -4,6 +4,12 @@ layout: default
 
 # 版本更新日志
 
+### version 1.2.0 (TODO)
+
+* 支持自定义数据库连接池
+
+* 支持数据库联合主键
+
 ### version 1.1.1
 
 * 新增Field别名识别，@Field(name = "alias")
