@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<storage-config>
+
+	<!-- text hash algo -->
+	<!-- additive | rotating | oneByOne | bernstein | fnv | rs | js | pjw | 
+		elf | bkdr | sdbm | djb | dek | ap | java | mix -->
+	<db.cluster.hash.algo>bernstein</db.cluster.hash.algo>
+	<!-- zookeeper connection -->
+	<db.cluster.zk>127.0.0.1:2181</db.cluster.zk>
+	<!-- id generator batch -->
+	<db.cluster.generateid.batch>1</db.cluster.generateid.batch>
+    <!-- db query cache expire is seconds -->
+    <db.cluster.cache enabled="true">
+        <primary expire="300">
+            <address>127.0.0.1:11211</address>
+        </primary>
+        <second expire="300">
+            <address>127.0.0.1:11211</address>
+        </second>
+    </db.cluster.cache>
+
+	<!-- catalog is "env" or "app" -->
+	<!-- env represent get connection pool from container -->
+	<!-- app represent get connection pool from internal application -->
+	<db-connection-pool catalog="env"></db-connection-pool>
+
+	<cluster name="pinus" catalog="mysql">
+		<global>
+            <master>java:comp/env/jdbc/pinus</master>
+            <slave>java:comp/env/jdbc/pinus0</slave>
+		</global>
+		<region capacity="1-1000000">
+			<master>
+				<sharding>java:comp/env/jdbc/pinus1</sharding>
+				<sharding>java:comp/env/jdbc/pinus2</sharding>
+			</master>
+			<slave>
+				<sharding>java:comp/env/jdbc/pinus3</sharding>
+				<sharding>java:comp/env/jdbc/pinus4</sharding>
+			</slave>
+		</region>
+		<region capacity="1000001-2000000">
+			<master>
+				<sharding>java:comp/env/jdbc/pinus5</sharding>
+				<sharding>java:comp/env/jdbc/pinus6</sharding>
+			</master>
+			<slave>
+				<sharding>java:comp/env/jdbc/pinus7</sharding>
+				<sharding>java:comp/env/jdbc/pinus8</sharding>
+			</slave>
+		</region>
+	</cluster>
+
+</storage-config>
