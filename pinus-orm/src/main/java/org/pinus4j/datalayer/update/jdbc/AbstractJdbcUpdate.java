@@ -18,8 +18,10 @@ package org.pinus4j.datalayer.update.jdbc;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.transaction.TransactionManager;
@@ -29,8 +31,9 @@ import org.pinus4j.cache.ISecondCache;
 import org.pinus4j.cluster.IDBCluster;
 import org.pinus4j.datalayer.SQLBuilder;
 import org.pinus4j.datalayer.update.IDataUpdate;
+import org.pinus4j.entity.meta.PKName;
+import org.pinus4j.entity.meta.PKValue;
 import org.pinus4j.exceptions.DBOperationException;
-import org.pinus4j.generator.IIdGenerator;
 import org.pinus4j.utils.JdbcUtil;
 import org.pinus4j.utils.ReflectUtil;
 import org.slf4j.Logger;
@@ -44,163 +47,172 @@ import org.slf4j.LoggerFactory;
  */
 public abstract class AbstractJdbcUpdate implements IDataUpdate {
 
-	public static final Logger LOG = LoggerFactory.getLogger(AbstractJdbcUpdate.class);
+    public static final Logger   LOG = LoggerFactory.getLogger(AbstractJdbcUpdate.class);
 
-	/**
-	 * 数据库集群引用
-	 */
-	protected IDBCluster dbCluster;
+    /**
+     * 数据库集群引用
+     */
+    protected IDBCluster         dbCluster;
 
-	/**
-	 * ID生成器
-	 */
-	protected IIdGenerator idGenerator;
+    /**
+     * 一级缓存引用.
+     */
+    protected IPrimaryCache      primaryCache;
 
-	/**
-	 * 一级缓存引用.
-	 */
-	protected IPrimaryCache primaryCache;
+    /**
+     * 二级缓存引用.
+     */
+    protected ISecondCache       secondCache;
 
-	/**
-	 * 二级缓存引用.
-	 */
-	protected ISecondCache secondCache;
+    protected TransactionManager txManager;
 
-	protected TransactionManager txManager;
+    protected List<PKValue> _saveBatchGlobal(Connection conn, List<? extends Object> entities) {
+        return _saveBatch(conn, entities, -1);
+    }
 
-	/**
-	 * 执行保存数据操作.
-	 *
-	 * @param conn
-	 *            数据库连接
-	 * @param entities
-	 *            需要被保存的数据
-	 * @param tableIndex
-	 *            分片表下标. 当-1时忽略下标
-	 */
-	protected void _saveBatch(Connection conn, List<? extends Object> entities, int tableIndex) {
-		Statement st = null;
-		try {
-			st = SQLBuilder.getInsert(conn, entities, tableIndex);
-			st.executeBatch();
-		} catch (SQLException e) {
-			try {
-				conn.rollback();
-			} catch (SQLException e1) {
-				LOG.error(e1.getMessage());
-			}
-			throw new DBOperationException(e);
-		} finally {
-			JdbcUtil.close(st);
-		}
-	}
+    /**
+     * 执行保存数据操作.
+     *
+     * @param conn 数据库连接
+     * @param entities 需要被保存的数据
+     * @param tableIndex 分片表下标. 当-1时忽略下标
+     */
+    protected List<PKValue> _saveBatch(Connection conn, List<? extends Object> entities, int tableIndex) {
+        List<PKValue> pks = new ArrayList<PKValue>();
 
-	/**
-	 * @param tableIndex
-	 *            等于-1时会被忽略.
-	 */
-	protected void _removeByPks(Connection conn, List<? extends Number> pks, Class<?> clazz, int tableIndex) {
-		PreparedStatement ps = null;
-		try {
-			ps = conn.prepareStatement(SQLBuilder.buildDeleteByPks(clazz, tableIndex, pks));
-			ps.executeUpdate();
-		} catch (SQLException e) {
-			try {
-				conn.rollback();
-			} catch (SQLException e1) {
-				LOG.error(e1.getMessage());
-			}
-		} finally {
-			JdbcUtil.close(ps);
-		}
-	}
+        Statement st = null;
+        String sql = null;
+        try {
+            st = conn.createStatement();
+            for (Object entity : entities) {
 
-	/**
-	 * @param tableIndex
-	 *            等于-1时会被忽略.
-	 */
-	protected void _updateBatch(Connection conn, List<? extends Object> entities, int tableIndex) {
-		Statement st = null;
-		try {
-			st = SQLBuilder.getUpdate(conn, entities, tableIndex);
-			st.executeBatch();
-		} catch (SQLException e) {
-			try {
-				conn.rollback();
-			} catch (SQLException e1) {
-				LOG.error(e1.getMessage());
-			}
-			throw new DBOperationException(e);
-		} finally {
-			JdbcUtil.close(st);
-		}
-	}
+                sql = SQLBuilder.getInsert(conn, entity, tableIndex);
 
-	/**
-	 * 判断一级缓存是否可用
-	 * 
-	 * @return true:启用cache, false:不启用
-	 */
-	protected boolean isCacheAvailable(Class<?> clazz) {
-		return primaryCache != null && ReflectUtil.isCache(clazz);
-	}
+                st.execute(sql, Statement.RETURN_GENERATED_KEYS);
 
-	/**
-	 * 判断二级缓存是否可用
-	 * 
-	 * @return true:启用cache, false:不启用
-	 */
-	protected boolean isSecondCacheAvailable(Class<?> clazz) {
-		return secondCache != null && ReflectUtil.isCache(clazz);
-	}
+                ResultSet rs = st.getGeneratedKeys();
+                PKName pkName = ReflectUtil.getNotUnionPkName(entity.getClass());
+                if (rs.next()) {
+                    ReflectUtil.setProperty(entity, pkName.getValue(), rs.getObject(1));
+                    pks.add(PKValue.valueOf(rs.getObject(1)));
+                }
+            }
+        } catch (SQLException e) {
+            try {
+                conn.rollback();
+            } catch (SQLException e1) {
+                LOG.error(e1.getMessage());
+            }
+            throw new DBOperationException(e);
+        } finally {
+            JdbcUtil.close(st);
+        }
 
-	@Override
-	public IDBCluster getDBCluster() {
-		return dbCluster;
-	}
+        return pks;
+    }
 
-	@Override
-	public void setDBCluster(IDBCluster dbCluster) {
-		this.dbCluster = dbCluster;
-	}
+    protected void _removeByPksGlobal(Connection conn, List<PKValue> pks, Class<?> clazz) {
+        _removeByPks(conn, pks, clazz, -1);
+    }
 
-	@Override
-	public void setIdGenerator(IIdGenerator idGenerator) {
-		this.idGenerator = idGenerator;
-	}
+    /**
+     * @param tableIndex 等于-1时会被忽略.
+     */
+    protected void _removeByPks(Connection conn, List<PKValue> pks, Class<?> clazz, int tableIndex) {
+        PreparedStatement ps = null;
+        try {
+            ps = conn.prepareStatement(SQLBuilder.buildDeleteByPks(clazz, tableIndex, pks));
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            try {
+                conn.rollback();
+            } catch (SQLException e1) {
+                LOG.error(e1.getMessage());
+            }
+        } finally {
+            JdbcUtil.close(ps);
+        }
+    }
 
-	@Override
-	public IIdGenerator getIdGenerator() {
-		return this.idGenerator;
-	}
+    protected void _updateBatchGlobal(Connection conn, List<? extends Object> entities) {
+        _updateBatch(conn, entities, -1);
+    }
 
-	@Override
-	public IPrimaryCache getPrimaryCache() {
-		return primaryCache;
-	}
+    /**
+     * @param tableIndex 等于-1时会被忽略.
+     */
+    protected void _updateBatch(Connection conn, List<? extends Object> entities, int tableIndex) {
+        Statement st = null;
+        try {
+            st = SQLBuilder.getUpdate(conn, entities, tableIndex);
+            st.executeBatch();
+        } catch (SQLException e) {
+            try {
+                conn.rollback();
+            } catch (SQLException e1) {
+                LOG.error(e1.getMessage());
+            }
+            throw new DBOperationException(e);
+        } finally {
+            JdbcUtil.close(st);
+        }
+    }
 
-	@Override
-	public void setPrimaryCache(IPrimaryCache primaryCache) {
-		this.primaryCache = primaryCache;
-	}
+    /**
+     * 判断一级缓存是否可用
+     * 
+     * @return true:启用cache, false:不启用
+     */
+    protected boolean isCacheAvailable(Class<?> clazz) {
+        return primaryCache != null && ReflectUtil.isCache(clazz);
+    }
 
-	@Override
-	public ISecondCache getSecondCache() {
-		return secondCache;
-	}
+    /**
+     * 判断二级缓存是否可用
+     * 
+     * @return true:启用cache, false:不启用
+     */
+    protected boolean isSecondCacheAvailable(Class<?> clazz) {
+        return secondCache != null && ReflectUtil.isCache(clazz);
+    }
 
-	@Override
-	public void setSecondCache(ISecondCache secondCache) {
-		this.secondCache = secondCache;
-	}
+    @Override
+    public IDBCluster getDBCluster() {
+        return dbCluster;
+    }
 
-	@Override
-	public void setTransactionManager(TransactionManager txManager) {
-		this.txManager = txManager;
-	}
+    @Override
+    public void setDBCluster(IDBCluster dbCluster) {
+        this.dbCluster = dbCluster;
+    }
 
-	@Override
-	public TransactionManager getTransactionManager() {
-		return this.txManager;
-	}
+    @Override
+    public IPrimaryCache getPrimaryCache() {
+        return primaryCache;
+    }
+
+    @Override
+    public void setPrimaryCache(IPrimaryCache primaryCache) {
+        this.primaryCache = primaryCache;
+    }
+
+    @Override
+    public ISecondCache getSecondCache() {
+        return secondCache;
+    }
+
+    @Override
+    public void setSecondCache(ISecondCache secondCache) {
+        this.secondCache = secondCache;
+    }
+
+    @Override
+    public void setTransactionManager(TransactionManager txManager) {
+        this.txManager = txManager;
+    }
+
+    @Override
+    public TransactionManager getTransactionManager() {
+        return this.txManager;
+    }
 }

@@ -13,7 +13,6 @@
 	<db.cluster.generateid.batch>1</db.cluster.generateid.batch>
 
     <!-- db query cache expire is seconds -->
-    <!-- 
     <db.cluster.cache enabled="true">
         <primary expire="300">
             <address>127.0.0.1:11211</address>
@@ -22,7 +21,7 @@
             <address>127.0.0.1:11211</address>
         </second>
     </db.cluster.cache>
-     -->
+    <!-- 
     <db.cluster.cache enabled="true">
         <primary expire="300" class="org.pinus4j.cache.impl.RedisPrimaryCacheImpl" maxTotal="10">
             <address>127.0.0.1:6379</address>
@@ -31,6 +30,7 @@
             <address>127.0.0.1:6379</address>
         </second>
     </db.cluster.cache>
+    -->
      
 	<!-- catalog is "env" or "app" -->
 	<!-- env represent get connection pool from container -->

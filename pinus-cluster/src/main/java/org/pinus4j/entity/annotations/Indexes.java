@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.pinus4j.generator.annotations;
+package org.pinus4j.entity.annotations;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
@@ -26,22 +26,16 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 /**
- * 表示一个字段的索引.
- * 如果联合索引可以使用逗号分隔多个字段
- * 例如<pre>@Index(field="fieldName1,fieldName2")</pre>
+ * 表示一个表的主键.
+ * 一个表可以定义多个字段的索引.
  *
  * @author duanbn
  */
-public @interface Index {
+public @interface Indexes {
 
     /**
-     * 是否是唯一索引.
+     * 索引数组
      */
-    boolean isUnique() default false;
+    Index[] value();
 
-    /**
-     * 需要被索引的字段
-     */
-    String field();
-  
 }

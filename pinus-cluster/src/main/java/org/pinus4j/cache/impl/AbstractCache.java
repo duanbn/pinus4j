@@ -4,6 +4,8 @@ import java.util.Map;
 
 import org.pinus4j.cache.ICache;
 import org.pinus4j.cluster.resources.ShardingDBResource;
+import org.pinus4j.entity.meta.EntityPK;
+import org.pinus4j.entity.meta.PKValue;
 
 /**
  * @author bingnan.dbn Jun 25, 2015 3:33:10 PM
@@ -66,10 +68,24 @@ public abstract class AbstractCache implements ICache {
     /**
      * build global cache key [clusterName].[tableName].[id]
      */
-    protected String buildGlobalKey(String clusterName, String tableName, Number id) {
+    protected String buildGlobalKey(String clusterName, String tableName, PKValue pkValue) {
         StringBuilder key = new StringBuilder();
         key.append(clusterName).append(".").append(tableName).append(".");
-        key.append(id);
+        key.append(pkValue.getValueAsString());
+        return key.toString();
+    }
+
+    /**
+     * build global cache key [clusterName].[tableName].[id]
+     */
+    protected String buildGlobalKey(String clusterName, String tableName, EntityPK entityPk) {
+        StringBuilder key = new StringBuilder();
+        key.append(clusterName).append(".").append(tableName).append(".");
+        StringBuilder pks = new StringBuilder();
+        for (PKValue pkValue : entityPk.getPkValues()) {
+            pks.append(pkValue.getValueAsString());
+        }
+        key.append(pks.toString());
         return key.toString();
     }
 
@@ -77,7 +93,7 @@ public abstract class AbstractCache implements ICache {
      * build sharding cache key [clusterName + dbIndex].[start + end].[tableName
      * + tableIndex].[id]
      */
-    protected String buildKey(ShardingDBResource shardingDBResource, Number id) {
+    protected String buildKey(ShardingDBResource shardingDBResource, PKValue pkValue) {
         StringBuilder key = new StringBuilder();
         key.append(shardingDBResource.getClusterName()).append(shardingDBResource.getDbName());
         key.append(".");
@@ -85,7 +101,27 @@ public abstract class AbstractCache implements ICache {
         key.append(".");
         key.append(shardingDBResource.getTableName()).append(shardingDBResource.getTableIndex());
         key.append(".");
-        key.append(id);
+        key.append(pkValue.getValueAsString());
+        return key.toString();
+    }
+
+    /**
+     * build sharding cache key [clusterName + dbIndex].[start + end].[tableName
+     * + tableIndex].[id]
+     */
+    protected String buildKey(ShardingDBResource shardingDBResource, EntityPK entityPk) {
+        StringBuilder key = new StringBuilder();
+        key.append(shardingDBResource.getClusterName()).append(shardingDBResource.getDbName());
+        key.append(".");
+        key.append(shardingDBResource.getRegionCapacity());
+        key.append(".");
+        key.append(shardingDBResource.getTableName()).append(shardingDBResource.getTableIndex());
+        key.append(".");
+        StringBuilder pks = new StringBuilder();
+        for (PKValue pkValue : entityPk.getPkValues()) {
+            pks.append(pkValue.getValueAsString());
+        }
+        key.append(pks.toString());
         return key.toString();
     }
 

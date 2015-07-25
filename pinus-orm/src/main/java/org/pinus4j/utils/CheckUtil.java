@@ -22,8 +22,8 @@ import org.pinus4j.api.SQL;
 import org.pinus4j.api.query.IQuery;
 import org.pinus4j.cluster.beans.IShardingKey;
 import org.pinus4j.cluster.enums.EnumDBMasterSlave;
+import org.pinus4j.entity.annotations.Table;
 import org.pinus4j.exceptions.DBOperationException;
-import org.pinus4j.generator.annotations.Table;
 
 /**
  * 校验工具.

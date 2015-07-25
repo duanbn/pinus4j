@@ -18,16 +18,14 @@ package org.pinus4j.datalayer.update.jdbc;
 
 import java.sql.Connection;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 import javax.transaction.Transaction;
 import javax.transaction.xa.XAResource;
 
 import org.pinus4j.cluster.resources.IDBResource;
-import org.pinus4j.constant.Const;
 import org.pinus4j.datalayer.update.IGlobalUpdate;
+import org.pinus4j.entity.meta.PKValue;
 import org.pinus4j.exceptions.DBOperationException;
 import org.pinus4j.utils.ReflectUtil;
 import org.slf4j.Logger;
@@ -35,231 +33,183 @@ import org.slf4j.LoggerFactory;
 
 public class GlobalJdbcUpdateImpl extends AbstractJdbcUpdate implements IGlobalUpdate {
 
-	public static final Logger LOG = LoggerFactory.getLogger(GlobalJdbcUpdateImpl.class);
+    public static final Logger LOG = LoggerFactory.getLogger(GlobalJdbcUpdateImpl.class);
 
-	@Override
-	public Number globalSave(Object entity, String clusterName) {
-		List<Object> entities = new ArrayList<Object>(1);
-		entities.add(entity);
-		return globalSaveBatch(entities, clusterName)[0];
-	}
+    @Override
+    public PKValue globalSave(Object entity, String clusterName) {
+        List<Object> entities = new ArrayList<Object>(1);
+        entities.add(entity);
+        return globalSaveBatch(entities, clusterName)[0];
+    }
 
-	@Override
-	public Number[] globalSaveBatch(List<? extends Object> entities, String clusterName) {
-		Class<?> clazz = entities.get(0).getClass();
-		String tableName = ReflectUtil.getTableName(clazz);
+    @Override
+    public PKValue[] globalSaveBatch(List<? extends Object> entities, String clusterName) {
+        Class<?> clazz = entities.get(0).getClass();
+        String tableName = ReflectUtil.getTableName(clazz);
 
-		int entitySize = entities.size();
-		Number[] pks = new Number[entitySize];
-		boolean isCheckPrimaryKey = true;
+        List<PKValue> pks = new ArrayList<PKValue>();
 
-		// 检查插入数据的主键
-		Map<Number, Object> map = new LinkedHashMap<Number, Object>(entitySize);
-		Number pk = null, maxPk = 0;
-		Object entity = null;
-		for (int i = 0; i < entitySize; i++) {
-			entity = entities.get(i);
-			pk = ReflectUtil.getPkValue(entity);
-			if (pk == null || pk.intValue() == 0) {
-				map.put(i, entity);
-			} else {
-				pks[i] = pk;
-				maxPk = pk.intValue() > maxPk.intValue() ? pk : maxPk;
-			}
-		}
-		// 如果主键为0，则设置主键
-		if (!map.isEmpty()) {
-			isCheckPrimaryKey = false;
-			int[] newPks = this.idGenerator.genClusterUniqueIntIdBatch(Const.ZK_PRIMARYKEY + "/" + clusterName,
-					tableName, map.size(), maxPk.longValue());
-			int i = 0;
-			for (Map.Entry<Number, Object> entry : map.entrySet()) {
-				int pos = entry.getKey().intValue();
-				try {
-					ReflectUtil.setPkValue(entities.get(pos), newPks[i]);
-				} catch (Exception e) {
-					throw new DBOperationException(e);
-				}
-				pks[pos] = newPks[i];
-				i++;
-			}
-		}
+        Transaction tx = null;
+        IDBResource dbResource = null;
+        try {
+            tx = txManager.getTransaction();
+            dbResource = this.dbCluster.getMasterGlobalDBResource(clusterName, ReflectUtil.getTableName(clazz));
+            Connection conn = dbResource.getConnection();
 
-		if (isCheckPrimaryKey)
-			this.idGenerator.checkAndSetPrimaryKey(maxPk.longValue(), clusterName, tableName);
+            List<PKValue> genPks = _saveBatchGlobal(conn, entities);
+            pks.addAll(genPks);
 
-		Transaction tx = null;
-		IDBResource dbResource = null;
-		try {
-			tx = txManager.getTransaction();
-			dbResource = this.dbCluster.getMasterGlobalDBResource(clusterName, ReflectUtil.getTableName(clazz));
-			Connection conn = dbResource.getConnection();
+            if (tx != null) {
+                tx.enlistResource((XAResource) dbResource);
+            } else {
+                dbResource.commit();
+            }
 
-			_saveBatchGlobal(conn, entities);
+            if (isCacheAvailable(clazz)) {
+                primaryCache.incrCountGlobal(clusterName, tableName, entities.size());
+            }
 
-			if (tx != null) {
-				tx.enlistResource((XAResource) dbResource);
-			} else {
-				dbResource.commit();
-			}
+            if (isSecondCacheAvailable(clazz)) {
+                secondCache.removeGlobal(clusterName, tableName);
+            }
+        } catch (Exception e1) {
+            if (tx != null) {
+                try {
+                    tx.rollback();
+                } catch (Exception e) {
+                    throw new DBOperationException(e);
+                }
+            } else {
+                if (dbResource != null) {
+                    dbResource.rollback();
+                }
+            }
 
-			if (isCacheAvailable(clazz)) {
-				primaryCache.incrCountGlobal(clusterName, tableName, entities.size());
-			}
+            throw new DBOperationException(e1);
+        } finally {
+            if (tx == null && dbResource != null) {
+                dbResource.close();
+            }
+        }
 
-			if (isSecondCacheAvailable(clazz)) {
-				secondCache.removeGlobal(clusterName, tableName);
-			}
-		} catch (Exception e1) {
-			if (tx != null) {
-				try {
-					tx.rollback();
-				} catch (Exception e) {
-					throw new DBOperationException(e);
-				}
-			} else {
-				if (dbResource != null) {
-					dbResource.rollback();
-				}
-			}
+        return pks.toArray(new PKValue[pks.size()]);
+    }
 
-			throw new DBOperationException(e1);
-		} finally {
-			if (tx == null && dbResource != null) {
-				dbResource.close();
-			}
-		}
+    @Override
+    public void globalUpdate(Object entity, String clusterName) {
+        List<Object> entities = new ArrayList<Object>();
+        entities.add(entity);
+        globalUpdateBatch(entities, clusterName);
+    }
 
-		return pks;
-	}
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @Override
+    public void globalUpdateBatch(List<? extends Object> entities, String clusterName) {
+        Class<?> clazz = entities.get(0).getClass();
+        String tableName = ReflectUtil.getTableName(clazz);
 
-	@Override
-	public void globalUpdate(Object entity, String clusterName) {
-		List<Object> entities = new ArrayList<Object>();
-		entities.add(entity);
-		globalUpdateBatch(entities, clusterName);
-	}
+        Transaction tx = null;
+        IDBResource dbResource = null;
+        try {
+            tx = txManager.getTransaction();
+            dbResource = this.dbCluster.getMasterGlobalDBResource(clusterName, ReflectUtil.getTableName(clazz));
 
-	@SuppressWarnings({ "rawtypes", "unchecked" })
-	@Override
-	public void globalUpdateBatch(List<? extends Object> entities, String clusterName) {
-		Class<?> clazz = entities.get(0).getClass();
-		String tableName = ReflectUtil.getTableName(clazz);
+            Connection conn = dbResource.getConnection();
 
-		Transaction tx = null;
-		IDBResource dbResource = null;
-		try {
-			tx = txManager.getTransaction();
-			dbResource = this.dbCluster.getMasterGlobalDBResource(clusterName, ReflectUtil.getTableName(clazz));
+            _updateBatchGlobal(conn, entities);
 
-			Connection conn = dbResource.getConnection();
+            if (tx != null) {
+                tx.enlistResource((XAResource) dbResource);
+            } else {
+                dbResource.commit();
+            }
 
-			_updateBatchGlobal(conn, entities);
+            // 删除缓存
+            if (isCacheAvailable(clazz)) {
+                List<PKValue> pks = new ArrayList(entities.size());
+                for (Object entity : entities) {
+                    pks.add(ReflectUtil.getNotUnionPkValue(entity));
+                }
+                primaryCache.removeGlobal(clusterName, tableName, pks);
+            }
+            if (isSecondCacheAvailable(clazz)) {
+                secondCache.removeGlobal(clusterName, tableName);
+            }
+        } catch (Exception e) {
+            if (tx != null) {
+                try {
+                    tx.rollback();
+                } catch (Exception e1) {
+                    throw new DBOperationException(e1);
+                }
+            } else {
+                if (dbResource != null) {
+                    dbResource.rollback();
+                }
+            }
 
-			if (tx != null) {
-				tx.enlistResource((XAResource) dbResource);
-			} else {
-				dbResource.commit();
-			}
+            throw new DBOperationException(e);
+        } finally {
+            if (tx == null && dbResource != null) {
+                dbResource.close();
+            }
+        }
+    }
 
-			// 删除缓存
-			if (isCacheAvailable(clazz)) {
-				List pks = new ArrayList(entities.size());
-				for (Object entity : entities) {
-					pks.add((Number) ReflectUtil.getPkValue(entity));
-				}
-				primaryCache.removeGlobal(clusterName, tableName, pks);
-			}
-			if (isSecondCacheAvailable(clazz)) {
-				secondCache.removeGlobal(clusterName, tableName);
-			}
-		} catch (Exception e) {
-			if (tx != null) {
-				try {
-					tx.rollback();
-				} catch (Exception e1) {
-					throw new DBOperationException(e1);
-				}
-			} else {
-				if (dbResource != null) {
-					dbResource.rollback();
-				}
-			}
+    @Override
+    public void globalRemoveByPk(PKValue pk, Class<?> clazz, String clusterName) {
+        List<PKValue> pks = new ArrayList<PKValue>(1);
+        pks.add(pk);
+        globalRemoveByPks(pks, clazz, clusterName);
+    }
 
-			throw new DBOperationException(e);
-		} finally {
-			if (tx == null && dbResource != null) {
-				dbResource.close();
-			}
-		}
-	}
+    @Override
+    public void globalRemoveByPks(List<PKValue> pks, Class<?> clazz, String clusterName) {
 
-	@Override
-	public void globalRemoveByPk(Number pk, Class<?> clazz, String clusterName) {
-		List<Number> pks = new ArrayList<Number>(1);
-		pks.add(pk);
-		globalRemoveByPks(pks, clazz, clusterName);
-	}
+        Transaction tx = null;
+        IDBResource dbResource = null;
+        try {
+            tx = txManager.getTransaction();
+            dbResource = this.dbCluster.getMasterGlobalDBResource(clusterName, ReflectUtil.getTableName(clazz));
 
-	@Override
-	public void globalRemoveByPks(List<? extends Number> pks, Class<?> clazz, String clusterName) {
+            Connection conn = dbResource.getConnection();
 
-		Transaction tx = null;
-		IDBResource dbResource = null;
-		try {
-			tx = txManager.getTransaction();
-			dbResource = this.dbCluster.getMasterGlobalDBResource(clusterName, ReflectUtil.getTableName(clazz));
+            _removeByPksGlobal(conn, pks, clazz);
 
-			Connection conn = dbResource.getConnection();
+            if (tx != null) {
+                tx.enlistResource((XAResource) dbResource);
+            } else {
+                dbResource.commit();
+            }
 
-			_removeByPksGlobal(conn, pks, clazz);
+            // 删除缓存
+            String tableName = ReflectUtil.getTableName(clazz);
+            if (isCacheAvailable(clazz)) {
+                primaryCache.removeGlobal(clusterName, tableName, pks);
+                primaryCache.decrCountGlobal(clusterName, tableName, pks.size());
+            }
+            if (isSecondCacheAvailable(clazz)) {
+                secondCache.removeGlobal(clusterName, tableName);
+            }
+        } catch (Exception e) {
+            if (tx != null) {
+                try {
+                    tx.rollback();
+                } catch (Exception e1) {
+                    throw new DBOperationException(e1);
+                }
+            } else {
+                if (dbResource != null) {
+                    dbResource.rollback();
+                }
+            }
 
-			if (tx != null) {
-				tx.enlistResource((XAResource) dbResource);
-			} else {
-				dbResource.commit();
-			}
-
-			// 删除缓存
-			String tableName = ReflectUtil.getTableName(clazz);
-			if (isCacheAvailable(clazz)) {
-				primaryCache.removeGlobal(clusterName, tableName, pks);
-				primaryCache.decrCountGlobal(clusterName, tableName, pks.size());
-			}
-			if (isSecondCacheAvailable(clazz)) {
-				secondCache.removeGlobal(clusterName, tableName);
-			}
-		} catch (Exception e) {
-			if (tx != null) {
-				try {
-					tx.rollback();
-				} catch (Exception e1) {
-					throw new DBOperationException(e1);
-				}
-			} else {
-				if (dbResource != null) {
-					dbResource.rollback();
-				}
-			}
-
-			throw new DBOperationException(e);
-		} finally {
-			if (tx == null && dbResource != null) {
-				dbResource.close();
-			}
-		}
-	}
-
-	private void _saveBatchGlobal(Connection conn, List<? extends Object> entities) {
-		_saveBatch(conn, entities, -1);
-	}
-
-	private void _updateBatchGlobal(Connection conn, List<? extends Object> entities) {
-		_updateBatch(conn, entities, -1);
-	}
-
-	private void _removeByPksGlobal(Connection conn, List<? extends Number> pks, Class<?> clazz) {
-		_removeByPks(conn, pks, clazz, -1);
-	}
+            throw new DBOperationException(e);
+        } finally {
+            if (tx == null && dbResource != null) {
+                dbResource.close();
+            }
+        }
+    }
 
 }

@@ -16,80 +16,79 @@ import org.pinus4j.utils.ReflectUtil;
  * 抽象数据库记录迭代器.
  * 
  * @author duanbn
- *
  */
 public abstract class AbstractRecordIterator<E> extends AbstractJdbcQuery implements IRecordIterator<E> {
-	
-	public static final int STEP = 5000;
 
-	protected Class<E> clazz;
+    public static final int STEP     = 5000;
 
-	protected String pkName;
+    protected Class<E>      clazz;
 
-	protected IQuery query;
+    protected String        pkName;
 
-	protected Queue<E> recordQ;
-	protected int step = STEP;
-	protected long latestId = 0;
-	protected long maxId;
+    protected IQuery        query;
 
-	public AbstractRecordIterator(Class<E> clazz) {
-		// check pk type
-		pkName = ReflectUtil.getPkName(clazz);
-		Class<?> type;
-		try {
-			type = clazz.getDeclaredField(pkName).getType();
-		} catch (NoSuchFieldException e) {
-			throw new DBOperationException("遍历数据失败, clazz " + clazz, e);
-		} catch (SecurityException e) {
-			throw new DBOperationException("遍历数据失败, clazz " + clazz, e);
-		}
-		if (type != Long.TYPE && type != Integer.TYPE && type != Short.TYPE && type != Long.class && type != Long.class
-				&& type != Short.class) {
-			throw new DBOperationException("被遍历的数据主键不是数值型");
-		}
+    protected Queue<E>      recordQ;
+    protected int           step     = STEP;
+    protected long          latestId = 0;
+    protected long          maxId;
 
-		this.clazz = clazz;
+    public AbstractRecordIterator(Class<E> clazz) {
+        // check pk type
+        pkName = ReflectUtil.getNotUnionPkName(clazz).getValue();
+        Class<?> type;
+        try {
+            type = clazz.getDeclaredField(pkName).getType();
+        } catch (NoSuchFieldException e) {
+            throw new DBOperationException("遍历数据失败, clazz " + clazz, e);
+        } catch (SecurityException e) {
+            throw new DBOperationException("遍历数据失败, clazz " + clazz, e);
+        }
+        if (type != Long.TYPE && type != Integer.TYPE && type != Short.TYPE && type != Long.class && type != Long.class
+                && type != Short.class) {
+            throw new DBOperationException("被遍历的数据主键不是数值型");
+        }
 
-		if (this.query == null) {
-			this.query = new QueryImpl();
-		}
+        this.clazz = clazz;
 
-		this.recordQ = new LinkedList<E>();
-	}
+        if (this.query == null) {
+            this.query = new QueryImpl();
+        }
 
-	@Override
-	public E next() {
-		return this.recordQ.poll();
-	}
+        this.recordQ = new LinkedList<E>();
+    }
 
-	@Override
-	public void remove() {
-		throw new UnsupportedOperationException("this iterator cann't doing remove");
-	}
+    @Override
+    public E next() {
+        return this.recordQ.poll();
+    }
 
-	@Override
-	public List<E> nextMore() {
-		List<E> data = new ArrayList<E>(this.recordQ);
-		this.recordQ.clear();
-		return data;
-	}
+    @Override
+    public void remove() {
+        throw new UnsupportedOperationException("this iterator cann't doing remove");
+    }
 
-	@Override
-	public void setQuery(IQuery query) {
-		if (query != null)
-			this.query = query;
-	}
+    @Override
+    public List<E> nextMore() {
+        List<E> data = new ArrayList<E>(this.recordQ);
+        this.recordQ.clear();
+        return data;
+    }
 
-	public abstract long getMaxId();
+    @Override
+    public void setQuery(IQuery query) {
+        if (query != null)
+            this.query = query;
+    }
 
-	public int getStep() {
-		return step;
-	}
+    public abstract long getMaxId();
 
-	@Override
-	public void setStep(int step) {
-		this.step = step;
-	}
+    public int getStep() {
+        return step;
+    }
+
+    @Override
+    public void setStep(int step) {
+        this.step = step;
+    }
 
 }

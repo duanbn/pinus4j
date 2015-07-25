@@ -25,11 +25,19 @@ import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.pinus4j.constant.Const;
+import org.pinus4j.entity.DefaultEntityMetaManager;
+import org.pinus4j.entity.IEntityMetaManager;
+import org.pinus4j.entity.annotations.DateTime;
+import org.pinus4j.entity.annotations.PrimaryKey;
+import org.pinus4j.entity.annotations.UpdateTime;
+import org.pinus4j.entity.meta.DBTable;
+import org.pinus4j.entity.meta.DBTablePK;
+import org.pinus4j.entity.meta.EntityPK;
+import org.pinus4j.entity.meta.PKName;
+import org.pinus4j.entity.meta.PKValue;
 import org.pinus4j.exceptions.DBOperationException;
-import org.pinus4j.generator.annotations.DateTime;
-import org.pinus4j.generator.annotations.PrimaryKey;
-import org.pinus4j.generator.annotations.Table;
-import org.pinus4j.generator.annotations.UpdateTime;
+
+import com.google.common.collect.Lists;
 
 /**
  * 反射工具类. 提供了一些简单的反射功能. 方便其他操作调用.
@@ -41,132 +49,90 @@ public class ReflectUtil {
     /**
      * 字段别名缓存，当没有指定别名时，使用字段名作为别名. key: 别名/字段名
      */
-    public static final Map<String, Field>     _aliasFieldCache       = new ConcurrentHashMap<String, Field>();
-
-    /**
-     * 主键字段名缓存.
-     */
-    public static final Map<Class<?>, String>  _pkNameCache           = new ConcurrentHashMap<Class<?>, String>();
-
-    /**
-     * 缓存被需要被缓存的表
-     */
-    public static final Map<Class<?>, Boolean> _tableCachedCache      = new ConcurrentHashMap<Class<?>, Boolean>();
+    public static final Map<String, Field>     _aliasFieldCache  = new ConcurrentHashMap<String, Field>();
 
     /**
      * 类属性缓存. 缓存反射结果
      */
-    public static final Map<Class<?>, Field[]> _fieldCache            = new ConcurrentHashMap<Class<?>, Field[]>();
+    public static final Map<Class<?>, Field[]> _fieldCache       = new ConcurrentHashMap<Class<?>, Field[]>();
 
     /**
-     * 集群名缓存.
+     * 实体元信息管理
      */
-    public static final Map<Class<?>, String>  _clusterNameCache      = new ConcurrentHashMap<Class<?>, String>();
+    private static IEntityMetaManager          entityMetaManager = DefaultEntityMetaManager.getInstance();
+
+    public static PKValue getNotUnionPkValue(Object obj) {
+        PKName pkName = getNotUnionPkName(obj.getClass());
+
+        Object pkValue = getProperty(obj, pkName.getValue());
+
+        return PKValue.valueOf(pkValue);
+    }
 
     /**
-     * 数据表名缓存.
+     * 获取主键值.
+     *
+     * @param obj
+     * @return 主键值
+     * @throws Exception 获取失败
      */
-    public static final Map<Class<?>, String>  _tableNameCache        = new ConcurrentHashMap<Class<?>, String>();
+    public static EntityPK getPkValue(Object obj) {
+        List<PKName> pkNames = getPkName(obj.getClass());
+        List<PKValue> pkValues = Lists.newArrayList();
+        Object pkValue = null;
+        for (PKName pkName : pkNames) {
+            pkValue = getProperty(obj, pkName.getValue());
+            pkValues.add(PKValue.valueOf(pkValue));
+        }
+        return EntityPK.valueOf(pkNames.toArray(new PKName[pkNames.size()]),
+                pkValues.toArray(new PKValue[pkValues.size()]));
+    }
+
+    public static PKName getNotUnionPkName(Class<?> clazz) {
+        DBTable dbTable = entityMetaManager.getTableMeta(clazz);
+        if (dbTable.isUnionPrimaryKey()) {
+            throw new IllegalStateException("不支持联合主键, class=" + clazz);
+        }
+
+        List<DBTablePK> primaryKeys = dbTable.getPrimaryKeys();
+
+        if (primaryKeys.isEmpty()) {
+            throw new IllegalStateException("找不到主键 class=" + clazz);
+        }
+
+        return primaryKeys.get(0).getPKName();
+    }
 
     /**
-     * 数据分片字段缓存.
+     * 获取对象的主键字段名.
+     *
+     * @param clazz 获取此对象的数据库主键名
+     * @return 字包含pkName的EntityPK对象
      */
-    public static final Map<Class<?>, String>  _shardingFieldCache    = new ConcurrentHashMap<Class<?>, String>();
+    public static List<PKName> getPkName(Class<?> clazz) {
+        DBTable dbTable = entityMetaManager.getTableMeta(clazz);
 
-    /**
-     * 集群表数量.
-     */
-    public static final Map<Class<?>, Integer> _tableNumCache         = new ConcurrentHashMap<Class<?>, Integer>();
+        List<DBTablePK> primaryKeys = dbTable.getPrimaryKeys();
 
-    /**
-     * 数据实体是否是分片实体.
-     */
-    public static final Map<Class<?>, Boolean> _isShardingEntityCache = new ConcurrentHashMap<Class<?>, Boolean>();
+        if (primaryKeys.isEmpty()) {
+            throw new IllegalStateException("找不到主键 class=" + clazz);
+        }
+
+        List<PKName> ePKList = new ArrayList<PKName>(primaryKeys.size());
+        for (DBTablePK primaryKey : primaryKeys) {
+            ePKList.add(primaryKey.getPKName());
+        }
+
+        return ePKList;
+    }
 
     /**
      * 判断是否是分片数据对象.
      */
     public static boolean isShardingEntity(Class<?> clazz) {
-        Boolean isSharding = _isShardingEntityCache.get(clazz);
-        if (isSharding == null) {
-            Table annoTable = clazz.getAnnotation(Table.class);
-            if (annoTable == null) {
-                throw new IllegalArgumentException(clazz + "无法分片的数据实体，请使用@Table注解");
-            }
+        DBTable dbTable = entityMetaManager.getTableMeta(clazz);
 
-            String shardingField = annoTable.shardingBy();
-            int shardingNum = annoTable.shardingNum();
-            if (StringUtils.isNotBlank(shardingField) || shardingNum > 0) {
-                isSharding = true;
-            } else {
-                isSharding = false;
-            }
-
-            _isShardingEntityCache.put(clazz, isSharding);
-        }
-
-        return isSharding;
-    }
-
-    /**
-     * 获取主键值.
-     * 
-     * @param obj
-     * @return 主键值
-     * @throws Exception 获取失败
-     */
-    public static Number getPkValue(Object obj) {
-        String pkName = getPkName(obj.getClass());
-        try {
-            return (Number) getProperty(obj, pkName);
-        } catch (Exception e) {
-            throw new RuntimeException("获取主键值失败" + e);
-        }
-    }
-
-    /**
-     * 设置主键
-     * 
-     * @param obj
-     * @throws Exception
-     */
-    public static void setPkValue(Object obj, Number pk) throws Exception {
-        try {
-            String pkName = getPkName(obj.getClass());
-            setProperty(obj, pkName, pk);
-        } catch (Exception e) {
-            throw new Exception("设置主键值失败", e);
-        }
-    }
-
-    /**
-     * 获取对象的主键字段名.
-     * 
-     * @param clazz 获取此对象的数据库主键名
-     * @return 主键名
-     */
-    public static String getPkName(Class<?> clazz) {
-        String pkName = _pkNameCache.get(clazz);
-        if (pkName != null) {
-            return pkName;
-        }
-
-        // 便利属性找到@PrimaryKey标识的属性名
-        Field[] fields = ReflectUtil.getFields(clazz);
-        for (Field f : fields) {
-            if (f.getAnnotation(PrimaryKey.class) != null) {
-                pkName = getFieldName(f);
-                break;
-            }
-        }
-
-        if (pkName == null) {
-            throw new IllegalArgumentException("没有标注主键属性, class=" + clazz);
-        }
-
-        _pkNameCache.put(clazz, pkName);
-
-        return pkName;
+        return dbTable.isSharding();
     }
 
     /**
@@ -177,17 +143,9 @@ public class ReflectUtil {
      */
     public static Object getShardingValue(Object entity) {
         Class<?> clazz = entity.getClass();
-        String shardingField = _shardingFieldCache.get(clazz);
-        if (shardingField == null) {
-            Table annoTable = clazz.getAnnotation(Table.class);
-            if (annoTable == null) {
-                throw new IllegalArgumentException(clazz + "无法分片的数据实体，请使用@Table注解");
-            }
-            shardingField = annoTable.shardingBy();
+        DBTable dbTable = entityMetaManager.getTableMeta(clazz);
 
-            _shardingFieldCache.put(clazz, shardingField);
-        }
-
+        String shardingField = dbTable.getShardingBy();
         Object shardingValue = null;
         try {
             shardingValue = getProperty(entity, shardingField);
@@ -208,18 +166,9 @@ public class ReflectUtil {
      * @return
      */
     public static String getClusterName(Class<?> clazz) {
-        String clusterName = _clusterNameCache.get(clazz);
-        if (clusterName == null) {
-            Table annoTable = clazz.getAnnotation(Table.class);
-            if (annoTable == null) {
-                throw new IllegalArgumentException(clazz + "无法分片的数据实体，请使用@Table注解");
-            }
-            clusterName = annoTable.cluster();
+        DBTable dbTable = entityMetaManager.getTableMeta(clazz);
 
-            _clusterNameCache.put(clazz, clusterName);
-        }
-
-        return clusterName;
+        return dbTable.getCluster();
     }
 
     /**
@@ -229,18 +178,9 @@ public class ReflectUtil {
      * @return
      */
     public static int getTableNum(Class<?> clazz) {
-        Integer tableNum = _tableNumCache.get(clazz);
-        if (tableNum == null) {
-            Table annoTable = clazz.getAnnotation(Table.class);
-            if (annoTable == null) {
-                throw new IllegalArgumentException(clazz + "无法分片的数据实体，请使用@Table注解");
-            }
-            tableNum = annoTable.shardingNum();
+        DBTable dbTable = entityMetaManager.getTableMeta(clazz);
 
-            _tableNumCache.put(clazz, tableNum);
-        }
-
-        return tableNum;
+        return dbTable.getShardingNum();
     }
 
     /**
@@ -277,21 +217,9 @@ public class ReflectUtil {
      * @return 表名，不带分表下标
      */
     public static String getTableName(Class<?> clazz) {
-        String tableName = _tableNameCache.get(clazz);
-        if (tableName != null) {
-            return tableName;
-        }
+        DBTable dbTable = entityMetaManager.getTableMeta(clazz);
 
-        Table annoTable = clazz.getAnnotation(Table.class);
-        if (annoTable == null) {
-            throw new IllegalArgumentException(clazz + "无法分片的数据实体，请使用@Table注解");
-        }
-        tableName = StringUtils.isBlank(annoTable.name()) ? clazz.getSimpleName() : annoTable.name();
-
-        tableName = tableName.toLowerCase();
-        _tableNameCache.put(clazz, tableName);
-
-        return tableName;
+        return dbTable.getName();
     }
 
     /**
@@ -301,15 +229,9 @@ public class ReflectUtil {
      * @return true:是, false:否
      */
     public static boolean isCache(Class<?> clazz) {
-        Boolean isCache = _tableCachedCache.get(clazz);
-        if (isCache != null) {
-            return isCache;
-        }
+        DBTable dbTable = entityMetaManager.getTableMeta(clazz);
 
-        isCache = clazz.getAnnotation(Table.class).cache();
-        _tableCachedCache.put(clazz, isCache);
-
-        return isCache;
+        return dbTable.isCache();
     }
 
     /**
@@ -320,10 +242,14 @@ public class ReflectUtil {
      * @return 属性值
      * @throws Exception 操作失败
      */
-    public static Object getProperty(Object obj, String propertyName) throws Exception {
+    public static Object getProperty(Object obj, String propertyName) {
         Field f = getField(obj.getClass(), propertyName);
         f.setAccessible(true);
-        return f.get(obj);
+        try {
+            return f.get(obj);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     /**
@@ -334,47 +260,39 @@ public class ReflectUtil {
      * @param value 值
      * @throws Exception 操作失败
      */
-    public static void setProperty(Object obj, String propertyName, Object value) throws Exception {
+    public static void setProperty(Object obj, String propertyName, Object value) {
         Field f = getField(obj.getClass(), propertyName);
         f.setAccessible(true);
 
-        if (value == null) {
-            f.set(obj, null);
-            return;
+        try {
+            if (value == null) {
+                f.set(obj, null);
+                return;
+            }
+
+            // 这里不能支持装箱类型，否则反射会报错
+            if (f.getType() == Boolean.TYPE) {
+                f.setBoolean(obj, ((Boolean) value).booleanValue());
+            } else if (f.getType() == Integer.TYPE) {
+                f.setInt(obj, ((Number) value).intValue());
+            } else if (f.getType() == Byte.TYPE) {
+                f.setByte(obj, ((Number) value).byteValue());
+            } else if (f.getType() == Long.TYPE) {
+                f.setLong(obj, ((Number) value).longValue());
+            } else if (f.getType() == Short.TYPE) {
+                f.setShort(obj, ((Number) value).shortValue());
+            } else if (f.getType() == Float.TYPE) {
+                f.setFloat(obj, ((Number) value).floatValue());
+            } else if (f.getType() == Double.TYPE) {
+                f.setDouble(obj, ((Number) value).doubleValue());
+            } else if (f.getType() == Character.TYPE) {
+                f.setChar(obj, ((Character) value).charValue());
+            } else {
+                f.set(obj, value);
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
-
-        // 这里不能支持装箱类型，否则反射会报错
-        if (f.getType() == Boolean.TYPE) {
-            f.setBoolean(obj, ((Boolean) value).booleanValue());
-        } else if (f.getType() == Integer.TYPE) {
-            f.setInt(obj, ((Number) value).intValue());
-        } else if (f.getType() == Byte.TYPE) {
-            f.setByte(obj, ((Number) value).byteValue());
-        } else if (f.getType() == Long.TYPE) {
-            f.setLong(obj, ((Number) value).longValue());
-        } else if (f.getType() == Short.TYPE) {
-            f.setShort(obj, ((Number) value).shortValue());
-        } else if (f.getType() == Float.TYPE) {
-            f.setFloat(obj, ((Number) value).floatValue());
-        } else if (f.getType() == Double.TYPE) {
-            f.setDouble(obj, ((Number) value).doubleValue());
-        } else if (f.getType() == Character.TYPE) {
-            f.setChar(obj, ((Character) value).charValue());
-        } else {
-            f.set(obj, value);
-        }
-
-    }
-
-    /**
-     * 获取对象的描述并过滤@UpdateTime注解的属性.
-     * 
-     * @param obj 被反射的对象
-     * @param isFilteDefault 是否过滤掉默认值
-     * @return {属性名, 属性值}
-     */
-    public static Map<String, Object> describeWithoutUpdateTime(Object obj, boolean isFilteDefault) throws Exception {
-        return describe(obj, isFilteDefault, true);
     }
 
     /**
@@ -384,19 +302,7 @@ public class ReflectUtil {
      * @return 属性名和属性值
      */
     public static Map<String, Object> describe(Object obj) throws Exception {
-        return describe(obj, false, false);
-    }
-
-    /**
-     * 获取对象的属性名及属性值. @UpdateTime不会被过滤
-     * 
-     * @param obj 被反射的对象
-     * @param isFilteDefault 是否过滤默认值
-     * @return
-     * @throws Exception
-     */
-    public static Map<String, Object> describe(Object obj, boolean isFilteNull) throws Exception {
-        return describe(obj, isFilteNull, false);
+        return describe(obj, false);
     }
 
     /**
@@ -404,11 +310,9 @@ public class ReflectUtil {
      * 
      * @param obj 被反射的对象
      * @param isFilteDefault 是否过滤掉默认值
-     * @param isFilteUpdateTime 是否过滤@UpdateTime注解
      * @return {属性名, 属性值}
      */
-    public static Map<String, Object> describe(Object obj, boolean isFilteNull, boolean isFilteUpdateTime)
-            throws Exception {
+    public static Map<String, Object> describe(Object obj, boolean isFilteNull) throws Exception {
         if (obj == null) {
             throw new IllegalArgumentException("参数错误, obj=null");
         }
@@ -420,17 +324,14 @@ public class ReflectUtil {
             f.setAccessible(true);
 
             if (f.getAnnotation(UpdateTime.class) != null) {
-                if (isFilteUpdateTime)
-                    continue;
-                else
-                    f.set(obj, new Timestamp(System.currentTimeMillis()));
+                f.set(obj, new Timestamp(System.currentTimeMillis()));
             }
 
             value = f.get(obj);
             Class<?> fTypeClazz = f.getType();
 
-            org.pinus4j.generator.annotations.Field annoField = f
-                    .getAnnotation(org.pinus4j.generator.annotations.Field.class);
+            org.pinus4j.entity.annotations.Field annoField = f
+                    .getAnnotation(org.pinus4j.entity.annotations.Field.class);
             if (fTypeClazz == String.class && annoField != null && annoField.length() > Const.COLUMN_TEXT_LENGTH
                     && value == null) {
                 value = "";
@@ -515,8 +416,8 @@ public class ReflectUtil {
     public static String getFieldName(Field field) {
         // 兼容字段别名
         String fieldName = field.getName();
-        org.pinus4j.generator.annotations.Field annoField = field
-                .getAnnotation(org.pinus4j.generator.annotations.Field.class);
+        org.pinus4j.entity.annotations.Field annoField = field
+                .getAnnotation(org.pinus4j.entity.annotations.Field.class);
         if (annoField != null && StringUtils.isNotBlank(annoField.name())) {
             fieldName = annoField.name();
         }
@@ -554,7 +455,7 @@ public class ReflectUtil {
         for (Field f : clazz.getDeclaredFields()) {
             if (f.getAnnotation(PrimaryKey.class) != null) {
                 mappingFields.add(f);
-            } else if (f.getAnnotation(org.pinus4j.generator.annotations.Field.class) != null) {
+            } else if (f.getAnnotation(org.pinus4j.entity.annotations.Field.class) != null) {
                 mappingFields.add(f);
             } else if (f.getAnnotation(DateTime.class) != null) {
                 mappingFields.add(f);

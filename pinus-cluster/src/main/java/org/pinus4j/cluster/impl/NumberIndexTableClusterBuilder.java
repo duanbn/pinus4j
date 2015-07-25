@@ -21,7 +21,7 @@ import java.util.List;
 import org.pinus4j.cluster.ITableCluster;
 import org.pinus4j.cluster.ITableClusterBuilder;
 import org.pinus4j.cluster.beans.TableNumberInfo;
-import org.pinus4j.generator.beans.DBTable;
+import org.pinus4j.entity.meta.DBTable;
 
 /**
  * builder implement for table cluster.

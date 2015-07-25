@@ -21,7 +21,6 @@ import javax.transaction.TransactionManager;
 import org.pinus4j.cache.IPrimaryCache;
 import org.pinus4j.cache.ISecondCache;
 import org.pinus4j.cluster.IDBCluster;
-import org.pinus4j.generator.IIdGenerator;
 
 /**
  * base data update interface.
@@ -30,18 +29,6 @@ import org.pinus4j.generator.IIdGenerator;
  * @since 0.7.1
  */
 public interface IDataUpdate {
-
-    /**
-	 * set id generator.
-	 * 
-	 * @param idGenerator
-	 */
-	public void setIdGenerator(IIdGenerator idGenerator);
-
-    /**
-     * get id generator.
-     */
-    public IIdGenerator getIdGenerator();
 
     /**
 	 *  set db cluster.

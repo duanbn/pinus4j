@@ -5,18 +5,18 @@ import java.sql.Timestamp;
 import java.util.Date;
 
 import org.pinus4j.api.FashionEntity;
-import org.pinus4j.generator.annotations.DateTime;
-import org.pinus4j.generator.annotations.Field;
-import org.pinus4j.generator.annotations.PrimaryKey;
-import org.pinus4j.generator.annotations.Table;
-import org.pinus4j.generator.annotations.UpdateTime;
+import org.pinus4j.entity.annotations.DateTime;
+import org.pinus4j.entity.annotations.Field;
+import org.pinus4j.entity.annotations.PrimaryKey;
+import org.pinus4j.entity.annotations.Table;
+import org.pinus4j.entity.annotations.UpdateTime;
 
 @Table(name = "test_entity", cluster = "pinus", shardingBy = "testInt", shardingNum = 3, cache = true)
 public class TestEntity extends FashionEntity implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    @PrimaryKey(comment = "主键")
+    @PrimaryKey(comment = "主键", isAutoIncrement = true)
     private long              id;
 
     @Field(comment = "测试byte类型的字段")

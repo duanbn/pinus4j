@@ -37,13 +37,6 @@ public class ReflectUtilTest extends BaseTest {
         Assert.assertNull(map.get("testByte"));
         Assert.assertTrue(map.containsKey("testString"));
         Assert.assertTrue(map.containsKey("testInt"));
-
-        map = ReflectUtil.describe(entity, true, false);
-        Assert.assertTrue(!map.containsKey("testString"));
-        Assert.assertTrue(map.containsKey("testTime"));
-
-        map = ReflectUtil.describe(entity, true, true);
-        Assert.assertTrue(!map.containsKey("testTime"));
     }
 
     @Test

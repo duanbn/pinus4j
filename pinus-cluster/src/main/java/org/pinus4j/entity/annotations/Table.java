@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.pinus4j.generator.annotations;
+package org.pinus4j.entity.annotations;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;

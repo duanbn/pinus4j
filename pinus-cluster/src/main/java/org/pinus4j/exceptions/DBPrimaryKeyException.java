@@ -14,28 +14,30 @@
  * limitations under the License.
  */
 
-package org.pinus4j.generator.annotations;
+package org.pinus4j.exceptions;
 
-import java.lang.annotation.Documented;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-
-@Target(ElementType.TYPE)
-@Retention(RetentionPolicy.RUNTIME)
-@Documented
 /**
- * 表示一个表的主键.
- * 一个表可以定义多个字段的索引.
+ * 数据库操作异常.
  *
  * @author duanbn
  */
-public @interface Indexes {
+public class DBPrimaryKeyException extends RuntimeException {
 
     /**
-     * 索引数组
-     */
-    Index[] value();
+	 * 
+	 */
+    private static final long serialVersionUID = 1L;
+
+    public DBPrimaryKeyException(String message) {
+        super(message);
+    }
+
+    public DBPrimaryKeyException(Exception e) {
+        super(e);
+    }
+
+    public DBPrimaryKeyException(String message, Exception e) {
+        super(message, e);
+    }
 
 }

@@ -18,12 +18,9 @@ package org.pinus4j.datalayer.update;
 
 import java.util.List;
 
-import org.pinus4j.cache.IPrimaryCache;
-import org.pinus4j.cache.ISecondCache;
-import org.pinus4j.cluster.IDBCluster;
 import org.pinus4j.cluster.beans.IShardingKey;
+import org.pinus4j.entity.meta.PKValue;
 import org.pinus4j.exceptions.DBOperationException;
-import org.pinus4j.generator.IIdGenerator;
 
 /**
  * 数据库增删改查操作接口.
@@ -45,7 +42,7 @@ public interface IShardingUpdate extends IDataUpdate {
 	 * @throws DBOperationException
 	 *             操作失败
 	 */
-	public Number save(Object entity, IShardingKey<?> shardingValue);
+	public PKValue save(Object entity, IShardingKey<?> shardingValue);
 
 	/**
 	 * 批量保存数据.
@@ -60,7 +57,7 @@ public interface IShardingUpdate extends IDataUpdate {
 	 * @throws DBOperationException
 	 *             操作失败
 	 */
-	public Number[] saveBatch(List<? extends Object> entities, IShardingKey<?> shardingValue);
+	public PKValue[] saveBatch(List<? extends Object> entities, IShardingKey<?> shardingValue);
 
 	/**
 	 * 更新数据. <b>忽略空值的更新</b>
@@ -101,7 +98,7 @@ public interface IShardingUpdate extends IDataUpdate {
 	 * @throws DBOperationException
 	 *             操作失败
 	 */
-	public void removeByPk(Number pk, IShardingKey<?> shardingValue, Class<?> clazz);
+	public void removeByPk(PKValue pk, IShardingKey<?> shardingValue, Class<?> clazz);
 
 	/**
 	 * 根据主键批量删除数据.
@@ -116,6 +113,6 @@ public interface IShardingUpdate extends IDataUpdate {
 	 * @throws DBOperationException
 	 *             操作失败
 	 */
-	public void removeByPks(List<? extends Number> pks, IShardingKey<?> shardingValue, Class<?> clazz);
+	public void removeByPks(List<PKValue> pks, IShardingKey<?> shardingValue, Class<?> clazz);
 
 }

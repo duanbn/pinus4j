@@ -24,6 +24,8 @@ import net.spy.memcached.internal.OperationFuture;
 
 import org.pinus4j.cache.IPrimaryCache;
 import org.pinus4j.cluster.resources.ShardingDBResource;
+import org.pinus4j.entity.meta.EntityPK;
+import org.pinus4j.entity.meta.PKValue;
 import org.pinus4j.utils.ReflectUtil;
 import org.pinus4j.utils.StringUtils;
 import org.slf4j.Logger;
@@ -81,7 +83,7 @@ public class MemCachedPrimaryCacheImpl extends AbstractMemCachedCache implements
     }
 
     @Override
-    public void putGlobal(String clusterName, String tableName, Number id, Object data) {
+    public void putGlobal(String clusterName, String tableName, PKValue id, Object data) {
         if (data == null) {
             return;
         }
@@ -98,21 +100,21 @@ public class MemCachedPrimaryCacheImpl extends AbstractMemCachedCache implements
 
         List<String> keys = new ArrayList<String>();
         for (Object d : data) {
-            Number id = ReflectUtil.getPkValue(d);
-            keys.add(buildGlobalKey(clusterName, tableName, id));
+            EntityPK entityPk = ReflectUtil.getPkValue(d);
+            keys.add(buildGlobalKey(clusterName, tableName, entityPk));
         }
         _put(keys, data);
     }
 
     @Override
-    public void putGlobal(String clusterName, String tableName, Map<Number, ? extends Object> data) {
+    public void putGlobal(String clusterName, String tableName, Map<PKValue, ? extends Object> data) {
         if (data == null || data.isEmpty()) {
             return;
         }
 
         List<String> keys = new ArrayList<String>();
         List<Object> datas = new ArrayList<Object>();
-        for (Map.Entry<Number, ? extends Object> entry : data.entrySet()) {
+        for (Map.Entry<PKValue, ? extends Object> entry : data.entrySet()) {
             keys.add(buildGlobalKey(clusterName, tableName, entry.getKey()));
             datas.add(entry.getValue());
         }
@@ -120,15 +122,15 @@ public class MemCachedPrimaryCacheImpl extends AbstractMemCachedCache implements
     }
 
     @Override
-    public <T> T getGlobal(String clusterName, String tableName, Number id) {
+    public <T> T getGlobal(String clusterName, String tableName, PKValue id) {
         String key = buildGlobalKey(clusterName, tableName, id);
         return _get(key);
     }
 
     @Override
-    public List<Object> getGlobal(String clusterName, String tableName, Number[] ids) {
+    public List<Object> getGlobal(String clusterName, String tableName, PKValue[] ids) {
         List<String> keys = new ArrayList<String>();
-        for (Number id : ids) {
+        for (PKValue id : ids) {
             String key = buildGlobalKey(clusterName, tableName, id);
             keys.add(key);
         }
@@ -136,15 +138,15 @@ public class MemCachedPrimaryCacheImpl extends AbstractMemCachedCache implements
     }
 
     @Override
-    public void removeGlobal(String clusterName, String tableName, Number id) {
+    public void removeGlobal(String clusterName, String tableName, PKValue id) {
         String key = buildGlobalKey(clusterName, tableName, id);
         _remove(key);
     }
 
     @Override
-    public void removeGlobal(String clusterName, String tableName, List<? extends Number> ids) {
+    public void removeGlobal(String clusterName, String tableName, List<PKValue> ids) {
         List<String> keys = new ArrayList<String>();
-        for (Number id : ids) {
+        for (PKValue id : ids) {
             keys.add(buildGlobalKey(clusterName, tableName, id));
         }
         _remove(keys);
@@ -181,7 +183,7 @@ public class MemCachedPrimaryCacheImpl extends AbstractMemCachedCache implements
     }
 
     @Override
-    public void put(ShardingDBResource db, Number id, Object data) {
+    public void put(ShardingDBResource db, PKValue id, Object data) {
         if (data == null) {
             return;
         }
@@ -191,27 +193,27 @@ public class MemCachedPrimaryCacheImpl extends AbstractMemCachedCache implements
     }
 
     @Override
-    public void put(ShardingDBResource db, Number[] ids, List<? extends Object> data) {
+    public void put(ShardingDBResource db, PKValue[] ids, List<? extends Object> data) {
         if (data == null || data.isEmpty()) {
             return;
         }
 
         List<String> keys = new ArrayList<String>();
-        for (Number id : ids) {
+        for (PKValue id : ids) {
             keys.add(buildKey(db, id));
         }
         _put(keys, data);
     }
 
     @Override
-    public void put(ShardingDBResource db, Map<Number, ? extends Object> data) {
+    public void put(ShardingDBResource db, Map<PKValue, ? extends Object> data) {
         if (data == null || data.isEmpty()) {
             return;
         }
 
         List<String> keys = new ArrayList<String>();
         List<Object> datas = new ArrayList<Object>();
-        for (Map.Entry<Number, ? extends Object> entry : data.entrySet()) {
+        for (Map.Entry<PKValue, ? extends Object> entry : data.entrySet()) {
             keys.add(buildKey(db, entry.getKey()));
             datas.add(entry.getValue());
         }
@@ -219,30 +221,30 @@ public class MemCachedPrimaryCacheImpl extends AbstractMemCachedCache implements
     }
 
     @Override
-    public <T> T get(ShardingDBResource db, Number id) {
+    public <T> T get(ShardingDBResource db, PKValue id) {
         String key = buildKey(db, id);
         return _get(key);
     }
 
     @Override
-    public List<Object> get(ShardingDBResource db, Number... ids) {
+    public List<Object> get(ShardingDBResource db, PKValue... ids) {
         List<String> keys = new ArrayList<String>();
-        for (Number id : ids) {
+        for (PKValue id : ids) {
             keys.add(buildKey(db, id));
         }
         return _get(keys);
     }
 
     @Override
-    public void remove(ShardingDBResource db, Number id) {
+    public void remove(ShardingDBResource db, PKValue id) {
         String key = buildKey(db, id);
         _remove(key);
     }
 
     @Override
-    public void remove(ShardingDBResource db, List<? extends Number> ids) {
+    public void remove(ShardingDBResource db, List<PKValue> ids) {
         List<String> keys = new ArrayList<String>();
-        for (Number id : ids) {
+        for (PKValue id : ids) {
             keys.add(buildKey(db, id));
         }
         _remove(keys);

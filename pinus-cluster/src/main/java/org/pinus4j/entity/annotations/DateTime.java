@@ -14,11 +14,10 @@
  * limitations under the License.
  */
 
-package org.pinus4j.generator.annotations;
+package org.pinus4j.entity.annotations;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
-import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
@@ -26,18 +25,28 @@ import java.lang.annotation.Target;
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-@Inherited
 /**
- * 主键注解，
+ * 数据库日期注解.
  *
  * @author duanbn
  */
-public @interface PrimaryKey {
-
+public @interface DateTime {
+    
     String name() default "";
 
     /**
-     * 注释
+     * 是否为null
      */
-    String comment() default "";
+    boolean isCanNull() default false;
+
+    /**
+     * 是否有默认值
+     */
+    boolean hasDefault() default true;
+    
+    /**
+	 * 注释
+	 */
+	String comment() default "";
+
 }

@@ -18,82 +18,65 @@ package org.pinus4j.datalayer.update;
 
 import java.util.List;
 
+import org.pinus4j.entity.meta.PKValue;
 import org.pinus4j.exceptions.DBOperationException;
 
 public interface IGlobalUpdate extends IDataUpdate {
 
     /**
-	 * 保存数据到集群全局库.
-	 * 
-	 * @param entity
-	 *            数据对象
-	 * @param clusterName
-	 *            集群名
-	 * 
-	 * @return 主键
-	 * 
-	 * @throws DBOperationException
-	 *             操作失败
-	 */
-	public Number globalSave(Object entity, String clusterName);
-
-	/**
-	 * 批量保存数据到全局库.
-	 * 
-	 * @param entities
-	 *            批量数据对象
-	 * @param clusterName
-	 *            集群名
-	 * 
-	 * @return 主键
-	 * 
-	 * @throws DBOperationException
-	 *             操作失败
-	 */
-	public Number[] globalSaveBatch(List<? extends Object> entities, String clusterName);
+     * 保存数据到集群全局库.
+     * 
+     * @param entity 数据对象
+     * @param clusterName 集群名
+     * @return 主键
+     * @throws DBOperationException 操作失败
+     */
+    public PKValue globalSave(Object entity, String clusterName);
 
     /**
-	 * 更新全局库
-	 * 
-	 * @param entity
-	 *            数据对象
-	 * @param clusterName
-	 *            集群名称
-	 * 
-	 * @throws DBOperationException
-	 *             操作失败
-	 */
-	public void globalUpdate(Object entity, String clusterName);
+     * 批量保存数据到全局库.
+     * 
+     * @param entities 批量数据对象
+     * @param clusterName 集群名
+     * @return 主键
+     * @throws DBOperationException 操作失败
+     */
+    public PKValue[] globalSaveBatch(List<? extends Object> entities, String clusterName);
 
-	/**
-	 * 批量更新全局库
-	 * 
-	 * @param entities
-	 *            批量更新数据
-	 * @param clusterName
-	 *            集群名
-	 * 
-	 * @throws DBOperationException
-	 *             操作失败
-	 */
-	public void globalUpdateBatch(List<? extends Object> entities, String clusterName);
+    /**
+     * 更新全局库
+     * 
+     * @param entity 数据对象
+     * @param clusterName 集群名称
+     * @throws DBOperationException 操作失败
+     */
+    public void globalUpdate(Object entity, String clusterName);
 
-	/**
-	 * 删除全局库
-	 * 
-	 * @param pk
-	 * @param shardingValue
-	 * @param clazz
-	 */
-	public void globalRemoveByPk(Number pk, Class<?> clazz, String clusterName);
+    /**
+     * 批量更新全局库
+     * 
+     * @param entities 批量更新数据
+     * @param clusterName 集群名
+     * @throws DBOperationException 操作失败
+     */
+    public void globalUpdateBatch(List<? extends Object> entities, String clusterName);
 
-	/**
-	 * 批量删除全局库
-	 * 
-	 * @param pks
-	 * @param shardingValue
-	 * @param clazz
-	 */
-	public void globalRemoveByPks(List<? extends Number> pks, Class<?> clazz, String clusterName);
+    /**
+     * 删除全局库
+     * 
+     * @param pk
+     * @param shardingValue
+     * @param clazz
+     */
+    public void globalRemoveByPk(PKValue pk, Class<?> clazz, String clusterName);
+
+    /**
+     * 批量删除全局库
+     * 
+     * @param pks
+     * @param shardingValue
+     * @param clazz
+     */
+    public void globalRemoveByPks(List<PKValue> pks, Class<?> clazz, String clusterName);
 
 }

@@ -4,7 +4,6 @@ import java.io.Serializable;
 import java.sql.Timestamp;
 import java.util.Date;
 
-import org.pinus4j.api.FashionEntity;
 import org.pinus4j.entity.annotations.DateTime;
 import org.pinus4j.entity.annotations.Field;
 import org.pinus4j.entity.annotations.Index;
@@ -15,14 +14,14 @@ import org.pinus4j.entity.annotations.UpdateTime;
 
 @Table(cluster = "pinus", cache = true)
 @Indexes({ @Index(field = "testInt") })
-public class TestGlobalEntity extends FashionEntity implements Serializable {
+public class TestUnionKeyEntity implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    @PrimaryKey(comment = "主键", name = "pk", isAutoIncrement = true)
+    @PrimaryKey(comment = "主键")
     private long              id;
 
-    @Field
+    @PrimaryKey
     private byte              testByte;
     @Field
     private Byte              oTestByte;
@@ -68,7 +67,7 @@ public class TestGlobalEntity extends FashionEntity implements Serializable {
     @DateTime
     private Date              testDate;
 
-    @UpdateTime(comment = "自动更新时间", name = "update_time")
+    @UpdateTime(comment = "自动更新时间")
     private Timestamp         testTime;
 
     @Override
@@ -116,7 +115,7 @@ public class TestGlobalEntity extends FashionEntity implements Serializable {
             return false;
         if (getClass() != obj.getClass())
             return false;
-        TestGlobalEntity other = (TestGlobalEntity) obj;
+        TestUnionKeyEntity other = (TestUnionKeyEntity) obj;
         if (id != other.id)
             return false;
         if (oTestBool == null) {

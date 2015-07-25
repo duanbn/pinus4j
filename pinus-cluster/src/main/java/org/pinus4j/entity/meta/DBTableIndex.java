@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.pinus4j.generator.beans;
+package org.pinus4j.entity.meta;
 
 import java.io.Serializable;
 
@@ -26,7 +26,12 @@ import org.pinus4j.utils.StringUtils;
  *
  * @author duanbn
  */
-public class DBIndex implements Serializable {
+public class DBTableIndex implements Serializable {
+
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 1L;
 
     /**
      * 被索引的字段名.
@@ -85,7 +90,7 @@ public class DBIndex implements Serializable {
             return false;
         if (getClass() != obj.getClass())
             return false;
-        DBIndex other = (DBIndex) obj;
+        DBTableIndex other = (DBTableIndex) obj;
         if (field == null) {
             if (other.field != null)
                 return false;

@@ -33,76 +33,75 @@ import org.slf4j.LoggerFactory;
  * 某个实体对象的一个分表遍历器. <b>需要注意的是此遍历器只能遍历主键是数值型的实体</b>
  * 
  * @author duanbn
- * 
  */
 public class ShardingRecordIterator<E> extends AbstractRecordIterator<E> {
 
-	public static final Logger LOG = LoggerFactory.getLogger(ShardingRecordIterator.class);
+    public static final Logger LOG = LoggerFactory.getLogger(ShardingRecordIterator.class);
 
-	private ShardingDBResource dbResource;
+    private ShardingDBResource dbResource;
 
-	public ShardingRecordIterator(ShardingDBResource dbResource, Class<E> clazz) {
-		super(clazz);
+    public ShardingRecordIterator(ShardingDBResource dbResource, Class<E> clazz) {
+        super(clazz);
 
-		this.dbResource = dbResource;
+        this.dbResource = dbResource;
 
-		this.maxId = getMaxId();
-	}
+        this.maxId = getMaxId();
+    }
 
-	public long getMaxId() {
-		long maxId = 0;
+    public long getMaxId() {
+        long maxId = 0;
 
-		IQuery query = new QueryImpl();
-		query.limit(1).orderBy(pkName, Order.DESC);
-		List<E> one;
-		try {
-			one = selectByQuery(dbResource, query, clazz);
-		} catch (SQLException e1) {
-			throw new DBOperationException(e1);
-		}
-		if (!one.isEmpty()) {
-			E e = one.get(0);
-			maxId = ReflectUtil.getPkValue(e).longValue();
-		}
+        IQuery query = new QueryImpl();
+        query.limit(1).orderBy(pkName, Order.DESC);
+        List<E> one;
+        try {
+            one = selectByQuery(dbResource, query, clazz);
+        } catch (SQLException e1) {
+            throw new DBOperationException(e1);
+        }
+        if (!one.isEmpty()) {
+            E e = one.get(0);
+            maxId = ReflectUtil.getNotUnionPkValue(e).getValueAsLong();
+        }
 
-		LOG.info("clazz " + clazz + " DB " + dbResource + " maxId=" + maxId);
+        LOG.info("clazz " + clazz + " DB " + dbResource + " maxId=" + maxId);
 
-		return maxId;
-	}
+        return maxId;
+    }
 
-	@Override
-	public long getCount() {
-		try {
-			return selectCount(dbResource, clazz, query).longValue();
-		} catch (SQLException e) {
-			throw new DBOperationException(e);
-		}
-	}
+    @Override
+    public long getCount() {
+        try {
+            return selectCount(dbResource, clazz, query).longValue();
+        } catch (SQLException e) {
+            throw new DBOperationException(e);
+        }
+    }
 
-	@Override
-	public boolean hasNext() {
-		if (this.recordQ.isEmpty()) {
-			IQuery query = this.query.clone();
-			long high = this.latestId + step;
-			query.add(Condition.gte(pkName, latestId)).add(Condition.lt(pkName, high));
-			try {
-				List<E> recrods = selectByQuery(dbResource, query, clazz);
-				this.latestId = high;
+    @Override
+    public boolean hasNext() {
+        if (this.recordQ.isEmpty()) {
+            IQuery query = this.query.clone();
+            long high = this.latestId + step;
+            query.add(Condition.gte(pkName, latestId)).add(Condition.lt(pkName, high));
+            try {
+                List<E> recrods = selectByQuery(dbResource, query, clazz);
+                this.latestId = high;
 
-				while (recrods.isEmpty() && this.latestId < maxId) {
-					query = this.query.clone();
-					high = this.latestId + step;
-					query.add(Condition.gte(pkName, this.latestId)).add(Condition.lt(pkName, high));
-					recrods = selectByQuery(dbResource, query, clazz);
-					this.latestId = high;
-				}
-				this.recordQ.addAll(recrods);
-			} catch (SQLException e) {
-				throw new DBOperationException(e);
-			}
-		}
+                while (recrods.isEmpty() && this.latestId < maxId) {
+                    query = this.query.clone();
+                    high = this.latestId + step;
+                    query.add(Condition.gte(pkName, this.latestId)).add(Condition.lt(pkName, high));
+                    recrods = selectByQuery(dbResource, query, clazz);
+                    this.latestId = high;
+                }
+                this.recordQ.addAll(recrods);
+            } catch (SQLException e) {
+                throw new DBOperationException(e);
+            }
+        }
 
-		return !this.recordQ.isEmpty();
-	}
+        return !this.recordQ.isEmpty();
+    }
 
 }

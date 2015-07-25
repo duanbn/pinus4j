@@ -5,17 +5,19 @@
 	<parent>
 		<groupId>org.pinus4j</groupId>
 		<artifactId>pinus</artifactId>
-		<version>1.1.1</version>
+		<version>1.1.2</version>
 	</parent>
 
 	<artifactId>pinus-orm</artifactId>
 	<packaging>jar</packaging>
 
+    <name>pinus-orm</name>
+
 	<dependencies>
 		<dependency>
 			<groupId>org.pinus4j</groupId>
 			<artifactId>pinus-cluster</artifactId>
-			<version>1.1.1</version>
+            <version>${project.version}</version>
 		</dependency>
 
 		<dependency>

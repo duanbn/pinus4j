@@ -14,11 +14,10 @@
  * limitations under the License.
  */
 
-package org.pinus4j.generator.beans;
+package org.pinus4j.entity.meta;
 
-import java.util.Date;
-import java.util.Map;
 import java.util.HashMap;
+import java.util.Map;
 
 /**
  * 数据库类型映射.
@@ -74,7 +73,7 @@ public enum DataTypeBind {
 	/**
 	 * 时间类型
 	 */
-	UPDATETIME("updatetime", "");
+	UPDATETIME("timestamp", "'0000-00-00 00:00:00'");
 
 	/**
 	 * 数据库类型
@@ -140,10 +139,8 @@ public enum DataTypeBind {
 			return DOUBLE;
 		} else if (fieldType == String.class) {
 			return STRING;
-		} else if (fieldType == Date.class) {
-			return DATETIME;
 		}
 
-		throw new IllegalStateException("无法识别的类型" + fieldType);
+		throw new IllegalStateException("不支持的的类型" + fieldType);
 	}
 }
