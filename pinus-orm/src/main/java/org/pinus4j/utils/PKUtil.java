@@ -2,6 +2,7 @@ package org.pinus4j.utils;
 
 import java.util.List;
 
+import org.pinus4j.entity.meta.EntityPK;
 import org.pinus4j.entity.meta.PKValue;
 
 import com.google.common.collect.Lists;
@@ -10,6 +11,18 @@ import com.google.common.collect.Lists;
  * @author shanwei Jul 25, 2015 9:42:36 AM
  */
 public class PKUtil {
+
+    public static List<EntityPK> parseEntityPKList(List<PKValue> pkValueList) {
+        List<EntityPK> entityPkList = Lists.newArrayList();
+
+        PKValue[] pkValues = null;
+        for (PKValue pkValue : pkValueList) {
+            pkValues = new PKValue[] { pkValue };
+            entityPkList.add(EntityPK.valueOf(null, pkValues));
+        }
+
+        return entityPkList;
+    }
 
     /**
      * parse List<PKValue> -> List<Number>

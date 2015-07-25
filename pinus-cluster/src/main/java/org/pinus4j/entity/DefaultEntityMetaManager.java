@@ -68,6 +68,12 @@ public class DefaultEntityMetaManager implements IEntityMetaManager {
     }
 
     @Override
+    public boolean isUnionKey(Class<?> clazz) {
+        DBTable dbTable = getTableMeta(clazz);
+        return dbTable.isUnionPrimaryKey();
+    }
+
+    @Override
     public DBTablePK getAutoIncrementField(Class<?> clazz) {
         DBTable dbTable = getTableMeta(clazz);
 

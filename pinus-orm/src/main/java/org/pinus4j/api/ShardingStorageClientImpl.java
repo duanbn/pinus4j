@@ -206,7 +206,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
     }
 
     // ////////////////////////////////////////////////////////
-    // update相关
+    // save相关
     // ////////////////////////////////////////////////////////
     @Override
     public Number globalSave(Object entity) {
@@ -215,7 +215,13 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
         String clusterName = ReflectUtil.getClusterName(entity.getClass());
         CheckUtil.checkClusterName(clusterName);
 
-        return this.globalUpdater.globalSave(entity, clusterName).getValueAsNumber();
+        PKValue pkValue = this.globalUpdater.globalSave(entity, clusterName);
+
+        if (pkValue != null) {
+            return pkValue.getValueAsNumber();
+        }
+
+        return null;
     }
 
     @Override
@@ -688,7 +694,8 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
         CheckUtil.checkShardingKey(shardingKey);
         CheckUtil.checkClass(clazz);
 
-        return this.shardingQuery.findByPkList(PKUtil.parsePKValueList(pkList), shardingKey, clazz, useCache, masterSlave);
+        return this.shardingQuery.findByPkList(PKUtil.parsePKValueList(pkList), shardingKey, clazz, useCache,
+                masterSlave);
     }
 
     @Override

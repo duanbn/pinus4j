@@ -29,12 +29,16 @@ import org.pinus4j.api.query.QueryImpl;
 import org.pinus4j.cluster.enums.EnumDBMasterSlave;
 import org.pinus4j.cluster.resources.IDBResource;
 import org.pinus4j.datalayer.query.IGlobalQuery;
+import org.pinus4j.entity.meta.EntityPK;
+import org.pinus4j.entity.meta.PKName;
 import org.pinus4j.entity.meta.PKValue;
 import org.pinus4j.exceptions.DBClusterException;
 import org.pinus4j.exceptions.DBOperationException;
 import org.pinus4j.utils.ReflectUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.Lists;
 
 /**
  * global query implements.
@@ -77,10 +81,10 @@ public class GlobalJdbcQueryImpl extends AbstractJdbcQuery implements IGlobalQue
                 tx.enlistResource((XAResource) dbResource);
             }
 
-            long count = selectGlobalCountWithCache(dbResource, clusterName, clazz, useCache).longValue();
+            long count = selectCountWithCache(dbResource, clazz, useCache).longValue();
             if (count == 0) {
                 dbResource = this.dbCluster.getMasterGlobalDBResource(clusterName, tableName);
-                count = selectGlobalCountWithCache(dbResource, clusterName, clazz, useCache).longValue();
+                count = selectCountWithCache(dbResource, clazz, useCache).longValue();
             }
 
             return count;
@@ -131,10 +135,10 @@ public class GlobalJdbcQueryImpl extends AbstractJdbcQuery implements IGlobalQue
                 tx.enlistResource((XAResource) dbResource);
             }
 
-            long count = selectGlobalCount(query, dbResource, clusterName, clazz).longValue();
+            long count = selectCountByQuery(query, dbResource, clazz).longValue();
             if (count == 0) {
                 dbResource = this.dbCluster.getMasterGlobalDBResource(clusterName, tableName);
-                count = selectGlobalCount(query, dbResource, clusterName, clazz).longValue();
+                count = selectCountByQuery(query, dbResource, clazz).longValue();
             }
 
             return count;
@@ -185,10 +189,12 @@ public class GlobalJdbcQueryImpl extends AbstractJdbcQuery implements IGlobalQue
                 tx.enlistResource((XAResource) dbResource);
             }
 
-            T data = selectByPkWithCache(dbResource, clusterName, pk, clazz, useCache);
+            PKName[] pkNames = new PKName[] { ReflectUtil.getNotUnionPkName(clazz) };
+            PKValue[] pkValues = new PKValue[] { pk };
+            T data = selectByPkWithCache(dbResource, EntityPK.valueOf(pkNames, pkValues), clazz, useCache);
             if (data == null) {
                 dbResource = this.dbCluster.getMasterGlobalDBResource(clusterName, tableName);
-                data = selectByPkWithCache(dbResource, clusterName, pk, clazz, useCache);
+                data = selectByPkWithCache(dbResource, EntityPK.valueOf(pkNames, pkValues), clazz, useCache);
             }
 
             return data;
@@ -219,7 +225,8 @@ public class GlobalJdbcQueryImpl extends AbstractJdbcQuery implements IGlobalQue
     }
 
     @Override
-    public <T> List<T> findByPkList(List<PKValue> pks, Class<T> clazz, boolean useCache, EnumDBMasterSlave masterSlave) {
+    public <T> List<T> findByPkList(List<PKValue> pkList, Class<T> clazz, boolean useCache,
+                                    EnumDBMasterSlave masterSlave) {
         String clusterName = ReflectUtil.getClusterName(clazz);
         String tableName = ReflectUtil.getTableName(clazz);
 
@@ -239,12 +246,19 @@ public class GlobalJdbcQueryImpl extends AbstractJdbcQuery implements IGlobalQue
                 tx.enlistResource((XAResource) dbResource);
             }
 
-            List<T> data = selectGlobalByPksWithCache(dbResource, clusterName, clazz,
-                    pks.toArray(new PKValue[pks.size()]), useCache);
+            List<EntityPK> entityPkList = Lists.newArrayList();
+            PKName[] pkNames = new PKName[] { ReflectUtil.getNotUnionPkName(clazz) };
+            for (PKValue pkValue : pkList) {
+                PKValue[] pkValues = new PKValue[] { pkValue };
+                entityPkList.add(EntityPK.valueOf(pkNames, pkValues));
+            }
+
+            List<T> data = selectByPksWithCache(dbResource, clazz,
+                    entityPkList.toArray(new EntityPK[entityPkList.size()]), useCache);
             if (data.isEmpty()) {
                 dbResource = this.dbCluster.getMasterGlobalDBResource(clusterName, tableName);
-                data = selectGlobalByPksWithCache(dbResource, clusterName, clazz,
-                        pks.toArray(new PKValue[pks.size()]), useCache);
+                data = selectByPksWithCache(dbResource, clazz, entityPkList.toArray(new EntityPK[entityPkList.size()]),
+                        useCache);
             }
 
             return data;
@@ -327,18 +341,18 @@ public class GlobalJdbcQueryImpl extends AbstractJdbcQuery implements IGlobalQue
 
             if (result == null || result.isEmpty()) {
                 if (isCacheAvailable(clazz, useCache)) {
-                    PKValue[] pkValues = selectGlobalPksByQuery(dbResource, query, clazz);
-                    result = selectGlobalByPksWithCache(dbResource, clusterName, clazz, pkValues, useCache);
+                    EntityPK[] entityPks = selectPksByQuery(dbResource, query, clazz);
+                    result = selectByPksWithCache(dbResource, clazz, entityPks, useCache);
 
                     if (result == null) {
                         dbResource = this.dbCluster.getMasterGlobalDBResource(clusterName, tableName);
-                        result = selectGlobalByPksWithCache(dbResource, clusterName, clazz, pkValues, useCache);
+                        result = selectByPksWithCache(dbResource, clazz, entityPks, useCache);
                     }
                 } else {
-                    result = selectGlobalByQuery(dbResource, query, clazz);
+                    result = selectByQuery(dbResource, query, clazz);
                     if (result == null) {
                         dbResource = this.dbCluster.getMasterGlobalDBResource(clusterName, tableName);
-                        result = selectGlobalByQuery(dbResource, query, clazz);
+                        result = selectByQuery(dbResource, query, clazz);
                     }
                 }
 
@@ -413,7 +427,7 @@ public class GlobalJdbcQueryImpl extends AbstractJdbcQuery implements IGlobalQue
                 tx.enlistResource((XAResource) next);
             }
 
-            List<Map<String, Object>> result = selectGlobalBySql(next, sql);
+            List<Map<String, Object>> result = selectBySql(next, sql);
 
             return result;
         } catch (Exception e) {

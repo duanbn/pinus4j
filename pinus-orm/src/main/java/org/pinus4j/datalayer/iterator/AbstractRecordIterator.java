@@ -37,9 +37,7 @@ public abstract class AbstractRecordIterator<E> extends AbstractJdbcQuery implem
         pkName = ReflectUtil.getNotUnionPkName(clazz).getValue();
         Class<?> type;
         try {
-            type = clazz.getDeclaredField(pkName).getType();
-        } catch (NoSuchFieldException e) {
-            throw new DBOperationException("遍历数据失败, clazz " + clazz, e);
+            type = ReflectUtil.getField(clazz, pkName).getType();
         } catch (SecurityException e) {
             throw new DBOperationException("遍历数据失败, clazz " + clazz, e);
         }

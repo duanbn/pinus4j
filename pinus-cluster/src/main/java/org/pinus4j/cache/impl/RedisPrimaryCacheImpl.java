@@ -7,7 +7,6 @@ import java.util.Map;
 import org.pinus4j.cache.IPrimaryCache;
 import org.pinus4j.cluster.resources.ShardingDBResource;
 import org.pinus4j.entity.meta.EntityPK;
-import org.pinus4j.entity.meta.PKValue;
 import org.pinus4j.utils.IOUtil;
 import org.pinus4j.utils.ReflectUtil;
 import org.pinus4j.utils.StringUtils;
@@ -55,7 +54,7 @@ public class RedisPrimaryCacheImpl extends AbstractRedisCache implements IPrimar
     }
 
     @Override
-    public void putGlobal(String clusterName, String tableName, PKValue id, Object data) {
+    public void putGlobal(String clusterName, String tableName, EntityPK id, Object data) {
         if (data == null) {
             return;
         }
@@ -79,14 +78,14 @@ public class RedisPrimaryCacheImpl extends AbstractRedisCache implements IPrimar
     }
 
     @Override
-    public void putGlobal(String clusterName, String tableName, Map<PKValue, ? extends Object> data) {
+    public void putGlobal(String clusterName, String tableName, Map<EntityPK, ? extends Object> data) {
         if (data == null || data.isEmpty()) {
             return;
         }
 
         List<String> keys = new ArrayList<String>();
         List<Object> datas = new ArrayList<Object>();
-        for (Map.Entry<PKValue, ? extends Object> entry : data.entrySet()) {
+        for (Map.Entry<EntityPK, ? extends Object> entry : data.entrySet()) {
             keys.add(buildGlobalKey(clusterName, tableName, entry.getKey()));
             datas.add(entry.getValue());
         }
@@ -94,15 +93,15 @@ public class RedisPrimaryCacheImpl extends AbstractRedisCache implements IPrimar
     }
 
     @Override
-    public <T> T getGlobal(String clusterName, String tableName, PKValue id) {
+    public <T> T getGlobal(String clusterName, String tableName, EntityPK id) {
         String key = buildGlobalKey(clusterName, tableName, id);
         return _get(key);
     }
 
     @Override
-    public List<Object> getGlobal(String clusterName, String tableName, PKValue[] ids) {
+    public List<Object> getGlobal(String clusterName, String tableName, EntityPK[] ids) {
         List<String> keys = new ArrayList<String>();
-        for (PKValue id : ids) {
+        for (EntityPK id : ids) {
             String key = buildGlobalKey(clusterName, tableName, id);
             keys.add(key);
         }
@@ -110,15 +109,15 @@ public class RedisPrimaryCacheImpl extends AbstractRedisCache implements IPrimar
     }
 
     @Override
-    public void removeGlobal(String clusterName, String tableName, PKValue id) {
+    public void removeGlobal(String clusterName, String tableName, EntityPK id) {
         String key = buildGlobalKey(clusterName, tableName, id);
         _remove(key);
     }
 
     @Override
-    public void removeGlobal(String clusterName, String tableName, List<PKValue> ids) {
+    public void removeGlobal(String clusterName, String tableName, List<EntityPK> ids) {
         List<String> keys = new ArrayList<String>();
-        for (PKValue id : ids) {
+        for (EntityPK id : ids) {
             keys.add(buildGlobalKey(clusterName, tableName, id));
         }
         _remove(keys);
@@ -155,7 +154,7 @@ public class RedisPrimaryCacheImpl extends AbstractRedisCache implements IPrimar
     }
 
     @Override
-    public void put(ShardingDBResource db, PKValue id, Object data) {
+    public void put(ShardingDBResource db, EntityPK id, Object data) {
         if (data == null) {
             return;
         }
@@ -165,27 +164,27 @@ public class RedisPrimaryCacheImpl extends AbstractRedisCache implements IPrimar
     }
 
     @Override
-    public void put(ShardingDBResource db, PKValue[] ids, List<? extends Object> data) {
+    public void put(ShardingDBResource db, EntityPK[] ids, List<? extends Object> data) {
         if (data == null || data.isEmpty()) {
             return;
         }
 
         List<String> keys = new ArrayList<String>();
-        for (PKValue id : ids) {
+        for (EntityPK id : ids) {
             keys.add(buildKey(db, id));
         }
         _put(keys, data);
     }
 
     @Override
-    public void put(ShardingDBResource db, Map<PKValue, ? extends Object> data) {
+    public void put(ShardingDBResource db, Map<EntityPK, ? extends Object> data) {
         if (data == null || data.isEmpty()) {
             return;
         }
 
         List<String> keys = new ArrayList<String>();
         List<Object> datas = new ArrayList<Object>();
-        for (Map.Entry<PKValue, ? extends Object> entry : data.entrySet()) {
+        for (Map.Entry<EntityPK, ? extends Object> entry : data.entrySet()) {
             keys.add(buildKey(db, entry.getKey()));
             datas.add(entry.getValue());
         }
@@ -193,30 +192,30 @@ public class RedisPrimaryCacheImpl extends AbstractRedisCache implements IPrimar
     }
 
     @Override
-    public <T> T get(ShardingDBResource db, PKValue id) {
+    public <T> T get(ShardingDBResource db, EntityPK id) {
         String key = buildKey(db, id);
         return _get(key);
     }
 
     @Override
-    public List<Object> get(ShardingDBResource db, PKValue... ids) {
+    public List<Object> get(ShardingDBResource db, EntityPK... ids) {
         List<String> keys = new ArrayList<String>();
-        for (PKValue id : ids) {
+        for (EntityPK id : ids) {
             keys.add(buildKey(db, id));
         }
         return _get(keys);
     }
 
     @Override
-    public void remove(ShardingDBResource db, PKValue id) {
+    public void remove(ShardingDBResource db, EntityPK id) {
         String key = buildKey(db, id);
         _remove(key);
     }
 
     @Override
-    public void remove(ShardingDBResource db, List<PKValue> ids) {
+    public void remove(ShardingDBResource db, List<EntityPK> ids) {
         List<String> keys = new ArrayList<String>();
-        for (PKValue id : ids) {
+        for (EntityPK id : ids) {
             keys.add(buildKey(db, id));
         }
         _remove(keys);

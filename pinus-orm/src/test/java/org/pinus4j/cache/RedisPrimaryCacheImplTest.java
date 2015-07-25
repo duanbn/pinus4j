@@ -17,9 +17,9 @@ import org.pinus4j.cluster.beans.ShardingKey;
 import org.pinus4j.cluster.resources.ShardingDBResource;
 import org.pinus4j.entity.TestEntity;
 import org.pinus4j.entity.TestGlobalEntity;
+import org.pinus4j.entity.meta.EntityPK;
 import org.pinus4j.entity.meta.PKValue;
 import org.pinus4j.exceptions.DBClusterException;
-import org.pinus4j.utils.PKUtil;
 
 public class RedisPrimaryCacheImplTest extends BaseTest {
 
@@ -74,13 +74,14 @@ public class RedisPrimaryCacheImplTest extends BaseTest {
     @Test
     public void testGlobal() {
         TestGlobalEntity entity = createGlobalEntity();
-        primaryCache.putGlobal(CLUSTER_KLSTORAGE, tableName, PKValue.valueOf(100), entity);
+        EntityPK entityPk = EntityPK.valueOf(null, new PKValue[] { PKValue.valueOf(100) });
+        primaryCache.putGlobal(CLUSTER_KLSTORAGE, tableName, entityPk, entity);
 
-        TestGlobalEntity entity1 = primaryCache.getGlobal(CLUSTER_KLSTORAGE, tableName, PKValue.valueOf(100));
+        TestGlobalEntity entity1 = primaryCache.getGlobal(CLUSTER_KLSTORAGE, tableName, entityPk);
         Assert.assertEquals(entity, entity1);
 
-        primaryCache.removeGlobal(CLUSTER_KLSTORAGE, tableName, PKValue.valueOf(100));
-        entity = primaryCache.getGlobal(CLUSTER_KLSTORAGE, tableName, PKValue.valueOf(100));
+        primaryCache.removeGlobal(CLUSTER_KLSTORAGE, tableName, entityPk);
+        entity = primaryCache.getGlobal(CLUSTER_KLSTORAGE, tableName, entityPk);
         Assert.assertNull(entity);
 
         List<TestGlobalEntity> entities = new ArrayList<TestGlobalEntity>();
@@ -91,15 +92,18 @@ public class RedisPrimaryCacheImplTest extends BaseTest {
         }
         primaryCache.putGlobal(CLUSTER_KLSTORAGE, tableName, entities);
 
-        Number[] pkNumbers = new Number[] { 1, 2, 3, 4, 5 };
-        List<TestGlobalEntity> entities1 = primaryCache.getGlobal(CLUSTER_KLSTORAGE, tableName,
-                PKUtil.parsePKValueArray(pkNumbers));
+        EntityPK[] entityPks = new EntityPK[] { EntityPK.valueOf(null, new PKValue[] { PKValue.valueOf(1) }),
+                EntityPK.valueOf(null, new PKValue[] { PKValue.valueOf(2) }),
+                EntityPK.valueOf(null, new PKValue[] { PKValue.valueOf(3) }),
+                EntityPK.valueOf(null, new PKValue[] { PKValue.valueOf(4) }),
+                EntityPK.valueOf(null, new PKValue[] { PKValue.valueOf(5) }) };
+        List<TestGlobalEntity> entities1 = primaryCache.getGlobal(CLUSTER_KLSTORAGE, tableName, entityPks);
         for (int i = 0; i < 5; i++) {
             Assert.assertEquals(entities.get(i), entities1.get(i));
         }
 
-        primaryCache.removeGlobal(CLUSTER_KLSTORAGE, tableName, PKUtil.parsePKValueList(Arrays.asList(pkNumbers)));
-        entities1 = primaryCache.getGlobal(CLUSTER_KLSTORAGE, tableName, PKUtil.parsePKValueArray(pkNumbers));
+        primaryCache.removeGlobal(CLUSTER_KLSTORAGE, tableName, Arrays.asList(entityPks));
+        entities1 = primaryCache.getGlobal(CLUSTER_KLSTORAGE, tableName, entityPks);
         Assert.assertEquals(0, entities1.size());
     }
 
@@ -122,31 +126,35 @@ public class RedisPrimaryCacheImplTest extends BaseTest {
     public void testSharding() {
         // test one
         TestEntity entity = createEntity();
-        primaryCache.put(db, PKValue.valueOf(100), entity);
-        TestEntity entity1 = primaryCache.get(db, PKValue.valueOf(100));
+        EntityPK entityPk = EntityPK.valueOf(null, new PKValue[] { PKValue.valueOf(100) });
+        primaryCache.put(db, entityPk, entity);
+        TestEntity entity1 = primaryCache.get(db, entityPk);
         Assert.assertEquals(entity, entity1);
-        primaryCache.remove(db, PKValue.valueOf(100));
-        entity = primaryCache.get(db, PKValue.valueOf(100));
+        primaryCache.remove(db, entityPk);
+        entity = primaryCache.get(db, entityPk);
         Assert.assertNull(entity);
 
         // test more
-        Number[] ids = new Number[5];
+        EntityPK[] entityPks = new EntityPK[] { EntityPK.valueOf(null, new PKValue[] { PKValue.valueOf(1) }),
+                EntityPK.valueOf(null, new PKValue[] { PKValue.valueOf(2) }),
+                EntityPK.valueOf(null, new PKValue[] { PKValue.valueOf(3) }),
+                EntityPK.valueOf(null, new PKValue[] { PKValue.valueOf(4) }),
+                EntityPK.valueOf(null, new PKValue[] { PKValue.valueOf(5) }) };
         List<TestEntity> entities = new ArrayList<TestEntity>();
         for (int i = 1; i <= 5; i++) {
-            ids[i - 1] = i;
             TestEntity entity2 = createEntity();
             entity2.setId(i);
             entities.add(entity2);
         }
-        primaryCache.put(db, PKUtil.parsePKValueArray(ids), entities);
+        primaryCache.put(db, entityPks, entities);
 
-        List<TestEntity> entities1 = primaryCache.get(db, PKUtil.parsePKValueArray(ids));
+        List<TestEntity> entities1 = primaryCache.get(db, entityPks);
         for (int i = 0; i < 5; i++) {
             Assert.assertEquals(entities.get(i), entities1.get(i));
         }
 
-        primaryCache.remove(db, PKUtil.parsePKValueList(Arrays.asList(ids)));
-        entities1 = primaryCache.get(db, PKUtil.parsePKValueArray(ids));
+        primaryCache.remove(db, Arrays.asList(entityPks));
+        entities1 = primaryCache.get(db, entityPks);
         Assert.assertEquals(0, entities1.size());
     }
 

@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.pinus4j.cluster.resources.ShardingDBResource;
-import org.pinus4j.entity.meta.PKValue;
+import org.pinus4j.entity.meta.EntityPK;
 
 /**
  * 主缓存接口. 为Pinus存储提供一级缓存, 一级缓存使用memcached作为存储主要是对数据库表中的数据进行缓存查询进行缓存.
@@ -78,7 +78,7 @@ public interface IPrimaryCache extends ICache {
      * @param pk 主键
      * @param data 记录
      */
-    public void putGlobal(String clusterName, String tableName, PKValue pk, Object data);
+    public void putGlobal(String clusterName, String tableName, EntityPK pk, Object data);
 
     /**
      * 批量添加记录.
@@ -95,7 +95,7 @@ public interface IPrimaryCache extends ICache {
      * @param tableName
      * @param data
      */
-    public void putGlobal(String clusterName, String tableName, Map<PKValue, ? extends Object> data);
+    public void putGlobal(String clusterName, String tableName, Map<EntityPK, ? extends Object> data);
 
     /**
      * 获取记录.
@@ -104,7 +104,7 @@ public interface IPrimaryCache extends ICache {
      * @param pk 主键
      * @return 记录
      */
-    public <T> T getGlobal(String clusterName, String tableName, PKValue pk);
+    public <T> T getGlobal(String clusterName, String tableName, EntityPK pk);
 
     /**
      * 获取多条记录.
@@ -113,7 +113,7 @@ public interface IPrimaryCache extends ICache {
      * @param pks 主键
      * @return 多条数据
      */
-    public <T> List<T> getGlobal(String clusterName, String tableName, PKValue[] pks);
+    public <T> List<T> getGlobal(String clusterName, String tableName, EntityPK[] pks);
 
     /**
      * 删除一条记录.
@@ -121,7 +121,7 @@ public interface IPrimaryCache extends ICache {
      * @param db 分库分表
      * @param pk 主键
      */
-    public void removeGlobal(String clusterName, String tableName, PKValue pk);
+    public void removeGlobal(String clusterName, String tableName, EntityPK pk);
 
     /**
      * 批量删除缓存.
@@ -129,7 +129,7 @@ public interface IPrimaryCache extends ICache {
      * @param db 分库分表
      * @param pks 主键
      */
-    public void removeGlobal(String clusterName, String tableName, List<PKValue> pks);
+    public void removeGlobal(String clusterName, String tableName, List<EntityPK> pks);
 
     /**
      * 设置count数.
@@ -179,7 +179,7 @@ public interface IPrimaryCache extends ICache {
      * @param pk 主键
      * @param data 记录
      */
-    public void put(ShardingDBResource db, PKValue pk, Object data);
+    public void put(ShardingDBResource db, EntityPK pk, Object data);
 
     /**
      * 批量添加记录.
@@ -188,7 +188,7 @@ public interface IPrimaryCache extends ICache {
      * @param pks 主键
      * @param data 批量数据
      */
-    public void put(ShardingDBResource db, PKValue[] pks, List<? extends Object> data);
+    public void put(ShardingDBResource db, EntityPK[] pks, List<? extends Object> data);
 
     /**
      * 批量添加记录.
@@ -196,7 +196,7 @@ public interface IPrimaryCache extends ICache {
      * @param db
      * @param data
      */
-    public void put(ShardingDBResource db, Map<PKValue, ? extends Object> data);
+    public void put(ShardingDBResource db, Map<EntityPK, ? extends Object> data);
 
     /**
      * 获取记录.
@@ -205,7 +205,7 @@ public interface IPrimaryCache extends ICache {
      * @param pk 主键
      * @return 记录
      */
-    public <T> T get(ShardingDBResource db, PKValue pk);
+    public <T> T get(ShardingDBResource db, EntityPK pk);
 
     /**
      * 获取多条记录.
@@ -214,7 +214,7 @@ public interface IPrimaryCache extends ICache {
      * @param ids 主键
      * @return 多条数据
      */
-    public <T> List<T> get(ShardingDBResource db, PKValue... ids);
+    public <T> List<T> get(ShardingDBResource db, EntityPK[] ids);
 
     /**
      * 删除一条记录.
@@ -222,7 +222,7 @@ public interface IPrimaryCache extends ICache {
      * @param db 分库分表
      * @param pk 主键
      */
-    public void remove(ShardingDBResource db, PKValue pk);
+    public void remove(ShardingDBResource db, EntityPK pk);
 
     /**
      * 批量删除缓存.
@@ -230,6 +230,6 @@ public interface IPrimaryCache extends ICache {
      * @param db 分库分表
      * @param ids 主键
      */
-    public void remove(ShardingDBResource db, List<PKValue> pks);
+    public void remove(ShardingDBResource db, List<EntityPK> pks);
 
 }

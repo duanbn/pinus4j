@@ -25,9 +25,11 @@ import javax.transaction.Transaction;
 import org.pinus4j.cluster.beans.IShardingKey;
 import org.pinus4j.cluster.resources.ShardingDBResource;
 import org.pinus4j.datalayer.update.IShardingUpdate;
+import org.pinus4j.entity.meta.EntityPK;
 import org.pinus4j.entity.meta.PKValue;
 import org.pinus4j.exceptions.DBClusterException;
 import org.pinus4j.exceptions.DBOperationException;
+import org.pinus4j.utils.PKUtil;
 import org.pinus4j.utils.ReflectUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,7 +66,8 @@ public class ShardingJdbcUpdateImpl extends AbstractJdbcUpdate implements IShard
             Connection conn = dbResource.getConnection();
 
             List<PKValue> genPks = _saveBatch(conn, entities, dbResource.getTableIndex());
-            pk = genPks.get(0);
+            if (!genPks.isEmpty())
+                pk = genPks.get(0);
 
             if (tx != null) {
                 tx.enlistResource(dbResource);
@@ -106,7 +109,6 @@ public class ShardingJdbcUpdateImpl extends AbstractJdbcUpdate implements IShard
         Class<?> clazz = entities.get(0).getClass();
         String tableName = ReflectUtil.getTableName(clazz);
 
-        int entitySize = entities.size();
         List<PKValue> pks = Lists.newArrayList();
 
         Transaction tx = null;
@@ -185,11 +187,11 @@ public class ShardingJdbcUpdateImpl extends AbstractJdbcUpdate implements IShard
 
             // 清理缓存
             if (isCacheAvailable(clazz)) {
-                List pks = new ArrayList(entities.size());
+                List<EntityPK> entityPkList = Lists.newArrayList();
                 for (Object entity : entities) {
-                    pks.add(ReflectUtil.getNotUnionPkValue(entity));
+                    entityPkList.add(ReflectUtil.getPkValue(entity));
                 }
-                primaryCache.remove(dbResource, pks);
+                primaryCache.remove(dbResource, entityPkList);
             }
             if (isSecondCacheAvailable(clazz)) {
                 secondCache.remove(dbResource);
@@ -245,7 +247,7 @@ public class ShardingJdbcUpdateImpl extends AbstractJdbcUpdate implements IShard
 
             // 删除缓存
             if (isCacheAvailable(clazz)) {
-                primaryCache.remove(dbResource, pks);
+                primaryCache.remove(dbResource, PKUtil.parseEntityPKList(pks));
                 primaryCache.decrCount(dbResource, pks.size());
             }
             if (isSecondCacheAvailable(clazz)) {

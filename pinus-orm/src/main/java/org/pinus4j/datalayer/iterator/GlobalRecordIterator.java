@@ -41,7 +41,7 @@ public class GlobalRecordIterator<E> extends AbstractRecordIterator<E> {
         query.limit(1).orderBy(pkName, Order.DESC);
         List<E> one;
         try {
-            one = selectGlobalByQuery(this.dbResource, query, clazz);
+            one = selectByQuery(this.dbResource, query, clazz);
         } catch (SQLException e1) {
             throw new DBOperationException(e1);
         }
@@ -58,7 +58,7 @@ public class GlobalRecordIterator<E> extends AbstractRecordIterator<E> {
     @Override
     public long getCount() {
         try {
-            return selectGlobalCount(query, dbResource, this.dbResource.getClusterName(), clazz).longValue();
+            return selectCountByQuery(query, dbResource, clazz).longValue();
         } catch (SQLException e) {
             throw new DBOperationException(e);
         }
@@ -71,14 +71,14 @@ public class GlobalRecordIterator<E> extends AbstractRecordIterator<E> {
             long high = this.latestId + step;
             query.add(Condition.gte(pkName, latestId)).add(Condition.lt(pkName, high));
             try {
-                List<E> recrods = selectGlobalByQuery(this.dbResource, query, clazz);
+                List<E> recrods = selectByQuery(this.dbResource, query, clazz);
                 this.latestId = high;
 
                 while (recrods.isEmpty() && this.latestId < maxId) {
                     query = this.query.clone();
                     high = this.latestId + step;
                     query.add(Condition.gte(pkName, this.latestId)).add(Condition.lt(pkName, high));
-                    recrods = selectGlobalByQuery(this.dbResource, query, clazz);
+                    recrods = selectByQuery(this.dbResource, query, clazz);
                     this.latestId = high;
                 }
                 this.recordQ.addAll(recrods);

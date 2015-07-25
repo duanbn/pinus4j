@@ -20,72 +20,72 @@ import org.pinus4j.task.TaskFuture;
 
 public class ShardingTaskTest extends BaseTest {
 
-	private static Number[] pks;
+    private static Number[]               pks;
 
-	private static IShardingKey<Integer> moreKey = new ShardingKey<Integer>(CLUSTER_KLSTORAGE, 4);
+    private static IShardingKey<Integer>  moreKey = new ShardingKey<Integer>(CLUSTER_KLSTORAGE, 4);
 
-	private static List<TestEntity> entities;
+    private static List<TestEntity>       entities;
 
-	private static final int SIZE = 2100;
+    private static final int              SIZE    = 1100;
 
-	private static IShardingStorageClient storageClient;
+    private static IShardingStorageClient storageClient;
 
-	@BeforeClass
-	public static void before() {
-		storageClient = getStorageClient();
+    @BeforeClass
+    public static void before() {
+        storageClient = getStorageClient();
 
-		// save more
-		entities = new ArrayList<TestEntity>(SIZE);
-		TestEntity entity = null;
-		for (int i = 0; i < SIZE; i++) {
-			entity = createEntity();
-			entity.setTestString("i am pinus");
-			entities.add(entity);
-		}
-		pks = storageClient.saveBatch(entities, moreKey);
-		// check save more
-		entities = storageClient.findByPkList(Arrays.asList(pks), moreKey, TestEntity.class);
-		Assert.assertEquals(SIZE, entities.size());
-	}
+        // save more
+        entities = new ArrayList<TestEntity>(SIZE);
+        TestEntity entity = null;
+        for (int i = 0; i < SIZE; i++) {
+            entity = createEntity();
+            entity.setTestString("i am pinus");
+            entities.add(entity);
+        }
+        pks = storageClient.saveBatch(entities, moreKey);
+        // check save more
+        entities = storageClient.findByPkList(Arrays.asList(pks), moreKey, TestEntity.class);
+        Assert.assertEquals(SIZE, entities.size());
+    }
 
-	@AfterClass
-	public static void after() {
-		// remove more
-		storageClient.removeByPks(moreKey, TestEntity.class, pks);
+    @AfterClass
+    public static void after() {
+        // remove more
+        storageClient.removeByPks(moreKey, TestEntity.class, pks);
 
-		storageClient.destroy();
-	}
+        storageClient.destroy();
+    }
 
-	@Test
-	public void testSubmit() throws InterruptedException {
-		ITask<TestEntity> task = new SimpleShardingTask();
+    @Test
+    public void testSubmit() throws InterruptedException {
+        ITask<TestEntity> task = new SimpleShardingTask();
 
-		TaskFuture future = storageClient.submit(task, TestEntity.class);
-		while (!future.isDone()) {
-			System.out.println(future.getProgress());
+        TaskFuture future = storageClient.submit(task, TestEntity.class);
+        while (!future.isDone()) {
+            System.out.println(future.getProgress());
 
-			Thread.sleep(2000);
-		}
+            Thread.sleep(2000);
+        }
 
-		System.out.println(future);
-	}
+        System.out.println(future);
+    }
 
-	@Test
-	public void testSubmitQuery() throws InterruptedException {
-		ITask<TestEntity> task = new SimpleShardingTask();
-		IQuery query = storageClient.createQuery();
-		query.add(Condition.gt("testInt", 100));
+    @Test
+    public void testSubmitQuery() throws InterruptedException {
+        ITask<TestEntity> task = new SimpleShardingTask();
+        IQuery query = storageClient.createQuery();
+        query.add(Condition.gt("testInt", 100));
 
-		TaskFuture future = storageClient.submit(task, TestEntity.class, query);
-		future.await();
+        TaskFuture future = storageClient.submit(task, TestEntity.class, query);
+        future.await();
 
-		System.out.println(future);
-	}
+        System.out.println(future);
+    }
 
-	public static class SimpleShardingTask extends AbstractTask<TestEntity> {
-		@Override
-		public void batchRecord(List<TestEntity> entity) {
-		}
-	}
+    public static class SimpleShardingTask extends AbstractTask<TestEntity> {
+        @Override
+        public void batchRecord(List<TestEntity> entity) {
+        }
+    }
 
 }

@@ -45,6 +45,8 @@ import org.pinus4j.utils.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.Maps;
+
 /**
  * SQL工具类.
  * 
@@ -285,16 +287,17 @@ public class SQLBuilder {
      * @return {pkValue, Object}
      * @throws SQLException
      */
-    public static <T> Map<PKValue, T> buildResultObjectAsMap(Class<T> clazz, ResultSet rs) throws SQLException {
-        Map<PKValue, T> map = new HashMap<PKValue, T>();
+    public static <T> Map<EntityPK, T> buildResultObjectAsMap(Class<T> clazz, ResultSet rs) throws SQLException {
+        Map<EntityPK, T> map = Maps.newHashMap();
 
         ResultSetMetaData rsmd = rs.getMetaData();
         T one = null;
         String fieldName = null;
-        PKName pkName = ReflectUtil.getNotUnionPkName(clazz);
+        PKName[] pkNames = ReflectUtil.getPkName(clazz).toArray(new PKName[0]);
+        PKValue[] pkValues = new PKValue[pkNames.length];
+
         Field f = null;
         Object value = null;
-        PKValue entityPk = null;
         while (rs.next()) {
             try {
                 one = (T) clazz.newInstance();
@@ -302,12 +305,15 @@ public class SQLBuilder {
                 for (int i = 1; i <= rsmd.getColumnCount(); i++) {
                     fieldName = rsmd.getColumnName(i);
                     f = ReflectUtil.getField(clazz, fieldName);
-                    entityPk = PKValue.valueOf(rs.getObject(pkName.getValue()));
                     value = _getRsValue(rs, f, i);
                     ReflectUtil.setProperty(one, fieldName, value);
                 }
 
-                map.put(entityPk, one);
+                for (int i = 0; i < pkNames.length; i++) {
+                    pkValues[i] = PKValue.valueOf(rs.getObject(pkNames[i].getValue()));
+                }
+
+                map.put(EntityPK.valueOf(pkNames, pkValues), one);
             } catch (Exception e) {
                 throw new SQLException(e);
             }
@@ -348,16 +354,23 @@ public class SQLBuilder {
      * @return sql语句
      * @throws SQLException
      */
-    public static String buildSelectByPks(Class<?> clazz, int tableIndex, PKValue[] pks) throws SQLException {
+    public static String buildSelectByPks(EntityPK[] pks, Class<?> clazz, int tableIndex) throws SQLException {
         Field[] fields = ReflectUtil.getFields(clazz);
         String tableName = ReflectUtil.getTableName(clazz, tableIndex);
-        PKName pkName = ReflectUtil.getNotUnionPkName(clazz);
 
-        StringBuilder sqlInValue = new StringBuilder();
-        for (PKValue pk : pks) {
-            sqlInValue.append(pk.getValueAsString()).append(",");
+        StringBuilder whereSql = new StringBuilder();
+        for (EntityPK pk : pks) {
+            whereSql.append("(");
+            for (int i = 0; i < pk.getPkNames().length; i++) {
+                whereSql.append(pk.getPkNames()[i].getValue()).append("=")
+                        .append(pk.getPkValues()[i].getValueAsString());
+                whereSql.append(" and ");
+            }
+            whereSql.delete(whereSql.length() - 5, whereSql.length());
+            whereSql.append(")");
+            whereSql.append(" or ");
         }
-        sqlInValue.deleteCharAt(sqlInValue.length() - 1);
+        whereSql.delete(whereSql.length() - 4, whereSql.length());
 
         StringBuilder SQL = new StringBuilder("SELECT ");
         for (Field field : fields) {
@@ -365,11 +378,7 @@ public class SQLBuilder {
         }
         SQL.deleteCharAt(SQL.length() - 1);
         SQL.append(" FROM ").append(tableName);
-        SQL.append(" WHERE ").append(pkName.getValue()).append(" in (");
-        SQL.append(sqlInValue.toString());
-        SQL.append(") order by field(");
-        SQL.append(pkName.getValue()).append(",").append(sqlInValue.toString());
-        SQL.append(")");
+        SQL.append(" WHERE ").append(whereSql.toString());
 
         debugSQL(SQL.toString());
 
@@ -384,10 +393,16 @@ public class SQLBuilder {
      * @param tableIndex 表下标
      * @return sql语句
      */
-    public static String buildSelectByPk(PKValue pk, Class<?> clazz, int tableIndex) throws SQLException {
+    public static String buildSelectByPk(EntityPK pk, Class<?> clazz, int tableIndex) throws SQLException {
         Field[] fields = ReflectUtil.getFields(clazz);
         String tableName = ReflectUtil.getTableName(clazz, tableIndex);
-        PKName pkName = ReflectUtil.getNotUnionPkName(clazz);
+
+        StringBuilder whereSql = new StringBuilder();
+        for (int i = 0; i < pk.getPkNames().length; i++) {
+            whereSql.append(pk.getPkNames()[i].getValue()).append("=").append(pk.getPkValues()[i].getValueAsString());
+            whereSql.append(" and ");
+        }
+        whereSql.delete(whereSql.length() - 5, whereSql.length());
 
         StringBuilder SQL = new StringBuilder("SELECT ");
         for (Field field : fields) {
@@ -395,7 +410,7 @@ public class SQLBuilder {
         }
         SQL.deleteCharAt(SQL.length() - 1);
         SQL.append(" FROM ").append(tableName);
-        SQL.append(" WHERE ").append(pkName.getValue()).append("=").append(pk.getValueAsString());
+        SQL.append(" WHERE ").append(whereSql.toString());
 
         debugSQL(SQL.toString());
 
@@ -457,10 +472,10 @@ public class SQLBuilder {
             for (int i = 0; i < entityPk.getPkNames().length; i++) {
                 pkWhereSql.append(entityPk.getPkNames()[i].getValue());
                 pkWhereSql.append("=");
-                pkWhereSql.append(entityPk.getPkValues()[i].getValueAsString()).append(",");
+                pkWhereSql.append(entityPk.getPkValues()[i].getValueAsString());
+                pkWhereSql.append(" and ");
             }
-
-            pkWhereSql.deleteCharAt(pkWhereSql.length() - 1);
+            pkWhereSql.delete(pkWhereSql.length() - 5, pkWhereSql.length());
 
             // 生成update语句.
             Set<Map.Entry<String, Object>> propertyEntrySet = entityProperty.entrySet();

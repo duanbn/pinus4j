@@ -14,7 +14,7 @@ import org.pinus4j.entity.annotations.UpdateTime;
 
 @Table(cluster = "pinus", cache = true)
 @Indexes({ @Index(field = "testInt") })
-public class TestUnionKeyEntity implements Serializable {
+public class TestGlobalUnionKeyEntity implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
@@ -115,7 +115,7 @@ public class TestUnionKeyEntity implements Serializable {
             return false;
         if (getClass() != obj.getClass())
             return false;
-        TestUnionKeyEntity other = (TestUnionKeyEntity) obj;
+        TestGlobalUnionKeyEntity other = (TestGlobalUnionKeyEntity) obj;
         if (id != other.id)
             return false;
         if (oTestBool == null) {

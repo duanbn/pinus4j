@@ -68,16 +68,6 @@ public abstract class AbstractCache implements ICache {
     /**
      * build global cache key [clusterName].[tableName].[id]
      */
-    protected String buildGlobalKey(String clusterName, String tableName, PKValue pkValue) {
-        StringBuilder key = new StringBuilder();
-        key.append(clusterName).append(".").append(tableName).append(".");
-        key.append(pkValue.getValueAsString());
-        return key.toString();
-    }
-
-    /**
-     * build global cache key [clusterName].[tableName].[id]
-     */
     protected String buildGlobalKey(String clusterName, String tableName, EntityPK entityPk) {
         StringBuilder key = new StringBuilder();
         key.append(clusterName).append(".").append(tableName).append(".");
@@ -86,22 +76,6 @@ public abstract class AbstractCache implements ICache {
             pks.append(pkValue.getValueAsString());
         }
         key.append(pks.toString());
-        return key.toString();
-    }
-
-    /**
-     * build sharding cache key [clusterName + dbIndex].[start + end].[tableName
-     * + tableIndex].[id]
-     */
-    protected String buildKey(ShardingDBResource shardingDBResource, PKValue pkValue) {
-        StringBuilder key = new StringBuilder();
-        key.append(shardingDBResource.getClusterName()).append(shardingDBResource.getDbName());
-        key.append(".");
-        key.append(shardingDBResource.getRegionCapacity());
-        key.append(".");
-        key.append(shardingDBResource.getTableName()).append(shardingDBResource.getTableIndex());
-        key.append(".");
-        key.append(pkValue.getValueAsString());
         return key.toString();
     }
 

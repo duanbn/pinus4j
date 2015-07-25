@@ -72,7 +72,7 @@ public class ShardingRecordIterator<E> extends AbstractRecordIterator<E> {
     @Override
     public long getCount() {
         try {
-            return selectCount(dbResource, clazz, query).longValue();
+            return selectCountByQuery(query, dbResource, clazz).longValue();
         } catch (SQLException e) {
             throw new DBOperationException(e);
         }

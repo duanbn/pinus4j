@@ -1,6 +1,5 @@
 package org.pinus4j.entity.meta;
 
-
 /**
  * 表示一个主键名
  * 
@@ -25,6 +24,11 @@ public class PKName {
 
     public String getValue() {
         return this.value;
+    }
+
+    @Override
+    public String toString() {
+        return "PKName [value=" + value + "]";
     }
 
     @Override

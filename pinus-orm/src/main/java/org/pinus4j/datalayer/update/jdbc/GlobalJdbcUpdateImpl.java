@@ -25,8 +25,10 @@ import javax.transaction.xa.XAResource;
 
 import org.pinus4j.cluster.resources.IDBResource;
 import org.pinus4j.datalayer.update.IGlobalUpdate;
+import org.pinus4j.entity.meta.EntityPK;
 import org.pinus4j.entity.meta.PKValue;
 import org.pinus4j.exceptions.DBOperationException;
+import org.pinus4j.utils.PKUtil;
 import org.pinus4j.utils.ReflectUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,7 +41,14 @@ public class GlobalJdbcUpdateImpl extends AbstractJdbcUpdate implements IGlobalU
     public PKValue globalSave(Object entity, String clusterName) {
         List<Object> entities = new ArrayList<Object>(1);
         entities.add(entity);
-        return globalSaveBatch(entities, clusterName)[0];
+
+        PKValue[] pkValues = globalSaveBatch(entities, clusterName);
+
+        if (pkValues.length > 0) {
+            return pkValues[0];
+        }
+
+        return null;
     }
 
     @Override
@@ -126,9 +135,9 @@ public class GlobalJdbcUpdateImpl extends AbstractJdbcUpdate implements IGlobalU
 
             // 删除缓存
             if (isCacheAvailable(clazz)) {
-                List<PKValue> pks = new ArrayList(entities.size());
+                List<EntityPK> pks = new ArrayList(entities.size());
                 for (Object entity : entities) {
-                    pks.add(ReflectUtil.getNotUnionPkValue(entity));
+                    pks.add(ReflectUtil.getPkValue(entity));
                 }
                 primaryCache.removeGlobal(clusterName, tableName, pks);
             }
@@ -185,7 +194,7 @@ public class GlobalJdbcUpdateImpl extends AbstractJdbcUpdate implements IGlobalU
             // 删除缓存
             String tableName = ReflectUtil.getTableName(clazz);
             if (isCacheAvailable(clazz)) {
-                primaryCache.removeGlobal(clusterName, tableName, pks);
+                primaryCache.removeGlobal(clusterName, tableName, PKUtil.parseEntityPKList(pks));
                 primaryCache.decrCountGlobal(clusterName, tableName, pks.size());
             }
             if (isSecondCacheAvailable(clazz)) {

@@ -13,6 +13,14 @@ import org.pinus4j.entity.meta.DBTablePK;
 public interface IEntityMetaManager {
 
     /**
+     * 判断实体是否是联合主键
+     * 
+     * @param clazz
+     * @return
+     */
+    public boolean isUnionKey(Class<?> clazz);
+
+    /**
      * 获取实体的自增主键信息，如果没有则返回null;
      * 
      * @return

@@ -4,8 +4,11 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.pinus4j.BaseTest;
+import org.pinus4j.api.query.Condition;
+import org.pinus4j.api.query.IQuery;
 import org.pinus4j.entity.TestEntity;
 import org.pinus4j.entity.TestGlobalEntity;
+import org.pinus4j.entity.TestGlobalUnionKeyEntity;
 
 public class UpdateTimeTest extends BaseTest {
 
@@ -25,13 +28,16 @@ public class UpdateTimeTest extends BaseTest {
     public void testSave() {
         TestEntity entity = createEntity();
         TestGlobalEntity globalEntity = createGlobalEntity();
+        TestGlobalUnionKeyEntity globalUKEntity = createGlobalUnionKeyEntity();
 
         try {
             storageClient.beginTransaction();
             storageClient.save(entity);
             storageClient.globalSave(globalEntity);
+            storageClient.globalSave(globalUKEntity);
             storageClient.commit();
         } catch (Exception e) {
+            e.printStackTrace();
             storageClient.rollback();
         }
     }
@@ -40,13 +46,21 @@ public class UpdateTimeTest extends BaseTest {
     public void testUpdate() {
         try {
             storageClient.beginTransaction();
-            TestGlobalEntity globalEntity = storageClient.findByPk(34737, TestGlobalEntity.class);
+            TestGlobalEntity globalEntity = storageClient.findByPk(14, TestGlobalEntity.class);
             storageClient.globalUpdate(globalEntity);
 
-//            TestEntity entity = storageClient.findByPk(32896, TestEntity.class);
-//            storageClient.update(entity);
+            IQuery query = storageClient.createQuery();
+            query.add(Condition.eq("id", 1349897939));
+            query.add(Condition.eq("testByte", (byte) -1));
+            TestGlobalUnionKeyEntity globalUnionKeyEntity = storageClient.findOneByQuery(query,
+                    TestGlobalUnionKeyEntity.class);
+            storageClient.globalUpdate(globalUnionKeyEntity);
+
+            //            TestEntity entity = storageClient.findByPk(32896, TestEntity.class);
+            //            storageClient.update(entity);
             storageClient.commit();
         } catch (Exception e) {
+            e.printStackTrace();
             storageClient.rollback();
         }
     }
