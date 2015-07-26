@@ -7,48 +7,48 @@ package org.pinus4j.entity.meta;
  */
 public class PKValue {
 
-    private Object pkValue;
+    private Object value;
 
-    private PKValue(Object pkValue) {
-        this.pkValue = pkValue;
+    private PKValue(Object value) {
+        this.value = value;
     }
 
-    public static PKValue valueOf(Object pkValue) {
-        PKValue pk = new PKValue(pkValue);
+    public static PKValue valueOf(Object value) {
+        PKValue pk = new PKValue(value);
         return pk;
     }
 
-    public void setPkValue(Object pkValue) {
-        this.pkValue = pkValue;
+    public Object getValue() {
+        return value;
     }
 
-    public Object getPkValue() {
-        return pkValue;
+    public void setValue(Object value) {
+        this.value = value;
     }
 
     public String getValueAsString() {
-        return this.pkValue.toString();
+        return this.value.toString();
     }
 
     public Number getValueAsNumber() {
-        if (this.pkValue instanceof Number) {
-            return (Number) this.pkValue;
+        if (this.value instanceof Number) {
+            return (Number) this.value;
         } else {
             throw new ClassCastException("value is not Number type");
         }
     }
 
     public int getValueAsInt() {
-        if (this.pkValue instanceof Number) {
-            return ((Number) this.pkValue).intValue();
+        if (this.value instanceof Number) {
+            return ((Number) this.value).intValue();
         } else {
             throw new ClassCastException("value is not Number type");
         }
     }
 
     public long getValueAsLong() {
-        if (this.pkValue instanceof Number) {
-            return ((Number) this.pkValue).longValue();
+        if (this.value instanceof Number) {
+            return ((Number) this.value).longValue();
         } else {
             throw new ClassCastException("value is not Number type");
         }
@@ -56,14 +56,14 @@ public class PKValue {
 
     @Override
     public String toString() {
-        return "PKValue [pkValue=" + pkValue + "]";
+        return "PKValue [value=" + value + "]";
     }
 
     @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((pkValue == null) ? 0 : pkValue.hashCode());
+        result = prime * result + ((value == null) ? 0 : value.hashCode());
         return result;
     }
 
@@ -76,10 +76,10 @@ public class PKValue {
         if (getClass() != obj.getClass())
             return false;
         PKValue other = (PKValue) obj;
-        if (pkValue == null) {
-            if (other.pkValue != null)
+        if (value == null) {
+            if (other.value != null)
                 return false;
-        } else if (!pkValue.equals(other.pkValue))
+        } else if (!value.equals(other.value))
             return false;
         return true;
     }

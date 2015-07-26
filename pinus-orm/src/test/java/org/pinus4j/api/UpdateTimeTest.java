@@ -29,12 +29,17 @@ public class UpdateTimeTest extends BaseTest {
         TestEntity entity = createEntity();
         TestGlobalEntity globalEntity = createGlobalEntity();
         TestGlobalUnionKeyEntity globalUKEntity = createGlobalUnionKeyEntity();
+        globalUKEntity.setId("aaa");
 
         try {
             storageClient.beginTransaction();
+
             storageClient.save(entity);
+
             storageClient.globalSave(globalEntity);
+
             storageClient.globalSave(globalUKEntity);
+
             storageClient.commit();
         } catch (Exception e) {
             e.printStackTrace();
@@ -46,11 +51,9 @@ public class UpdateTimeTest extends BaseTest {
     public void testUpdate() {
         try {
             storageClient.beginTransaction();
-            TestGlobalEntity globalEntity = storageClient.findByPk(14, TestGlobalEntity.class);
-            storageClient.globalUpdate(globalEntity);
 
             IQuery query = storageClient.createQuery();
-            query.add(Condition.eq("id", 1349897939));
+            query.add(Condition.eq("id", "aaa"));
             query.add(Condition.eq("testByte", (byte) -1));
             TestGlobalUnionKeyEntity globalUnionKeyEntity = storageClient.findOneByQuery(query,
                     TestGlobalUnionKeyEntity.class);

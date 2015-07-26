@@ -19,7 +19,7 @@ public class TestGlobalUnionKeyEntity implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @PrimaryKey(comment = "主键")
-    private long              id;
+    private String            id;
 
     @PrimaryKey
     private byte              testByte;
@@ -70,123 +70,11 @@ public class TestGlobalUnionKeyEntity implements Serializable {
     @UpdateTime(comment = "自动更新时间")
     private Timestamp         testTime;
 
-    @Override
-    public String toString() {
-        return "TestGlobalEntity [id=" + id + ", testByte=" + testByte + ", oTestByte=" + oTestByte + ", testBool="
-                + testBool + ", oTestBool=" + oTestBool + ", testChar=" + testChar + ", oTestChar=" + oTestChar
-                + ", testShort=" + testShort + ", oTestShort=" + oTestShort + ", testInt=" + testInt + ", oTestInt="
-                + oTestInt + ", testLong=" + testLong + ", oTestLong=" + oTestLong + ", testFloat=" + testFloat
-                + ", oTestFloat=" + oTestFloat + ", testDouble=" + testDouble + ", oTestDouble=" + oTestDouble
-                + ", testString=" + testString + ", testDate=" + testDate + ", testTime=" + testTime + "]";
-    }
-
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + (int) (id ^ (id >>> 32));
-        result = prime * result + ((oTestBool == null) ? 0 : oTestBool.hashCode());
-        result = prime * result + ((oTestByte == null) ? 0 : oTestByte.hashCode());
-        result = prime * result + ((oTestChar == null) ? 0 : oTestChar.hashCode());
-        result = prime * result + ((oTestDouble == null) ? 0 : oTestDouble.hashCode());
-        result = prime * result + ((oTestFloat == null) ? 0 : oTestFloat.hashCode());
-        result = prime * result + ((oTestInt == null) ? 0 : oTestInt.hashCode());
-        result = prime * result + ((oTestLong == null) ? 0 : oTestLong.hashCode());
-        result = prime * result + ((oTestShort == null) ? 0 : oTestShort.hashCode());
-        result = prime * result + (testBool ? 1231 : 1237);
-        result = prime * result + testByte;
-        result = prime * result + testChar;
-        long temp;
-        temp = Double.doubleToLongBits(testDouble);
-        result = prime * result + (int) (temp ^ (temp >>> 32));
-        result = prime * result + Float.floatToIntBits(testFloat);
-        result = prime * result + testInt;
-        result = prime * result + (int) (testLong ^ (testLong >>> 32));
-        result = prime * result + testShort;
-        result = prime * result + ((testString == null) ? 0 : testString.hashCode());
-        return result;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj)
-            return true;
-        if (obj == null)
-            return false;
-        if (getClass() != obj.getClass())
-            return false;
-        TestGlobalUnionKeyEntity other = (TestGlobalUnionKeyEntity) obj;
-        if (id != other.id)
-            return false;
-        if (oTestBool == null) {
-            if (other.oTestBool != null)
-                return false;
-        } else if (!oTestBool.equals(other.oTestBool))
-            return false;
-        if (oTestByte == null) {
-            if (other.oTestByte != null)
-                return false;
-        } else if (!oTestByte.equals(other.oTestByte))
-            return false;
-        if (oTestChar == null) {
-            if (other.oTestChar != null)
-                return false;
-        } else if (!oTestChar.equals(other.oTestChar))
-            return false;
-        if (oTestDouble == null) {
-            if (other.oTestDouble != null)
-                return false;
-        } else if (!oTestDouble.equals(other.oTestDouble))
-            return false;
-        if (oTestFloat == null) {
-            if (other.oTestFloat != null)
-                return false;
-        } else if (!oTestFloat.equals(other.oTestFloat))
-            return false;
-        if (oTestInt == null) {
-            if (other.oTestInt != null)
-                return false;
-        } else if (!oTestInt.equals(other.oTestInt))
-            return false;
-        if (oTestLong == null) {
-            if (other.oTestLong != null)
-                return false;
-        } else if (!oTestLong.equals(other.oTestLong))
-            return false;
-        if (oTestShort == null) {
-            if (other.oTestShort != null)
-                return false;
-        } else if (!oTestShort.equals(other.oTestShort))
-            return false;
-        if (testBool != other.testBool)
-            return false;
-        if (testByte != other.testByte)
-            return false;
-        if (testChar != other.testChar)
-            return false;
-        if (Double.doubleToLongBits(testDouble) != Double.doubleToLongBits(other.testDouble))
-            return false;
-        if (Float.floatToIntBits(testFloat) != Float.floatToIntBits(other.testFloat))
-            return false;
-        if (testInt != other.testInt)
-            return false;
-        if (testLong != other.testLong)
-            return false;
-        if (testShort != other.testShort)
-            return false;
-        if (testString == null) {
-            if (other.testString != null)
-                return false;
-        } else if (!testString.equals(other.testString))
-            return false;
-        return true;
-    }
-
-    public long getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(long id) {
+    public void setId(String id) {
         this.id = id;
     }
 

@@ -35,8 +35,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.pinus4j.api.SQL;
 import org.pinus4j.api.query.IQuery;
 import org.pinus4j.constant.Const;
-import org.pinus4j.entity.DefaultEntityMetaManager;
-import org.pinus4j.entity.IEntityMetaManager;
 import org.pinus4j.entity.meta.EntityPK;
 import org.pinus4j.entity.meta.PKName;
 import org.pinus4j.entity.meta.PKValue;
@@ -62,8 +60,6 @@ public class SQLBuilder {
     private static final Map<String, String> _selectCountCache = new ConcurrentHashMap<String, String>();
 
     private static final SimpleDateFormat    sdf               = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-
-    private static final IEntityMetaManager  entityMetaManager = DefaultEntityMetaManager.getInstance();
 
     /**
      * 拼装sql. SELECT pkName FROM tableName {IQuery.getSql()}
@@ -363,7 +359,7 @@ public class SQLBuilder {
             whereSql.append("(");
             for (int i = 0; i < pk.getPkNames().length; i++) {
                 whereSql.append(pk.getPkNames()[i].getValue()).append("=")
-                        .append(pk.getPkValues()[i].getValueAsString());
+                        .append(formatValue(pk.getPkValues()[i].getValue()));
                 whereSql.append(" and ");
             }
             whereSql.delete(whereSql.length() - 5, whereSql.length());
@@ -399,7 +395,8 @@ public class SQLBuilder {
 
         StringBuilder whereSql = new StringBuilder();
         for (int i = 0; i < pk.getPkNames().length; i++) {
-            whereSql.append(pk.getPkNames()[i].getValue()).append("=").append(pk.getPkValues()[i].getValueAsString());
+            whereSql.append(pk.getPkNames()[i].getValue()).append("=")
+                    .append(formatValue(pk.getPkValues()[i].getValue()));
             whereSql.append(" and ");
         }
         whereSql.delete(whereSql.length() - 5, whereSql.length());
@@ -472,7 +469,7 @@ public class SQLBuilder {
             for (int i = 0; i < entityPk.getPkNames().length; i++) {
                 pkWhereSql.append(entityPk.getPkNames()[i].getValue());
                 pkWhereSql.append("=");
-                pkWhereSql.append(entityPk.getPkValues()[i].getValueAsString());
+                pkWhereSql.append(formatValue(entityPk.getPkValues()[i].getValue()));
                 pkWhereSql.append(" and ");
             }
             pkWhereSql.delete(pkWhereSql.length() - 5, pkWhereSql.length());

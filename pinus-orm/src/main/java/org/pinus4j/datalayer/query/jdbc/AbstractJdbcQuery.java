@@ -22,7 +22,6 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -44,7 +43,6 @@ import org.pinus4j.entity.IEntityMetaManager;
 import org.pinus4j.entity.meta.EntityPK;
 import org.pinus4j.entity.meta.PKName;
 import org.pinus4j.entity.meta.PKValue;
-import org.pinus4j.exceptions.DBOperationException;
 import org.pinus4j.utils.JdbcUtil;
 import org.pinus4j.utils.ReflectUtil;
 

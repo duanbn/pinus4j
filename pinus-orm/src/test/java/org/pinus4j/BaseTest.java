@@ -84,7 +84,6 @@ public class BaseTest {
 
     public static TestGlobalUnionKeyEntity createGlobalUnionKeyEntity() {
         TestGlobalUnionKeyEntity testEntity = new TestGlobalUnionKeyEntity();
-        testEntity.setId(r.nextInt());
         testEntity.setTestBool(r.nextBoolean());
         testEntity.setoTestBool(r.nextBoolean());
         testEntity.setTestByte((byte) 255);
@@ -121,7 +120,7 @@ public class BaseTest {
         return storageClient;
     }
 
-//    @Test
+    //    @Test
     public void genData() throws Exception {
         IShardingStorageClient storageClient = getStorageClient();
 
