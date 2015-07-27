@@ -100,7 +100,7 @@ public class MemCachedPrimaryCacheImpl extends AbstractMemCachedCache implements
 
         List<String> keys = new ArrayList<String>();
         for (Object d : data) {
-            EntityPK entityPk = ReflectUtil.getPkValue(d);
+            EntityPK entityPk = ReflectUtil.getEntityPK(d);
             keys.add(buildGlobalKey(clusterName, tableName, entityPk));
         }
         _put(keys, data);

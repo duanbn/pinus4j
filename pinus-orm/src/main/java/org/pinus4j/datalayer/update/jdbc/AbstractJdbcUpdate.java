@@ -32,6 +32,7 @@ import org.pinus4j.datalayer.SQLBuilder;
 import org.pinus4j.datalayer.update.IDataUpdate;
 import org.pinus4j.entity.DefaultEntityMetaManager;
 import org.pinus4j.entity.IEntityMetaManager;
+import org.pinus4j.entity.meta.EntityPK;
 import org.pinus4j.entity.meta.PKName;
 import org.pinus4j.entity.meta.PKValue;
 import org.pinus4j.exceptions.DBOperationException;
@@ -121,14 +122,14 @@ public abstract class AbstractJdbcUpdate implements IDataUpdate {
         return pks;
     }
 
-    protected void _removeByPksGlobal(Connection conn, List<PKValue> pks, Class<?> clazz) {
+    protected void _removeByPksGlobal(Connection conn, List<EntityPK> pks, Class<?> clazz) {
         _removeByPks(conn, pks, clazz, -1);
     }
 
     /**
      * @param tableIndex 等于-1时会被忽略.
      */
-    protected void _removeByPks(Connection conn, List<PKValue> pks, Class<?> clazz, int tableIndex) {
+    protected void _removeByPks(Connection conn, List<EntityPK> pks, Class<?> clazz, int tableIndex) {
         PreparedStatement ps = null;
         try {
             ps = conn.prepareStatement(SQLBuilder.buildDeleteByPks(clazz, tableIndex, pks));

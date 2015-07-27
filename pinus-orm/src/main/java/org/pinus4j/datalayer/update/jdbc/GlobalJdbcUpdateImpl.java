@@ -38,11 +38,11 @@ public class GlobalJdbcUpdateImpl extends AbstractJdbcUpdate implements IGlobalU
     public static final Logger LOG = LoggerFactory.getLogger(GlobalJdbcUpdateImpl.class);
 
     @Override
-    public PKValue globalSave(Object entity, String clusterName) {
+    public PKValue save(Object entity, String clusterName) {
         List<Object> entities = new ArrayList<Object>(1);
         entities.add(entity);
 
-        PKValue[] pkValues = globalSaveBatch(entities, clusterName);
+        PKValue[] pkValues = saveBatch(entities, clusterName);
 
         if (pkValues.length > 0) {
             return pkValues[0];
@@ -52,7 +52,7 @@ public class GlobalJdbcUpdateImpl extends AbstractJdbcUpdate implements IGlobalU
     }
 
     @Override
-    public PKValue[] globalSaveBatch(List<? extends Object> entities, String clusterName) {
+    public PKValue[] saveBatch(List<? extends Object> entities, String clusterName) {
         Class<?> clazz = entities.get(0).getClass();
         String tableName = ReflectUtil.getTableName(clazz);
 
@@ -105,15 +105,15 @@ public class GlobalJdbcUpdateImpl extends AbstractJdbcUpdate implements IGlobalU
     }
 
     @Override
-    public void globalUpdate(Object entity, String clusterName) {
+    public void update(Object entity, String clusterName) {
         List<Object> entities = new ArrayList<Object>();
         entities.add(entity);
-        globalUpdateBatch(entities, clusterName);
+        updateBatch(entities, clusterName);
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
     @Override
-    public void globalUpdateBatch(List<? extends Object> entities, String clusterName) {
+    public void updateBatch(List<? extends Object> entities, String clusterName) {
         Class<?> clazz = entities.get(0).getClass();
         String tableName = ReflectUtil.getTableName(clazz);
 
@@ -137,7 +137,7 @@ public class GlobalJdbcUpdateImpl extends AbstractJdbcUpdate implements IGlobalU
             if (isCacheAvailable(clazz)) {
                 List<EntityPK> pks = new ArrayList(entities.size());
                 for (Object entity : entities) {
-                    pks.add(ReflectUtil.getPkValue(entity));
+                    pks.add(ReflectUtil.getEntityPK(entity));
                 }
                 primaryCache.removeGlobal(clusterName, tableName, pks);
             }
@@ -166,14 +166,14 @@ public class GlobalJdbcUpdateImpl extends AbstractJdbcUpdate implements IGlobalU
     }
 
     @Override
-    public void globalRemoveByPk(PKValue pk, Class<?> clazz, String clusterName) {
-        List<PKValue> pks = new ArrayList<PKValue>(1);
+    public void removeByPk(EntityPK pk, Class<?> clazz, String clusterName) {
+        List<EntityPK> pks = new ArrayList<EntityPK>(1);
         pks.add(pk);
-        globalRemoveByPks(pks, clazz, clusterName);
+        removeByPks(pks, clazz, clusterName);
     }
 
     @Override
-    public void globalRemoveByPks(List<PKValue> pks, Class<?> clazz, String clusterName) {
+    public void removeByPks(List<EntityPK> pks, Class<?> clazz, String clusterName) {
 
         Transaction tx = null;
         IDBResource dbResource = null;
@@ -194,7 +194,7 @@ public class GlobalJdbcUpdateImpl extends AbstractJdbcUpdate implements IGlobalU
             // 删除缓存
             String tableName = ReflectUtil.getTableName(clazz);
             if (isCacheAvailable(clazz)) {
-                primaryCache.removeGlobal(clusterName, tableName, PKUtil.parseEntityPKList(pks));
+                primaryCache.removeGlobal(clusterName, tableName, pks);
                 primaryCache.decrCountGlobal(clusterName, tableName, pks.size());
             }
             if (isSecondCacheAvailable(clazz)) {

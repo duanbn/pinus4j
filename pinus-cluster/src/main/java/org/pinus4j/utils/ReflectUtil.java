@@ -76,7 +76,7 @@ public class ReflectUtil {
      * @return 主键值
      * @throws Exception 获取失败
      */
-    public static EntityPK getPkValue(Object obj) {
+    public static EntityPK getEntityPK(Object obj) {
         List<PKName> pkNames = getPkName(obj.getClass());
         List<PKValue> pkValues = Lists.newArrayList();
         Object pkValue = null;

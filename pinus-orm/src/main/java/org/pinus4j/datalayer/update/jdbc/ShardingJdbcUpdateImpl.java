@@ -29,7 +29,6 @@ import org.pinus4j.entity.meta.EntityPK;
 import org.pinus4j.entity.meta.PKValue;
 import org.pinus4j.exceptions.DBClusterException;
 import org.pinus4j.exceptions.DBOperationException;
-import org.pinus4j.utils.PKUtil;
 import org.pinus4j.utils.ReflectUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -189,7 +188,7 @@ public class ShardingJdbcUpdateImpl extends AbstractJdbcUpdate implements IShard
             if (isCacheAvailable(clazz)) {
                 List<EntityPK> entityPkList = Lists.newArrayList();
                 for (Object entity : entities) {
-                    entityPkList.add(ReflectUtil.getPkValue(entity));
+                    entityPkList.add(ReflectUtil.getEntityPK(entity));
                 }
                 primaryCache.remove(dbResource, entityPkList);
             }
@@ -219,14 +218,14 @@ public class ShardingJdbcUpdateImpl extends AbstractJdbcUpdate implements IShard
     }
 
     @Override
-    public void removeByPk(PKValue pk, IShardingKey<?> shardingKey, Class<?> clazz) {
-        List<PKValue> pks = Lists.newArrayListWithCapacity(1);
+    public void removeByPk(EntityPK pk, IShardingKey<?> shardingKey, Class<?> clazz) {
+        List<EntityPK> pks = Lists.newArrayListWithCapacity(1);
         pks.add(pk);
         removeByPks(pks, shardingKey, clazz);
     }
 
     @Override
-    public void removeByPks(List<PKValue> pks, IShardingKey<?> shardingKey, Class<?> clazz) {
+    public void removeByPks(List<EntityPK> pks, IShardingKey<?> shardingKey, Class<?> clazz) {
         String talbeName = ReflectUtil.getTableName(clazz);
 
         Transaction tx = null;
@@ -247,7 +246,7 @@ public class ShardingJdbcUpdateImpl extends AbstractJdbcUpdate implements IShard
 
             // 删除缓存
             if (isCacheAvailable(clazz)) {
-                primaryCache.remove(dbResource, PKUtil.parseEntityPKList(pks));
+                primaryCache.remove(dbResource, pks);
                 primaryCache.decrCount(dbResource, pks.size());
             }
             if (isSecondCacheAvailable(clazz)) {

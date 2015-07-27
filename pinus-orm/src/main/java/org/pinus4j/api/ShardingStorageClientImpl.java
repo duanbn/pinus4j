@@ -40,6 +40,8 @@ import org.pinus4j.datalayer.query.IGlobalQuery;
 import org.pinus4j.datalayer.query.IShardingQuery;
 import org.pinus4j.datalayer.update.IGlobalUpdate;
 import org.pinus4j.datalayer.update.IShardingUpdate;
+import org.pinus4j.entity.meta.EntityPK;
+import org.pinus4j.entity.meta.PKName;
 import org.pinus4j.entity.meta.PKValue;
 import org.pinus4j.exceptions.DBClusterException;
 import org.pinus4j.exceptions.DBOperationException;
@@ -59,10 +61,11 @@ import org.slf4j.LoggerFactory;
 import com.google.common.collect.Lists;
 
 /**
- * sharding storage client implements.
+ * sharding storage client implements. replace by DefaultPinusClient
  * 
  * @author duanbn
  */
+@Deprecated
 public class ShardingStorageClientImpl implements IShardingStorageClient {
 
     /**
@@ -215,7 +218,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
         String clusterName = ReflectUtil.getClusterName(entity.getClass());
         CheckUtil.checkClusterName(clusterName);
 
-        PKValue pkValue = this.globalUpdater.globalSave(entity, clusterName);
+        PKValue pkValue = this.globalUpdater.save(entity, clusterName);
 
         if (pkValue != null) {
             return pkValue.getValueAsNumber();
@@ -229,7 +232,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
         CheckUtil.checkEntityList(entities);
         CheckUtil.checkClusterName(clusterName);
 
-        PKValue[] pkValues = this.globalUpdater.globalSaveBatch(entities, clusterName);
+        PKValue[] pkValues = this.globalUpdater.saveBatch(entities, clusterName);
         Number[] pkNumbers = new Number[pkValues.length];
         for (int i = 0; i < pkValues.length; i++) {
             pkNumbers[i] = pkValues[i].getValueAsNumber();
@@ -245,7 +248,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
         String clusterName = ReflectUtil.getClusterName(entity.getClass());
         CheckUtil.checkClusterName(clusterName);
 
-        this.globalUpdater.globalUpdate(entity, clusterName);
+        this.globalUpdater.update(entity, clusterName);
     }
 
     @Override
@@ -253,7 +256,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
         CheckUtil.checkEntityList(entities);
         CheckUtil.checkClusterName(clusterName);
 
-        this.globalUpdater.globalUpdateBatch(entities, clusterName);
+        this.globalUpdater.updateBatch(entities, clusterName);
     }
 
     @Override
@@ -262,7 +265,10 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
         CheckUtil.checkClass(clazz);
         CheckUtil.checkClusterName(clusterName);
 
-        this.globalUpdater.globalRemoveByPk(PKValue.valueOf(pk), clazz, clusterName);
+        PKName[] pkNames = new PKName[] { ReflectUtil.getNotUnionPkName(clazz) };
+        PKValue[] pkValues = new PKValue[] { PKValue.valueOf(pk) };
+
+        this.globalUpdater.removeByPk(EntityPK.valueOf(pkNames, pkValues), clazz, clusterName);
     }
 
     @Override
@@ -273,12 +279,15 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
         CheckUtil.checkClass(clazz);
         CheckUtil.checkClusterName(clusterName);
 
-        List<PKValue> pkValues = Lists.newArrayListWithCapacity(pks.size());
+        List<EntityPK> entityPkList = Lists.newArrayListWithCapacity(pks.size());
+        PKName[] pkNames = new PKName[] { ReflectUtil.getNotUnionPkName(clazz) };
+        PKValue[] pkValues = null;
         for (Number pk : pks) {
-            pkValues.add(PKValue.valueOf(pk));
+            pkValues = new PKValue[] { PKValue.valueOf(pk) };
+            entityPkList.add(EntityPK.valueOf(pkNames, pkValues));
         }
 
-        this.globalUpdater.globalRemoveByPks(pkValues, clazz, clusterName);
+        this.globalUpdater.removeByPks(entityPkList, clazz, clusterName);
     }
 
     @Override
@@ -338,7 +347,9 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
         CheckUtil.checkShardingKey(shardingKey);
         CheckUtil.checkClass(clazz);
 
-        this.shardingUpdater.removeByPk(PKValue.valueOf(pk), shardingKey, clazz);
+        PKName[] pkNames = new PKName[] { ReflectUtil.getNotUnionPkName(clazz) };
+        PKValue[] pkValues = new PKValue[] { PKValue.valueOf(pk) };
+        this.shardingUpdater.removeByPk(EntityPK.valueOf(pkNames, pkValues), shardingKey, clazz);
     }
 
     @Override
@@ -349,7 +360,15 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
         CheckUtil.checkShardingKey(shardingKey);
         CheckUtil.checkClass(clazz);
 
-        this.shardingUpdater.removeByPks(PKUtil.parsePKValueList(pks), shardingKey, clazz);
+        List<EntityPK> entityPkList = Lists.newArrayListWithCapacity(pks.size());
+        PKName[] pkNames = new PKName[] { ReflectUtil.getNotUnionPkName(clazz) };
+        PKValue[] pkValues = null;
+        for (Number pk : pks) {
+            pkValues = new PKValue[] { PKValue.valueOf(pk) };
+            entityPkList.add(EntityPK.valueOf(pkNames, pkValues));
+        }
+
+        this.shardingUpdater.removeByPks(entityPkList, shardingKey, clazz);
     }
 
     @Override

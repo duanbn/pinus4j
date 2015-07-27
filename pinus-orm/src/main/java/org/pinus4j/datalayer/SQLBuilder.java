@@ -420,18 +420,25 @@ public class SQLBuilder {
      * @return DELETE语句
      * @throws SQLException
      */
-    public static String buildDeleteByPks(Class<?> clazz, int tableIndex, List<PKValue> pks) throws SQLException {
+    public static String buildDeleteByPks(Class<?> clazz, int tableIndex, List<EntityPK> pks) throws SQLException {
         String tableName = ReflectUtil.getTableName(clazz, tableIndex);
-        PKName pkName = ReflectUtil.getNotUnionPkName(clazz);
+
+        StringBuilder whereSql = new StringBuilder();
+        for (EntityPK pk : pks) {
+            whereSql.append("(");
+            for (int i = 0; i < pk.getPkNames().length; i++) {
+                whereSql.append(pk.getPkNames()[i].getValue()).append("=")
+                        .append(formatValue(pk.getPkValues()[i].getValue()));
+                whereSql.append(" and ");
+            }
+            whereSql.delete(whereSql.length() - 5, whereSql.length());
+            whereSql.append(")");
+            whereSql.append(" or ");
+        }
+        whereSql.delete(whereSql.length() - 4, whereSql.length());
 
         StringBuilder SQL = new StringBuilder("DELETE FROM ").append(tableName);
-        SQL.append(" WHERE ").append(pkName.getValue()).append(" IN (");
-        for (PKValue pk : pks) {
-            if (pk.getValueAsLong() > 0)
-                SQL.append(pk.getValueAsLong()).append(",");
-        }
-        SQL.deleteCharAt(SQL.length() - 1);
-        SQL.append(")");
+        SQL.append(" WHERE ").append(whereSql.toString());
 
         debugSQL(SQL.toString());
 
@@ -464,7 +471,7 @@ public class SQLBuilder {
                 throw new SQLException("解析实体对象失败", e);
             }
             // 拼装主键条件
-            EntityPK entityPk = ReflectUtil.getPkValue(dbEntity);
+            EntityPK entityPk = ReflectUtil.getEntityPK(dbEntity);
             StringBuilder pkWhereSql = new StringBuilder();
             for (int i = 0; i < entityPk.getPkNames().length; i++) {
                 pkWhereSql.append(entityPk.getPkNames()[i].getValue());

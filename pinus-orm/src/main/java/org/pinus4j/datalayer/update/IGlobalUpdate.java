@@ -18,6 +18,7 @@ package org.pinus4j.datalayer.update;
 
 import java.util.List;
 
+import org.pinus4j.entity.meta.EntityPK;
 import org.pinus4j.entity.meta.PKValue;
 import org.pinus4j.exceptions.DBOperationException;
 
@@ -31,7 +32,7 @@ public interface IGlobalUpdate extends IDataUpdate {
      * @return 主键
      * @throws DBOperationException 操作失败
      */
-    public PKValue globalSave(Object entity, String clusterName);
+    public PKValue save(Object entity, String clusterName);
 
     /**
      * 批量保存数据到全局库.
@@ -41,7 +42,7 @@ public interface IGlobalUpdate extends IDataUpdate {
      * @return 主键
      * @throws DBOperationException 操作失败
      */
-    public PKValue[] globalSaveBatch(List<? extends Object> entities, String clusterName);
+    public PKValue[] saveBatch(List<? extends Object> entities, String clusterName);
 
     /**
      * 更新全局库
@@ -50,7 +51,7 @@ public interface IGlobalUpdate extends IDataUpdate {
      * @param clusterName 集群名称
      * @throws DBOperationException 操作失败
      */
-    public void globalUpdate(Object entity, String clusterName);
+    public void update(Object entity, String clusterName);
 
     /**
      * 批量更新全局库
@@ -59,7 +60,7 @@ public interface IGlobalUpdate extends IDataUpdate {
      * @param clusterName 集群名
      * @throws DBOperationException 操作失败
      */
-    public void globalUpdateBatch(List<? extends Object> entities, String clusterName);
+    public void updateBatch(List<? extends Object> entities, String clusterName);
 
     /**
      * 删除全局库
@@ -68,7 +69,7 @@ public interface IGlobalUpdate extends IDataUpdate {
      * @param shardingValue
      * @param clazz
      */
-    public void globalRemoveByPk(PKValue pk, Class<?> clazz, String clusterName);
+    public void removeByPk(EntityPK pk, Class<?> clazz, String clusterName);
 
     /**
      * 批量删除全局库
@@ -77,6 +78,6 @@ public interface IGlobalUpdate extends IDataUpdate {
      * @param shardingValue
      * @param clazz
      */
-    public void globalRemoveByPks(List<PKValue> pks, Class<?> clazz, String clusterName);
+    public void removeByPks(List<EntityPK> pks, Class<?> clazz, String clusterName);
 
 }

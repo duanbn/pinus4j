@@ -36,8 +36,11 @@ import org.pinus4j.transaction.enums.EnumTransactionIsolationLevel;
 /**
  * Pinus存储中间件用户调用接口. 所有分布式存储的操作都有此接口提供.
  * 
+ * replace by PinusClient.
+ * 
  * @author duanbn
  */
+@Deprecated
 public interface IShardingStorageClient {
 
 	/**********************************************************

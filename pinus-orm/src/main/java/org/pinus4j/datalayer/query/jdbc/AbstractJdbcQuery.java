@@ -539,7 +539,7 @@ public abstract class AbstractJdbcQuery implements IDataQuery {
 
         EntityPK entityPk = null;
         for (T entity : entities) {
-            entityPk = ReflectUtil.getPkValue(entity);
+            entityPk = ReflectUtil.getEntityPK(entity);
             map.put(entityPk, entity);
         }
 
