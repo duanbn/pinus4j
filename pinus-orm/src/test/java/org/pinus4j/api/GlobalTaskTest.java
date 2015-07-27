@@ -10,78 +10,78 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.pinus4j.BaseTest;
-import org.pinus4j.api.query.Condition;
 import org.pinus4j.api.query.IQuery;
+import org.pinus4j.api.query.impl.Condition;
 import org.pinus4j.entity.TestGlobalEntity;
 import org.pinus4j.task.ITask;
 import org.pinus4j.task.TaskFuture;
 
 public class GlobalTaskTest extends BaseTest {
 
-	private static Number[] pks;
+    private static Number[]               pks;
 
-	private static List<TestGlobalEntity> entities;
+    private static List<TestGlobalEntity> entities;
 
-	private static final int SIZE = 2100;
+    private static final int              SIZE = 2100;
 
-	private static IShardingStorageClient storageClient;
+    private static IShardingStorageClient storageClient;
 
-	@BeforeClass
-	public static void before() {
-		storageClient = getStorageClient();
+    @BeforeClass
+    public static void before() {
+        storageClient = getStorageClient();
 
-		// save more
-		entities = new ArrayList<TestGlobalEntity>(SIZE);
-		TestGlobalEntity entity = null;
-		for (int i = 0; i < SIZE; i++) {
-			entity = createGlobalEntity();
-			entity.setTestString("i am pinus");
-			entities.add(entity);
-		}
-		pks = storageClient.globalSaveBatch(entities, CLUSTER_KLSTORAGE);
-		// check save more
-		entities = storageClient.findByPkList(Arrays.asList(pks), TestGlobalEntity.class);
-		Assert.assertEquals(SIZE, entities.size());
-	}
+        // save more
+        entities = new ArrayList<TestGlobalEntity>(SIZE);
+        TestGlobalEntity entity = null;
+        for (int i = 0; i < SIZE; i++) {
+            entity = createGlobalEntity();
+            entity.setTestString("i am pinus");
+            entities.add(entity);
+        }
+        pks = storageClient.globalSaveBatch(entities, CLUSTER_KLSTORAGE);
+        // check save more
+        entities = storageClient.findByPkList(Arrays.asList(pks), TestGlobalEntity.class);
+        Assert.assertEquals(SIZE, entities.size());
+    }
 
-	@AfterClass
-	public static void after() {
-		// remove more
-		storageClient.globalRemoveByPks(CLUSTER_KLSTORAGE, TestGlobalEntity.class, pks);
+    @AfterClass
+    public static void after() {
+        // remove more
+        storageClient.globalRemoveByPks(CLUSTER_KLSTORAGE, TestGlobalEntity.class, pks);
 
-		storageClient.destroy();
-	}
+        storageClient.destroy();
+    }
 
-	@Test
-	public void testSubmit() throws InterruptedException {
-		ITask<TestGlobalEntity> task = new SimpleGlobalTask();
+    @Test
+    public void testSubmit() throws InterruptedException {
+        ITask<TestGlobalEntity> task = new SimpleGlobalTask();
 
-		TaskFuture future = storageClient.submit(task, TestGlobalEntity.class);
-		while (!future.isDone()) {
-			System.out.println(future.getProgress());
-		}
+        TaskFuture future = storageClient.submit(task, TestGlobalEntity.class);
+        while (!future.isDone()) {
+            System.out.println(future.getProgress());
+        }
 
-		System.out.println(future);
-	}
+        System.out.println(future);
+    }
 
-	@Test
-	public void testSubmitQuery() throws InterruptedException {
-		ITask<TestGlobalEntity> task = new SimpleGlobalTask();
-		IQuery query = storageClient.createQuery();
-		query.add(Condition.gt("testInt", 100));
+    @Test
+    public void testSubmitQuery() throws InterruptedException {
+        ITask<TestGlobalEntity> task = new SimpleGlobalTask();
+        IQuery query = storageClient.createQuery();
+        query.add(Condition.gt("testInt", 100, TestGlobalEntity.class));
 
-		TaskFuture future = storageClient.submit(task, TestGlobalEntity.class, query);
-		future.await();
+        TaskFuture future = storageClient.submit(task, TestGlobalEntity.class, query);
+        future.await();
 
-		System.out.println(future);
-	}
+        System.out.println(future);
+    }
 
-	public static class SimpleGlobalTask extends AbstractTask<TestGlobalEntity> {
-		@Override
-		public void batchRecord(List<TestGlobalEntity> entityList) {
-			for (TestGlobalEntity entity : entityList) {
-			}
-		}
-	}
+    public static class SimpleGlobalTask extends AbstractTask<TestGlobalEntity> {
+        @Override
+        public void batchRecord(List<TestGlobalEntity> entityList) {
+            for (TestGlobalEntity entity : entityList) {
+            }
+        }
+    }
 
 }

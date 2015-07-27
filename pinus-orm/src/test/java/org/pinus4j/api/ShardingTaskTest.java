@@ -10,8 +10,8 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.pinus4j.BaseTest;
-import org.pinus4j.api.query.Condition;
 import org.pinus4j.api.query.IQuery;
+import org.pinus4j.api.query.impl.Condition;
 import org.pinus4j.cluster.beans.IShardingKey;
 import org.pinus4j.cluster.beans.ShardingKey;
 import org.pinus4j.entity.TestEntity;
@@ -74,7 +74,7 @@ public class ShardingTaskTest extends BaseTest {
     public void testSubmitQuery() throws InterruptedException {
         ITask<TestEntity> task = new SimpleShardingTask();
         IQuery query = storageClient.createQuery();
-        query.add(Condition.gt("testInt", 100));
+        query.add(Condition.gt("testInt", 100, TestEntity.class));
 
         TaskFuture future = storageClient.submit(task, TestEntity.class, query);
         future.await();

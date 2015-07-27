@@ -23,6 +23,7 @@ import java.util.concurrent.locks.Lock;
 import javax.transaction.TransactionManager;
 
 import org.pinus4j.api.query.IQuery;
+import org.pinus4j.api.query.impl.ResultSetableQueryImpl;
 import org.pinus4j.cluster.IDBCluster;
 import org.pinus4j.cluster.IDBClusterBuilder;
 import org.pinus4j.cluster.beans.IShardingKey;
@@ -277,12 +278,12 @@ public class DefaultPinusClient implements PinusClient {
             String clusterName = null;
             for (Object globalEntity : globalList) {
                 clusterName = ReflectUtil.getClusterName(globalEntity.getClass());
-                List<Object> mapValueList = clusterEntityMap.get(clusterName);
-                if (mapValueList != null) {
-                    mapValueList.add(globalEntity);
+                List<Object> theSameClusterNameList = clusterEntityMap.get(clusterName);
+                if (theSameClusterNameList != null) {
+                    theSameClusterNameList.add(globalEntity);
                 } else {
-                    mapValueList = Lists.newArrayList(globalEntity);
-                    clusterEntityMap.put(clusterName, mapValueList);
+                    theSameClusterNameList = Lists.newArrayList(globalEntity);
+                    clusterEntityMap.put(clusterName, theSameClusterNameList);
                 }
             }
 
@@ -293,22 +294,22 @@ public class DefaultPinusClient implements PinusClient {
 
         // handle sharding entity list.
         if (!shardingList.isEmpty()) {
-            Map<IShardingKey<?>, List<Object>> shardingEntityMap = Maps.newHashMap();
+            Map<IShardingKey<?>, List<Object>> theSameShardingKeyMap = Maps.newHashMap();
 
             ShardingKey<?> shardingKey = null;
             for (Object shardingEntity : shardingList) {
                 shardingKey = new ShardingKey(ReflectUtil.getClusterName(shardingEntity.getClass()),
                         ReflectUtil.getShardingValue(shardingEntity));
-                List<Object> shardingMapValueList = shardingEntityMap.get(shardingKey);
-                if (shardingMapValueList != null) {
-                    shardingMapValueList.add(shardingEntity);
+                List<Object> theSameShardingKeyList = theSameShardingKeyMap.get(shardingKey);
+                if (theSameShardingKeyList != null) {
+                    theSameShardingKeyList.add(shardingEntity);
                 } else {
-                    shardingMapValueList = Lists.newArrayList(shardingEntity);
-                    shardingEntityMap.put(shardingKey, shardingMapValueList);
+                    theSameShardingKeyList = Lists.newArrayList(shardingEntity);
+                    theSameShardingKeyMap.put(shardingKey, theSameShardingKeyList);
                 }
             }
 
-            for (Map.Entry<IShardingKey<?>, List<Object>> entry : shardingEntityMap.entrySet()) {
+            for (Map.Entry<IShardingKey<?>, List<Object>> entry : theSameShardingKeyMap.entrySet()) {
                 this.shardingUpdater.saveBatch(entry.getValue(), entry.getKey());
             }
         }
@@ -366,48 +367,49 @@ public class DefaultPinusClient implements PinusClient {
 
         // handle global entity list.
         if (!globalList.isEmpty()) {
-            Map<String, List<Object>> clusterEntityMap = Maps.newHashMap();
+            Map<String, List<Object>> theSameClusterNameMap = Maps.newHashMap();
 
             String clusterName = null;
             for (Object globalEntity : globalList) {
                 clusterName = ReflectUtil.getClusterName(globalEntity.getClass());
-                List<Object> mapValueList = clusterEntityMap.get(clusterName);
-                if (mapValueList != null) {
-                    mapValueList.add(globalEntity);
+                List<Object> theSameClusterNameList = theSameClusterNameMap.get(clusterName);
+                if (theSameClusterNameList != null) {
+                    theSameClusterNameList.add(globalEntity);
                 } else {
-                    mapValueList = Lists.newArrayList(globalEntity);
-                    clusterEntityMap.put(clusterName, mapValueList);
+                    theSameClusterNameList = Lists.newArrayList(globalEntity);
+                    theSameClusterNameMap.put(clusterName, theSameClusterNameList);
                 }
             }
 
-            for (Map.Entry<String, List<Object>> entry : clusterEntityMap.entrySet()) {
+            for (Map.Entry<String, List<Object>> entry : theSameClusterNameMap.entrySet()) {
                 this.globalUpdater.updateBatch(entry.getValue(), entry.getKey());
             }
         }
 
         // handle sharding entity list.
         if (!shardingList.isEmpty()) {
-            Map<IShardingKey<?>, List<Object>> shardingEntityMap = Maps.newHashMap();
+            Map<IShardingKey<?>, List<Object>> theSameShardingKeyMap = Maps.newHashMap();
 
             ShardingKey<?> shardingKey = null;
             for (Object shardingEntity : shardingList) {
                 shardingKey = new ShardingKey(ReflectUtil.getClusterName(shardingEntity.getClass()),
                         ReflectUtil.getShardingValue(shardingEntity));
-                List<Object> shardingMapValueList = shardingEntityMap.get(shardingKey);
-                if (shardingMapValueList != null) {
-                    shardingMapValueList.add(shardingEntity);
+                List<Object> theSameShardingKeyList = theSameShardingKeyMap.get(shardingKey);
+                if (theSameShardingKeyList != null) {
+                    theSameShardingKeyList.add(shardingEntity);
                 } else {
-                    shardingMapValueList = Lists.newArrayList(shardingEntity);
-                    shardingEntityMap.put(shardingKey, shardingMapValueList);
+                    theSameShardingKeyList = Lists.newArrayList(shardingEntity);
+                    theSameShardingKeyMap.put(shardingKey, theSameShardingKeyList);
                 }
             }
 
-            for (Map.Entry<IShardingKey<?>, List<Object>> entry : shardingEntityMap.entrySet()) {
+            for (Map.Entry<IShardingKey<?>, List<Object>> entry : theSameShardingKeyMap.entrySet()) {
                 this.shardingUpdater.updateBatch(entry.getValue(), entry.getKey());
             }
         }
     }
 
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     @Override
     public void delete(Object entity) {
         if (entity == null) {
@@ -459,91 +461,164 @@ public class DefaultPinusClient implements PinusClient {
 
         // handle global entity list.
         if (!globalList.isEmpty()) {
-            Map<String, List<Object>> clusterEntityMap = Maps.newHashMap();
+
+            // filter the same cluster name
+            Map<String, List<Object>> theSameClusterNameMap = Maps.newHashMap();
 
             String clusterName = null;
             for (Object globalEntity : globalList) {
                 clusterName = ReflectUtil.getClusterName(globalEntity.getClass());
-                List<Object> mapValueList = clusterEntityMap.get(clusterName);
-                if (mapValueList != null) {
-                    mapValueList.add(globalEntity);
+                List<Object> theSameClusterNameList = theSameClusterNameMap.get(clusterName);
+                if (theSameClusterNameList != null) {
+                    theSameClusterNameList.add(globalEntity);
                 } else {
-                    mapValueList = Lists.newArrayList(globalEntity);
-                    clusterEntityMap.put(clusterName, mapValueList);
+                    theSameClusterNameList = Lists.newArrayList(globalEntity);
+                    theSameClusterNameMap.put(clusterName, theSameClusterNameList);
                 }
             }
 
-            for (Map.Entry<String, List<Object>> entry : clusterEntityMap.entrySet()) {
-                List<EntityPK> pks = Lists.newArrayList();
-                for (Object entity : entry.getValue()) {
-                    pks.add(ReflectUtil.getEntityPK(entity));
+            // filter the same class
+            for (Map.Entry<String, List<Object>> sameClusterNameEntry : theSameClusterNameMap.entrySet()) {
+                Map<Class<?>, List<Object>> theSameClassMap = Maps.newHashMap();
+                Class<?> clazz = null;
+                for (Object sameClusterNameEntity : sameClusterNameEntry.getValue()) {
+                    clazz = sameClusterNameEntity.getClass();
+                    List<Object> theSameClassList = theSameClassMap.get(clazz);
+                    if (theSameClassList != null) {
+                        theSameClassList.add(sameClusterNameEntity);
+                    } else {
+                        theSameClassMap.put(clazz, Lists.newArrayList(sameClusterNameEntity));
+                    }
+
+                    // do delete
+                    for (Map.Entry<Class<?>, List<Object>> sameClassEntry : theSameClassMap.entrySet()) {
+                        List<EntityPK> pks = Lists.newArrayList();
+                        for (Object sameClassEntity : sameClassEntry.getValue()) {
+                            pks.add(ReflectUtil.getEntityPK(sameClassEntity));
+                        }
+                        this.globalUpdater.removeByPks(pks, sameClassEntry.getKey(), sameClusterNameEntry.getKey());
+                    }
                 }
-                this.globalUpdater.removeByPks(pks, entry.getValue().get(0).getClass(), clusterName);
             }
         }
 
         // handle sharding entity list.
         if (!shardingList.isEmpty()) {
-            Map<IShardingKey<?>, List<Object>> shardingEntityMap = Maps.newHashMap();
+
+            // filter the same sharding key
+            Map<IShardingKey<?>, List<Object>> theSameShardingKeyMap = Maps.newHashMap();
 
             ShardingKey<?> shardingKey = null;
             for (Object shardingEntity : shardingList) {
                 shardingKey = new ShardingKey(ReflectUtil.getClusterName(shardingEntity.getClass()),
                         ReflectUtil.getShardingValue(shardingEntity));
-                List<Object> shardingMapValueList = shardingEntityMap.get(shardingKey);
-                if (shardingMapValueList != null) {
-                    shardingMapValueList.add(shardingEntity);
+                List<Object> theSameShardingKeyList = theSameShardingKeyMap.get(shardingKey);
+                if (theSameShardingKeyList != null) {
+                    theSameShardingKeyList.add(shardingEntity);
                 } else {
-                    shardingMapValueList = Lists.newArrayList(shardingEntity);
-                    shardingEntityMap.put(shardingKey, shardingMapValueList);
+                    theSameShardingKeyList = Lists.newArrayList(shardingEntity);
+                    theSameShardingKeyMap.put(shardingKey, theSameShardingKeyList);
                 }
             }
 
-            for (Map.Entry<IShardingKey<?>, List<Object>> entry : shardingEntityMap.entrySet()) {
-                List<EntityPK> pks = Lists.newArrayList();
-                for (Object entity : entry.getValue()) {
-                    pks.add(ReflectUtil.getEntityPK(entity));
+            // filter the same class
+            for (Map.Entry<IShardingKey<?>, List<Object>> sameShardingKeyEntry : theSameShardingKeyMap.entrySet()) {
+                Map<Class<?>, List<Object>> theSameClassMap = Maps.newHashMap();
+                Class<?> clazz = null;
+                for (Object sameShardingKeyEntity : sameShardingKeyEntry.getValue()) {
+                    clazz = sameShardingKeyEntity.getClass();
+                    List<Object> theSameClassList = theSameClassMap.get(clazz);
+                    if (theSameClassList != null) {
+                        theSameClassList.add(sameShardingKeyEntity);
+                    } else {
+                        theSameClassMap.put(clazz, Lists.newArrayList(sameShardingKeyEntity));
+                    }
+
+                    // do delete
+                    for (Map.Entry<Class<?>, List<Object>> sameClassEntry : theSameClassMap.entrySet()) {
+                        List<EntityPK> pks = Lists.newArrayList();
+                        for (Object sameClassEntity : sameClassEntry.getValue()) {
+                            pks.add(ReflectUtil.getEntityPK(sameClassEntity));
+                        }
+                        this.shardingUpdater.removeByPks(pks, sameShardingKeyEntry.getKey(), sameClassEntry.getKey());
+                    }
                 }
-                this.shardingUpdater.removeByPks(pks, entry.getKey(), entry.getValue().get(0).getClass());
             }
+
         }
 
     }
 
     @Override
     public void load(Object entity) {
-        // TODO Auto-generated method stub
-
+        load(entity, true, EnumDBMasterSlave.MASTER);
     }
 
     @Override
     public void load(Object entity, boolean useCache) {
-        // TODO Auto-generated method stub
-
+        load(entity, useCache, EnumDBMasterSlave.MASTER);
     }
 
     @Override
     public void load(Object entity, EnumDBMasterSlave masterSlave) {
-        // TODO Auto-generated method stub
-
+        load(entity, true, masterSlave);
     }
 
     @Override
     public void load(Object entity, boolean useCache, EnumDBMasterSlave masterSlave) {
-        // TODO Auto-generated method stub
+        if (entity == null) {
+            throw new IllegalArgumentException("param should not be null");
+        }
+
+        Object loadedEntity = null;
+
+        EntityPK entityPk = ReflectUtil.getEntityPK(entity);
+
+        Class<?> clazz = entity.getClass();
+        if (ReflectUtil.isShardingEntity(clazz)) {
+            loadedEntity = this.shardingQuery.findByPk(entityPk, clazz, useCache, masterSlave);
+        } else {
+            loadedEntity = this.globalQuery.findByPk(entityPk, clazz, useCache, masterSlave);
+        }
+
+        if (loadedEntity == null) {
+            throw new DBOperationException("找不到记录, pk=" + entityPk);
+        }
+
+        try {
+            ReflectUtil.copyProperties(loadedEntity, entity);
+        } catch (Exception e) {
+            throw new DBOperationException(e);
+        }
 
     }
 
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
     public IQuery createQuery(Class<?> clazz) {
-        // TODO Auto-generated method stub
-        return null;
+        ResultSetableQueryImpl query = new ResultSetableQueryImpl(clazz);
+        query.setGlobalQuery(this.globalQuery);
+        query.setShardingQuery(this.shardingQuery);
+        return query;
     }
 
     @Override
-    public <T> List<T> findBySQL(SQL sql) {
-        // TODO Auto-generated method stub
-        return null;
+    public List<Map<String, Object>> findBySQL(SQL sql, Class<?> clazz) {
+        if (sql == null) {
+            throw new IllegalArgumentException("param sql should not be null");
+        }
+        if (clazz == null) {
+            throw new IllegalArgumentException("param class should not be null");
+        }
+
+        CheckUtil.checkSQL(sql);
+        CheckUtil.checkClass(clazz);
+
+        if (ReflectUtil.isShardingEntity(clazz)) {
+            return this.shardingQuery.findBySql(sql, EnumDBMasterSlave.MASTER);
+        } else {
+            return this.globalQuery.findBySql(sql, clazz, EnumDBMasterSlave.MASTER);
+        }
     }
 
     @Override

@@ -25,21 +25,18 @@ import javax.transaction.xa.XAResource;
 
 import org.pinus4j.api.SQL;
 import org.pinus4j.api.query.IQuery;
+import org.pinus4j.api.query.impl.DefaultQueryImpl;
 import org.pinus4j.cluster.beans.IShardingKey;
 import org.pinus4j.cluster.enums.EnumDBMasterSlave;
 import org.pinus4j.cluster.resources.IDBResource;
 import org.pinus4j.cluster.resources.ShardingDBResource;
 import org.pinus4j.datalayer.query.IShardingQuery;
 import org.pinus4j.entity.meta.EntityPK;
-import org.pinus4j.entity.meta.PKName;
-import org.pinus4j.entity.meta.PKValue;
 import org.pinus4j.exceptions.DBClusterException;
 import org.pinus4j.exceptions.DBOperationException;
 import org.pinus4j.utils.ReflectUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.collect.Lists;
 
 /**
  * jdbc sharding query implements.
@@ -50,11 +47,6 @@ import com.google.common.collect.Lists;
 public class ShardingJdbcQueryImpl extends AbstractJdbcQuery implements IShardingQuery {
 
     public static final Logger LOG = LoggerFactory.getLogger(ShardingJdbcQueryImpl.class);
-
-    @Override
-    public Number getCount(Class<?> clazz, boolean useCache) {
-        return getCount(clazz, useCache, EnumDBMasterSlave.MASTER);
-    }
 
     @Override
     public Number getCount(Class<?> clazz, boolean useCache, EnumDBMasterSlave masterSlave) {
@@ -111,11 +103,6 @@ public class ShardingJdbcQueryImpl extends AbstractJdbcQuery implements IShardin
     }
 
     @Override
-    public Number getCount(IShardingKey<?> shardingKey, Class<?> clazz, boolean useCache) {
-        return getCount(shardingKey, clazz, useCache, EnumDBMasterSlave.MASTER);
-    }
-
-    @Override
     public Number getCount(IShardingKey<?> shardingKey, Class<?> clazz, boolean useCache, EnumDBMasterSlave masterSlave) {
         Transaction tx = null;
         ShardingDBResource dbResource = null;
@@ -157,11 +144,6 @@ public class ShardingJdbcQueryImpl extends AbstractJdbcQuery implements IShardin
                 dbResource.close();
             }
         }
-    }
-
-    @Override
-    public Number getCountByQuery(IQuery query, Class<?> clazz, boolean useCache) {
-        return getCountByQuery(query, clazz, useCache, EnumDBMasterSlave.MASTER);
     }
 
     @Override
@@ -218,11 +200,6 @@ public class ShardingJdbcQueryImpl extends AbstractJdbcQuery implements IShardin
     }
 
     @Override
-    public Number getCountByQuery(IQuery query, IShardingKey<?> shardingKey, Class<?> clazz, boolean useCache) {
-        return getCountByQuery(query, shardingKey, clazz, useCache, EnumDBMasterSlave.MASTER);
-    }
-
-    @Override
     public Number getCountByQuery(IQuery query, IShardingKey<?> shardingKey, Class<?> clazz, boolean useCache,
                                   EnumDBMasterSlave masterSlave) {
         Transaction tx = null;
@@ -269,12 +246,7 @@ public class ShardingJdbcQueryImpl extends AbstractJdbcQuery implements IShardin
     }
 
     @Override
-    public <T> T findByPk(PKValue pk, Class<T> clazz, boolean useCache) {
-        return findByPk(pk, clazz, useCache, EnumDBMasterSlave.MASTER);
-    }
-
-    @Override
-    public <T> T findByPk(PKValue pk, Class<T> clazz, boolean useCache, EnumDBMasterSlave masterSlave) {
+    public <T> T findByPk(EntityPK pk, Class<T> clazz, boolean useCache, EnumDBMasterSlave masterSlave) {
         Transaction tx = null;
         List<IDBResource> dbResources = null;
         try {
@@ -288,17 +260,13 @@ public class ShardingJdbcQueryImpl extends AbstractJdbcQuery implements IShardin
                 dbResources = this.dbCluster.getAllSlaveShardingDBResource(clazz, masterSlave);
             }
 
-            PKName[] pkNames = new PKName[] { ReflectUtil.getNotUnionPkName(clazz) };
-            PKValue[] pkValues = new PKValue[] { pk };
-
             T data = null;
             for (IDBResource dbResource : dbResources) {
                 if (tx != null) {
                     tx.enlistResource((ShardingDBResource) dbResource);
                 }
 
-                data = selectByPkWithCache((ShardingDBResource) dbResource, EntityPK.valueOf(pkNames, pkValues), clazz,
-                        useCache);
+                data = selectByPkWithCache((ShardingDBResource) dbResource, pk, clazz, useCache);
                 if (data != null) {
                     break;
                 }
@@ -312,8 +280,7 @@ public class ShardingJdbcQueryImpl extends AbstractJdbcQuery implements IShardin
                         tx.enlistResource((ShardingDBResource) dbResource);
                     }
 
-                    data = selectByPkWithCache((ShardingDBResource) dbResource, EntityPK.valueOf(pkNames, pkValues),
-                            clazz, useCache);
+                    data = selectByPkWithCache((ShardingDBResource) dbResource, pk, clazz, useCache);
                     if (data != null) {
                         break;
                     }
@@ -341,12 +308,7 @@ public class ShardingJdbcQueryImpl extends AbstractJdbcQuery implements IShardin
     }
 
     @Override
-    public <T> T findByPk(PKValue pk, IShardingKey<?> shardingKey, Class<T> clazz, boolean useCache) {
-        return findByPk(pk, shardingKey, clazz, useCache, EnumDBMasterSlave.MASTER);
-    }
-
-    @Override
-    public <T> T findByPk(PKValue pk, IShardingKey<?> shardingKey, Class<T> clazz, boolean useCache,
+    public <T> T findByPk(EntityPK pk, IShardingKey<?> shardingKey, Class<T> clazz, boolean useCache,
                           EnumDBMasterSlave masterSlave) {
         Transaction tx = null;
         ShardingDBResource dbResource = null;
@@ -365,15 +327,12 @@ public class ShardingJdbcQueryImpl extends AbstractJdbcQuery implements IShardin
                 tx.enlistResource(dbResource);
             }
 
-            PKName[] pkNames = new PKName[] { ReflectUtil.getNotUnionPkName(clazz) };
-            PKValue[] pkValues = new PKValue[] { pk };
-            
-            T data = selectByPkWithCache(dbResource, EntityPK.valueOf(pkNames, pkValues), clazz, useCache);
+            T data = selectByPkWithCache(dbResource, pk, clazz, useCache);
 
             // query from master again
             if (data == null) {
                 dbResource = _getDbFromMaster(clazz, shardingKey);
-                selectByPkWithCache(dbResource, EntityPK.valueOf(pkNames, pkValues), clazz, useCache);
+                selectByPkWithCache(dbResource, pk, clazz, useCache);
             }
 
             return data;
@@ -395,12 +354,7 @@ public class ShardingJdbcQueryImpl extends AbstractJdbcQuery implements IShardin
     }
 
     @Override
-    public <T> List<T> findByPkList(List<PKValue> pkList, Class<T> clazz, boolean useCache) {
-        return findByPkList(pkList, clazz, useCache, EnumDBMasterSlave.MASTER);
-    }
-
-    @Override
-    public <T> List<T> findByPkList(List<PKValue> pkList, Class<T> clazz, boolean useCache,
+    public <T> List<T> findByPkList(List<EntityPK> pkList, Class<T> clazz, boolean useCache,
                                     EnumDBMasterSlave masterSlave) {
         Transaction tx = null;
         List<IDBResource> dbResources = null;
@@ -415,12 +369,7 @@ public class ShardingJdbcQueryImpl extends AbstractJdbcQuery implements IShardin
                 dbResources = this.dbCluster.getAllSlaveShardingDBResource(clazz, masterSlave);
             }
 
-            List<EntityPK> entityPkList = Lists.newArrayList();
-            PKName[] pkNames = new PKName[] { ReflectUtil.getNotUnionPkName(clazz) };
-            for (PKValue pkValue : pkList) {
-                PKValue[] pkValues = new PKValue[] { pkValue };
-                entityPkList.add(EntityPK.valueOf(pkNames, pkValues));
-            }
+            EntityPK[] entityPkList = pkList.toArray(new EntityPK[pkList.size()]);
 
             List<T> data = new ArrayList<T>();
             for (IDBResource dbResource : dbResources) {
@@ -428,8 +377,7 @@ public class ShardingJdbcQueryImpl extends AbstractJdbcQuery implements IShardin
                     tx.enlistResource((ShardingDBResource) dbResource);
                 }
 
-                data.addAll(selectByPksWithCache((ShardingDBResource) dbResource, clazz,
-                        entityPkList.toArray(new EntityPK[entityPkList.size()]), useCache));
+                data.addAll(selectByPksWithCache((ShardingDBResource) dbResource, clazz, entityPkList, useCache));
             }
 
             // query from master again
@@ -440,8 +388,7 @@ public class ShardingJdbcQueryImpl extends AbstractJdbcQuery implements IShardin
                         tx.enlistResource((ShardingDBResource) dbResource);
                     }
 
-                    data.addAll(selectByPksWithCache((ShardingDBResource) dbResource, clazz,
-                            entityPkList.toArray(new EntityPK[entityPkList.size()]), useCache));
+                    data.addAll(selectByPksWithCache((ShardingDBResource) dbResource, clazz, entityPkList, useCache));
                 }
             }
 
@@ -466,12 +413,7 @@ public class ShardingJdbcQueryImpl extends AbstractJdbcQuery implements IShardin
     }
 
     @Override
-    public <T> List<T> findByPkList(List<PKValue> pkList, IShardingKey<?> shardingKey, Class<T> clazz, boolean useCache) {
-        return findByPkList(pkList, shardingKey, clazz, useCache, EnumDBMasterSlave.MASTER);
-    }
-
-    @Override
-    public <T> List<T> findByPkList(List<PKValue> pkList, IShardingKey<?> shardingKey, Class<T> clazz,
+    public <T> List<T> findByPkList(List<EntityPK> pkList, IShardingKey<?> shardingKey, Class<T> clazz,
                                     boolean useCache, EnumDBMasterSlave masterSlave) {
         Transaction tx = null;
         ShardingDBResource dbResource = null;
@@ -490,19 +432,13 @@ public class ShardingJdbcQueryImpl extends AbstractJdbcQuery implements IShardin
                 tx.enlistResource(dbResource);
             }
 
-            List<EntityPK> entityPkList = Lists.newArrayList();
-            PKName[] pkNames = new PKName[] { ReflectUtil.getNotUnionPkName(clazz) };
-            for (PKValue pkValue : pkList) {
-                PKValue[] pkValues = new PKValue[] {pkValue};
-                entityPkList.add(EntityPK.valueOf(pkNames, pkValues));
-            }
-            List<T> data = selectByPksWithCache(dbResource, clazz,
-                    entityPkList.toArray(new EntityPK[entityPkList.size()]), useCache);
+            EntityPK[] entityPkList = pkList.toArray(new EntityPK[pkList.size()]);
+
+            List<T> data = selectByPksWithCache(dbResource, clazz, entityPkList, useCache);
 
             if (data.isEmpty()) {
                 dbResource = _getDbFromMaster(clazz, shardingKey);
-                data = selectByPksWithCache(dbResource, clazz, entityPkList.toArray(new EntityPK[entityPkList.size()]),
-                        useCache);
+                data = selectByPksWithCache(dbResource, clazz, entityPkList, useCache);
             }
 
             return data;
@@ -524,11 +460,6 @@ public class ShardingJdbcQueryImpl extends AbstractJdbcQuery implements IShardin
     }
 
     @Override
-    public <T> T findOneByQuery(IQuery query, Class<T> clazz, boolean useCache) {
-        return findOneByQuery(query, clazz, useCache, EnumDBMasterSlave.MASTER);
-    }
-
-    @Override
     public <T> T findOneByQuery(IQuery query, Class<T> clazz, boolean useCache, EnumDBMasterSlave masterSlave) {
         List<T> entities = findByQuery(query, clazz, useCache, masterSlave);
 
@@ -537,11 +468,6 @@ public class ShardingJdbcQueryImpl extends AbstractJdbcQuery implements IShardin
         }
 
         return entities.get(0);
-    }
-
-    @Override
-    public <T> T findOneByQuery(IQuery query, IShardingKey<?> shardingKey, Class<T> clazz, boolean useCache) {
-        return findOneByQuery(query, shardingKey, clazz, useCache, EnumDBMasterSlave.MASTER);
     }
 
     @Override
@@ -554,11 +480,6 @@ public class ShardingJdbcQueryImpl extends AbstractJdbcQuery implements IShardin
         }
 
         return entities.get(0);
-    }
-
-    @Override
-    public <T> List<T> findByQuery(IQuery query, Class<T> clazz, boolean useCache) {
-        return findByQuery(query, clazz, useCache, EnumDBMasterSlave.MASTER);
     }
 
     @Override
@@ -598,10 +519,12 @@ public class ShardingJdbcQueryImpl extends AbstractJdbcQuery implements IShardin
             //            });
 
             List<T> result = null;
-            if (query.getStart() > -1 && query.getLimit() > -1) {
-                result = mergeResult.subList(query.getStart(), query.getStart() + query.getLimit());
-            } else if (query.getLimit() > -1) {
-                result = mergeResult.subList(0, query.getLimit());
+            int start = ((DefaultQueryImpl) query).getStart();
+            int limit = ((DefaultQueryImpl) query).getLimit();
+            if (start > -1 && limit > -1) {
+                result = mergeResult.subList(start, start + limit);
+            } else if (limit > -1) {
+                result = mergeResult.subList(0, limit);
             } else {
                 result = mergeResult;
             }
@@ -611,11 +534,6 @@ public class ShardingJdbcQueryImpl extends AbstractJdbcQuery implements IShardin
             throw new DBOperationException(e);
         }
 
-    }
-
-    @Override
-    public <T> List<T> findByQuery(IQuery query, IShardingKey<?> shardingKey, Class<T> clazz, boolean useCache) {
-        return findByQuery(query, shardingKey, clazz, useCache, EnumDBMasterSlave.MASTER);
     }
 
     @Override
@@ -642,6 +560,7 @@ public class ShardingJdbcQueryImpl extends AbstractJdbcQuery implements IShardin
         return data;
     }
 
+    @SuppressWarnings("unchecked")
     private <T> List<T> findByQuery(IQuery query, IDBResource dbResource, Class<T> clazz, boolean useCache,
                                     EnumDBMasterSlave masterSlave) {
         Transaction tx = null;
@@ -657,7 +576,8 @@ public class ShardingJdbcQueryImpl extends AbstractJdbcQuery implements IShardin
             List<T> result = null;
 
             if (isSecondCacheAvailable(clazz, useCache)) {
-                result = (List<T>) secondCache.get(query.getWhereSql(), (ShardingDBResource) dbResource);
+                result = (List<T>) secondCache.get(((DefaultQueryImpl) query).getWhereSql(),
+                        (ShardingDBResource) dbResource);
             }
 
             if (result == null || result.isEmpty()) {
@@ -669,15 +589,16 @@ public class ShardingJdbcQueryImpl extends AbstractJdbcQuery implements IShardin
                 }
 
                 if (isSecondCacheAvailable(clazz, useCache)) {
-                    secondCache.put(query.getWhereSql(), (ShardingDBResource) dbResource, result);
+                    secondCache.put(((DefaultQueryImpl) query).getWhereSql(), (ShardingDBResource) dbResource, result);
                 }
             }
             // 过滤从缓存结果, 将没有指定的字段设置为默认值.
             List<T> filteResult = new ArrayList<T>(result.size());
-            if (query.hasQueryFields()) {
+            if (((DefaultQueryImpl) query).hasQueryFields()) {
                 for (T obj : result) {
                     try {
-                        filteResult.add((T) ReflectUtil.cloneWithGivenField(obj, query.getFields()));
+                        filteResult
+                                .add((T) ReflectUtil.cloneWithGivenField(obj, ((DefaultQueryImpl) query).getFields()));
                     } catch (Exception e) {
                         throw new DBOperationException(e);
                     }
@@ -704,18 +625,8 @@ public class ShardingJdbcQueryImpl extends AbstractJdbcQuery implements IShardin
     }
 
     @Override
-    public List<Map<String, Object>> findBySql(SQL sql) {
-        return findBySql(sql, EnumDBMasterSlave.MASTER);
-    }
-
-    @Override
     public List<Map<String, Object>> findBySql(SQL sql, EnumDBMasterSlave masterSlave) {
         throw new UnsupportedOperationException("not support");
-    }
-
-    @Override
-    public List<Map<String, Object>> findBySql(SQL sql, IShardingKey<?> shardingKey) {
-        return findBySql(sql, shardingKey, EnumDBMasterSlave.MASTER);
     }
 
     @Override

@@ -24,7 +24,7 @@ import java.util.concurrent.locks.Lock;
 import javax.transaction.TransactionManager;
 
 import org.pinus4j.api.query.IQuery;
-import org.pinus4j.api.query.QueryImpl;
+import org.pinus4j.api.query.impl.DefaultQueryImpl;
 import org.pinus4j.cluster.IDBCluster;
 import org.pinus4j.cluster.IDBClusterBuilder;
 import org.pinus4j.cluster.beans.IShardingKey;
@@ -391,14 +391,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 
     @Override
     public Number getCount(Class<?> clazz, boolean useCache) {
-        CheckUtil.checkClass(clazz);
-
-        if (ReflectUtil.isShardingEntity(clazz)) {
-            return this.shardingQuery.getCount(clazz, useCache);
-        } else {
-            return this.globalQuery.getCount(clazz, useCache);
-        }
-
+        return getCount(clazz, useCache, EnumDBMasterSlave.MASTER);
     }
 
     @Override
@@ -424,10 +417,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 
     @Override
     public Number getCount(IShardingKey<?> shardingKey, Class<?> clazz, boolean useCache) {
-        CheckUtil.checkShardingKey(shardingKey);
-        CheckUtil.checkClass(clazz);
-
-        return this.shardingQuery.getCount(shardingKey, clazz, useCache);
+        return getCount(shardingKey, clazz, useCache, EnumDBMasterSlave.MASTER);
     }
 
     @Override
@@ -450,13 +440,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 
     @Override
     public Number getCountByQuery(Class<?> clazz, IQuery query, boolean useCache) {
-        CheckUtil.checkClass(clazz);
-
-        if (ReflectUtil.isShardingEntity(clazz)) {
-            return this.shardingQuery.getCountByQuery(query, clazz, useCache);
-        } else {
-            return this.globalQuery.getCountByQuery(query, clazz, useCache);
-        }
+        return getCountByQuery(clazz, query, useCache, EnumDBMasterSlave.MASTER);
     }
 
     @Override
@@ -482,10 +466,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 
     @Override
     public Number getCountByQuery(IQuery query, IShardingKey<?> shardingKey, Class<?> clazz, boolean useCache) {
-        CheckUtil.checkClass(clazz);
-        CheckUtil.checkShardingKey(shardingKey);
-
-        return this.shardingQuery.getCountByQuery(query, shardingKey, clazz, useCache);
+        return getCountByQuery(query, shardingKey, clazz, useCache, EnumDBMasterSlave.MASTER);
     }
 
     @Override
@@ -510,13 +491,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 
     @Override
     public <T> T findByPk(Number pk, Class<T> clazz, boolean useCache) {
-        CheckUtil.checkClass(clazz);
-
-        if (ReflectUtil.isShardingEntity(clazz)) {
-            return this.shardingQuery.findByPk(PKValue.valueOf(pk), clazz, useCache);
-        } else {
-            return this.globalQuery.getByPk(PKValue.valueOf(pk), clazz, useCache);
-        }
+        return findByPk(pk, clazz, useCache, EnumDBMasterSlave.MASTER);
     }
 
     @Override
@@ -528,10 +503,13 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
     public <T> T findByPk(Number pk, Class<T> clazz, boolean useCache, EnumDBMasterSlave masterSlave) {
         CheckUtil.checkClass(clazz);
 
+        PKName[] pkNames = new PKName[] { ReflectUtil.getNotUnionPkName(clazz) };
+        PKValue[] pkValues = new PKValue[] { PKValue.valueOf(pk) };
+
         if (ReflectUtil.isShardingEntity(clazz)) {
-            return this.shardingQuery.findByPk(PKValue.valueOf(pk), clazz, useCache, masterSlave);
+            return this.shardingQuery.findByPk(EntityPK.valueOf(pkNames, pkValues), clazz, useCache, masterSlave);
         } else {
-            return this.globalQuery.getByPk(PKValue.valueOf(pk), clazz, useCache, masterSlave);
+            return this.globalQuery.findByPk(EntityPK.valueOf(pkNames, pkValues), clazz, useCache, masterSlave);
         }
     }
 
@@ -542,13 +520,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 
     @Override
     public <T> List<T> findByPkList(List<? extends Number> pkList, Class<T> clazz, boolean useCache) {
-        CheckUtil.checkClass(clazz);
-
-        if (ReflectUtil.isShardingEntity(clazz)) {
-            return this.shardingQuery.findByPkList(PKUtil.parsePKValueList(pkList), clazz, useCache);
-        } else {
-            return this.globalQuery.findByPkList(PKUtil.parsePKValueList(pkList), clazz, useCache);
-        }
+        return findByPkList(pkList, clazz, useCache, EnumDBMasterSlave.MASTER);
     }
 
     @Override
@@ -561,10 +533,17 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
                                     EnumDBMasterSlave masterSlave) {
         CheckUtil.checkClass(clazz);
 
+        List<EntityPK> entityPkList = Lists.newArrayList();
+        PKName[] pkNames = new PKName[] { ReflectUtil.getNotUnionPkName(clazz) };
+        for (Number pkValue : pkList) {
+            PKValue[] pkValues = new PKValue[] { PKValue.valueOf(pkValue) };
+            entityPkList.add(EntityPK.valueOf(pkNames, pkValues));
+        }
+
         if (ReflectUtil.isShardingEntity(clazz)) {
-            return this.shardingQuery.findByPkList(PKUtil.parsePKValueList(pkList), clazz, useCache, masterSlave);
+            return this.shardingQuery.findByPkList(entityPkList, clazz, useCache, masterSlave);
         } else {
-            return this.globalQuery.findByPkList(PKUtil.parsePKValueList(pkList), clazz, useCache, masterSlave);
+            return this.globalQuery.findByPkList(entityPkList, clazz, useCache, masterSlave);
         }
     }
 
@@ -575,13 +554,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 
     @Override
     public <T> T findOneByQuery(IQuery query, Class<T> clazz, boolean useCache) {
-        CheckUtil.checkClass(clazz);
-
-        if (ReflectUtil.isShardingEntity(clazz)) {
-            return this.shardingQuery.findOneByQuery(query, clazz, useCache);
-        } else {
-            return this.globalQuery.findOneByQuery(query, clazz, useCache);
-        }
+        return findOneByQuery(query, clazz, useCache, EnumDBMasterSlave.MASTER);
     }
 
     @Override
@@ -607,13 +580,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 
     @Override
     public <T> List<T> findByQuery(IQuery query, Class<T> clazz, boolean useCache) {
-        CheckUtil.checkClass(clazz);
-
-        if (ReflectUtil.isShardingEntity(clazz)) {
-            return this.shardingQuery.findByQuery(query, clazz, useCache);
-        } else {
-            return this.globalQuery.findByQuery(query, clazz, useCache);
-        }
+        return findByQuery(query, clazz, useCache, EnumDBMasterSlave.MASTER);
     }
 
     @Override
@@ -634,14 +601,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 
     @Override
     public List<Map<String, Object>> findBySql(SQL sql, Class<?> clazz) {
-        CheckUtil.checkSQL(sql);
-        CheckUtil.checkClass(clazz);
-
-        if (ReflectUtil.isShardingEntity(clazz)) {
-            return this.shardingQuery.findBySql(sql);
-        } else {
-            return this.globalQuery.findBySql(sql, clazz);
-        }
+        return findBySql(sql, clazz, EnumDBMasterSlave.MASTER);
     }
 
     @Override
@@ -663,11 +623,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 
     @Override
     public <T> T findByPk(Number pk, IShardingKey<?> shardingKey, Class<T> clazz, boolean useCache) {
-        CheckUtil.checkNumberGtZero(pk);
-        CheckUtil.checkShardingKey(shardingKey);
-        CheckUtil.checkClass(clazz);
-
-        return this.shardingQuery.findByPk(PKValue.valueOf(pk), shardingKey, clazz, useCache);
+        return findByPk(pk, shardingKey, clazz, useCache, EnumDBMasterSlave.MASTER);
     }
 
     @Override
@@ -682,7 +638,11 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
         CheckUtil.checkShardingKey(shardingKey);
         CheckUtil.checkClass(clazz);
 
-        return this.shardingQuery.findByPk(PKValue.valueOf(pk), shardingKey, clazz, useCache, masterSlave);
+        PKName[] pkNames = new PKName[] { ReflectUtil.getNotUnionPkName(clazz) };
+        PKValue[] pkValues = new PKValue[] { PKValue.valueOf(pk) };
+
+        return this.shardingQuery.findByPk(EntityPK.valueOf(pkNames, pkValues), shardingKey, clazz, useCache,
+                masterSlave);
     }
 
     @Override
@@ -693,11 +653,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
     @Override
     public <T> List<T> findByPkList(List<? extends Number> pkList, IShardingKey<?> shardingKey, Class<T> clazz,
                                     boolean useCache) {
-        CheckUtil.checkNumberList(pkList);
-        CheckUtil.checkShardingKey(shardingKey);
-        CheckUtil.checkClass(clazz);
-
-        return this.shardingQuery.findByPkList(PKUtil.parsePKValueList(pkList), shardingKey, clazz, useCache);
+        return findByPkList(pkList, shardingKey, clazz, useCache, EnumDBMasterSlave.MASTER);
     }
 
     @Override
@@ -713,8 +669,14 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
         CheckUtil.checkShardingKey(shardingKey);
         CheckUtil.checkClass(clazz);
 
-        return this.shardingQuery.findByPkList(PKUtil.parsePKValueList(pkList), shardingKey, clazz, useCache,
-                masterSlave);
+        List<EntityPK> entityPkList = Lists.newArrayList();
+        PKName[] pkNames = new PKName[] { ReflectUtil.getNotUnionPkName(clazz) };
+        for (Number pkValue : pkList) {
+            PKValue[] pkValues = new PKValue[] { PKValue.valueOf(pkValue) };
+            entityPkList.add(EntityPK.valueOf(pkNames, pkValues));
+        }
+
+        return this.shardingQuery.findByPkList(entityPkList, shardingKey, clazz, useCache, masterSlave);
     }
 
     @Override
@@ -724,10 +686,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 
     @Override
     public <T> T findOneByQuery(IQuery query, IShardingKey<?> shardingKey, Class<T> clazz, boolean useCache) {
-        CheckUtil.checkShardingKey(shardingKey);
-        CheckUtil.checkClass(clazz);
-
-        return this.shardingQuery.findOneByQuery(query, shardingKey, clazz, useCache);
+        return findOneByQuery(query, shardingKey, clazz, useCache, EnumDBMasterSlave.MASTER);
     }
 
     @Override
@@ -751,11 +710,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 
     @Override
     public <T> List<T> findByQuery(IQuery query, IShardingKey<?> shardingKey, Class<T> clazz, boolean useCache) {
-        CheckUtil.checkQuery(query);
-        CheckUtil.checkShardingKey(shardingKey);
-        CheckUtil.checkClass(clazz);
-
-        return this.shardingQuery.findByQuery(query, shardingKey, clazz, useCache);
+        return findByQuery(query, shardingKey, clazz, useCache, EnumDBMasterSlave.MASTER);
     }
 
     @Override
@@ -776,10 +731,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 
     @Override
     public List<Map<String, Object>> findBySql(SQL sql, IShardingKey<?> shardingKey) {
-        CheckUtil.checkShardingKey(shardingKey);
-        CheckUtil.checkSQL(sql);
-
-        return this.shardingQuery.findBySql(sql, shardingKey);
+        return findBySql(sql, shardingKey, EnumDBMasterSlave.MASTER);
     }
 
     @Override
@@ -835,7 +787,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 
     @Override
     public IQuery createQuery() {
-        IQuery query = new QueryImpl();
+        IQuery query = new DefaultQueryImpl();
         return query;
     }
 

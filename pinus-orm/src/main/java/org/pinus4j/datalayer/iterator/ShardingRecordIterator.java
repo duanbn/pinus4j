@@ -19,10 +19,10 @@ package org.pinus4j.datalayer.iterator;
 import java.sql.SQLException;
 import java.util.List;
 
-import org.pinus4j.api.query.Condition;
 import org.pinus4j.api.query.IQuery;
-import org.pinus4j.api.query.Order;
-import org.pinus4j.api.query.QueryImpl;
+import org.pinus4j.api.query.impl.Condition;
+import org.pinus4j.api.query.impl.Order;
+import org.pinus4j.api.query.impl.DefaultQueryImpl;
 import org.pinus4j.cluster.resources.ShardingDBResource;
 import org.pinus4j.exceptions.DBOperationException;
 import org.pinus4j.utils.ReflectUtil;
@@ -51,8 +51,8 @@ public class ShardingRecordIterator<E> extends AbstractRecordIterator<E> {
     public long getMaxId() {
         long maxId = 0;
 
-        IQuery query = new QueryImpl();
-        query.limit(1).orderBy(pkName, Order.DESC,clazz);
+        IQuery query = new DefaultQueryImpl();
+        query.limit(1).orderBy(pkName, Order.DESC, clazz);
         List<E> one;
         try {
             one = selectByQuery(dbResource, query, clazz);
@@ -81,7 +81,7 @@ public class ShardingRecordIterator<E> extends AbstractRecordIterator<E> {
     @Override
     public boolean hasNext() {
         if (this.recordQ.isEmpty()) {
-            IQuery query = this.query.clone();
+            IQuery query = ((DefaultQueryImpl) this.query).clone();
             long high = this.latestId + step;
             query.add(Condition.gte(pkName, latestId, clazz)).add(Condition.lt(pkName, high, clazz));
             try {
@@ -89,7 +89,7 @@ public class ShardingRecordIterator<E> extends AbstractRecordIterator<E> {
                 this.latestId = high;
 
                 while (recrods.isEmpty() && this.latestId < maxId) {
-                    query = this.query.clone();
+                    query = ((DefaultQueryImpl) this.query).clone();
                     high = this.latestId + step;
                     query.add(Condition.gte(pkName, this.latestId, clazz)).add(Condition.lt(pkName, high, clazz));
                     recrods = selectByQuery(dbResource, query, clazz);

@@ -9,11 +9,13 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.pinus4j.BaseTest;
 import org.pinus4j.api.IShardingStorageClient;
-import org.pinus4j.api.query.Condition;
 import org.pinus4j.api.query.IQuery;
+import org.pinus4j.api.query.impl.Condition;
+import org.pinus4j.api.query.impl.DefaultQueryImpl;
 import org.pinus4j.cluster.beans.IShardingKey;
 import org.pinus4j.cluster.beans.ShardingKey;
 import org.pinus4j.cluster.resources.ShardingDBResource;
+import org.pinus4j.entity.TestEntity;
 import org.pinus4j.exceptions.DBClusterException;
 
 public class RedisSecondCacheImplTest extends BaseTest {
@@ -30,8 +32,8 @@ public class RedisSecondCacheImplTest extends BaseTest {
         secondCache = storageClient.getDBCluster().getSecondCache();
 
         query = storageClient.createQuery();
-        query.add(Condition.eq("aa", "aa"));
-        query.add(Condition.eq("bb", "bb"));
+        query.add(Condition.eq("aa", "aa", TestEntity.class));
+        query.add(Condition.eq("bb", "bb", TestEntity.class));
 
         IShardingKey<?> shardingValue = new ShardingKey<Integer>(CLUSTER_KLSTORAGE, 1);
         try {
@@ -53,15 +55,15 @@ public class RedisSecondCacheImplTest extends BaseTest {
         List<String> data = new ArrayList<String>();
         data.add("aaa");
         data.add("bbb");
-        secondCache.putGlobal(query.getWhereSql(), CLUSTER_KLSTORAGE, "testglobalentity", data);
+        secondCache.putGlobal(((DefaultQueryImpl) query).getWhereSql(), CLUSTER_KLSTORAGE, "testglobalentity", data);
 
-        data = secondCache.getGlobal(query.getWhereSql(), CLUSTER_KLSTORAGE, "testglobalentity");
+        data = secondCache.getGlobal(((DefaultQueryImpl) query).getWhereSql(), CLUSTER_KLSTORAGE, "testglobalentity");
         Assert.assertEquals("aaa", data.get(0));
         Assert.assertEquals("bbb", data.get(1));
 
         secondCache.removeGlobal(CLUSTER_KLSTORAGE, "testglobalentity");
 
-        data = secondCache.getGlobal(query.getWhereSql(), CLUSTER_KLSTORAGE, "testglobalentity");
+        data = secondCache.getGlobal(((DefaultQueryImpl) query).getWhereSql(), CLUSTER_KLSTORAGE, "testglobalentity");
         Assert.assertNull(data);
     }
 
@@ -70,15 +72,15 @@ public class RedisSecondCacheImplTest extends BaseTest {
         List<String> data = new ArrayList<String>();
         data.add("ccc");
         data.add("ddd");
-        secondCache.put(query.getWhereSql(), db, data);
+        secondCache.put(((DefaultQueryImpl) query).getWhereSql(), db, data);
 
-        data = secondCache.get(query.getWhereSql(), db);
+        data = secondCache.get(((DefaultQueryImpl) query).getWhereSql(), db);
         Assert.assertEquals("ccc", data.get(0));
         Assert.assertEquals("ddd", data.get(1));
 
         secondCache.remove(db);
 
-        data = secondCache.getGlobal(query.getWhereSql(), CLUSTER_KLSTORAGE, "testglobalentity");
+        data = secondCache.getGlobal(((DefaultQueryImpl) query).getWhereSql(), CLUSTER_KLSTORAGE, "testglobalentity");
         Assert.assertNull(data);
     }
 

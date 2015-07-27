@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-package org.pinus4j.api.query;
+package org.pinus4j.api.query.impl;
+
 
 /**
  * 查询条件操作符枚举.

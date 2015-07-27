@@ -50,4 +50,12 @@ public class ReflectUtilTest extends BaseTest {
         Assert.assertNull(clone.getTestString());
     }
 
+    @Test
+    public void testCopyProperties() throws Exception {
+        TestEntity source = createEntity();
+        TestEntity target = new TestEntity();
+        ReflectUtil.copyProperties(source, target);
+        Assert.assertEquals(source, target);
+    }
+
 }

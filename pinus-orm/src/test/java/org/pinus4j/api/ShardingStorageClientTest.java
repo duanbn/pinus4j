@@ -10,8 +10,8 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.pinus4j.BaseTest;
-import org.pinus4j.api.query.Condition;
 import org.pinus4j.api.query.IQuery;
+import org.pinus4j.api.query.impl.Condition;
 import org.pinus4j.cluster.beans.IShardingKey;
 import org.pinus4j.cluster.beans.ShardingKey;
 import org.pinus4j.entity.TestEntity;
@@ -63,7 +63,7 @@ public class ShardingStorageClientTest extends BaseTest {
         storageClient.globalUpdateBatch(globalEntities, CLUSTER_KLSTORAGE);
 
         globalQuery = storageClient.createQuery();
-        globalQuery.add(Condition.eq("testString", "i am a global entity batch"));
+        globalQuery.add(Condition.eq("testString", "i am a global entity batch", TestGlobalEntity.class));
 
         // save and update one
         shardingEntity1 = createEntity();
@@ -91,7 +91,7 @@ public class ShardingStorageClientTest extends BaseTest {
         storageClient.updateBatch(shardingEntities, manyKey);
 
         shardingQuery = storageClient.createQuery();
-        shardingQuery.add(Condition.eq("testString", "i am a sharding entity batch"));
+        shardingQuery.add(Condition.eq("testString", "i am a sharding entity batch", TestEntity.class));
     }
 
     /**

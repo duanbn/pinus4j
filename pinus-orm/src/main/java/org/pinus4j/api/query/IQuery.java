@@ -18,6 +18,10 @@ package org.pinus4j.api.query;
 
 import java.util.List;
 
+import org.pinus4j.api.query.impl.Condition;
+import org.pinus4j.api.query.impl.Order;
+import org.pinus4j.cluster.enums.EnumDBMasterSlave;
+
 /**
  * 查询对象.
  * 
@@ -25,35 +29,35 @@ import java.util.List;
  */
 public interface IQuery {
 
+    /**
+     * 获取此Query查询到的结果集.
+     * 
+     * @return
+     */
     public <T> List<T> list();
 
-    public long count();
-
     /**
-     * get value of start.
+     * 获取此Query查询到的结果集数量.
      * 
      * @return
      */
-    public int getStart();
+    public Number count();
 
     /**
-     * get value of limit
+     * 设置查询主从库.
      * 
+     * @param masterSlave
      * @return
      */
-    public int getLimit();
+    public IQuery setMasterSlave(EnumDBMasterSlave masterSlave);
 
     /**
-     * 判断是否有查询字段.
+     * 设置查询是否使用缓存
+     * 
+     * @param useCache
+     * @return
      */
-    public boolean hasQueryFields();
-
-    /**
-     * 获取此对象的复制对象.
-     *
-     * @return 此对象实例的复制
-     */
-    public IQuery clone();
+    public IQuery setUseCache(boolean useCache);
 
     /**
      * 添加取值字段.
@@ -70,21 +74,7 @@ public interface IQuery {
      * @param field 获取值的字段
      * @return
      */
-    public IQuery setFields(Class<?> clazz,String... field);
-
-    /**
-     * 获取取值字段.
-     * 
-     * @return
-     */
-    public String[] getFields();
-
-    /**
-     * 返回查询条件的sql语句.
-     * 
-     * @return 查询条件sql
-     */
-    public String getWhereSql();
+    public IQuery setFields(Class<?> clazz, String... field);
 
     /**
      * 添加查询条件.
@@ -99,7 +89,7 @@ public interface IQuery {
      * @param field 被排序字段
      * @param order 升序降序
      */
-    public IQuery orderBy(String field, Order order,Class<?> clazz);
+    public IQuery orderBy(String field, Order order, Class<?> clazz);
 
     /**
      * 分页参数.

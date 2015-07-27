@@ -17,6 +17,7 @@
 package org.pinus4j.api;
 
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.locks.Lock;
 
 import org.pinus4j.api.query.IQuery;
@@ -108,7 +109,7 @@ public interface PinusClient {
 
     public IQuery createQuery(Class<?> clazz);
 
-    public <T> List<T> findBySQL(SQL sql);
+    public List<Map<String, Object>> findBySQL(SQL sql, Class<?> clazz);
 
     /**********************************************************
      * other相关

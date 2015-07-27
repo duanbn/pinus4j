@@ -14,13 +14,32 @@
  * limitations under the License.
  */
 
-package org.pinus4j.api.query;
+package org.pinus4j.api.query.impl;
 
 /**
- * SQL查询
- * 
- * @author shanwei Jul 26, 2015 3:56:21 PM
+ * 数据库排序枚举.
+ *
+ * @author duanbn
  */
-public interface ISQL {
+public enum Order {
+
+    /**
+     * 升序.
+     */
+    ASC("asc"),
+    /**
+     * 降序.
+     */
+    DESC("desc");
+
+    private String value;
+
+    private Order(String value) {
+        this.value = value;
+    }
+
+    public String getValue() {
+        return this.value;
+    }
 
 }

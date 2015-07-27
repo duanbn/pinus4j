@@ -14,11 +14,13 @@
  * limitations under the License.
  */
 
-package org.pinus4j.api.query;
+package org.pinus4j.api.query.impl;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import org.pinus4j.api.query.IQuery;
+import org.pinus4j.cluster.enums.EnumDBMasterSlave;
 import org.pinus4j.utils.ReflectUtil;
 import org.pinus4j.utils.StringUtils;
 
@@ -27,7 +29,7 @@ import org.pinus4j.utils.StringUtils;
  * 
  * @author duanbn
  */
-public class QueryImpl implements IQuery, Cloneable {
+public class DefaultQueryImpl implements IQuery, Cloneable {
 
     /**
      * 保存取值的字段.
@@ -55,40 +57,22 @@ public class QueryImpl implements IQuery, Cloneable {
 
     @Override
     public <T> List<T> list() {
-        // TODO Auto-generated method stub
-        return null;
+        throw new UnsupportedOperationException("not support");
     }
 
     @Override
-    public long count() {
-        // TODO Auto-generated method stub
-        return 0;
+    public Number count() {
+        throw new UnsupportedOperationException("not support");
     }
 
     @Override
-    public int getStart() {
-        return this.start;
+    public IQuery setMasterSlave(EnumDBMasterSlave masterSlave) {
+        throw new UnsupportedOperationException("not support");
     }
 
     @Override
-    public int getLimit() {
-        return this.limit;
-    }
-
-    @Override
-    public boolean hasQueryFields() {
-        return this.fields != null && this.fields.length > 0;
-    }
-
-    @Override
-    public IQuery clone() {
-        QueryImpl clone = new QueryImpl();
-        clone.setFields(this.fields);
-        clone.setCondList(new ArrayList<Condition>(this.condList));
-        clone.setOrderList(new ArrayList<OrderBy>(this.orderList));
-        clone.setStart(this.start);
-        clone.setLimit(this.limit);
-        return clone;
+    public IQuery setUseCache(boolean useCache) {
+        throw new UnsupportedOperationException("not support");
     }
 
     @Override
@@ -100,23 +84,88 @@ public class QueryImpl implements IQuery, Cloneable {
     }
 
     @Override
-    public IQuery setFields(Class<?> clazz,String... fields) {
+    public IQuery setFields(Class<?> clazz, String... fields) {
         if (fields != null && fields.length > 0) {
-            for(String field :fields){
-                field= ReflectUtil.getFieldName(ReflectUtil.getField(clazz, field));
+            for (String field : fields) {
+                field = ReflectUtil.getFieldName(ReflectUtil.getField(clazz, field));
             }
             this.fields = fields;
         }
         return this;
     }
 
+    @Override
+    public IQuery add(Condition cond) {
+        if (cond == null) {
+            throw new IllegalArgumentException("参数错误, cond=null");
+        }
+
+        condList.add(cond);
+        return this;
+    }
 
     @Override
+    public IQuery orderBy(String field, Order order, Class<?> clazz) {
+        if (StringUtils.isBlank(field)) {
+            throw new IllegalArgumentException("参数错误, field=" + field);
+        }
+        if (order == null) {
+            throw new IllegalArgumentException("参数错误, order=null");
+        }
+
+        orderList.add(new OrderBy(field, order, clazz));
+        return this;
+    }
+
+    @Override
+    public IQuery limit(int start, int limit) {
+        if (start < 0 || limit <= 0) {
+            throw new IllegalArgumentException("分页参数错误, start" + start + ", limit=" + limit);
+        }
+
+        this.start = start;
+        this.limit = limit;
+
+        return this;
+    }
+
+    @Override
+    public IQuery limit(int limit) {
+        if (limit <= 0) {
+            throw new IllegalArgumentException("设置limit参数错误， limit=" + limit);
+        }
+
+        this.limit = limit;
+
+        return this;
+    }
+
+    public int getStart() {
+        return this.start;
+    }
+
+    public int getLimit() {
+        return this.limit;
+    }
+
+    public boolean hasQueryFields() {
+        return this.fields != null && this.fields.length > 0;
+    }
+
+    public IQuery clone() {
+        DefaultQueryImpl clone = new DefaultQueryImpl();
+        clone.setFields(this.fields);
+        clone.setCondList(new ArrayList<Condition>(this.condList));
+        clone.setOrderList(new ArrayList<OrderBy>(this.orderList));
+        clone.setStart(this.start);
+        clone.setLimit(this.limit);
+        return clone;
+    }
+
     public String[] getFields() {
         return this.fields;
     }
 
-    @Override
     public String getWhereSql() {
         StringBuilder SQL = new StringBuilder();
         // 添加查询条件
@@ -145,52 +194,6 @@ public class QueryImpl implements IQuery, Cloneable {
             SQL.append(" LIMIT ").append(limit);
         }
         return SQL.toString();
-    }
-
-    @Override
-    public IQuery add(Condition cond) {
-        if (cond == null) {
-            throw new IllegalArgumentException("参数错误, cond=null");
-        }
-
-        condList.add(cond);
-        return this;
-    }
-
-    @Override
-    public IQuery orderBy(String field, Order order,Class<?> clazz) {
-        if (StringUtils.isBlank(field)) {
-            throw new IllegalArgumentException("参数错误, field=" + field);
-        }
-        if (order == null) {
-            throw new IllegalArgumentException("参数错误, order=null");
-        }
-
-        orderList.add(new OrderBy(field, order,clazz));
-        return this;
-    }
-
-    @Override
-    public IQuery limit(int start, int limit) {
-        if (start < 0 || limit <= 0) {
-            throw new IllegalArgumentException("分页参数错误, start" + start + ", limit=" + limit);
-        }
-
-        this.start = start;
-        this.limit = limit;
-
-        return this;
-    }
-
-    @Override
-    public IQuery limit(int limit) {
-        if (limit <= 0) {
-            throw new IllegalArgumentException("设置limit参数错误， limit=" + limit);
-        }
-
-        this.limit = limit;
-
-        return this;
     }
 
     @Override
@@ -232,7 +235,7 @@ public class QueryImpl implements IQuery, Cloneable {
         private String field;
         private Order  order;
 
-        public OrderBy(String field, Order order,Class<?> clazz) {
+        public OrderBy(String field, Order order, Class<?> clazz) {
             this.field = ReflectUtil.getFieldName(ReflectUtil.getField(clazz, field));
             this.order = order;
         }

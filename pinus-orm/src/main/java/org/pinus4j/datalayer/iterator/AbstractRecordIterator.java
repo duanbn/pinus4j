@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.Queue;
 
 import org.pinus4j.api.query.IQuery;
-import org.pinus4j.api.query.QueryImpl;
+import org.pinus4j.api.query.impl.DefaultQueryImpl;
 import org.pinus4j.datalayer.IRecordIterator;
 import org.pinus4j.datalayer.query.jdbc.AbstractJdbcQuery;
 import org.pinus4j.exceptions.DBOperationException;
@@ -65,7 +65,7 @@ public abstract class AbstractRecordIterator<E> extends AbstractJdbcQuery implem
         this.clazz = clazz;
 
         if (this.query == null) {
-            this.query = new QueryImpl();
+            this.query = new DefaultQueryImpl();
         }
 
         this.recordQ = new LinkedList<E>();

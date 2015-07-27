@@ -38,6 +38,7 @@ import org.pinus4j.entity.meta.PKValue;
 import org.pinus4j.exceptions.DBOperationException;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 /**
  * 反射工具类. 提供了一些简单的反射功能. 方便其他操作调用.
@@ -383,6 +384,27 @@ public class ReflectUtil {
         }
 
         return map;
+    }
+
+    public static void copyProperties(Object source, Object target) throws Exception {
+        if (source == null) {
+            throw new IllegalArgumentException("source should not be null");
+        }
+        if (target == null) {
+            throw new IllegalArgumentException("target should not be null");
+        }
+
+        Field targetField = null;
+        for (Field sourceField : getFields(source.getClass())) {
+            sourceField.setAccessible(true);
+            
+            targetField = target.getClass().getDeclaredField(sourceField.getName());
+            targetField.setAccessible(true);
+            
+            if (targetField != null) {
+                targetField.set(target, sourceField.get(source));
+            }
+        }
     }
 
     public static void putAliasField(Class<?> clazz, String fieldName, Field f) {

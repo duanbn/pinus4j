@@ -34,6 +34,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.pinus4j.api.SQL;
 import org.pinus4j.api.query.IQuery;
+import org.pinus4j.api.query.impl.DefaultQueryImpl;
 import org.pinus4j.constant.Const;
 import org.pinus4j.entity.meta.EntityPK;
 import org.pinus4j.entity.meta.PKName;
@@ -78,9 +79,9 @@ public class SQLBuilder {
 
         StringBuilder SQL = new StringBuilder("SELECT " + pkField.toString() + " FROM ");
         SQL.append(tableName);
-        String whereSql = query.getWhereSql();
+        String whereSql = ((DefaultQueryImpl) query).getWhereSql();
         if (StringUtils.isNotBlank(whereSql))
-            SQL.append(query.getWhereSql());
+            SQL.append(((DefaultQueryImpl) query).getWhereSql());
 
         debugSQL(SQL.toString());
 
@@ -96,8 +97,8 @@ public class SQLBuilder {
         String tableName = ReflectUtil.getTableName(clazz, tableIndex);
 
         StringBuilder fields = new StringBuilder();
-        if (query.hasQueryFields()) {
-            for (String field : query.getFields()) {
+        if (((DefaultQueryImpl) query).hasQueryFields()) {
+            for (String field : ((DefaultQueryImpl) query).getFields()) {
                 fields.append(field).append(",");
             }
             fields.deleteCharAt(fields.length() - 1);
@@ -108,9 +109,9 @@ public class SQLBuilder {
         StringBuilder SQL = new StringBuilder("SELECT ");
         SQL.append(fields.toString()).append(" FROM ");
         SQL.append(tableName);
-        String whereSql = query.getWhereSql();
+        String whereSql = ((DefaultQueryImpl) query).getWhereSql();
         if (StringUtils.isNotBlank(whereSql))
-            SQL.append(query.getWhereSql());
+            SQL.append(((DefaultQueryImpl) query).getWhereSql());
 
         debugSQL(SQL.toString());
 
@@ -123,9 +124,9 @@ public class SQLBuilder {
         SQL.append(tableName);
 
         if (query != null) {
-            String whereSql = query.getWhereSql();
+            String whereSql = ((DefaultQueryImpl) query).getWhereSql();
             if (StringUtils.isNotBlank(whereSql))
-                SQL.append(query.getWhereSql());
+                SQL.append(((DefaultQueryImpl) query).getWhereSql());
         }
 
         debugSQL(SQL.toString());
@@ -180,7 +181,7 @@ public class SQLBuilder {
         StringBuilder SQL = new StringBuilder("SELECT count(*) ").append("FROM ");
         SQL.append(tableName);
         if (query != null) {
-            SQL.append(query.getWhereSql());
+            SQL.append(((DefaultQueryImpl) query).getWhereSql());
         }
         debugSQL(SQL.toString());
 

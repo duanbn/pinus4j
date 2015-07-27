@@ -25,20 +25,16 @@ import javax.transaction.xa.XAResource;
 
 import org.pinus4j.api.SQL;
 import org.pinus4j.api.query.IQuery;
-import org.pinus4j.api.query.QueryImpl;
+import org.pinus4j.api.query.impl.DefaultQueryImpl;
 import org.pinus4j.cluster.enums.EnumDBMasterSlave;
 import org.pinus4j.cluster.resources.IDBResource;
 import org.pinus4j.datalayer.query.IGlobalQuery;
 import org.pinus4j.entity.meta.EntityPK;
-import org.pinus4j.entity.meta.PKName;
-import org.pinus4j.entity.meta.PKValue;
 import org.pinus4j.exceptions.DBClusterException;
 import org.pinus4j.exceptions.DBOperationException;
 import org.pinus4j.utils.ReflectUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.collect.Lists;
 
 /**
  * global query implements.
@@ -49,16 +45,6 @@ import com.google.common.collect.Lists;
 public class GlobalJdbcQueryImpl extends AbstractJdbcQuery implements IGlobalQuery {
 
     public static final Logger LOG = LoggerFactory.getLogger(GlobalJdbcQueryImpl.class);
-
-    @Override
-    public Number getCount(Class<?> clazz) {
-        return getCount(clazz, true);
-    }
-
-    @Override
-    public Number getCount(Class<?> clazz, boolean useCache) {
-        return getCount(clazz, useCache, EnumDBMasterSlave.MASTER);
-    }
 
     @Override
     public Number getCount(Class<?> clazz, boolean useCache, EnumDBMasterSlave masterSlave) {
@@ -106,16 +92,6 @@ public class GlobalJdbcQueryImpl extends AbstractJdbcQuery implements IGlobalQue
     }
 
     @Override
-    public Number getCountByQuery(IQuery query, Class<?> clazz) {
-        return getCountByQuery(query, clazz, true);
-    }
-
-    @Override
-    public Number getCountByQuery(IQuery query, Class<?> clazz, boolean useCache) {
-        return getCountByQuery(query, clazz, useCache, EnumDBMasterSlave.MASTER);
-    }
-
-    @Override
     public Number getCountByQuery(IQuery query, Class<?> clazz, boolean useCache, EnumDBMasterSlave masterSlave) {
         String clusterName = ReflectUtil.getClusterName(clazz);
         String tableName = ReflectUtil.getTableName(clazz);
@@ -159,17 +135,7 @@ public class GlobalJdbcQueryImpl extends AbstractJdbcQuery implements IGlobalQue
     }
 
     @Override
-    public <T> T getByPk(PKValue pk, Class<T> clazz) {
-        return getByPk(pk, clazz, true);
-    }
-
-    @Override
-    public <T> T getByPk(PKValue pk, Class<T> clazz, boolean useCache) {
-        return getByPk(pk, clazz, useCache, EnumDBMasterSlave.MASTER);
-    }
-
-    @Override
-    public <T> T getByPk(PKValue pk, Class<T> clazz, boolean useCache, EnumDBMasterSlave masterSlave) {
+    public <T> T findByPk(EntityPK pk, Class<T> clazz, boolean useCache, EnumDBMasterSlave masterSlave) {
         String clusterName = ReflectUtil.getClusterName(clazz);
         String tableName = ReflectUtil.getTableName(clazz);
 
@@ -189,12 +155,10 @@ public class GlobalJdbcQueryImpl extends AbstractJdbcQuery implements IGlobalQue
                 tx.enlistResource((XAResource) dbResource);
             }
 
-            PKName[] pkNames = new PKName[] { ReflectUtil.getNotUnionPkName(clazz) };
-            PKValue[] pkValues = new PKValue[] { pk };
-            T data = selectByPkWithCache(dbResource, EntityPK.valueOf(pkNames, pkValues), clazz, useCache);
+            T data = selectByPkWithCache(dbResource, pk, clazz, useCache);
             if (data == null) {
                 dbResource = this.dbCluster.getMasterGlobalDBResource(clusterName, tableName);
-                data = selectByPkWithCache(dbResource, EntityPK.valueOf(pkNames, pkValues), clazz, useCache);
+                data = selectByPkWithCache(dbResource, pk, clazz, useCache);
             }
 
             return data;
@@ -215,17 +179,7 @@ public class GlobalJdbcQueryImpl extends AbstractJdbcQuery implements IGlobalQue
     }
 
     @Override
-    public <T> List<T> findByPkList(List<PKValue> pks, Class<T> clazz) {
-        return findByPkList(pks, clazz, true);
-    }
-
-    @Override
-    public <T> List<T> findByPkList(List<PKValue> pks, Class<T> clazz, boolean useCache) {
-        return findByPkList(pks, clazz, useCache, EnumDBMasterSlave.MASTER);
-    }
-
-    @Override
-    public <T> List<T> findByPkList(List<PKValue> pkList, Class<T> clazz, boolean useCache,
+    public <T> List<T> findByPkList(List<EntityPK> pkList, Class<T> clazz, boolean useCache,
                                     EnumDBMasterSlave masterSlave) {
         String clusterName = ReflectUtil.getClusterName(clazz);
         String tableName = ReflectUtil.getTableName(clazz);
@@ -246,19 +200,11 @@ public class GlobalJdbcQueryImpl extends AbstractJdbcQuery implements IGlobalQue
                 tx.enlistResource((XAResource) dbResource);
             }
 
-            List<EntityPK> entityPkList = Lists.newArrayList();
-            PKName[] pkNames = new PKName[] { ReflectUtil.getNotUnionPkName(clazz) };
-            for (PKValue pkValue : pkList) {
-                PKValue[] pkValues = new PKValue[] { pkValue };
-                entityPkList.add(EntityPK.valueOf(pkNames, pkValues));
-            }
-
-            List<T> data = selectByPksWithCache(dbResource, clazz,
-                    entityPkList.toArray(new EntityPK[entityPkList.size()]), useCache);
+            EntityPK[] entityPks = pkList.toArray(new EntityPK[pkList.size()]);
+            List<T> data = selectByPksWithCache(dbResource, clazz, entityPks, useCache);
             if (data.isEmpty()) {
                 dbResource = this.dbCluster.getMasterGlobalDBResource(clusterName, tableName);
-                data = selectByPksWithCache(dbResource, clazz, entityPkList.toArray(new EntityPK[entityPkList.size()]),
-                        useCache);
+                data = selectByPksWithCache(dbResource, clazz, entityPks, useCache);
             }
 
             return data;
@@ -279,16 +225,6 @@ public class GlobalJdbcQueryImpl extends AbstractJdbcQuery implements IGlobalQue
     }
 
     @Override
-    public <T> T findOneByQuery(IQuery query, Class<T> clazz) {
-        return findOneByQuery(query, clazz, true);
-    }
-
-    @Override
-    public <T> T findOneByQuery(IQuery query, Class<T> clazz, boolean useCache) {
-        return findOneByQuery(query, clazz, useCache, EnumDBMasterSlave.MASTER);
-    }
-
-    @Override
     public <T> T findOneByQuery(IQuery query, Class<T> clazz, boolean useCache, EnumDBMasterSlave masterSlave) {
         List<T> entities = findByQuery(query, clazz, useCache, masterSlave);
 
@@ -299,20 +235,11 @@ public class GlobalJdbcQueryImpl extends AbstractJdbcQuery implements IGlobalQue
         return entities.get(0);
     }
 
-    @Override
-    public <T> List<T> findByQuery(IQuery query, Class<T> clazz) {
-        return findByQuery(query, clazz, true);
-    }
-
-    @Override
-    public <T> List<T> findByQuery(IQuery query, Class<T> clazz, boolean useCache) {
-        return findByQuery(query, clazz, useCache, EnumDBMasterSlave.MASTER);
-    }
-
+    @SuppressWarnings("unchecked")
     @Override
     public <T> List<T> findByQuery(IQuery query, Class<T> clazz, boolean useCache, EnumDBMasterSlave masterSlave) {
         if (query == null) {
-            query = new QueryImpl();
+            query = new DefaultQueryImpl();
         }
 
         String clusterName = ReflectUtil.getClusterName(clazz);
@@ -336,7 +263,8 @@ public class GlobalJdbcQueryImpl extends AbstractJdbcQuery implements IGlobalQue
             List<T> result = null;
 
             if (isSecondCacheAvailable(clazz, useCache)) {
-                result = (List<T>) secondCache.getGlobal(query.getWhereSql(), clusterName, tableName);
+                result = (List<T>) secondCache.getGlobal(((DefaultQueryImpl) query).getWhereSql(), clusterName,
+                        tableName);
             }
 
             if (result == null || result.isEmpty()) {
@@ -357,15 +285,15 @@ public class GlobalJdbcQueryImpl extends AbstractJdbcQuery implements IGlobalQue
                 }
 
                 if (isSecondCacheAvailable(clazz, useCache)) {
-                    secondCache.putGlobal(query.getWhereSql(), clusterName, tableName, result);
+                    secondCache.putGlobal(((DefaultQueryImpl) query).getWhereSql(), clusterName, tableName, result);
                 }
             }
 
             // 过滤从缓存结果, 将没有指定的字段设置为默认值.
             List<T> filteResult = new ArrayList<T>(result.size());
-            if (query.hasQueryFields()) {
+            if (((DefaultQueryImpl) query).hasQueryFields()) {
                 for (T obj : result) {
-                    filteResult.add((T) ReflectUtil.cloneWithGivenField(obj, query.getFields()));
+                    filteResult.add((T) ReflectUtil.cloneWithGivenField(obj, ((DefaultQueryImpl) query).getFields()));
                 }
                 result = filteResult;
             }
@@ -385,11 +313,6 @@ public class GlobalJdbcQueryImpl extends AbstractJdbcQuery implements IGlobalQue
                 dbResource.close();
             }
         }
-    }
-
-    @Override
-    public List<Map<String, Object>> findBySql(SQL sql, Class<?> clazz) {
-        return findBySql(sql, clazz, EnumDBMasterSlave.MASTER);
     }
 
     @Override
