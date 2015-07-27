@@ -334,6 +334,16 @@ public class SQLBuilder {
                     value = new Character('\u0000');
             } else if (f.getType() == Short.TYPE || f.getType() == Short.class) {
                 value = rs.getShort(i);
+            } else if (f.getType() == Long.TYPE || f.getType() == Long.class) {
+                value = rs.getLong(i);
+            } else if (f.getType() == Integer.TYPE || f.getType() == Integer.class) {
+                if (value instanceof Boolean) {
+                    if ((Boolean) value) {
+                        value = new Integer(1);
+                    } else {
+                        value = new Integer(0);
+                    }
+                }
             }
         }
 
@@ -346,7 +356,6 @@ public class SQLBuilder {
      * @param clazz 数据对象
      * @param tableIndex 表下标
      * @param pks 主键
-     * @param query 保证in顺序
      * @return sql语句
      * @throws SQLException
      */
@@ -506,10 +515,10 @@ public class SQLBuilder {
      * 根据指定对象创建一个SQL语句.
      * 
      * @param conn 数据库连接引用
-     * @param entities 数据对象
+     * @param entity 数据对象
      * @param tableIndex 分表下标
      * @return SQL语句
-     * @throws 操作失败
+     * @throws SQLException 操作失败
      */
     public static String getInsert(Connection conn, Object entity, int tableIndex) throws SQLException {
         // 获取表名.

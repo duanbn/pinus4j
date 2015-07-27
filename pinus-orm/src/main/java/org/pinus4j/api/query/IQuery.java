@@ -64,6 +64,15 @@ public interface IQuery {
     public IQuery setFields(String... field);
 
     /**
+     * 添加取值字段.
+     *
+     * @param clazz class
+     * @param field 获取值的字段
+     * @return
+     */
+    public IQuery setFields(Class<?> clazz,String... field);
+
+    /**
      * 获取取值字段.
      * 
      * @return
@@ -90,7 +99,7 @@ public interface IQuery {
      * @param field 被排序字段
      * @param order 升序降序
      */
-    public IQuery orderBy(String field, Order order);
+    public IQuery orderBy(String field, Order order,Class<?> clazz);
 
     /**
      * 分页参数.

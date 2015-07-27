@@ -5,3 +5,5 @@
 /.project
 /javadoc.sh
 /target
+/.idea
+*.iml

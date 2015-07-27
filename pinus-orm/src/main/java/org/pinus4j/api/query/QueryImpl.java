@@ -19,6 +19,7 @@ package org.pinus4j.api.query;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.pinus4j.utils.ReflectUtil;
 import org.pinus4j.utils.StringUtils;
 
 /**
@@ -99,6 +100,18 @@ public class QueryImpl implements IQuery, Cloneable {
     }
 
     @Override
+    public IQuery setFields(Class<?> clazz,String... fields) {
+        if (fields != null && fields.length > 0) {
+            for(String field :fields){
+                field= ReflectUtil.getFieldName(ReflectUtil.getField(clazz, field));
+            }
+            this.fields = fields;
+        }
+        return this;
+    }
+
+
+    @Override
     public String[] getFields() {
         return this.fields;
     }
@@ -145,7 +158,7 @@ public class QueryImpl implements IQuery, Cloneable {
     }
 
     @Override
-    public IQuery orderBy(String field, Order order) {
+    public IQuery orderBy(String field, Order order,Class<?> clazz) {
         if (StringUtils.isBlank(field)) {
             throw new IllegalArgumentException("参数错误, field=" + field);
         }
@@ -153,7 +166,7 @@ public class QueryImpl implements IQuery, Cloneable {
             throw new IllegalArgumentException("参数错误, order=null");
         }
 
-        orderList.add(new OrderBy(field, order));
+        orderList.add(new OrderBy(field, order,clazz));
         return this;
     }
 
@@ -219,8 +232,8 @@ public class QueryImpl implements IQuery, Cloneable {
         private String field;
         private Order  order;
 
-        public OrderBy(String field, Order order) {
-            this.field = field;
+        public OrderBy(String field, Order order,Class<?> clazz) {
+            this.field = ReflectUtil.getFieldName(ReflectUtil.getField(clazz, field));
             this.order = order;
         }
 
