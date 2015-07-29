@@ -29,7 +29,7 @@ import org.pinus4j.entity.meta.EntityPK;
 import org.pinus4j.entity.meta.PKValue;
 import org.pinus4j.exceptions.DBClusterException;
 import org.pinus4j.exceptions.DBOperationException;
-import org.pinus4j.utils.ReflectUtil;
+import org.pinus4j.utils.BeanUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,7 +51,7 @@ public class ShardingJdbcUpdateImpl extends AbstractJdbcUpdate implements IShard
     @Override
     public PKValue save(Object entity, IShardingKey shardingKey) {
         Class clazz = entity.getClass();
-        String tableName = ReflectUtil.getTableName(clazz);
+        String tableName = BeanUtil.getTableName(clazz);
 
         PKValue pk = null;
         List<Object> entities = new ArrayList<Object>(1);
@@ -106,7 +106,7 @@ public class ShardingJdbcUpdateImpl extends AbstractJdbcUpdate implements IShard
     @Override
     public PKValue[] saveBatch(List<? extends Object> entities, IShardingKey<?> shardingKey) {
         Class<?> clazz = entities.get(0).getClass();
-        String tableName = ReflectUtil.getTableName(clazz);
+        String tableName = BeanUtil.getTableName(clazz);
 
         List<PKValue> pks = Lists.newArrayList();
 
@@ -167,7 +167,7 @@ public class ShardingJdbcUpdateImpl extends AbstractJdbcUpdate implements IShard
     public void updateBatch(List<? extends Object> entities, IShardingKey<?> shardingKey) {
         Class<?> clazz = entities.get(0).getClass();
 
-        String talbeName = ReflectUtil.getTableName(clazz);
+        String talbeName = BeanUtil.getTableName(clazz);
 
         Transaction tx = null;
         ShardingDBResource dbResource = null;
@@ -188,7 +188,7 @@ public class ShardingJdbcUpdateImpl extends AbstractJdbcUpdate implements IShard
             if (isCacheAvailable(clazz)) {
                 List<EntityPK> entityPkList = Lists.newArrayList();
                 for (Object entity : entities) {
-                    entityPkList.add(ReflectUtil.getEntityPK(entity));
+                    entityPkList.add(BeanUtil.getEntityPK(entity));
                 }
                 primaryCache.remove(dbResource, entityPkList);
             }
@@ -226,7 +226,7 @@ public class ShardingJdbcUpdateImpl extends AbstractJdbcUpdate implements IShard
 
     @Override
     public void removeByPks(List<EntityPK> pks, IShardingKey<?> shardingKey, Class<?> clazz) {
-        String talbeName = ReflectUtil.getTableName(clazz);
+        String talbeName = BeanUtil.getTableName(clazz);
 
         Transaction tx = null;
         ShardingDBResource dbResource = null;

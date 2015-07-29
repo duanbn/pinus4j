@@ -26,7 +26,7 @@ import org.pinus4j.api.query.impl.DefaultQueryImpl;
 import org.pinus4j.datalayer.IRecordIterator;
 import org.pinus4j.datalayer.query.jdbc.AbstractJdbcQuery;
 import org.pinus4j.exceptions.DBOperationException;
-import org.pinus4j.utils.ReflectUtil;
+import org.pinus4j.utils.BeanUtil;
 
 /**
  * 抽象数据库记录迭代器.
@@ -50,10 +50,10 @@ public abstract class AbstractRecordIterator<E> extends AbstractJdbcQuery implem
 
     public AbstractRecordIterator(Class<E> clazz) {
         // check pk type
-        pkName = ReflectUtil.getNotUnionPkName(clazz).getValue();
+        pkName = BeanUtil.getNotUnionPkName(clazz).getValue();
         Class<?> type;
         try {
-            type = ReflectUtil.getField(clazz, pkName).getType();
+            type = BeanUtil.getField(clazz, pkName).getType();
         } catch (SecurityException e) {
             throw new DBOperationException("遍历数据失败, clazz " + clazz, e);
         }

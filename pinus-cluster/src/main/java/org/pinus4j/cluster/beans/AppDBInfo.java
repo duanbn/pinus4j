@@ -29,124 +29,124 @@ import org.pinus4j.utils.StringUtils;
  */
 public class AppDBInfo extends DBInfo {
 
-	private String username;
+    private String              username;
 
-	private String password;
+    private String              password;
 
-	private String url;
+    private String              url;
 
-	/**
-	 * 校验对象的合法性
-	 * 
-	 * @return
-	 */
-	public boolean check() throws LoadConfigException {
-		if (StringUtils.isBlank(this.username)) {
-			throw new LoadConfigException("db username is empty");
-		}
-		if (StringUtils.isBlank(this.password)) {
-			throw new LoadConfigException("db password is empty");
-		}
-		if (StringUtils.isBlank(this.url)) {
-			throw new LoadConfigException("db url is empty");
-		}
-		return true;
-	}
+    /**
+     * 数据库连接池参数
+     */
+    private Map<String, String> connPoolInfo;
 
-	/**
-	 * 数据库连接池参数
-	 */
-	private Map<String, Object> connPoolInfo;
+    /**
+     * 校验对象的合法性
+     * 
+     * @return
+     */
+    public boolean check() throws LoadConfigException {
+        if (StringUtils.isBlank(this.username)) {
+            throw new LoadConfigException("db username is empty");
+        }
+        if (StringUtils.isBlank(this.password)) {
+            throw new LoadConfigException("db password is empty");
+        }
+        if (StringUtils.isBlank(this.url)) {
+            throw new LoadConfigException("db url is empty");
+        }
+        return true;
+    }
 
-	@Override
-	public String toString() {
-		return "AppDBConnectionInfo [username=" + username + ", clusterName=" + clusterName + ", masterSlave="
-				+ masterSlave + ", url=" + url + "]";
-	}
+    @Override
+    public String toString() {
+        return "AppDBConnectionInfo [username=" + username + ", clusterName=" + clusterName + ", masterSlave="
+                + masterSlave + ", url=" + url + "]";
+    }
 
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((connPoolInfo == null) ? 0 : connPoolInfo.hashCode());
-		result = prime * result + ((masterSlave == null) ? 0 : masterSlave.hashCode());
-		result = prime * result + ((password == null) ? 0 : password.hashCode());
-		result = prime * result + ((url == null) ? 0 : url.hashCode());
-		result = prime * result + ((username == null) ? 0 : username.hashCode());
-		return result;
-	}
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((connPoolInfo == null) ? 0 : connPoolInfo.hashCode());
+        result = prime * result + ((masterSlave == null) ? 0 : masterSlave.hashCode());
+        result = prime * result + ((password == null) ? 0 : password.hashCode());
+        result = prime * result + ((url == null) ? 0 : url.hashCode());
+        result = prime * result + ((username == null) ? 0 : username.hashCode());
+        return result;
+    }
 
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		AppDBInfo other = (AppDBInfo) obj;
-		if (connPoolInfo == null) {
-			if (other.connPoolInfo != null)
-				return false;
-		} else if (!connPoolInfo.equals(other.connPoolInfo))
-			return false;
-		if (masterSlave != other.masterSlave)
-			return false;
-		if (password == null) {
-			if (other.password != null)
-				return false;
-		} else if (!password.equals(other.password))
-			return false;
-		if (url == null) {
-			if (other.url != null)
-				return false;
-		} else if (!url.equals(other.url))
-			return false;
-		if (username == null) {
-			if (other.username != null)
-				return false;
-		} else if (!username.equals(other.username))
-			return false;
-		return true;
-	}
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        AppDBInfo other = (AppDBInfo) obj;
+        if (connPoolInfo == null) {
+            if (other.connPoolInfo != null)
+                return false;
+        } else if (!connPoolInfo.equals(other.connPoolInfo))
+            return false;
+        if (masterSlave != other.masterSlave)
+            return false;
+        if (password == null) {
+            if (other.password != null)
+                return false;
+        } else if (!password.equals(other.password))
+            return false;
+        if (url == null) {
+            if (other.url != null)
+                return false;
+        } else if (!url.equals(other.url))
+            return false;
+        if (username == null) {
+            if (other.username != null)
+                return false;
+        } else if (!username.equals(other.username))
+            return false;
+        return true;
+    }
 
-	public String getUsername() {
-		return username;
-	}
+    public String getUsername() {
+        return username;
+    }
 
-	public void setUsername(String username) {
-		this.username = username;
-	}
+    public void setUsername(String username) {
+        this.username = username;
+    }
 
-	public String getPassword() {
-		return password;
-	}
+    public String getPassword() {
+        return password;
+    }
 
-	public void setPassword(String password) {
-		this.password = password;
-	}
+    public void setPassword(String password) {
+        this.password = password;
+    }
 
-	public String getUrl() {
-		return url;
-	}
+    public String getUrl() {
+        return url;
+    }
 
-	public void setUrl(String url) {
-		this.url = url;
-	}
+    public void setUrl(String url) {
+        this.url = url;
+    }
 
-	public EnumDBMasterSlave getMasterSlave() {
-		return masterSlave;
-	}
+    public EnumDBMasterSlave getMasterSlave() {
+        return masterSlave;
+    }
 
-	public void setMasterSlave(EnumDBMasterSlave masterSlave) {
-		this.masterSlave = masterSlave;
-	}
+    public void setMasterSlave(EnumDBMasterSlave masterSlave) {
+        this.masterSlave = masterSlave;
+    }
 
-	public void setConnPoolInfo(Map<String, Object> connPoolInfo) {
-		this.connPoolInfo = connPoolInfo;
-	}
+    public void setConnPoolInfo(Map<String, String> connPoolInfo) {
+        this.connPoolInfo = connPoolInfo;
+    }
 
-	public Map<String, Object> getConnPoolInfo() {
-		return this.connPoolInfo;
-	}
+    public Map<String, String> getConnPoolInfo() {
+        return this.connPoolInfo;
+    }
 }

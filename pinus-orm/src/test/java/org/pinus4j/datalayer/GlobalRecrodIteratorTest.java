@@ -17,7 +17,7 @@ import org.pinus4j.cluster.resources.IDBResource;
 import org.pinus4j.datalayer.iterator.GlobalRecordIterator;
 import org.pinus4j.entity.TestGlobalEntity;
 import org.pinus4j.exceptions.DBClusterException;
-import org.pinus4j.utils.ReflectUtil;
+import org.pinus4j.utils.BeanUtil;
 
 public class GlobalRecrodIteratorTest extends BaseTest {
 
@@ -53,7 +53,7 @@ public class GlobalRecrodIteratorTest extends BaseTest {
 		IDBCluster dbCluster = storageClient.getDBCluster();
 		try {
 			dbResource = dbCluster.getMasterGlobalDBResource(CLUSTER_KLSTORAGE,
-					ReflectUtil.getTableName(TestGlobalEntity.class));
+					BeanUtil.getTableName(TestGlobalEntity.class));
 		} catch (DBClusterException e) {
 			e.printStackTrace();
 		}

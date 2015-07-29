@@ -22,7 +22,7 @@ import org.pinus4j.api.query.IQuery;
 import org.pinus4j.cluster.enums.EnumDBMasterSlave;
 import org.pinus4j.datalayer.query.IGlobalQuery;
 import org.pinus4j.datalayer.query.IShardingQuery;
-import org.pinus4j.utils.ReflectUtil;
+import org.pinus4j.utils.BeanUtil;
 
 /**
  * 可以获取结果集的查询条件
@@ -49,7 +49,7 @@ public class ResultSetableQueryImpl<T> extends DefaultQueryImpl {
     public List<T> list() {
         List<T> result = null;
 
-        if (ReflectUtil.isShardingEntity(clazz)) {
+        if (BeanUtil.isShardingEntity(clazz)) {
             result = this.shardingQuery.findByQuery(this, this.clazz, this.useCache, this.masterSlave);
         } else {
             result = this.globalQuery.findByQuery(this, this.clazz, this.useCache, this.masterSlave);
@@ -62,7 +62,7 @@ public class ResultSetableQueryImpl<T> extends DefaultQueryImpl {
     public Number count() {
         Number count = 0;
 
-        if (ReflectUtil.isShardingEntity(clazz)) {
+        if (BeanUtil.isShardingEntity(clazz)) {
             count = this.shardingQuery.getCountByQuery(this, this.clazz, this.useCache, this.masterSlave);
         } else {
             count = this.globalQuery.getCountByQuery(this, this.clazz, this.useCache, this.masterSlave);

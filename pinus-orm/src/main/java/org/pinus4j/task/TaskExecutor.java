@@ -31,7 +31,7 @@ import org.pinus4j.datalayer.iterator.ShardingRecordIterator;
 import org.pinus4j.exceptions.DBClusterException;
 import org.pinus4j.exceptions.DBOperationException;
 import org.pinus4j.exceptions.TaskException;
-import org.pinus4j.utils.ReflectUtil;
+import org.pinus4j.utils.BeanUtil;
 import org.pinus4j.utils.ThreadPool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -84,10 +84,10 @@ public class TaskExecutor<E> {
 
 		TaskFuture future = null;
 
-		String clusterName = ReflectUtil.getClusterName(clazz);
+		String clusterName = BeanUtil.getClusterName(clazz);
 
 		IRecordIterator<E> reader = null;
-		if (ReflectUtil.isShardingEntity(clazz)) { // 分片情况
+		if (BeanUtil.isShardingEntity(clazz)) { // 分片情况
 			List<IDBResource> dbResources;
 			try {
 				dbResources = this.dbCluster.getAllMasterShardingDBResource(clazz);
@@ -119,7 +119,7 @@ public class TaskExecutor<E> {
 
 			IDBResource dbResource;
 			try {
-				dbResource = this.dbCluster.getMasterGlobalDBResource(clusterName, ReflectUtil.getTableName(clazz));
+				dbResource = this.dbCluster.getMasterGlobalDBResource(clusterName, BeanUtil.getTableName(clazz));
 			} catch (DBClusterException e) {
 				throw new DBOperationException(e);
 			}

@@ -44,7 +44,7 @@ import org.pinus4j.entity.meta.EntityPK;
 import org.pinus4j.entity.meta.PKName;
 import org.pinus4j.entity.meta.PKValue;
 import org.pinus4j.utils.JdbcUtil;
-import org.pinus4j.utils.ReflectUtil;
+import org.pinus4j.utils.BeanUtil;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -81,7 +81,7 @@ public abstract class AbstractJdbcQuery implements IDataQuery {
      * @return true:启用cache, false:不启用
      */
     protected boolean isCacheAvailable(Class<?> clazz, boolean useCache) {
-        return primaryCache != null && ReflectUtil.isCache(clazz) && useCache;
+        return primaryCache != null && BeanUtil.isCache(clazz) && useCache;
     }
 
     /**
@@ -90,7 +90,7 @@ public abstract class AbstractJdbcQuery implements IDataQuery {
      * @return true:启用cache, false:不启用
      */
     protected boolean isSecondCacheAvailable(Class<?> clazz, boolean useCache) {
-        return secondCache != null && ReflectUtil.isCache(clazz) && useCache;
+        return secondCache != null && BeanUtil.isCache(clazz) && useCache;
     }
 
     // //////////////////////////////////////////////////////////////////////////////////////
@@ -144,7 +144,7 @@ public abstract class AbstractJdbcQuery implements IDataQuery {
      */
     protected Number selectCountWithCache(IDBResource dbResource, Class<?> clazz, boolean useCache) throws SQLException {
         String clusterName = dbResource.getClusterName();
-        String tableName = ReflectUtil.getTableName(clazz);
+        String tableName = BeanUtil.getTableName(clazz);
 
         // 操作缓存
         if (isCacheAvailable(clazz, useCache)) {
@@ -245,7 +245,7 @@ public abstract class AbstractJdbcQuery implements IDataQuery {
 
     protected <T> T selectByPkWithCache(IDBResource dbResource, EntityPK pk, Class<T> clazz, boolean useCache)
             throws SQLException {
-        String tableName = ReflectUtil.getTableName(clazz);
+        String tableName = BeanUtil.getTableName(clazz);
         String clusterName = dbResource.getClusterName();
 
         T data = null;
@@ -354,7 +354,7 @@ public abstract class AbstractJdbcQuery implements IDataQuery {
             return _selectByPks(dbResource, clazz, pks);
         }
 
-        String tableName = ReflectUtil.getTableName(clazz);
+        String tableName = BeanUtil.getTableName(clazz);
         String clusterName = dbResource.getClusterName();
 
         List<T> hitResult = null;
@@ -539,7 +539,7 @@ public abstract class AbstractJdbcQuery implements IDataQuery {
 
         EntityPK entityPk = null;
         for (T entity : entities) {
-            entityPk = ReflectUtil.getEntityPK(entity);
+            entityPk = BeanUtil.getEntityPK(entity);
             map.put(entityPk, entity);
         }
 

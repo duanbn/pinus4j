@@ -24,7 +24,7 @@ import org.pinus4j.cache.IPrimaryCache;
 import org.pinus4j.cluster.resources.ShardingDBResource;
 import org.pinus4j.entity.meta.EntityPK;
 import org.pinus4j.utils.IOUtil;
-import org.pinus4j.utils.ReflectUtil;
+import org.pinus4j.utils.BeanUtil;
 import org.pinus4j.utils.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -87,7 +87,7 @@ public class RedisPrimaryCacheImpl extends AbstractRedisCache implements IPrimar
 
         List<String> keys = new ArrayList<String>();
         for (Object d : data) {
-            EntityPK entityPk = ReflectUtil.getEntityPK(d);
+            EntityPK entityPk = BeanUtil.getEntityPK(d);
             keys.add(buildGlobalKey(clusterName, tableName, entityPk));
         }
         _put(keys, data);

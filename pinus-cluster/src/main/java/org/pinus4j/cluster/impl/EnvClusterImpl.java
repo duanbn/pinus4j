@@ -28,9 +28,9 @@ import org.pinus4j.exceptions.LoadConfigException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class EnvDBClusterImpl extends AbstractDBCluster {
+public class EnvClusterImpl extends AbstractDBCluster {
 
-	public static final Logger LOG = LoggerFactory.getLogger(EnvDBClusterImpl.class);
+	public static final Logger LOG = LoggerFactory.getLogger(EnvClusterImpl.class);
 
 	private Context initCtx;
 
@@ -40,7 +40,7 @@ public class EnvDBClusterImpl extends AbstractDBCluster {
 	 * @param enumDb
 	 *            数据库类型
 	 */
-	public EnvDBClusterImpl(EnumDB enumDb) {
+	public EnvClusterImpl(EnumDB enumDb) {
 		super(enumDb);
 
 		try {

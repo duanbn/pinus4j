@@ -43,7 +43,7 @@ import org.pinus4j.entity.meta.DBTableColumn;
 import org.pinus4j.entity.meta.DBTableIndex;
 import org.pinus4j.entity.meta.DBTablePK;
 import org.pinus4j.entity.meta.DataTypeBind;
-import org.pinus4j.utils.ReflectUtil;
+import org.pinus4j.utils.BeanUtil;
 import org.pinus4j.utils.StringUtils;
 
 /**
@@ -252,7 +252,7 @@ public class DefaultEntityMetaManager implements IEntityMetaManager {
                 if (StringUtils.isNotBlank(datetime.name())) {
                     fieldName = datetime.name();
                 }
-                ReflectUtil.putAliasField(clazz, fieldName, f);
+                BeanUtil.putAliasField(clazz, fieldName, f);
 
                 column = new DBTableColumn();
                 column.setField(fieldName);
@@ -279,7 +279,7 @@ public class DefaultEntityMetaManager implements IEntityMetaManager {
                 if (StringUtils.isNotBlank(updateTime.name())) {
                     fieldName = updateTime.name();
                 }
-                ReflectUtil._aliasFieldCache.put(clazz.getName() + fieldName, f);
+                BeanUtil._aliasFieldCache.put(clazz.getName() + fieldName, f);
 
                 column = new DBTableColumn();
                 column.setField(fieldName);
@@ -305,7 +305,7 @@ public class DefaultEntityMetaManager implements IEntityMetaManager {
                 if (StringUtils.isNotBlank(dbField.name())) {
                     fieldName = dbField.name();
                 }
-                ReflectUtil._aliasFieldCache.put(clazz.getName() + fieldName, f);
+                BeanUtil._aliasFieldCache.put(clazz.getName() + fieldName, f);
 
                 boolean isCanNull = dbField.isCanNull();
                 int length = _getLength(f, dbField.length());
@@ -347,7 +347,7 @@ public class DefaultEntityMetaManager implements IEntityMetaManager {
                 if (StringUtils.isNotBlank(pk.name())) {
                     fieldName = pk.name();
                 }
-                ReflectUtil._aliasFieldCache.put(clazz.getName() + fieldName, f);
+                BeanUtil._aliasFieldCache.put(clazz.getName() + fieldName, f);
 
                 primaryKey = new DBTablePK();
                 primaryKey.setField(fieldName);

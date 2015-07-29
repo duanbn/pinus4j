@@ -26,7 +26,7 @@ import org.pinus4j.api.query.impl.DefaultQueryImpl;
 import org.pinus4j.cluster.resources.GlobalDBResource;
 import org.pinus4j.cluster.resources.IDBResource;
 import org.pinus4j.exceptions.DBOperationException;
-import org.pinus4j.utils.ReflectUtil;
+import org.pinus4j.utils.BeanUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -63,7 +63,7 @@ public class GlobalRecordIterator<E> extends AbstractRecordIterator<E> {
         }
         if (!one.isEmpty()) {
             E e = one.get(0);
-            maxId = ReflectUtil.getNotUnionPkValue(e).getValueAsLong();
+            maxId = BeanUtil.getNotUnionPkValue(e).getValueAsLong();
         }
 
         LOG.info("clazz " + clazz + " maxId=" + maxId);

@@ -19,7 +19,7 @@ package org.pinus4j.api.query.impl;
 import java.lang.reflect.Array;
 
 import org.pinus4j.datalayer.SQLBuilder;
-import org.pinus4j.utils.ReflectUtil;
+import org.pinus4j.utils.BeanUtil;
 import org.pinus4j.utils.StringUtils;
 
 /**
@@ -77,7 +77,7 @@ public class Condition {
 
         this.field = field;
         if (clazz != null)
-            this.field = ReflectUtil.getFieldName(ReflectUtil.getField(clazz, field));
+            this.field = BeanUtil.getFieldName(BeanUtil.getField(clazz, field));
 
         this.value = SQLBuilder.formatValue(value);
         this.opt = opt;
@@ -96,7 +96,7 @@ public class Condition {
 
         this.field = field;
         if (clazz != null)
-            this.field = ReflectUtil.getFieldName(ReflectUtil.getField(clazz, field));
+            this.field = BeanUtil.getFieldName(BeanUtil.getField(clazz, field));
         this.opt = opt;
     }
 

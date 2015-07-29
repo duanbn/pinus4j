@@ -80,7 +80,7 @@ import org.pinus4j.transaction.impl.BestEffortsOnePCJtaTransactionManager;
 import org.pinus4j.utils.CuratorDistributeedLock;
 import org.pinus4j.utils.IOUtil;
 import org.pinus4j.utils.JdbcUtil;
-import org.pinus4j.utils.ReflectUtil;
+import org.pinus4j.utils.BeanUtil;
 import org.pinus4j.utils.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -525,13 +525,13 @@ public abstract class AbstractDBCluster implements IDBCluster {
 
     @Override
     public List<IDBResource> getAllMasterShardingDBResource(Class<?> clazz) throws SQLException {
-        int tableNum = ReflectUtil.getTableNum(clazz);
+        int tableNum = BeanUtil.getTableNum(clazz);
         if (tableNum == 0) {
             throw new IllegalStateException("table number is 0");
         }
 
-        String clusterName = ReflectUtil.getClusterName(clazz);
-        String tableName = ReflectUtil.getTableName(clazz);
+        String clusterName = BeanUtil.getClusterName(clazz);
+        String tableName = BeanUtil.getTableName(clazz);
 
         return getAllMasterShardingDBResource(tableNum, clusterName, tableName);
     }
@@ -572,13 +572,13 @@ public abstract class AbstractDBCluster implements IDBCluster {
             throws SQLException, DBClusterException {
         List<IDBResource> dbResources = new ArrayList<IDBResource>();
 
-        int tableNum = ReflectUtil.getTableNum(clazz);
+        int tableNum = BeanUtil.getTableNum(clazz);
         if (tableNum == 0) {
             throw new IllegalStateException("table number is 0");
         }
 
-        String clusterName = ReflectUtil.getClusterName(clazz);
-        String tableName = ReflectUtil.getTableName(clazz);
+        String clusterName = BeanUtil.getClusterName(clazz);
+        String tableName = BeanUtil.getTableName(clazz);
 
         IDBResource dbResource = null;
         DBClusterInfo dbClusterInfo = this.getDBClusterInfo(clusterName);

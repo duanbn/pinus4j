@@ -18,7 +18,7 @@ package org.pinus4j.api;
 
 import org.pinus4j.cluster.beans.IShardingKey;
 import org.pinus4j.cluster.beans.ShardingKey;
-import org.pinus4j.utils.ReflectUtil;
+import org.pinus4j.utils.BeanUtil;
 
 /**
  * 继承此对象的Entity对象会具备save, update, saveOrUpdate, remove方法.
@@ -34,7 +34,7 @@ public abstract class FashionEntity {
         Number pk = null;
 
         IShardingStorageClient storageClient = ShardingStorageClientImpl.instance;
-        if (ReflectUtil.isShardingEntity(this.getClass())) {
+        if (BeanUtil.isShardingEntity(this.getClass())) {
             pk = storageClient.save(this);
         } else {
             pk = storageClient.globalSave(this);
@@ -48,7 +48,7 @@ public abstract class FashionEntity {
      */
     public void update() {
         IShardingStorageClient storageClient = ShardingStorageClientImpl.instance;
-        if (ReflectUtil.isShardingEntity(this.getClass())) {
+        if (BeanUtil.isShardingEntity(this.getClass())) {
             storageClient.update(this);
         } else {
             storageClient.globalUpdate(this);
@@ -59,7 +59,7 @@ public abstract class FashionEntity {
      * 如果存在则更新，否则保存.
      */
     public Number saveOrUpdate() {
-        Number pk = ReflectUtil.getNotUnionPkValue(this).getValueAsNumber();
+        Number pk = BeanUtil.getNotUnionPkValue(this).getValueAsNumber();
         if (pk.intValue() == 0) {
             return save();
         }
@@ -67,10 +67,10 @@ public abstract class FashionEntity {
         Object obj = null;
 
         Class<?> clazz = this.getClass();
-        String clusterName = ReflectUtil.getClusterName(clazz);
+        String clusterName = BeanUtil.getClusterName(clazz);
         IShardingStorageClient storageClient = ShardingStorageClientImpl.instance;
-        if (ReflectUtil.isShardingEntity(clazz)) {
-            Object shardingValue = ReflectUtil.getShardingValue(this);
+        if (BeanUtil.isShardingEntity(clazz)) {
+            Object shardingValue = BeanUtil.getShardingValue(this);
             IShardingKey<Object> sk = new ShardingKey<Object>(clusterName, shardingValue);
             obj = storageClient.findByPk(pk, sk, clazz);
         } else {
@@ -89,17 +89,17 @@ public abstract class FashionEntity {
      * 删除.
      */
     public void remove() {
-        Number pk = ReflectUtil.getNotUnionPkValue(this).getValueAsNumber();
+        Number pk = BeanUtil.getNotUnionPkValue(this).getValueAsNumber();
 
         if (pk.intValue() == 0) {
             return;
         }
 
         Class<?> clazz = this.getClass();
-        String clusterName = ReflectUtil.getClusterName(clazz);
+        String clusterName = BeanUtil.getClusterName(clazz);
         IShardingStorageClient storageClient = ShardingStorageClientImpl.instance;
-        if (ReflectUtil.isShardingEntity(this.getClass())) {
-            Object shardingValue = ReflectUtil.getShardingValue(this);
+        if (BeanUtil.isShardingEntity(this.getClass())) {
+            Object shardingValue = BeanUtil.getShardingValue(this);
             IShardingKey<Object> sk = new ShardingKey<Object>(clusterName, shardingValue);
             storageClient.removeByPk(pk, sk, clazz);
         } else {

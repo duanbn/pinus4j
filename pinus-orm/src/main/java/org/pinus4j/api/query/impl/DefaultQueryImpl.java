@@ -21,7 +21,7 @@ import java.util.List;
 
 import org.pinus4j.api.query.IQuery;
 import org.pinus4j.cluster.enums.EnumDBMasterSlave;
-import org.pinus4j.utils.ReflectUtil;
+import org.pinus4j.utils.BeanUtil;
 import org.pinus4j.utils.StringUtils;
 
 /**
@@ -87,7 +87,7 @@ public class DefaultQueryImpl implements IQuery, Cloneable {
     public IQuery setFields(Class<?> clazz, String... fields) {
         if (fields != null && fields.length > 0) {
             for (String field : fields) {
-                field = ReflectUtil.getFieldName(ReflectUtil.getField(clazz, field));
+                field = BeanUtil.getFieldName(BeanUtil.getField(clazz, field));
             }
             this.fields = fields;
         }
@@ -236,7 +236,7 @@ public class DefaultQueryImpl implements IQuery, Cloneable {
         private Order  order;
 
         public OrderBy(String field, Order order, Class<?> clazz) {
-            this.field = ReflectUtil.getFieldName(ReflectUtil.getField(clazz, field));
+            this.field = BeanUtil.getFieldName(BeanUtil.getField(clazz, field));
             this.order = order;
         }
 

@@ -17,6 +17,7 @@
 package org.pinus4j.utils;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
@@ -38,14 +39,13 @@ import org.pinus4j.entity.meta.PKValue;
 import org.pinus4j.exceptions.DBOperationException;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 
 /**
  * 反射工具类. 提供了一些简单的反射功能. 方便其他操作调用.
  * 
  * @author duanbn
  */
-public class ReflectUtil {
+public class BeanUtil {
 
     /**
      * 字段别名缓存，当没有指定别名时，使用字段名作为别名. key: 别名/字段名
@@ -262,7 +262,28 @@ public class ReflectUtil {
      * @throws Exception 操作失败
      */
     public static void setProperty(Object obj, String propertyName, Object value) {
-        Field f = getField(obj.getClass(), propertyName);
+        if (obj == null) {
+            throw new IllegalArgumentException("param should not be null");
+        }
+
+        Class<?> clazz = obj.getClass();
+
+        // 优先使用使用set设置
+        Method[] setMethods = clazz.getMethods();
+        for (Method setMethod : setMethods) {
+            if (setMethod.getName().equals("set" + StringUtils.upperFirstLetter(propertyName))) {
+                if (setMethod.getParameterTypes().length == 1) {
+                    try {
+                        setMethod.invoke(obj, value);
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                    return;
+                }
+            }
+        }
+
+        Field f = getField(clazz, propertyName);
         f.setAccessible(true);
 
         try {
@@ -288,6 +309,81 @@ public class ReflectUtil {
                 f.setDouble(obj, ((Number) value).doubleValue());
             } else if (f.getType() == Character.TYPE) {
                 f.setChar(obj, ((Character) value).charValue());
+            } else {
+                f.set(obj, value);
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static void setProperty(Object obj, String propertyName, String value) {
+        if (obj == null) {
+            throw new IllegalArgumentException("param should not be null");
+        }
+
+        Class<?> clazz = obj.getClass();
+
+        // 优先使用set设置
+        Method[] setMethods = clazz.getMethods();
+        for (Method setMethod : setMethods) {
+            if (setMethod.getName().equals("set" + StringUtils.upperFirstLetter(propertyName))) {
+                if (setMethod.getParameterTypes().length == 1) {
+                    Class<?> paramType = setMethod.getParameterTypes()[0];
+                    try {
+                        if (paramType == Boolean.TYPE || paramType == Boolean.class) {
+                            setMethod.invoke(obj, (Boolean.valueOf(value)).booleanValue());
+                        } else if (paramType == Integer.TYPE || paramType == Integer.class) {
+                            setMethod.invoke(obj, Integer.parseInt(value));
+                        } else if (paramType == Byte.TYPE || paramType == Byte.class) {
+                            setMethod.invoke(obj, Byte.parseByte(value));
+                        } else if (paramType == Long.TYPE || paramType == Long.class) {
+                            setMethod.invoke(obj, Long.parseLong(value));
+                        } else if (paramType == Short.TYPE || paramType == Short.class) {
+                            setMethod.invoke(obj, Short.valueOf(value));
+                        } else if (paramType == Float.TYPE || paramType == Float.class) {
+                            setMethod.invoke(obj, Float.valueOf(value));
+                        } else if (paramType == Double.TYPE || paramType == Double.class) {
+                            setMethod.invoke(obj, Double.valueOf(value));
+                        } else if (paramType == Character.TYPE || paramType == Character.class) {
+                            setMethod.invoke(obj, value.charAt(0));
+                        } else {
+                            setMethod.invoke(obj, value);
+                        }
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                    return;
+                }
+            }
+        }
+
+        Field f = getField(clazz, propertyName);
+        f.setAccessible(true);
+
+        try {
+            if (value == null) {
+                f.set(obj, null);
+                return;
+            }
+
+            // 这里不能支持装箱类型，否则反射会报错
+            if (f.getType() == Boolean.TYPE || f.getType() == Boolean.class) {
+                f.setBoolean(obj, (Boolean.valueOf(value)).booleanValue());
+            } else if (f.getType() == Integer.TYPE || f.getType() == Integer.class) {
+                f.setInt(obj, Integer.parseInt(value));
+            } else if (f.getType() == Byte.TYPE || f.getType() == Byte.class) {
+                f.setByte(obj, Byte.parseByte(value));
+            } else if (f.getType() == Long.TYPE || f.getType() == Long.class) {
+                f.setLong(obj, Long.parseLong(value));
+            } else if (f.getType() == Short.TYPE || f.getType() == Short.class) {
+                f.setShort(obj, Short.valueOf(value));
+            } else if (f.getType() == Float.TYPE || f.getType() == Float.class) {
+                f.setFloat(obj, Float.valueOf(value));
+            } else if (f.getType() == Double.TYPE || f.getType() == Double.class) {
+                f.setDouble(obj, Double.valueOf(value));
+            } else if (f.getType() == Character.TYPE || f.getType() == Character.class) {
+                f.setChar(obj, value.charAt(0));
             } else {
                 f.set(obj, value);
             }
@@ -397,10 +493,10 @@ public class ReflectUtil {
         Field targetField = null;
         for (Field sourceField : getFields(source.getClass())) {
             sourceField.setAccessible(true);
-            
+
             targetField = target.getClass().getDeclaredField(sourceField.getName());
             targetField.setAccessible(true);
-            
+
             if (targetField != null) {
                 targetField.set(target, sourceField.get(source));
             }
@@ -422,7 +518,14 @@ public class ReflectUtil {
             try {
                 field = clazz.getDeclaredField(fieldName);
             } catch (Exception e) {
-                throw new RuntimeException(e);
+                // 忽略错误
+            }
+        }
+
+        if (field == null) {
+            Class<?> superClass = clazz.getSuperclass();
+            if (superClass != null) {
+                field = getField(superClass, fieldName);
             }
         }
 

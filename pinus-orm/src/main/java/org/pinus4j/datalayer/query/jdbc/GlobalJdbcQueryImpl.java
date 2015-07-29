@@ -32,7 +32,7 @@ import org.pinus4j.datalayer.query.IGlobalQuery;
 import org.pinus4j.entity.meta.EntityPK;
 import org.pinus4j.exceptions.DBClusterException;
 import org.pinus4j.exceptions.DBOperationException;
-import org.pinus4j.utils.ReflectUtil;
+import org.pinus4j.utils.BeanUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,8 +48,8 @@ public class GlobalJdbcQueryImpl extends AbstractJdbcQuery implements IGlobalQue
 
     @Override
     public Number getCount(Class<?> clazz, boolean useCache, EnumDBMasterSlave masterSlave) {
-        String clusterName = ReflectUtil.getClusterName(clazz);
-        String tableName = ReflectUtil.getTableName(clazz);
+        String clusterName = BeanUtil.getClusterName(clazz);
+        String tableName = BeanUtil.getTableName(clazz);
 
         Transaction tx = null;
         IDBResource dbResource = null;
@@ -93,8 +93,8 @@ public class GlobalJdbcQueryImpl extends AbstractJdbcQuery implements IGlobalQue
 
     @Override
     public Number getCountByQuery(IQuery query, Class<?> clazz, boolean useCache, EnumDBMasterSlave masterSlave) {
-        String clusterName = ReflectUtil.getClusterName(clazz);
-        String tableName = ReflectUtil.getTableName(clazz);
+        String clusterName = BeanUtil.getClusterName(clazz);
+        String tableName = BeanUtil.getTableName(clazz);
 
         Transaction tx = null;
         IDBResource dbResource = null;
@@ -136,8 +136,8 @@ public class GlobalJdbcQueryImpl extends AbstractJdbcQuery implements IGlobalQue
 
     @Override
     public <T> T findByPk(EntityPK pk, Class<T> clazz, boolean useCache, EnumDBMasterSlave masterSlave) {
-        String clusterName = ReflectUtil.getClusterName(clazz);
-        String tableName = ReflectUtil.getTableName(clazz);
+        String clusterName = BeanUtil.getClusterName(clazz);
+        String tableName = BeanUtil.getTableName(clazz);
 
         Transaction tx = null;
         IDBResource dbResource = null;
@@ -181,8 +181,8 @@ public class GlobalJdbcQueryImpl extends AbstractJdbcQuery implements IGlobalQue
     @Override
     public <T> List<T> findByPkList(List<EntityPK> pkList, Class<T> clazz, boolean useCache,
                                     EnumDBMasterSlave masterSlave) {
-        String clusterName = ReflectUtil.getClusterName(clazz);
-        String tableName = ReflectUtil.getTableName(clazz);
+        String clusterName = BeanUtil.getClusterName(clazz);
+        String tableName = BeanUtil.getTableName(clazz);
 
         Transaction tx = null;
         IDBResource dbResource = null;
@@ -242,8 +242,8 @@ public class GlobalJdbcQueryImpl extends AbstractJdbcQuery implements IGlobalQue
             query = new DefaultQueryImpl();
         }
 
-        String clusterName = ReflectUtil.getClusterName(clazz);
-        String tableName = ReflectUtil.getTableName(clazz);
+        String clusterName = BeanUtil.getClusterName(clazz);
+        String tableName = BeanUtil.getTableName(clazz);
 
         Transaction tx = null;
         IDBResource dbResource = null;
@@ -293,7 +293,7 @@ public class GlobalJdbcQueryImpl extends AbstractJdbcQuery implements IGlobalQue
             List<T> filteResult = new ArrayList<T>(result.size());
             if (((DefaultQueryImpl) query).hasQueryFields()) {
                 for (T obj : result) {
-                    filteResult.add((T) ReflectUtil.cloneWithGivenField(obj, ((DefaultQueryImpl) query).getFields()));
+                    filteResult.add((T) BeanUtil.cloneWithGivenField(obj, ((DefaultQueryImpl) query).getFields()));
                 }
                 result = filteResult;
             }
@@ -317,7 +317,7 @@ public class GlobalJdbcQueryImpl extends AbstractJdbcQuery implements IGlobalQue
 
     @Override
     public List<Map<String, Object>> findBySql(SQL sql, Class<?> clazz, EnumDBMasterSlave masterSlave) {
-        String clusterName = ReflectUtil.getClusterName(clazz);
+        String clusterName = BeanUtil.getClusterName(clazz);
 
         IDBResource next = null;
 

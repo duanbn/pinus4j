@@ -17,7 +17,6 @@ package org.pinus4j.cluster.beans;
 
 import java.util.List;
 
-import org.pinus4j.cluster.enums.EnumClusterCatalog;
 import org.pinus4j.cluster.router.IClusterRouter;
 
 /**
@@ -28,59 +27,44 @@ import org.pinus4j.cluster.router.IClusterRouter;
  */
 public class DBClusterInfo {
 
-	/**
-	 * cluster name.
-	 */
-	private String clusterName;
-
     /**
-     * catalog for database.
+     * cluster name.
      */
-	private EnumClusterCatalog catalog;
+    private String                clusterName;
 
     /**
-     * class of cluster router.
-     * this class for create router instance.
+     * class of cluster router. this class for create router instance.
      */
     private Class<IClusterRouter> routerClass;
 
-	/**
-	 *  master global database info.
-	 */
-	private DBInfo masterGlobalDBInfo;
+    /**
+     * master global database info.
+     */
+    private DBInfo                masterGlobalDBInfo;
 
     /**
      * slave global database info.
      */
-	private List<DBInfo> slaveGlobalDBInfo;
+    private List<DBInfo>          slaveGlobalDBInfo;
 
     /**
      * sharding database info.
      */
-	private List<DBRegionInfo> dbRegions;
+    private List<DBRegionInfo>    dbRegions;
 
-	@Override
-	public String toString() {
-		return "DBClusterInfo [clusterName=" + clusterName + ", catalog=" + catalog + ", masterGlobalDBInfo="
-				+ masterGlobalDBInfo + ", slaveGlobalDBInfo=" + slaveGlobalDBInfo + ", dbRegions="
-				+ dbRegions + "]";
-	}
+    @Override
+    public String toString() {
+        return "DBClusterInfo [clusterName=" + clusterName + ", masterGlobalDBInfo=" + masterGlobalDBInfo
+                + ", slaveGlobalDBInfo=" + slaveGlobalDBInfo + ", dbRegions=" + dbRegions + "]";
+    }
 
-	public String getClusterName() {
-		return clusterName;
-	}
+    public String getClusterName() {
+        return clusterName;
+    }
 
-	public void setClusterName(String clusterName) {
-		this.clusterName = clusterName;
-	}
-
-	public EnumClusterCatalog getCatalog() {
-		return catalog;
-	}
-
-	public void setCatalog(EnumClusterCatalog catalog) {
-		this.catalog = catalog;
-	}
+    public void setClusterName(String clusterName) {
+        this.clusterName = clusterName;
+    }
 
     public void setRouterClass(Class<IClusterRouter> clazz) {
         this.routerClass = clazz;
@@ -90,28 +74,28 @@ public class DBClusterInfo {
         return this.routerClass;
     }
 
-	public DBInfo getMasterGlobalDBInfo() {
-		return masterGlobalDBInfo;
-	}
+    public DBInfo getMasterGlobalDBInfo() {
+        return masterGlobalDBInfo;
+    }
 
-	public void setMasterGlobalDBInfo(DBInfo masterGlobalDBInfo) {
-		this.masterGlobalDBInfo = masterGlobalDBInfo;
-	}
+    public void setMasterGlobalDBInfo(DBInfo masterGlobalDBInfo) {
+        this.masterGlobalDBInfo = masterGlobalDBInfo;
+    }
 
-	public List<DBInfo> getSlaveGlobalDBInfo() {
-		return slaveGlobalDBInfo;
-	}
+    public List<DBInfo> getSlaveGlobalDBInfo() {
+        return slaveGlobalDBInfo;
+    }
 
-	public void setSlaveGlobalDBInfo(List<DBInfo> slaveGlobalDBInfo) {
-		this.slaveGlobalDBInfo = slaveGlobalDBInfo;
-	}
+    public void setSlaveGlobalDBInfo(List<DBInfo> slaveGlobalDBInfo) {
+        this.slaveGlobalDBInfo = slaveGlobalDBInfo;
+    }
 
-	public List<DBRegionInfo> getDbRegions() {
-		return dbRegions;
-	}
+    public List<DBRegionInfo> getDbRegions() {
+        return dbRegions;
+    }
 
-	public void setDbRegions(List<DBRegionInfo> dbRegions) {
-		this.dbRegions = dbRegions;
-	}
+    public void setDbRegions(List<DBRegionInfo> dbRegions) {
+        this.dbRegions = dbRegions;
+    }
 
 }

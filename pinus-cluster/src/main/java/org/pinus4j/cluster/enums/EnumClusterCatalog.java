@@ -19,6 +19,7 @@ package org.pinus4j.cluster.enums;
 import java.util.HashMap;
 import java.util.Map;
 
+@Deprecated
 public enum EnumClusterCatalog {
 
 	/**
