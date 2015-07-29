@@ -344,8 +344,10 @@ public class RedisPrimaryCacheImpl extends AbstractRedisCache implements IPrimar
         ShardedJedis redisClient = null;
         try {
             redisClient = jedisPool.getResource();
+
             redisClient.set(key.getBytes(), IOUtil.getBytes(data));
-            redisClient.expire(key, expire);
+            redisClient.expire(key.getBytes(), expire);
+
             if (LOG.isDebugEnabled()) {
                 LOG.debug("[PRIMARY CACHE] - put " + key + " value=" + data);
             }

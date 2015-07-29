@@ -48,6 +48,7 @@ public class RedisSecondCacheImpl extends AbstractRedisCache implements ISecondC
             String cacheKey = _buildGlobalCacheKey(whereSql, clusterName, tableName);
 
             redisClient.set(cacheKey.getBytes(), IOUtil.getBytes(data));
+            redisClient.expire(cacheKey.getBytes(), expire);
 
             if (LOG.isDebugEnabled()) {
                 LOG.debug("[SECOND CACHE] - put to cache done, key: " + cacheKey);
@@ -125,6 +126,7 @@ public class RedisSecondCacheImpl extends AbstractRedisCache implements ISecondC
             redisClient = jedisPool.getResource();
             String cacheKey = _buildShardingCacheKey(whereSql, db);
             redisClient.set(cacheKey.getBytes(), IOUtil.getBytes(data));
+            redisClient.expire(cacheKey.getBytes(), expire);
 
             if (LOG.isDebugEnabled()) {
                 LOG.debug("[SECOND CACHE] - put to cache done, key: " + cacheKey);
