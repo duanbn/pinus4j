@@ -396,39 +396,6 @@ public class SQLBuilder {
     }
 
     /**
-     * 拼装select sql. SELECT field... FROM tableName WHERE pk = ?
-     * 
-     * @param pk 主键
-     * @param clazz 数据对象class
-     * @param tableIndex 表下标
-     * @return sql语句
-     */
-    public static String buildSelectByPk(EntityPK pk, Class<?> clazz, int tableIndex) throws SQLException {
-        Field[] fields = BeansUtil.getFields(clazz);
-        String tableName = entityMetaManager.getTableName(clazz, tableIndex);
-
-        StringBuilder whereSql = new StringBuilder();
-        for (int i = 0; i < pk.getPkNames().length; i++) {
-            whereSql.append(pk.getPkNames()[i].getValue()).append("=")
-                    .append(formatValue(pk.getPkValues()[i].getValue()));
-            whereSql.append(" and ");
-        }
-        whereSql.delete(whereSql.length() - 5, whereSql.length());
-
-        StringBuilder SQL = new StringBuilder("SELECT ");
-        for (Field field : fields) {
-            SQL.append(BeansUtil.getFieldName(field)).append(",");
-        }
-        SQL.deleteCharAt(SQL.length() - 1);
-        SQL.append(" FROM ").append(tableName);
-        SQL.append(" WHERE ").append(whereSql.toString());
-
-        debugSQL(SQL.toString());
-
-        return SQL.toString();
-    }
-
-    /**
      * 拼装sql. DELETE FROM tableName WHERE pk in (...)
      * 
      * @return DELETE语句

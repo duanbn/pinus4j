@@ -159,7 +159,7 @@ public class Condition {
                     }
                     break;
             }
-            return SQL.toString();
+            return SQL.toString().trim();
         }
     }
 
@@ -223,7 +223,7 @@ public class Condition {
     }
 
     public static Condition gte(String field, Object value) {
-        return gte(field, value);
+        return gte(field, value, null);
     }
 
     /**
@@ -320,7 +320,7 @@ public class Condition {
     }
 
     public static Condition in(String field, short[] values) {
-        return in(field, values);
+        return in(field, values, null);
     }
 
     public static Condition in(String field, short[] values, Class<?> clazz) {
@@ -332,7 +332,7 @@ public class Condition {
     }
 
     public static Condition in(String field, long[] values) {
-        return in(field, values);
+        return in(field, values, null);
     }
 
     public static Condition in(String field, long[] values, Class<?> clazz) {
@@ -344,7 +344,7 @@ public class Condition {
     }
 
     public static Condition in(String field, float[] values) {
-        return in(field, values);
+        return in(field, values, null);
     }
 
     public static Condition in(String field, float[] values, Class<?> clazz) {
@@ -356,7 +356,7 @@ public class Condition {
     }
 
     public static Condition in(String field, double[] values) {
-        return in(field, values);
+        return in(field, values, null);
     }
 
     public static Condition in(String field, double[] values, Class<?> clazz) {
@@ -368,7 +368,7 @@ public class Condition {
     }
 
     public static Condition in(String field, boolean[] values) {
-        return in(field, values);
+        return in(field, values, null);
     }
 
     public static Condition in(String field, boolean[] values, Class<?> clazz) {
@@ -380,7 +380,7 @@ public class Condition {
     }
 
     public static Condition like(String field, String value) {
-        return like(field, value);
+        return like(field, value, null);
     }
 
     /**

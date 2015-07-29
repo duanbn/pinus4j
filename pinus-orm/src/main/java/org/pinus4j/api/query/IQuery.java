@@ -30,6 +30,13 @@ import org.pinus4j.cluster.enums.EnumDBMasterSlave;
 public interface IQuery {
 
     /**
+     * 获取一条记录. 如果有多条只获取第一条.
+     * 
+     * @return
+     */
+    public <T> T load();
+
+    /**
      * 获取此Query查询到的结果集.
      * 
      * @return

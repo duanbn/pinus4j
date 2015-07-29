@@ -135,50 +135,6 @@ public class GlobalJdbcQueryImpl extends AbstractJdbcQuery implements IGlobalQue
     }
 
     @Override
-    public <T> T findByPk(EntityPK pk, Class<T> clazz, boolean useCache, EnumDBMasterSlave masterSlave) {
-        String clusterName = entityMetaManager.getClusterName(clazz);
-        String tableName = entityMetaManager.getTableName(clazz);
-
-        Transaction tx = null;
-        IDBResource dbResource = null;
-        try {
-
-            tx = txManager.getTransaction();
-
-            if (EnumDBMasterSlave.MASTER == masterSlave || !this.dbCluster.isGlobalSlaveExist(clusterName)) {
-                dbResource = this.dbCluster.getMasterGlobalDBResource(clusterName, tableName);
-            } else {
-                dbResource = this.dbCluster.getSlaveGlobalDBResource(clusterName, tableName, masterSlave);
-            }
-
-            if (tx != null) {
-                tx.enlistResource((XAResource) dbResource);
-            }
-
-            T data = selectByPkWithCache(dbResource, pk, clazz, useCache);
-            if (data == null) {
-                dbResource = this.dbCluster.getMasterGlobalDBResource(clusterName, tableName);
-                data = selectByPkWithCache(dbResource, pk, clazz, useCache);
-            }
-
-            return data;
-        } catch (Exception e) {
-            if (tx != null) {
-                try {
-                    tx.rollback();
-                } catch (Exception e1) {
-                    throw new DBOperationException(e1);
-                }
-            }
-            throw new DBOperationException(e);
-        } finally {
-            if (tx == null && dbResource != null) {
-                dbResource.close();
-            }
-        }
-    }
-
-    @Override
     public <T> List<T> findByPkList(List<EntityPK> pkList, Class<T> clazz, boolean useCache,
                                     EnumDBMasterSlave masterSlave) {
         String clusterName = entityMetaManager.getClusterName(clazz);

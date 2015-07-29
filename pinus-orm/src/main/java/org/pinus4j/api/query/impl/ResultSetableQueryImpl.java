@@ -49,6 +49,17 @@ public class ResultSetableQueryImpl<T> extends DefaultQueryImpl {
     }
 
     @Override
+    public T load() {
+        List<T> result = list();
+
+        if (result.isEmpty()) {
+            return null;
+        }
+
+        return result.get(0);
+    }
+
+    @Override
     public List<T> list() {
         List<T> result = null;
 

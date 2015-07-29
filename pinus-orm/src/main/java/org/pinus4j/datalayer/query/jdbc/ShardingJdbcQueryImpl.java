@@ -246,68 +246,6 @@ public class ShardingJdbcQueryImpl extends AbstractJdbcQuery implements IShardin
     }
 
     @Override
-    public <T> T findByPk(EntityPK pk, Class<T> clazz, boolean useCache, EnumDBMasterSlave masterSlave) {
-        Transaction tx = null;
-        List<IDBResource> dbResources = null;
-        try {
-
-            tx = txManager.getTransaction();
-
-            String clusterName = entityMetaManager.getClusterName(clazz);
-            if (EnumDBMasterSlave.MASTER == masterSlave || this.dbCluster.isShardingSlaveExist(clusterName)) {
-                dbResources = this.dbCluster.getAllMasterShardingDBResource(clazz);
-            } else {
-                dbResources = this.dbCluster.getAllSlaveShardingDBResource(clazz, masterSlave);
-            }
-
-            T data = null;
-            for (IDBResource dbResource : dbResources) {
-                if (tx != null) {
-                    tx.enlistResource((ShardingDBResource) dbResource);
-                }
-
-                data = selectByPkWithCache((ShardingDBResource) dbResource, pk, clazz, useCache);
-                if (data != null) {
-                    break;
-                }
-            }
-
-            // query from master again
-            if (data == null) {
-                dbResources = this.dbCluster.getAllMasterShardingDBResource(clazz);
-                for (IDBResource dbResource : dbResources) {
-                    if (tx != null) {
-                        tx.enlistResource((ShardingDBResource) dbResource);
-                    }
-
-                    data = selectByPkWithCache((ShardingDBResource) dbResource, pk, clazz, useCache);
-                    if (data != null) {
-                        break;
-                    }
-                }
-            }
-
-            return data;
-        } catch (Exception e) {
-            if (tx != null) {
-                try {
-                    tx.rollback();
-                } catch (Exception e1) {
-                    throw new DBOperationException(e1);
-                }
-            }
-
-            throw new DBOperationException(e);
-        } finally {
-            if (tx == null && dbResources != null) {
-                for (IDBResource dbResource : dbResources) {
-                    dbResource.close();
-                }
-            }
-        }
-    }
-
-    @Override
     public <T> T findByPk(EntityPK pk, IShardingKey<?> shardingKey, Class<T> clazz, boolean useCache,
                           EnumDBMasterSlave masterSlave) {
         Transaction tx = null;
@@ -327,15 +265,19 @@ public class ShardingJdbcQueryImpl extends AbstractJdbcQuery implements IShardin
                 tx.enlistResource(dbResource);
             }
 
-            T data = selectByPkWithCache(dbResource, pk, clazz, useCache);
+            List<T> data = selectByPksWithCache(dbResource, clazz, new EntityPK[] { pk }, useCache);
 
             // query from master again
             if (data == null) {
                 dbResource = _getDbFromMaster(clazz, shardingKey);
-                selectByPkWithCache(dbResource, pk, clazz, useCache);
+                data = selectByPksWithCache(dbResource, clazz, new EntityPK[] { pk }, useCache);
             }
 
-            return data;
+            if (data.isEmpty()) {
+                return null;
+            }
+
+            return data.get(0);
         } catch (Exception e) {
             if (tx != null) {
                 try {
@@ -597,8 +539,7 @@ public class ShardingJdbcQueryImpl extends AbstractJdbcQuery implements IShardin
             if (((DefaultQueryImpl) query).hasQueryFields()) {
                 for (T obj : result) {
                     try {
-                        filteResult
-                                .add((T) BeansUtil.cloneWithGivenField(obj, ((DefaultQueryImpl) query).getFields()));
+                        filteResult.add((T) BeansUtil.cloneWithGivenField(obj, ((DefaultQueryImpl) query).getFields()));
                     } catch (Exception e) {
                         throw new DBOperationException(e);
                     }

@@ -580,9 +580,9 @@ public class DefaultPinusClient implements PinusClient {
 
         Class<?> clazz = entity.getClass();
         if (entityMetaManager.isShardingEntity(clazz)) {
-            loadedEntity = this.shardingQuery.findByPk(entityPk, clazz, useCache, masterSlave);
+            loadedEntity = this.shardingQuery.findByPkList(Lists.newArrayList(entityPk), clazz, useCache, masterSlave);
         } else {
-            loadedEntity = this.globalQuery.findByPk(entityPk, clazz, useCache, masterSlave);
+            loadedEntity = this.globalQuery.findByPkList(Lists.newArrayList(entityPk), clazz, useCache, masterSlave);
         }
 
         if (loadedEntity == null) {

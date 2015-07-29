@@ -8,6 +8,18 @@ import org.pinus4j.api.query.impl.Condition;
 public class ConditionTest {
 
     @Test
+    public void testIsNull() throws Exception {
+        Condition cond = Condition.isNull("field");
+        Assert.assertEquals("field is null", cond.toString());
+    }
+
+    @Test
+    public void testIsNotNull() throws Exception {
+        Condition cond = Condition.isNotNull("field");
+        Assert.assertEquals("field is not null", cond.toString());
+    }
+
+    @Test
     public void testEq() throws Exception {
         Condition cond = Condition.eq("field", "test");
         Assert.assertEquals("field = 'test'", cond.toString());
@@ -51,8 +63,26 @@ public class ConditionTest {
 
     @Test
     public void testIn() throws Exception {
-        int[] is = new int[] { 1, 2, 3, 4 };
-        Condition cond = Condition.in("field", is);
+
+        Condition cond = Condition.in("field", new short[] { (short) 1, (short) 2, (short) 3, (short) 4 });
+        Assert.assertEquals("field in (1,2,3,4)", cond.toString());
+
+        cond = Condition.in("field", new int[] { 1, 2, 3, 4 });
+        Assert.assertEquals("field in (1,2,3,4)", cond.toString());
+
+        cond = Condition.in("field", new long[] { 1l, 2l, 3l, 4l });
+        Assert.assertEquals("field in (1,2,3,4)", cond.toString());
+
+        cond = Condition.in("field", new float[] { 1.0f, 2.0f, 3.0f, 4.0f });
+        Assert.assertEquals("field in (1.0,2.0,3.0,4.0)", cond.toString());
+
+        cond = Condition.in("field", new double[] { 1.0, 2.0, 3.0, 4.0 });
+        Assert.assertEquals("field in (1.0,2.0,3.0,4.0)", cond.toString());
+
+        cond = Condition.in("field", new boolean[] { true, false });
+        Assert.assertEquals("field in ('1','0')", cond.toString());
+
+        cond = Condition.in("field", new byte[] { (byte) 1, (byte) 2, (byte) 3, (byte) 4 });
         Assert.assertEquals("field in (1,2,3,4)", cond.toString());
 
         cond = Condition.in("field", new Integer[] { 2, 3, 4, 5 });

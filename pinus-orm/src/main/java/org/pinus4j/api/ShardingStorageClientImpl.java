@@ -504,16 +504,13 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 
     @Override
     public <T> T findByPk(Number pk, Class<T> clazz, boolean useCache, EnumDBMasterSlave masterSlave) {
-        CheckUtil.checkClass(clazz);
+        List<T> result = findByPkList(Lists.newArrayList(pk), clazz, useCache, masterSlave);
 
-        PKName[] pkNames = new PKName[] { entityMetaManager.getNotUnionPkName(clazz) };
-        PKValue[] pkValues = new PKValue[] { PKValue.valueOf(pk) };
-
-        if (entityMetaManager.isShardingEntity(clazz)) {
-            return this.shardingQuery.findByPk(EntityPK.valueOf(pkNames, pkValues), clazz, useCache, masterSlave);
-        } else {
-            return this.globalQuery.findByPk(EntityPK.valueOf(pkNames, pkValues), clazz, useCache, masterSlave);
+        if (result.isEmpty()) {
+            return null;
         }
+
+        return result.get(0);
     }
 
     @Override

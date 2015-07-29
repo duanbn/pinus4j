@@ -56,6 +56,11 @@ public class DefaultQueryImpl implements IQuery, Cloneable {
     private int             limit     = -1;
 
     @Override
+    public <T> T load() {
+        throw new UnsupportedOperationException("not support");
+    }
+
+    @Override
     public <T> List<T> list() {
         throw new UnsupportedOperationException("not support");
     }

@@ -31,7 +31,7 @@ import org.pinus4j.entity.meta.EntityPK;
  * @author duanbn
  * @since 1.1.1
  */
-public interface IShardingQuery {
+public interface IShardingQuery extends IDataQuery {
 
     Number getCount(Class<?> clazz, boolean useCache, EnumDBMasterSlave masterSlave);
 
@@ -41,8 +41,6 @@ public interface IShardingQuery {
 
     Number getCountByQuery(IQuery query, IShardingKey<?> shardingKey, Class<?> clazz, boolean useCache,
                            EnumDBMasterSlave masterSlave);
-
-    <T> T findByPk(EntityPK pk, Class<T> clazz, boolean useCache, EnumDBMasterSlave masterSlave);
 
     <T> T findByPk(EntityPK pk, IShardingKey<?> shardingKey, Class<T> clazz, boolean useCache,
                    EnumDBMasterSlave masterSlave);
