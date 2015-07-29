@@ -26,214 +26,26 @@ import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.pinus4j.constant.Const;
-import org.pinus4j.entity.DefaultEntityMetaManager;
-import org.pinus4j.entity.IEntityMetaManager;
 import org.pinus4j.entity.annotations.DateTime;
 import org.pinus4j.entity.annotations.PrimaryKey;
 import org.pinus4j.entity.annotations.UpdateTime;
-import org.pinus4j.entity.meta.DBTable;
-import org.pinus4j.entity.meta.DBTablePK;
-import org.pinus4j.entity.meta.EntityPK;
-import org.pinus4j.entity.meta.PKName;
-import org.pinus4j.entity.meta.PKValue;
-import org.pinus4j.exceptions.DBOperationException;
-
-import com.google.common.collect.Lists;
 
 /**
  * 反射工具类. 提供了一些简单的反射功能. 方便其他操作调用.
  * 
  * @author duanbn
  */
-public class BeanUtil {
+public class BeansUtil {
 
     /**
      * 字段别名缓存，当没有指定别名时，使用字段名作为别名. key: 别名/字段名
      */
-    public static final Map<String, Field>     _aliasFieldCache  = new ConcurrentHashMap<String, Field>();
+    public static final Map<String, Field>     _aliasFieldCache = new ConcurrentHashMap<String, Field>();
 
     /**
      * 类属性缓存. 缓存反射结果
      */
-    public static final Map<Class<?>, Field[]> _fieldCache       = new ConcurrentHashMap<Class<?>, Field[]>();
-
-    /**
-     * 实体元信息管理
-     */
-    private static IEntityMetaManager          entityMetaManager = DefaultEntityMetaManager.getInstance();
-
-    public static PKValue getNotUnionPkValue(Object obj) {
-        PKName pkName = getNotUnionPkName(obj.getClass());
-
-        Object pkValue = getProperty(obj, pkName.getValue());
-
-        return PKValue.valueOf(pkValue);
-    }
-
-    /**
-     * 获取主键值.
-     *
-     * @param obj
-     * @return 主键值
-     * @throws Exception 获取失败
-     */
-    public static EntityPK getEntityPK(Object obj) {
-        List<PKName> pkNames = getPkName(obj.getClass());
-        List<PKValue> pkValues = Lists.newArrayList();
-        Object pkValue = null;
-        for (PKName pkName : pkNames) {
-            pkValue = getProperty(obj, pkName.getValue());
-            pkValues.add(PKValue.valueOf(pkValue));
-        }
-        return EntityPK.valueOf(pkNames.toArray(new PKName[pkNames.size()]),
-                pkValues.toArray(new PKValue[pkValues.size()]));
-    }
-
-    public static PKName getNotUnionPkName(Class<?> clazz) {
-        DBTable dbTable = entityMetaManager.getTableMeta(clazz);
-        if (dbTable.isUnionPrimaryKey()) {
-            throw new IllegalStateException("不支持联合主键, class=" + clazz);
-        }
-
-        List<DBTablePK> primaryKeys = dbTable.getPrimaryKeys();
-
-        if (primaryKeys.isEmpty()) {
-            throw new IllegalStateException("找不到主键 class=" + clazz);
-        }
-
-        return primaryKeys.get(0).getPKName();
-    }
-
-    /**
-     * 获取对象的主键字段名.
-     *
-     * @param clazz 获取此对象的数据库主键名
-     * @return 字包含pkName的EntityPK对象
-     */
-    public static List<PKName> getPkName(Class<?> clazz) {
-        DBTable dbTable = entityMetaManager.getTableMeta(clazz);
-
-        List<DBTablePK> primaryKeys = dbTable.getPrimaryKeys();
-
-        if (primaryKeys.isEmpty()) {
-            throw new IllegalStateException("找不到主键 class=" + clazz);
-        }
-
-        List<PKName> ePKList = new ArrayList<PKName>(primaryKeys.size());
-        for (DBTablePK primaryKey : primaryKeys) {
-            ePKList.add(primaryKey.getPKName());
-        }
-
-        return ePKList;
-    }
-
-    /**
-     * 判断是否是分片数据对象.
-     */
-    public static boolean isShardingEntity(Class<?> clazz) {
-        DBTable dbTable = entityMetaManager.getTableMeta(clazz);
-
-        return dbTable.isSharding();
-    }
-
-    /**
-     * 获取sharding值
-     * 
-     * @param entity
-     * @return
-     */
-    public static Object getShardingValue(Object entity) {
-        Class<?> clazz = entity.getClass();
-        DBTable dbTable = entityMetaManager.getTableMeta(clazz);
-
-        String shardingField = dbTable.getShardingBy();
-        Object shardingValue = null;
-        try {
-            shardingValue = getProperty(entity, shardingField);
-        } catch (Exception e) {
-            throw new DBOperationException("获取sharding value失败, clazz=" + clazz + " field=" + shardingField);
-        }
-        if (shardingValue == null) {
-            throw new IllegalStateException("shardingValue is null, clazz=" + clazz + " field=" + shardingField);
-        }
-
-        return shardingValue;
-    }
-
-    /**
-     * 获取集群名
-     * 
-     * @param clazz
-     * @return
-     */
-    public static String getClusterName(Class<?> clazz) {
-        DBTable dbTable = entityMetaManager.getTableMeta(clazz);
-
-        return dbTable.getCluster();
-    }
-
-    /**
-     * 获取集群表数量.
-     * 
-     * @param clazz
-     * @return
-     */
-    public static int getTableNum(Class<?> clazz) {
-        DBTable dbTable = entityMetaManager.getTableMeta(clazz);
-
-        return dbTable.getShardingNum();
-    }
-
-    /**
-     * 获取表名.
-     * 
-     * @param entity 数据对象
-     * @param tableIndex 表下标
-     * @return 表名
-     */
-    public static String getTableName(Object entity, int tableIndex) {
-        Class<?> entityClass = entity.getClass();
-        return getTableName(entityClass, tableIndex);
-    }
-
-    /**
-     * 获取表名. 如果下标等于-1则忽略添加下标
-     * 
-     * @param clazz 数据对象class
-     * @param tableIndex 表下标
-     * @return 表名
-     */
-    public static String getTableName(Class<?> clazz, int tableIndex) {
-        if (tableIndex == -1) {
-            return getTableName(clazz);
-        } else {
-            return getTableName(clazz) + tableIndex;
-        }
-    }
-
-    /**
-     * 获取表名不带分表下标.
-     * 
-     * @param clazz 数据对象class
-     * @return 表名，不带分表下标
-     */
-    public static String getTableName(Class<?> clazz) {
-        DBTable dbTable = entityMetaManager.getTableMeta(clazz);
-
-        return dbTable.getName();
-    }
-
-    /**
-     * 判断实体是否需要被缓存
-     * 
-     * @param clazz 实体对象
-     * @return true:是, false:否
-     */
-    public static boolean isCache(Class<?> clazz) {
-        DBTable dbTable = entityMetaManager.getTableMeta(clazz);
-
-        return dbTable.isCache();
-    }
+    public static final Map<Class<?>, Field[]> _fieldCache      = new ConcurrentHashMap<Class<?>, Field[]>();
 
     /**
      * 通过反射获取对象的属性值.
@@ -271,7 +83,7 @@ public class BeanUtil {
         // 优先使用使用set设置
         Method[] setMethods = clazz.getMethods();
         for (Method setMethod : setMethods) {
-            if (setMethod.getName().equals("set" + StringUtils.upperFirstLetter(propertyName))) {
+            if (setMethod.getName().equals("set" + StringUtil.upperFirstLetter(propertyName))) {
                 if (setMethod.getParameterTypes().length == 1) {
                     try {
                         setMethod.invoke(obj, value);
@@ -327,7 +139,7 @@ public class BeanUtil {
         // 优先使用set设置
         Method[] setMethods = clazz.getMethods();
         for (Method setMethod : setMethods) {
-            if (setMethod.getName().equals("set" + StringUtils.upperFirstLetter(propertyName))) {
+            if (setMethod.getName().equals("set" + StringUtil.upperFirstLetter(propertyName))) {
                 if (setMethod.getParameterTypes().length == 1) {
                     Class<?> paramType = setMethod.getParameterTypes()[0];
                     try {
@@ -543,22 +355,22 @@ public class BeanUtil {
         String fieldName = field.getName();
         org.pinus4j.entity.annotations.Field annoField = field
                 .getAnnotation(org.pinus4j.entity.annotations.Field.class);
-        if (annoField != null && StringUtils.isNotBlank(annoField.name())) {
+        if (annoField != null && StringUtil.isNotBlank(annoField.name())) {
             fieldName = annoField.name();
         }
 
         PrimaryKey annoPrimaryKey = field.getAnnotation(PrimaryKey.class);
-        if (annoPrimaryKey != null && StringUtils.isNotBlank(annoPrimaryKey.name())) {
+        if (annoPrimaryKey != null && StringUtil.isNotBlank(annoPrimaryKey.name())) {
             fieldName = annoPrimaryKey.name();
         }
 
         DateTime annoDateTime = field.getAnnotation(DateTime.class);
-        if (annoDateTime != null && StringUtils.isNotBlank(annoDateTime.name())) {
+        if (annoDateTime != null && StringUtil.isNotBlank(annoDateTime.name())) {
             fieldName = annoDateTime.name();
         }
 
         UpdateTime annoUpdateTime = field.getAnnotation(UpdateTime.class);
-        if (annoUpdateTime != null && StringUtils.isNotBlank(annoUpdateTime.name())) {
+        if (annoUpdateTime != null && StringUtil.isNotBlank(annoUpdateTime.name())) {
             fieldName = annoUpdateTime.name();
         }
 

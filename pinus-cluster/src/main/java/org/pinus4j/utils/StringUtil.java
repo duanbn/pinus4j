@@ -21,7 +21,7 @@ package org.pinus4j.utils;
  * 
  * @author duanbn
  */
-public class StringUtils {
+public class StringUtil {
 
     /**
      * 将首字母变成大写.

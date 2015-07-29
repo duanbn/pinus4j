@@ -39,7 +39,7 @@ import org.pinus4j.cluster.enums.HashAlgoEnum;
 import org.pinus4j.cluster.router.IClusterRouter;
 import org.pinus4j.constant.Const;
 import org.pinus4j.exceptions.LoadConfigException;
-import org.pinus4j.utils.StringUtils;
+import org.pinus4j.utils.StringUtil;
 import org.pinus4j.utils.XmlUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -96,7 +96,7 @@ public class XmlClusterConfigImpl implements IClusterConfig {
     }
 
     private XmlClusterConfigImpl(String xmlFilePath) throws LoadConfigException {
-        if (StringUtils.isBlank(xmlFilePath))
+        if (StringUtil.isBlank(xmlFilePath))
             xmlUtil = XmlUtil.getInstance();
         else
             xmlUtil = XmlUtil.getInstance(new File(xmlFilePath));
@@ -137,7 +137,7 @@ public class XmlClusterConfigImpl implements IClusterConfig {
         }
 
         String cpClassFullpath = xmlUtil.getAttributeValue(dsBucket, "cpclass");
-        if (StringUtils.isNotBlank(cpClassFullpath)) {
+        if (StringUtil.isNotBlank(cpClassFullpath)) {
             defaultConnectionPoolClass = cpClassFullpath;
         }
 
@@ -146,7 +146,7 @@ public class XmlClusterConfigImpl implements IClusterConfig {
 
         for (Node appDBInfoNode : xmlUtil.getChildByName(dsBucket, "appds")) {
             dbInfoId = xmlUtil.getAttributeValue(appDBInfoNode, "id");
-            if (StringUtils.isBlank(dbInfoId))
+            if (StringUtil.isBlank(dbInfoId))
                 throw new LoadConfigException("<envds> <appds> 必须设置id属性");
             dbInfo = new AppDBInfo();
             String username = xmlUtil.getFirstChildByName(appDBInfoNode, "username").getTextContent().trim();
@@ -252,7 +252,7 @@ public class XmlClusterConfigImpl implements IClusterConfig {
         // set router class
         try {
             String classFullPath = xmlUtil.getAttributeValue(clusterNode, "router");
-            if (StringUtils.isBlank(classFullPath)) {
+            if (StringUtil.isBlank(classFullPath)) {
                 classFullPath = DEFAULT_CLUSTER_ROUTER_CLASS;
             }
             Class<IClusterRouter> clazz = (Class<IClusterRouter>) Class.forName(classFullPath);
@@ -397,7 +397,7 @@ public class XmlClusterConfigImpl implements IClusterConfig {
 
         try {
             String isCacheEnabled = xmlUtil.getAttributeValue(dbClusterCacheNode, "enabled");
-            if (StringUtils.isNotBlank(isCacheEnabled)) {
+            if (StringUtil.isNotBlank(isCacheEnabled)) {
                 XmlClusterConfigImpl.isCacheEnabled = Boolean.valueOf(isCacheEnabled);
             }
 
@@ -405,7 +405,7 @@ public class XmlClusterConfigImpl implements IClusterConfig {
                 Node primaryNode = xmlUtil.getFirstChildByName(dbClusterCacheNode, Const.PROP_DB_CLUSTER_CACHE_PRIMARY);
                 int primaryCacheExpire = Integer.parseInt(xmlUtil.getAttributeValue(primaryNode, "expire"));
                 String classFullPath = xmlUtil.getAttributeValue(primaryNode, "class");
-                if (StringUtils.isBlank(classFullPath)) {
+                if (StringUtil.isBlank(classFullPath)) {
                     classFullPath = DEFAULT_PRIMARY_CACHE_CLASS;
                 }
                 Class<IPrimaryCache> primaryCacheClass = (Class<IPrimaryCache>) Class.forName(classFullPath);
@@ -421,7 +421,7 @@ public class XmlClusterConfigImpl implements IClusterConfig {
                 Node secondNode = xmlUtil.getFirstChildByName(dbClusterCacheNode, Const.PROP_DB_CLUSTER_CACHE_SECOND);
                 int secondCacheExpire = Integer.parseInt(xmlUtil.getAttributeValue(secondNode, "expire"));
                 classFullPath = xmlUtil.getAttributeValue(secondNode, "class");
-                if (StringUtils.isBlank(classFullPath)) {
+                if (StringUtil.isBlank(classFullPath)) {
                     classFullPath = DEFAULT_SECOND_CACHE_CLASS;
                 }
                 Class<ISecondCache> secondCacheClass = (Class<ISecondCache>) Class.forName(classFullPath);

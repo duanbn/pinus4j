@@ -50,7 +50,7 @@ public class CheckUtil {
      * @param clusterName
      */
     public static void checkClusterName(String clusterName) {
-        if (StringUtils.isBlank(clusterName)) {
+        if (StringUtil.isBlank(clusterName)) {
             throw new IllegalArgumentException("参数错误, clusterName不能为空");
         }
     }
@@ -129,7 +129,7 @@ public class CheckUtil {
      * @throws IllegalArgumentException 校验失败
      */
     public static void checkShardingKey(IShardingKey<?> shardingKey) {
-        if (shardingKey == null || StringUtils.isBlank(shardingKey.getClusterName())) {
+        if (shardingKey == null || StringUtil.isBlank(shardingKey.getClusterName())) {
             throw new IllegalArgumentException("参数错误, shardingKey=" + shardingKey);
         }
         if (shardingKey.getValue() instanceof Number) {
@@ -184,7 +184,7 @@ public class CheckUtil {
         String shardingField = table.shardingBy();
         int shardingNum = table.shardingNum();
 
-        if (StringUtils.isBlank(clusterName) || StringUtils.isBlank(shardingField) || shardingNum <= 0) {
+        if (StringUtil.isBlank(clusterName) || StringUtil.isBlank(shardingField) || shardingNum <= 0) {
             throw new IllegalArgumentException("被保存的对象不是ShardingEntity, class=" + clazz);
         }
     }
@@ -203,7 +203,7 @@ public class CheckUtil {
         String clusterName = table.cluster();
         String shardingField = table.shardingBy();
         int shardingNum = table.shardingNum();
-        if (StringUtils.isBlank(clusterName) || StringUtils.isNotBlank(shardingField) || shardingNum > 0) {
+        if (StringUtil.isBlank(clusterName) || StringUtil.isNotBlank(shardingField) || shardingNum > 0) {
             throw new IllegalArgumentException("被保存的对象不是GlobalEntity class=" + clazz);
         }
     }

@@ -20,6 +20,9 @@ import java.util.List;
 
 import org.pinus4j.entity.meta.DBTable;
 import org.pinus4j.entity.meta.DBTablePK;
+import org.pinus4j.entity.meta.EntityPK;
+import org.pinus4j.entity.meta.PKName;
+import org.pinus4j.entity.meta.PKValue;
 
 /**
  * Entity管理接口
@@ -27,6 +30,104 @@ import org.pinus4j.entity.meta.DBTablePK;
  * @author shanwei Jul 22, 2015 1:38:37 PM
  */
 public interface IEntityMetaManager {
+
+    /**
+     * 判断缓存是否开启
+     * 
+     * @param clazz
+     * @return
+     */
+    public boolean isCache(Class<?> clazz);
+
+    /**
+     * 获取表名不带下标
+     * 
+     * @param clazz
+     * @return
+     */
+    public String getTableName(Class<?> clazz);
+
+    /**
+     * 获取表名.
+     * 
+     * @param clazz
+     * @param tableIndex
+     * @return
+     */
+    public String getTableName(Class<?> clazz, int tableIndex);
+
+    /**
+     * 获取表名
+     * 
+     * @param entity
+     * @param tableIndex 表下标
+     * @return
+     */
+    public String getTableName(Object entity, int tableIndex);
+
+    /**
+     * 获取分片表数
+     * 
+     * @param clazz
+     * @return
+     */
+    public int getTableNum(Class<?> clazz);
+
+    /**
+     * 获取集群名
+     * 
+     * @param clazz
+     * @return
+     */
+    public String getClusterName(Class<?> clazz);
+
+    /**
+     * 获取分片值
+     * 
+     * @param entity
+     * @return
+     */
+    public Object getShardingValue(Object entity);
+
+    /**
+     * 判断是否是分片
+     * 
+     * @param clazz
+     * @return
+     */
+    public boolean isShardingEntity(Class<?> clazz);
+
+    /**
+     * 获取联合主键的主键名.
+     * 
+     * @param clazz
+     * @return
+     */
+    public List<PKName> getPkName(Class<?> clazz);
+
+    /**
+     * 获取联合主键的主键名
+     * 
+     * @param clazz
+     * @return
+     */
+    public PKName getNotUnionPkName(Class<?> clazz);
+
+    /**
+     * 获取主键信息，包括联合主键
+     * 
+     * @param obj
+     * @return
+     */
+    public EntityPK getEntityPK(Object obj);
+
+    /**
+     * 获取非联合主键的主键值
+     * 
+     * @param obj
+     * @return
+     */
+    public PKValue getNotUnionPkValue(Object obj);
 
     /**
      * 判断实体是否是联合主键

@@ -22,7 +22,7 @@ import javax.sql.DataSource;
 
 import org.pinus4j.cluster.cp.IDBConnectionPool;
 import org.pinus4j.exceptions.LoadConfigException;
-import org.pinus4j.utils.BeanUtil;
+import org.pinus4j.utils.BeansUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,13 +55,13 @@ public class DruidConnectionPoolImpl implements IDBConnectionPool {
         for (Map.Entry<String, String> entry : connectParam.entrySet()) {
             if (entry.getKey().equals("passwordCallback")) {
                 try {
-                    BeanUtil.setProperty(ds, entry.getKey(), Class.forName(entry.getValue()).newInstance());
+                    BeansUtil.setProperty(ds, entry.getKey(), Class.forName(entry.getValue()).newInstance());
                 } catch (Exception e) {
                     throw new LoadConfigException("create password callback instance failure");
                 }
             } else {
                 try {
-                    BeanUtil.setProperty(ds, entry.getKey(), entry.getValue());
+                    BeansUtil.setProperty(ds, entry.getKey(), entry.getValue());
                 } catch (Exception e) {
                     LOG.warn("无法识别的连接池参数:" + entry);
                 }

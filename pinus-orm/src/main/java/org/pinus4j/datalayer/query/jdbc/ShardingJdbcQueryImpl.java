@@ -34,7 +34,7 @@ import org.pinus4j.datalayer.query.IShardingQuery;
 import org.pinus4j.entity.meta.EntityPK;
 import org.pinus4j.exceptions.DBClusterException;
 import org.pinus4j.exceptions.DBOperationException;
-import org.pinus4j.utils.BeanUtil;
+import org.pinus4j.utils.BeansUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,7 +56,7 @@ public class ShardingJdbcQueryImpl extends AbstractJdbcQuery implements IShardin
 
             tx = txManager.getTransaction();
 
-            String clusterName = BeanUtil.getClusterName(clazz);
+            String clusterName = entityMetaManager.getClusterName(clazz);
             if (EnumDBMasterSlave.MASTER == masterSlave || this.dbCluster.isShardingSlaveExist(clusterName)) {
                 dbResources = this.dbCluster.getAllMasterShardingDBResource(clazz);
             } else {
@@ -153,7 +153,7 @@ public class ShardingJdbcQueryImpl extends AbstractJdbcQuery implements IShardin
         try {
             tx = txManager.getTransaction();
 
-            String clusterName = BeanUtil.getClusterName(clazz);
+            String clusterName = entityMetaManager.getClusterName(clazz);
             if (EnumDBMasterSlave.MASTER == masterSlave || this.dbCluster.isShardingSlaveExist(clusterName)) {
                 dbResources = this.dbCluster.getAllMasterShardingDBResource(clazz);
             } else {
@@ -253,7 +253,7 @@ public class ShardingJdbcQueryImpl extends AbstractJdbcQuery implements IShardin
 
             tx = txManager.getTransaction();
 
-            String clusterName = BeanUtil.getClusterName(clazz);
+            String clusterName = entityMetaManager.getClusterName(clazz);
             if (EnumDBMasterSlave.MASTER == masterSlave || this.dbCluster.isShardingSlaveExist(clusterName)) {
                 dbResources = this.dbCluster.getAllMasterShardingDBResource(clazz);
             } else {
@@ -362,7 +362,7 @@ public class ShardingJdbcQueryImpl extends AbstractJdbcQuery implements IShardin
 
             tx = txManager.getTransaction();
 
-            String clusterName = BeanUtil.getClusterName(clazz);
+            String clusterName = entityMetaManager.getClusterName(clazz);
             if (EnumDBMasterSlave.MASTER == masterSlave || this.dbCluster.isShardingSlaveExist(clusterName)) {
                 dbResources = this.dbCluster.getAllMasterShardingDBResource(clazz);
             } else {
@@ -488,7 +488,7 @@ public class ShardingJdbcQueryImpl extends AbstractJdbcQuery implements IShardin
         List<IDBResource> dbResources = null;
 
         try {
-            String clusterName = BeanUtil.getClusterName(clazz);
+            String clusterName = entityMetaManager.getClusterName(clazz);
             if (EnumDBMasterSlave.MASTER == masterSlave || this.dbCluster.isShardingSlaveExist(clusterName)) {
                 dbResources = this.dbCluster.getAllMasterShardingDBResource(clazz);
             } else {
@@ -598,7 +598,7 @@ public class ShardingJdbcQueryImpl extends AbstractJdbcQuery implements IShardin
                 for (T obj : result) {
                     try {
                         filteResult
-                                .add((T) BeanUtil.cloneWithGivenField(obj, ((DefaultQueryImpl) query).getFields()));
+                                .add((T) BeansUtil.cloneWithGivenField(obj, ((DefaultQueryImpl) query).getFields()));
                     } catch (Exception e) {
                         throw new DBOperationException(e);
                     }
@@ -695,7 +695,7 @@ public class ShardingJdbcQueryImpl extends AbstractJdbcQuery implements IShardin
      * @param shardingKey 路由因子
      */
     private ShardingDBResource _getDbFromMaster(Class<?> clazz, IShardingKey<?> shardingKey) {
-        String tableName = BeanUtil.getTableName(clazz);
+        String tableName = entityMetaManager.getTableName(clazz);
         return _getDbFromMaster(tableName, shardingKey);
     }
 
@@ -720,7 +720,7 @@ public class ShardingJdbcQueryImpl extends AbstractJdbcQuery implements IShardin
      */
     private ShardingDBResource _getDbFromSlave(Class<?> clazz, IShardingKey<?> shardingKey,
                                                EnumDBMasterSlave masterSlave) {
-        String tableName = BeanUtil.getTableName(clazz);
+        String tableName = entityMetaManager.getTableName(clazz);
         ShardingDBResource shardingDBResource = null;
         try {
             shardingDBResource = (ShardingDBResource) this.dbCluster.selectDBResourceFromSlave(tableName, shardingKey,

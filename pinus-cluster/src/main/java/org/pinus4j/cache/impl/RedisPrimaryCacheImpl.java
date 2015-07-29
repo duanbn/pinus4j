@@ -24,8 +24,8 @@ import org.pinus4j.cache.IPrimaryCache;
 import org.pinus4j.cluster.resources.ShardingDBResource;
 import org.pinus4j.entity.meta.EntityPK;
 import org.pinus4j.utils.IOUtil;
-import org.pinus4j.utils.BeanUtil;
-import org.pinus4j.utils.StringUtils;
+import org.pinus4j.utils.BeansUtil;
+import org.pinus4j.utils.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -87,7 +87,7 @@ public class RedisPrimaryCacheImpl extends AbstractRedisCache implements IPrimar
 
         List<String> keys = new ArrayList<String>();
         for (Object d : data) {
-            EntityPK entityPk = BeanUtil.getEntityPK(d);
+            EntityPK entityPk = entityMetaManager.getEntityPK(d);
             keys.add(buildGlobalKey(clusterName, tableName, entityPk));
         }
         _put(keys, data);
@@ -324,7 +324,7 @@ public class RedisPrimaryCacheImpl extends AbstractRedisCache implements IPrimar
             redisClient = jedisPool.getResource();
 
             String count = (String) redisClient.get(key);
-            if (StringUtils.isNotBlank(count)) {
+            if (StringUtil.isNotBlank(count)) {
                 if (LOG.isDebugEnabled()) {
                     LOG.debug("[PRIMARY CACHE] - get " + key + " " + count);
                 }

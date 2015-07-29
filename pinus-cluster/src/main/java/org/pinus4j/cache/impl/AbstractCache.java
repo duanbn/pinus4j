@@ -20,6 +20,8 @@ import java.util.Map;
 
 import org.pinus4j.cache.ICache;
 import org.pinus4j.cluster.resources.ShardingDBResource;
+import org.pinus4j.entity.DefaultEntityMetaManager;
+import org.pinus4j.entity.IEntityMetaManager;
 import org.pinus4j.entity.meta.EntityPK;
 import org.pinus4j.entity.meta.PKValue;
 
@@ -30,9 +32,11 @@ public abstract class AbstractCache implements ICache {
 
     protected String              address;
 
-    protected int                 expire = 30;
+    protected int                 expire            = 30;
 
     protected Map<String, String> properties;
+
+    protected IEntityMetaManager  entityMetaManager = DefaultEntityMetaManager.getInstance();
 
     public AbstractCache(String address, int expire) {
         this.address = address;

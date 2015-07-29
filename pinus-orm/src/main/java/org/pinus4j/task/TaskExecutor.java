@@ -16,7 +16,6 @@
 
 package org.pinus4j.task;
 
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,10 +27,11 @@ import org.pinus4j.cluster.resources.ShardingDBResource;
 import org.pinus4j.datalayer.IRecordIterator;
 import org.pinus4j.datalayer.iterator.GlobalRecordIterator;
 import org.pinus4j.datalayer.iterator.ShardingRecordIterator;
+import org.pinus4j.entity.DefaultEntityMetaManager;
+import org.pinus4j.entity.IEntityMetaManager;
 import org.pinus4j.exceptions.DBClusterException;
 import org.pinus4j.exceptions.DBOperationException;
 import org.pinus4j.exceptions.TaskException;
-import org.pinus4j.utils.BeanUtil;
 import org.pinus4j.utils.ThreadPool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,181 +40,181 @@ import org.slf4j.LoggerFactory;
  * 数据处理执行器.
  * 
  * @author duanbn
- *
  */
 public class TaskExecutor<E> {
 
-	public static final Logger LOG = LoggerFactory.getLogger(TaskExecutor.class);
+    public static final Logger  LOG               = LoggerFactory.getLogger(TaskExecutor.class);
 
-	/**
-	 * 处理线程池名称.
-	 */
-	private static final String THREADPOOL_NAME = "pinus";
+    /**
+     * 处理线程池名称.
+     */
+    private static final String THREADPOOL_NAME   = "pinus";
 
-	/**
-	 * 本次处理的数据对象
-	 */
-	private Class<E> clazz;
+    /**
+     * 本次处理的数据对象
+     */
+    private Class<E>            clazz;
 
-	/**
-	 * 数据库集群引用
-	 */
-	private IDBCluster dbCluster;
+    /**
+     * 数据库集群引用
+     */
+    private IDBCluster          dbCluster;
 
-	public TaskExecutor(Class<E> clazz, IDBCluster dbCluster) {
-		this.clazz = clazz;
+    private IEntityMetaManager  entityMetaManager = DefaultEntityMetaManager.getInstance();
 
-		this.dbCluster = dbCluster;
-	}
+    public TaskExecutor(Class<E> clazz, IDBCluster dbCluster) {
+        this.clazz = clazz;
 
-	public TaskFuture execute(ITask<E> task) {
-		return execute(task, null);
-	}
+        this.dbCluster = dbCluster;
+    }
 
-	public TaskFuture execute(ITask<E> task, IQuery query) {
-		// 初始化任务.
-		try {
-			task.init();
-		} catch (Exception e) {
-			throw new TaskException(e);
-		}
+    public TaskFuture execute(ITask<E> task) {
+        return execute(task, null);
+    }
 
-		// 创建线程池.
-		ThreadPool threadPool = ThreadPool.newInstance(THREADPOOL_NAME);
+    public TaskFuture execute(ITask<E> task, IQuery query) {
+        // 初始化任务.
+        try {
+            task.init();
+        } catch (Exception e) {
+            throw new TaskException(e);
+        }
 
-		TaskFuture future = null;
+        // 创建线程池.
+        ThreadPool threadPool = ThreadPool.newInstance(THREADPOOL_NAME);
 
-		String clusterName = BeanUtil.getClusterName(clazz);
+        TaskFuture future = null;
 
-		IRecordIterator<E> reader = null;
-		if (BeanUtil.isShardingEntity(clazz)) { // 分片情况
-			List<IDBResource> dbResources;
-			try {
-				dbResources = this.dbCluster.getAllMasterShardingDBResource(clazz);
-			} catch (Exception e) {
-				throw new DBOperationException(e);
-			}
-			List<IRecordIterator<E>> readers = new ArrayList<IRecordIterator<E>>(dbResources.size());
+        String clusterName = entityMetaManager.getClusterName(clazz);
 
-			// 计算总数
-			long total = 0;
-			for (IDBResource dbResource : dbResources) {
-				reader = new ShardingRecordIterator<E>((ShardingDBResource) dbResource, clazz);
-				if (task.taskBuffer() > 0) {
-					reader.setStep(task.taskBuffer());
-				}
-				reader.setQuery(query);
-				readers.add(reader);
-				total += reader.getCount();
-			}
+        IRecordIterator<E> reader = null;
+        if (entityMetaManager.isShardingEntity(clazz)) { // 分片情况
+            List<IDBResource> dbResources;
+            try {
+                dbResources = this.dbCluster.getAllMasterShardingDBResource(clazz);
+            } catch (Exception e) {
+                throw new DBOperationException(e);
+            }
+            List<IRecordIterator<E>> readers = new ArrayList<IRecordIterator<E>>(dbResources.size());
 
-			future = new TaskFuture(total, threadPool, task);
-			future.addDBResource(dbResources);
+            // 计算总数
+            long total = 0;
+            for (IDBResource dbResource : dbResources) {
+                reader = new ShardingRecordIterator<E>((ShardingDBResource) dbResource, clazz);
+                if (task.taskBuffer() > 0) {
+                    reader.setStep(task.taskBuffer());
+                }
+                reader.setQuery(query);
+                readers.add(reader);
+                total += reader.getCount();
+            }
 
-			for (IRecordIterator<E> r : readers) {
-				threadPool.submit(new RecrodReaderThread<E>(r, threadPool, task, future));
-			}
-		} else { // 全局情况
-			RecrodThread<E> rt = null;
+            future = new TaskFuture(total, threadPool, task);
+            future.addDBResource(dbResources);
 
-			IDBResource dbResource;
-			try {
-				dbResource = this.dbCluster.getMasterGlobalDBResource(clusterName, BeanUtil.getTableName(clazz));
-			} catch (DBClusterException e) {
-				throw new DBOperationException(e);
-			}
-			reader = new GlobalRecordIterator<E>((GlobalDBResource) dbResource, clazz);
-			if (task.taskBuffer() > 0) {
-				reader.setStep(task.taskBuffer());
-			}
-			reader.setQuery(query);
+            for (IRecordIterator<E> r : readers) {
+                threadPool.submit(new RecrodReaderThread<E>(r, threadPool, task, future));
+            }
+        } else { // 全局情况
+            RecrodThread<E> rt = null;
 
-			future = new TaskFuture(reader.getCount(), threadPool, task);
-			future.addDBResource(dbResource);
+            IDBResource dbResource;
+            try {
+                dbResource = this.dbCluster.getMasterGlobalDBResource(clusterName,
+                        entityMetaManager.getTableName(clazz));
+            } catch (DBClusterException e) {
+                throw new DBOperationException(e);
+            }
+            reader = new GlobalRecordIterator<E>((GlobalDBResource) dbResource, clazz);
+            if (task.taskBuffer() > 0) {
+                reader.setStep(task.taskBuffer());
+            }
+            reader.setQuery(query);
 
-			while (reader.hasNext()) {
-				List<E> record = reader.nextMore();
-				rt = new RecrodThread<E>(record, task, future);
-				threadPool.submit(rt);
-			}
-		}
+            future = new TaskFuture(reader.getCount(), threadPool, task);
+            future.addDBResource(dbResource);
 
-		return future;
-	}
+            while (reader.hasNext()) {
+                List<E> record = reader.nextMore();
+                rt = new RecrodThread<E>(record, task, future);
+                threadPool.submit(rt);
+            }
+        }
 
-	/**
-	 * 只是在数据分片情况下会被使用.
-	 * 
-	 * @author duanbn
-	 *
-	 * @param <E>
-	 */
-	public static class RecrodReaderThread<E> implements Runnable {
+        return future;
+    }
 
-		private IRecordIterator<E> recordReader;
+    /**
+     * 只是在数据分片情况下会被使用.
+     * 
+     * @author duanbn
+     * @param <E>
+     */
+    public static class RecrodReaderThread<E> implements Runnable {
 
-		private ThreadPool threadPool;
+        private IRecordIterator<E> recordReader;
 
-		private ITask<E> task;
+        private ThreadPool         threadPool;
 
-		private TaskFuture future;
+        private ITask<E>           task;
 
-		public RecrodReaderThread(IRecordIterator<E> recordReader, ThreadPool threadPool, ITask<E> task,
-				TaskFuture future) {
-			this.recordReader = recordReader;
-			this.threadPool = threadPool;
-			this.task = task;
-			this.future = future;
-		}
+        private TaskFuture         future;
 
-		@Override
-		public void run() {
-			RecrodThread<E> rt = null;
-			while (recordReader.hasNext()) {
-				List<E> record = recordReader.nextMore();
-				rt = new RecrodThread<E>(record, task, future);
-				threadPool.submit(rt);
-			}
-		}
+        public RecrodReaderThread(IRecordIterator<E> recordReader, ThreadPool threadPool, ITask<E> task,
+                                  TaskFuture future) {
+            this.recordReader = recordReader;
+            this.threadPool = threadPool;
+            this.task = task;
+            this.future = future;
+        }
 
-	}
+        @Override
+        public void run() {
+            RecrodThread<E> rt = null;
+            while (recordReader.hasNext()) {
+                List<E> record = recordReader.nextMore();
+                rt = new RecrodThread<E>(record, task, future);
+                threadPool.submit(rt);
+            }
+        }
 
-	/**
-	 * 具体执行任务方法.
-	 * 
-	 * @author duanbn
-	 *
-	 * @param <E>
-	 */
-	public static class RecrodThread<E> implements Runnable {
+    }
 
-		public static final Logger LOG = LoggerFactory.getLogger(RecrodThread.class);
+    /**
+     * 具体执行任务方法.
+     * 
+     * @author duanbn
+     * @param <E>
+     */
+    public static class RecrodThread<E> implements Runnable {
 
-		private List<E> record;
+        public static final Logger LOG = LoggerFactory.getLogger(RecrodThread.class);
 
-		private ITask<E> task;
+        private List<E>            record;
 
-		private TaskFuture future;
+        private ITask<E>           task;
 
-		public RecrodThread(List<E> record, ITask<E> task, TaskFuture future) {
-			this.record = record;
-			this.task = task;
-			this.future = future;
-		}
+        private TaskFuture         future;
 
-		@Override
-		public void run() {
-			try {
-				this.task.batchRecord(record);
-				this.task.afterBatch();
-			} catch (Exception e) {
-				LOG.warn("do task failure " + record, e);
-			} finally {
-				this.future.down(record.size());
-				this.future.incrCount(record.size());
-			}
-		}
+        public RecrodThread(List<E> record, ITask<E> task, TaskFuture future) {
+            this.record = record;
+            this.task = task;
+            this.future = future;
+        }
 
-	}
+        @Override
+        public void run() {
+            try {
+                this.task.batchRecord(record);
+                this.task.afterBatch();
+            } catch (Exception e) {
+                LOG.warn("do task failure " + record, e);
+            } finally {
+                this.future.down(record.size());
+                this.future.incrCount(record.size());
+            }
+        }
+
+    }
 
 }

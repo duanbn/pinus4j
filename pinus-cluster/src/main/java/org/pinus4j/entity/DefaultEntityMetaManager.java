@@ -43,8 +43,14 @@ import org.pinus4j.entity.meta.DBTableColumn;
 import org.pinus4j.entity.meta.DBTableIndex;
 import org.pinus4j.entity.meta.DBTablePK;
 import org.pinus4j.entity.meta.DataTypeBind;
-import org.pinus4j.utils.BeanUtil;
-import org.pinus4j.utils.StringUtils;
+import org.pinus4j.entity.meta.EntityPK;
+import org.pinus4j.entity.meta.PKName;
+import org.pinus4j.entity.meta.PKValue;
+import org.pinus4j.exceptions.DBOperationException;
+import org.pinus4j.utils.BeansUtil;
+import org.pinus4j.utils.StringUtil;
+
+import com.google.common.collect.Lists;
 
 /**
  * 管理加载的Entity信息.
@@ -81,6 +87,131 @@ public class DefaultEntityMetaManager implements IEntityMetaManager {
             }
         }
         return instance;
+    }
+
+    @Override
+    public PKValue getNotUnionPkValue(Object obj) {
+        PKName pkName = getNotUnionPkName(obj.getClass());
+
+        Object pkValue = BeansUtil.getProperty(obj, pkName.getValue());
+
+        return PKValue.valueOf(pkValue);
+    }
+
+    @Override
+    public EntityPK getEntityPK(Object obj) {
+        List<PKName> pkNames = getPkName(obj.getClass());
+        List<PKValue> pkValues = Lists.newArrayList();
+        Object pkValue = null;
+        for (PKName pkName : pkNames) {
+            pkValue = BeansUtil.getProperty(obj, pkName.getValue());
+            pkValues.add(PKValue.valueOf(pkValue));
+        }
+        return EntityPK.valueOf(pkNames.toArray(new PKName[pkNames.size()]),
+                pkValues.toArray(new PKValue[pkValues.size()]));
+    }
+
+    @Override
+    public PKName getNotUnionPkName(Class<?> clazz) {
+        DBTable dbTable = this.getTableMeta(clazz);
+        if (dbTable.isUnionPrimaryKey()) {
+            throw new IllegalStateException("不支持联合主键, class=" + clazz);
+        }
+
+        List<DBTablePK> primaryKeys = dbTable.getPrimaryKeys();
+
+        if (primaryKeys.isEmpty()) {
+            throw new IllegalStateException("找不到主键 class=" + clazz);
+        }
+
+        return primaryKeys.get(0).getPKName();
+    }
+
+    @Override
+    public List<PKName> getPkName(Class<?> clazz) {
+        DBTable dbTable = this.getTableMeta(clazz);
+
+        List<DBTablePK> primaryKeys = dbTable.getPrimaryKeys();
+
+        if (primaryKeys.isEmpty()) {
+            throw new IllegalStateException("找不到主键 class=" + clazz);
+        }
+
+        List<PKName> ePKList = new ArrayList<PKName>(primaryKeys.size());
+        for (DBTablePK primaryKey : primaryKeys) {
+            ePKList.add(primaryKey.getPKName());
+        }
+
+        return ePKList;
+    }
+
+    @Override
+    public boolean isShardingEntity(Class<?> clazz) {
+        DBTable dbTable = this.getTableMeta(clazz);
+
+        return dbTable.isSharding();
+    }
+
+    @Override
+    public Object getShardingValue(Object entity) {
+        Class<?> clazz = entity.getClass();
+        DBTable dbTable = this.getTableMeta(clazz);
+
+        String shardingField = dbTable.getShardingBy();
+        Object shardingValue = null;
+        try {
+            shardingValue = BeansUtil.getProperty(entity, shardingField);
+        } catch (Exception e) {
+            throw new DBOperationException("获取sharding value失败, clazz=" + clazz + " field=" + shardingField);
+        }
+        if (shardingValue == null) {
+            throw new IllegalStateException("shardingValue is null, clazz=" + clazz + " field=" + shardingField);
+        }
+
+        return shardingValue;
+    }
+
+    @Override
+    public String getClusterName(Class<?> clazz) {
+        DBTable dbTable = this.getTableMeta(clazz);
+
+        return dbTable.getCluster();
+    }
+
+    @Override
+    public int getTableNum(Class<?> clazz) {
+        DBTable dbTable = this.getTableMeta(clazz);
+
+        return dbTable.getShardingNum();
+    }
+
+    @Override
+    public String getTableName(Object entity, int tableIndex) {
+        Class<?> entityClass = entity.getClass();
+        return getTableName(entityClass, tableIndex);
+    }
+
+    @Override
+    public String getTableName(Class<?> clazz, int tableIndex) {
+        if (tableIndex == -1) {
+            return getTableName(clazz);
+        } else {
+            return getTableName(clazz) + tableIndex;
+        }
+    }
+
+    @Override
+    public String getTableName(Class<?> clazz) {
+        DBTable dbTable = this.getTableMeta(clazz);
+
+        return dbTable.getName();
+    }
+
+    @Override
+    public boolean isCache(Class<?> clazz) {
+        DBTable dbTable = this.getTableMeta(clazz);
+
+        return dbTable.isCache();
     }
 
     @Override
@@ -206,11 +337,11 @@ public class DefaultEntityMetaManager implements IEntityMetaManager {
             throw new IllegalArgumentException(clazz + "无法转化为数据库，请使用@Table注解");
         }
         // 获取表名
-        String tableName = StringUtils.isBlank(annoTable.name()) ? clazz.getSimpleName() : annoTable.name();
+        String tableName = StringUtil.isBlank(annoTable.name()) ? clazz.getSimpleName() : annoTable.name();
         DBTable table = new DBTable(tableName.toLowerCase());
         // 获取集群名
         String cluster = annoTable.cluster();
-        if (StringUtils.isBlank(cluster)) {
+        if (StringUtil.isBlank(cluster)) {
             throw new IllegalArgumentException(clazz + " @Table的cluster不能为空");
         }
         table.setCluster(cluster);
@@ -249,10 +380,10 @@ public class DefaultEntityMetaManager implements IEntityMetaManager {
                 }
 
                 String fieldName = f.getName();
-                if (StringUtils.isNotBlank(datetime.name())) {
+                if (StringUtil.isNotBlank(datetime.name())) {
                     fieldName = datetime.name();
                 }
-                BeanUtil.putAliasField(clazz, fieldName, f);
+                BeansUtil.putAliasField(clazz, fieldName, f);
 
                 column = new DBTableColumn();
                 column.setField(fieldName);
@@ -276,10 +407,10 @@ public class DefaultEntityMetaManager implements IEntityMetaManager {
                 }
 
                 String fieldName = f.getName();
-                if (StringUtils.isNotBlank(updateTime.name())) {
+                if (StringUtil.isNotBlank(updateTime.name())) {
                     fieldName = updateTime.name();
                 }
-                BeanUtil._aliasFieldCache.put(clazz.getName() + fieldName, f);
+                BeansUtil._aliasFieldCache.put(clazz.getName() + fieldName, f);
 
                 column = new DBTableColumn();
                 column.setField(fieldName);
@@ -302,10 +433,10 @@ public class DefaultEntityMetaManager implements IEntityMetaManager {
                 }
 
                 String fieldName = f.getName();
-                if (StringUtils.isNotBlank(dbField.name())) {
+                if (StringUtil.isNotBlank(dbField.name())) {
                     fieldName = dbField.name();
                 }
-                BeanUtil._aliasFieldCache.put(clazz.getName() + fieldName, f);
+                BeansUtil._aliasFieldCache.put(clazz.getName() + fieldName, f);
 
                 boolean isCanNull = dbField.isCanNull();
                 int length = _getLength(f, dbField.length());
@@ -344,10 +475,10 @@ public class DefaultEntityMetaManager implements IEntityMetaManager {
             pk = f.getAnnotation(PrimaryKey.class);
             if (pk != null) {
                 String fieldName = f.getName();
-                if (StringUtils.isNotBlank(pk.name())) {
+                if (StringUtil.isNotBlank(pk.name())) {
                     fieldName = pk.name();
                 }
-                BeanUtil._aliasFieldCache.put(clazz.getName() + fieldName, f);
+                BeansUtil._aliasFieldCache.put(clazz.getName() + fieldName, f);
 
                 primaryKey = new DBTablePK();
                 primaryKey.setField(fieldName);
@@ -389,7 +520,7 @@ public class DefaultEntityMetaManager implements IEntityMetaManager {
         DBTableIndex dbIndex = null;
         for (Index index : indexes) {
             dbIndex = new DBTableIndex();
-            dbIndex.setField(StringUtils.removeBlank(index.field()));
+            dbIndex.setField(StringUtil.removeBlank(index.field()));
             dbIndex.setUnique(index.isUnique());
             table.addIndex(dbIndex);
         }

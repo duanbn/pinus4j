@@ -37,7 +37,7 @@ import org.pinus4j.entity.meta.PKName;
 import org.pinus4j.entity.meta.PKValue;
 import org.pinus4j.exceptions.DBOperationException;
 import org.pinus4j.utils.JdbcUtil;
-import org.pinus4j.utils.BeanUtil;
+import org.pinus4j.utils.BeansUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -101,9 +101,9 @@ public abstract class AbstractJdbcUpdate implements IDataUpdate {
 
                 if (!entityMetaManager.isUnionKey(clazz)) {
                     ResultSet rs = st.getGeneratedKeys();
-                    PKName pkName = BeanUtil.getNotUnionPkName(clazz);
+                    PKName pkName = entityMetaManager.getNotUnionPkName(clazz);
                     if (rs.next()) {
-                        BeanUtil.setProperty(entity, pkName.getValue(), rs.getObject(1));
+                        BeansUtil.setProperty(entity, pkName.getValue(), rs.getObject(1));
                         pks.add(PKValue.valueOf(rs.getObject(1)));
                     }
                 }
@@ -175,7 +175,7 @@ public abstract class AbstractJdbcUpdate implements IDataUpdate {
      * @return true:启用cache, false:不启用
      */
     protected boolean isCacheAvailable(Class<?> clazz) {
-        return primaryCache != null && BeanUtil.isCache(clazz);
+        return primaryCache != null && entityMetaManager.isCache(clazz);
     }
 
     /**
@@ -184,7 +184,7 @@ public abstract class AbstractJdbcUpdate implements IDataUpdate {
      * @return true:启用cache, false:不启用
      */
     protected boolean isSecondCacheAvailable(Class<?> clazz) {
-        return secondCache != null && BeanUtil.isCache(clazz);
+        return secondCache != null && entityMetaManager.isCache(clazz);
     }
 
     @Override

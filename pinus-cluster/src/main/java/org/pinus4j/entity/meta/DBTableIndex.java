@@ -18,7 +18,7 @@ package org.pinus4j.entity.meta;
 
 import java.io.Serializable;
 
-import org.pinus4j.utils.StringUtils;
+import org.pinus4j.utils.StringUtil;
 
 /**
  * 数据库索引bean.
@@ -48,7 +48,7 @@ public class DBTableIndex implements Serializable {
      */
     public String getIndexName() {
         StringBuilder indexName = new StringBuilder();
-        indexName.append("index__").append(StringUtils.removeBlank(field).replaceAll(",", "__"));
+        indexName.append("index__").append(StringUtil.removeBlank(field).replaceAll(",", "__"));
         return indexName.toString();
     }
 

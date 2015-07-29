@@ -36,11 +36,13 @@ import org.pinus4j.api.SQL;
 import org.pinus4j.api.query.IQuery;
 import org.pinus4j.api.query.impl.DefaultQueryImpl;
 import org.pinus4j.constant.Const;
+import org.pinus4j.entity.DefaultEntityMetaManager;
+import org.pinus4j.entity.IEntityMetaManager;
 import org.pinus4j.entity.meta.EntityPK;
 import org.pinus4j.entity.meta.PKName;
 import org.pinus4j.entity.meta.PKValue;
-import org.pinus4j.utils.BeanUtil;
-import org.pinus4j.utils.StringUtils;
+import org.pinus4j.utils.BeansUtil;
+import org.pinus4j.utils.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,15 +64,17 @@ public class SQLBuilder {
 
     private static final SimpleDateFormat    sdf               = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
+    private static IEntityMetaManager        entityMetaManager = DefaultEntityMetaManager.getInstance();
+
     /**
      * 拼装sql. SELECT pkName FROM tableName {IQuery.getSql()}
      * 
      * @return sql语句.
      */
     public static String buildSelectPkByQuery(Class<?> clazz, int tableIndex, IQuery query) {
-        String tableName = BeanUtil.getTableName(clazz, tableIndex);
+        String tableName = entityMetaManager.getTableName(clazz, tableIndex);
 
-        List<PKName> pkNames = BeanUtil.getPkName(clazz);
+        List<PKName> pkNames = entityMetaManager.getPkName(clazz);
         StringBuilder pkField = new StringBuilder();
         for (PKName pkName : pkNames) {
             pkField.append(pkName.getValue()).append(',');
@@ -80,7 +84,7 @@ public class SQLBuilder {
         StringBuilder SQL = new StringBuilder("SELECT " + pkField.toString() + " FROM ");
         SQL.append(tableName);
         String whereSql = ((DefaultQueryImpl) query).getWhereSql();
-        if (StringUtils.isNotBlank(whereSql))
+        if (StringUtil.isNotBlank(whereSql))
             SQL.append(((DefaultQueryImpl) query).getWhereSql());
 
         debugSQL(SQL.toString());
@@ -94,7 +98,7 @@ public class SQLBuilder {
      * @return sql语句.
      */
     public static String buildSelectByQuery(Class<?> clazz, int tableIndex, IQuery query) {
-        String tableName = BeanUtil.getTableName(clazz, tableIndex);
+        String tableName = entityMetaManager.getTableName(clazz, tableIndex);
 
         StringBuilder fields = new StringBuilder();
         if (((DefaultQueryImpl) query).hasQueryFields()) {
@@ -110,7 +114,7 @@ public class SQLBuilder {
         SQL.append(fields.toString()).append(" FROM ");
         SQL.append(tableName);
         String whereSql = ((DefaultQueryImpl) query).getWhereSql();
-        if (StringUtils.isNotBlank(whereSql))
+        if (StringUtil.isNotBlank(whereSql))
             SQL.append(((DefaultQueryImpl) query).getWhereSql());
 
         debugSQL(SQL.toString());
@@ -119,13 +123,13 @@ public class SQLBuilder {
     }
 
     public static String buildSelectCountByQuery(Class<?> clazz, int tableIndex, IQuery query) {
-        String tableName = BeanUtil.getTableName(clazz, tableIndex);
+        String tableName = entityMetaManager.getTableName(clazz, tableIndex);
         StringBuilder SQL = new StringBuilder("SELECT count(*) FROM ");
         SQL.append(tableName);
 
         if (query != null) {
             String whereSql = ((DefaultQueryImpl) query).getWhereSql();
-            if (StringUtils.isNotBlank(whereSql))
+            if (StringUtil.isNotBlank(whereSql))
                 SQL.append(((DefaultQueryImpl) query).getWhereSql());
         }
 
@@ -176,7 +180,7 @@ public class SQLBuilder {
     }
 
     public static String buildSelectCountGlobalSql(Class<?> clazz, IQuery query) {
-        String tableName = BeanUtil.getTableName(clazz, -1);
+        String tableName = entityMetaManager.getTableName(clazz, -1);
 
         StringBuilder SQL = new StringBuilder("SELECT count(*) ").append("FROM ");
         SQL.append(tableName);
@@ -202,7 +206,7 @@ public class SQLBuilder {
             return sql;
         }
 
-        String tableName = BeanUtil.getTableName(clazz, tableIndex);
+        String tableName = entityMetaManager.getTableName(clazz, tableIndex);
 
         StringBuilder SQL = new StringBuilder("SELECT count(*) ").append("FROM ");
         SQL.append(tableName);
@@ -263,9 +267,9 @@ public class SQLBuilder {
                 Object value = null;
                 for (int i = 1; i <= rsmd.getColumnCount(); i++) {
                     fieldName = rsmd.getColumnName(i);
-                    f = BeanUtil.getField(clazz, fieldName);
+                    f = BeansUtil.getField(clazz, fieldName);
                     value = _getRsValue(rs, f, i);
-                    BeanUtil.setProperty(one, fieldName, value);
+                    BeansUtil.setProperty(one, fieldName, value);
                 }
                 list.add(one);
             } catch (Exception e) {
@@ -290,7 +294,7 @@ public class SQLBuilder {
         ResultSetMetaData rsmd = rs.getMetaData();
         T one = null;
         String fieldName = null;
-        PKName[] pkNames = BeanUtil.getPkName(clazz).toArray(new PKName[0]);
+        PKName[] pkNames = entityMetaManager.getPkName(clazz).toArray(new PKName[0]);
         PKValue[] pkValues = new PKValue[pkNames.length];
 
         Field f = null;
@@ -301,9 +305,9 @@ public class SQLBuilder {
 
                 for (int i = 1; i <= rsmd.getColumnCount(); i++) {
                     fieldName = rsmd.getColumnName(i);
-                    f = BeanUtil.getField(clazz, fieldName);
+                    f = BeansUtil.getField(clazz, fieldName);
                     value = _getRsValue(rs, f, i);
-                    BeanUtil.setProperty(one, fieldName, value);
+                    BeansUtil.setProperty(one, fieldName, value);
                 }
 
                 for (int i = 0; i < pkNames.length; i++) {
@@ -361,8 +365,8 @@ public class SQLBuilder {
      * @throws SQLException
      */
     public static String buildSelectByPks(EntityPK[] pks, Class<?> clazz, int tableIndex) throws SQLException {
-        Field[] fields = BeanUtil.getFields(clazz);
-        String tableName = BeanUtil.getTableName(clazz, tableIndex);
+        Field[] fields = BeansUtil.getFields(clazz);
+        String tableName = entityMetaManager.getTableName(clazz, tableIndex);
 
         StringBuilder whereSql = new StringBuilder();
         for (EntityPK pk : pks) {
@@ -380,7 +384,7 @@ public class SQLBuilder {
 
         StringBuilder SQL = new StringBuilder("SELECT ");
         for (Field field : fields) {
-            SQL.append(BeanUtil.getFieldName(field)).append(",");
+            SQL.append(BeansUtil.getFieldName(field)).append(",");
         }
         SQL.deleteCharAt(SQL.length() - 1);
         SQL.append(" FROM ").append(tableName);
@@ -400,8 +404,8 @@ public class SQLBuilder {
      * @return sql语句
      */
     public static String buildSelectByPk(EntityPK pk, Class<?> clazz, int tableIndex) throws SQLException {
-        Field[] fields = BeanUtil.getFields(clazz);
-        String tableName = BeanUtil.getTableName(clazz, tableIndex);
+        Field[] fields = BeansUtil.getFields(clazz);
+        String tableName = entityMetaManager.getTableName(clazz, tableIndex);
 
         StringBuilder whereSql = new StringBuilder();
         for (int i = 0; i < pk.getPkNames().length; i++) {
@@ -413,7 +417,7 @@ public class SQLBuilder {
 
         StringBuilder SQL = new StringBuilder("SELECT ");
         for (Field field : fields) {
-            SQL.append(BeanUtil.getFieldName(field)).append(",");
+            SQL.append(BeansUtil.getFieldName(field)).append(",");
         }
         SQL.deleteCharAt(SQL.length() - 1);
         SQL.append(" FROM ").append(tableName);
@@ -431,7 +435,7 @@ public class SQLBuilder {
      * @throws SQLException
      */
     public static String buildDeleteByPks(Class<?> clazz, int tableIndex, List<EntityPK> pks) throws SQLException {
-        String tableName = BeanUtil.getTableName(clazz, tableIndex);
+        String tableName = entityMetaManager.getTableName(clazz, tableIndex);
 
         StringBuilder whereSql = new StringBuilder();
         for (EntityPK pk : pks) {
@@ -469,19 +473,19 @@ public class SQLBuilder {
         Object entity = entities.get(0);
 
         // 获取表名.
-        String tableName = BeanUtil.getTableName(entity, tableIndex);
+        String tableName = entityMetaManager.getTableName(entity, tableIndex);
 
         // 批量添加
         Statement st = conn.createStatement();
         Map<String, Object> entityProperty = null;
         for (Object dbEntity : entities) {
             try {
-                entityProperty = BeanUtil.describe(dbEntity, true);
+                entityProperty = BeansUtil.describe(dbEntity, true);
             } catch (Exception e) {
                 throw new SQLException("解析实体对象失败", e);
             }
             // 拼装主键条件
-            EntityPK entityPk = BeanUtil.getEntityPK(dbEntity);
+            EntityPK entityPk = entityMetaManager.getEntityPK(dbEntity);
             StringBuilder pkWhereSql = new StringBuilder();
             for (int i = 0; i < entityPk.getPkNames().length; i++) {
                 pkWhereSql.append(entityPk.getPkNames()[i].getValue());
@@ -523,13 +527,13 @@ public class SQLBuilder {
      */
     public static String getInsert(Connection conn, Object entity, int tableIndex) throws SQLException {
         // 获取表名.
-        String tableName = BeanUtil.getTableName(entity, tableIndex);
+        String tableName = entityMetaManager.getTableName(entity, tableIndex);
 
         // 批量添加
         Map<String, Object> entityProperty = null;
         try {
             // 获取需要被插入数据库的字段.
-            entityProperty = BeanUtil.describe(entity, true);
+            entityProperty = BeansUtil.describe(entity, true);
         } catch (Exception e) {
             throw new SQLException("解析实体对象失败", e);
         }

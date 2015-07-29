@@ -21,12 +21,13 @@ import java.util.List;
 
 import org.pinus4j.api.query.IQuery;
 import org.pinus4j.api.query.impl.Condition;
-import org.pinus4j.api.query.impl.Order;
 import org.pinus4j.api.query.impl.DefaultQueryImpl;
+import org.pinus4j.api.query.impl.Order;
 import org.pinus4j.cluster.resources.GlobalDBResource;
 import org.pinus4j.cluster.resources.IDBResource;
+import org.pinus4j.entity.DefaultEntityMetaManager;
+import org.pinus4j.entity.IEntityMetaManager;
 import org.pinus4j.exceptions.DBOperationException;
-import org.pinus4j.utils.BeanUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,6 +43,8 @@ public class GlobalRecordIterator<E> extends AbstractRecordIterator<E> {
 
     private IDBResource        dbResource;
 
+    private IEntityMetaManager entityMetaManager = DefaultEntityMetaManager.getInstance();
+    
     public GlobalRecordIterator(GlobalDBResource dbResource, Class<E> clazz) {
         super(clazz);
 
@@ -63,7 +66,7 @@ public class GlobalRecordIterator<E> extends AbstractRecordIterator<E> {
         }
         if (!one.isEmpty()) {
             E e = one.get(0);
-            maxId = BeanUtil.getNotUnionPkValue(e).getValueAsLong();
+            maxId = entityMetaManager.getNotUnionPkValue(e).getValueAsLong();
         }
 
         LOG.info("clazz " + clazz + " maxId=" + maxId);

@@ -80,8 +80,7 @@ import org.pinus4j.transaction.impl.BestEffortsOnePCJtaTransactionManager;
 import org.pinus4j.utils.CuratorDistributeedLock;
 import org.pinus4j.utils.IOUtil;
 import org.pinus4j.utils.JdbcUtil;
-import org.pinus4j.utils.BeanUtil;
-import org.pinus4j.utils.StringUtils;
+import org.pinus4j.utils.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -96,14 +95,14 @@ public abstract class AbstractDBCluster implements IDBCluster {
     /**
      * 日志
      */
-    private static final Logger        LOG        = LoggerFactory.getLogger(AbstractDBCluster.class);
+    private static final Logger        LOG               = LoggerFactory.getLogger(AbstractDBCluster.class);
 
-    public static final Random         r          = new Random();
+    public static final Random         r                 = new Random();
 
     /**
      * 同步数据表操作.
      */
-    private EnumSyncAction             syncAction = EnumSyncAction.CREATE;
+    private EnumSyncAction             syncAction        = EnumSyncAction.CREATE;
 
     /**
      * 扫描数据对象包.
@@ -118,12 +117,12 @@ public abstract class AbstractDBCluster implements IDBCluster {
     /**
      * 数据库类型.
      */
-    protected EnumDB                   enumDb     = EnumDB.MYSQL;
+    protected EnumDB                   enumDb            = EnumDB.MYSQL;
 
     /**
      * Entity管理器
      */
-    private IEntityMetaManager         entityManager;
+    private IEntityMetaManager         entityMetaManager = DefaultEntityMetaManager.getInstance();
 
     /**
      * 数据库表生成器.
@@ -231,9 +230,6 @@ public abstract class AbstractDBCluster implements IDBCluster {
             throw new IllegalStateException("初始化zookeeper根目录失败");
         }
 
-        // init entity manager
-        this.entityManager = DefaultEntityMetaManager.getInstance();
-
         //
         // init id generator
         //
@@ -273,7 +269,7 @@ public abstract class AbstractDBCluster implements IDBCluster {
                 // get table sharding info from zookeeper
                 tables = getDBTableFromZk();
             } else {
-                if (StringUtils.isBlank(scanPackage)) {
+                if (StringUtil.isBlank(scanPackage)) {
                     throw new DBClusterException(
                             "get shardinfo from jvm, but i can't find scanpackage full path, did you forget setScanPackage ?");
                 }
@@ -395,11 +391,6 @@ public abstract class AbstractDBCluster implements IDBCluster {
         }
 
         return masterDBResource;
-    }
-
-    @Override
-    public IEntityMetaManager getEntityManager() {
-        return this.entityManager;
     }
 
     @Override
@@ -525,13 +516,13 @@ public abstract class AbstractDBCluster implements IDBCluster {
 
     @Override
     public List<IDBResource> getAllMasterShardingDBResource(Class<?> clazz) throws SQLException {
-        int tableNum = BeanUtil.getTableNum(clazz);
+        int tableNum = entityMetaManager.getTableNum(clazz);
         if (tableNum == 0) {
             throw new IllegalStateException("table number is 0");
         }
 
-        String clusterName = BeanUtil.getClusterName(clazz);
-        String tableName = BeanUtil.getTableName(clazz);
+        String clusterName = entityMetaManager.getClusterName(clazz);
+        String tableName = entityMetaManager.getTableName(clazz);
 
         return getAllMasterShardingDBResource(tableNum, clusterName, tableName);
     }
@@ -572,13 +563,13 @@ public abstract class AbstractDBCluster implements IDBCluster {
             throws SQLException, DBClusterException {
         List<IDBResource> dbResources = new ArrayList<IDBResource>();
 
-        int tableNum = BeanUtil.getTableNum(clazz);
+        int tableNum = entityMetaManager.getTableNum(clazz);
         if (tableNum == 0) {
             throw new IllegalStateException("table number is 0");
         }
 
-        String clusterName = BeanUtil.getClusterName(clazz);
-        String tableName = BeanUtil.getTableName(clazz);
+        String clusterName = entityMetaManager.getClusterName(clazz);
+        String tableName = entityMetaManager.getTableName(clazz);
 
         IDBResource dbResource = null;
         DBClusterInfo dbClusterInfo = this.getDBClusterInfo(clusterName);
@@ -679,10 +670,10 @@ public abstract class AbstractDBCluster implements IDBCluster {
     @Override
     public List<DBTable> getDBTableFromJvm() {
         for (String pkgPath : this.scanPackage.split(",")) {
-            this.entityManager.loadEntity(pkgPath);
+            this.entityMetaManager.loadEntity(pkgPath);
         }
 
-        return this.entityManager.getTableMetaList();
+        return this.entityMetaManager.getTableMetaList();
     }
 
     /**
@@ -863,7 +854,7 @@ public abstract class AbstractDBCluster implements IDBCluster {
     private IClusterConfig _getConfig(String xmlFilePath) throws LoadConfigException {
         IClusterConfig config = null;
 
-        if (StringUtils.isBlank(xmlFilePath)) {
+        if (StringUtil.isBlank(xmlFilePath)) {
             config = XmlClusterConfigImpl.getInstance();
         } else {
             config = XmlClusterConfigImpl.getInstance(xmlFilePath);

@@ -19,8 +19,8 @@ package org.pinus4j.api.query.impl;
 import java.lang.reflect.Array;
 
 import org.pinus4j.datalayer.SQLBuilder;
-import org.pinus4j.utils.BeanUtil;
-import org.pinus4j.utils.StringUtils;
+import org.pinus4j.utils.BeansUtil;
+import org.pinus4j.utils.StringUtil;
 
 /**
  * 查询条件.
@@ -65,7 +65,7 @@ public class Condition {
      * @param opt 条件枚举
      */
     private Condition(String field, Object value, QueryOpt opt, Class<?> clazz) {
-        if (StringUtils.isBlank(field)) {
+        if (StringUtil.isBlank(field)) {
             throw new IllegalArgumentException("条件字段不能为空, condition field=" + field);
         }
         if (value == null) {
@@ -77,7 +77,7 @@ public class Condition {
 
         this.field = field;
         if (clazz != null)
-            this.field = BeanUtil.getFieldName(BeanUtil.getField(clazz, field));
+            this.field = BeansUtil.getFieldName(BeansUtil.getField(clazz, field));
 
         this.value = SQLBuilder.formatValue(value);
         this.opt = opt;
@@ -90,13 +90,13 @@ public class Condition {
      * @param opt 条件枚举
      */
     private Condition(String field, QueryOpt opt, Class<?> clazz) {
-        if (StringUtils.isBlank(field)) {
+        if (StringUtil.isBlank(field)) {
             throw new IllegalArgumentException("条件字段不能为空, condition field=" + field);
         }
 
         this.field = field;
         if (clazz != null)
-            this.field = BeanUtil.getFieldName(BeanUtil.getField(clazz, field));
+            this.field = BeansUtil.getFieldName(BeansUtil.getField(clazz, field));
         this.opt = opt;
     }
 

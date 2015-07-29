@@ -20,7 +20,7 @@ import java.util.Map;
 
 import org.pinus4j.cluster.enums.EnumDBMasterSlave;
 import org.pinus4j.exceptions.LoadConfigException;
-import org.pinus4j.utils.StringUtils;
+import org.pinus4j.utils.StringUtil;
 
 /**
  * 表示一个数据库连接信息. 此类仅表示一个连接信息，并不是一个数据库连接对象.
@@ -46,13 +46,13 @@ public class AppDBInfo extends DBInfo {
      * @return
      */
     public boolean check() throws LoadConfigException {
-        if (StringUtils.isBlank(this.username)) {
+        if (StringUtil.isBlank(this.username)) {
             throw new LoadConfigException("db username is empty");
         }
-        if (StringUtils.isBlank(this.password)) {
+        if (StringUtil.isBlank(this.password)) {
             throw new LoadConfigException("db password is empty");
         }
-        if (StringUtils.isBlank(this.url)) {
+        if (StringUtil.isBlank(this.url)) {
             throw new LoadConfigException("db url is empty");
         }
         return true;

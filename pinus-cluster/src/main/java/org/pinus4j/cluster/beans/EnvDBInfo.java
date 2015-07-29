@@ -17,7 +17,7 @@
 package org.pinus4j.cluster.beans;
 
 import org.pinus4j.exceptions.LoadConfigException;
-import org.pinus4j.utils.StringUtils;
+import org.pinus4j.utils.StringUtil;
 
 public class EnvDBInfo extends DBInfo {
 
@@ -25,7 +25,7 @@ public class EnvDBInfo extends DBInfo {
 
 	@Override
 	public boolean check() throws LoadConfigException {
-		if (StringUtils.isBlank(envDsName)) {
+		if (StringUtil.isBlank(envDsName)) {
 			throw new LoadConfigException("env ds name is empty");
 		}
 		return true;

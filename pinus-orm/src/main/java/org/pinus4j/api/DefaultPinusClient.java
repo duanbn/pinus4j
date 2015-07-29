@@ -39,6 +39,8 @@ import org.pinus4j.datalayer.query.IGlobalQuery;
 import org.pinus4j.datalayer.query.IShardingQuery;
 import org.pinus4j.datalayer.update.IGlobalUpdate;
 import org.pinus4j.datalayer.update.IShardingUpdate;
+import org.pinus4j.entity.DefaultEntityMetaManager;
+import org.pinus4j.entity.IEntityMetaManager;
 import org.pinus4j.entity.meta.EntityPK;
 import org.pinus4j.exceptions.DBClusterException;
 import org.pinus4j.exceptions.DBOperationException;
@@ -49,8 +51,8 @@ import org.pinus4j.task.TaskFuture;
 import org.pinus4j.transaction.enums.EnumTransactionIsolationLevel;
 import org.pinus4j.transaction.impl.BestEffortsOnePCJtaTransactionManager;
 import org.pinus4j.utils.CheckUtil;
-import org.pinus4j.utils.BeanUtil;
-import org.pinus4j.utils.StringUtils;
+import org.pinus4j.utils.BeansUtil;
+import org.pinus4j.utils.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -67,7 +69,7 @@ public class DefaultPinusClient implements PinusClient {
     /**
      * 日志.
      */
-    public static final Logger LOG        = LoggerFactory.getLogger(DefaultPinusClient.class);
+    public static final Logger LOG               = LoggerFactory.getLogger(DefaultPinusClient.class);
 
     /**
      * reference it self;
@@ -77,12 +79,12 @@ public class DefaultPinusClient implements PinusClient {
     /**
      * 数据库类型.
      */
-    private EnumDB             enumDb     = EnumDB.MYSQL;
+    private EnumDB             enumDb            = EnumDB.MYSQL;
 
     /**
      * 同步数据表操作.
      */
-    private EnumSyncAction     syncAction = EnumSyncAction.CREATE;
+    private EnumSyncAction     syncAction        = EnumSyncAction.CREATE;
 
     /**
      * 扫描数据对象的包. 数据对象是使用了@Table注解的javabean.
@@ -123,6 +125,8 @@ public class DefaultPinusClient implements PinusClient {
      * sharding query.
      */
     private IShardingQuery     shardingQuery;
+
+    private IEntityMetaManager entityMetaManager = DefaultEntityMetaManager.getInstance();
 
     /**
      * init method
@@ -231,12 +235,12 @@ public class DefaultPinusClient implements PinusClient {
 
         Class<?> clazz = entity.getClass();
 
-        if (BeanUtil.isShardingEntity(clazz)) {
+        if (entityMetaManager.isShardingEntity(clazz)) {
 
             CheckUtil.checkShardingEntity(entity);
 
-            String clusterName = BeanUtil.getClusterName(clazz);
-            Object shardingKey = BeanUtil.getShardingValue(entity);
+            String clusterName = entityMetaManager.getClusterName(clazz);
+            Object shardingKey = entityMetaManager.getShardingValue(entity);
             IShardingKey<Object> sk = new ShardingKey<Object>(clusterName, shardingKey);
             CheckUtil.checkShardingKey(sk);
 
@@ -245,7 +249,7 @@ public class DefaultPinusClient implements PinusClient {
         } else {
 
             CheckUtil.checkGlobalEntity(entity);
-            String clusterName = BeanUtil.getClusterName(entity.getClass());
+            String clusterName = entityMetaManager.getClusterName(entity.getClass());
             CheckUtil.checkClusterName(clusterName);
 
             this.globalUpdater.save(entity, clusterName);
@@ -264,7 +268,7 @@ public class DefaultPinusClient implements PinusClient {
         List<Object> shardingList = Lists.newArrayList();
 
         for (Object entity : entityList) {
-            if (BeanUtil.isShardingEntity(entity.getClass())) {
+            if (entityMetaManager.isShardingEntity(entity.getClass())) {
                 shardingList.add(entity);
             } else {
                 globalList.add(entity);
@@ -277,7 +281,7 @@ public class DefaultPinusClient implements PinusClient {
 
             String clusterName = null;
             for (Object globalEntity : globalList) {
-                clusterName = BeanUtil.getClusterName(globalEntity.getClass());
+                clusterName = entityMetaManager.getClusterName(globalEntity.getClass());
                 List<Object> theSameClusterNameList = clusterEntityMap.get(clusterName);
                 if (theSameClusterNameList != null) {
                     theSameClusterNameList.add(globalEntity);
@@ -298,8 +302,8 @@ public class DefaultPinusClient implements PinusClient {
 
             ShardingKey<?> shardingKey = null;
             for (Object shardingEntity : shardingList) {
-                shardingKey = new ShardingKey(BeanUtil.getClusterName(shardingEntity.getClass()),
-                        BeanUtil.getShardingValue(shardingEntity));
+                shardingKey = new ShardingKey(entityMetaManager.getClusterName(shardingEntity.getClass()),
+                        entityMetaManager.getShardingValue(shardingEntity));
                 List<Object> theSameShardingKeyList = theSameShardingKeyMap.get(shardingKey);
                 if (theSameShardingKeyList != null) {
                     theSameShardingKeyList.add(shardingEntity);
@@ -324,12 +328,12 @@ public class DefaultPinusClient implements PinusClient {
 
         Class<?> clazz = entity.getClass();
 
-        if (BeanUtil.isShardingEntity(clazz)) {
+        if (entityMetaManager.isShardingEntity(clazz)) {
 
             CheckUtil.checkShardingEntity(entity);
 
-            String clusterName = BeanUtil.getClusterName(entity.getClass());
-            Object shardingKey = BeanUtil.getShardingValue(entity);
+            String clusterName = entityMetaManager.getClusterName(entity.getClass());
+            Object shardingKey = entityMetaManager.getShardingValue(entity);
             IShardingKey<Object> sk = new ShardingKey<Object>(clusterName, shardingKey);
             CheckUtil.checkShardingKey(sk);
 
@@ -339,7 +343,7 @@ public class DefaultPinusClient implements PinusClient {
 
             CheckUtil.checkGlobalEntity(entity);
 
-            String clusterName = BeanUtil.getClusterName(entity.getClass());
+            String clusterName = entityMetaManager.getClusterName(entity.getClass());
             CheckUtil.checkClusterName(clusterName);
 
             this.globalUpdater.update(entity, clusterName);
@@ -358,7 +362,7 @@ public class DefaultPinusClient implements PinusClient {
         List<Object> shardingList = Lists.newArrayList();
 
         for (Object entity : entityList) {
-            if (BeanUtil.isShardingEntity(entity.getClass())) {
+            if (entityMetaManager.isShardingEntity(entity.getClass())) {
                 shardingList.add(entity);
             } else {
                 globalList.add(entity);
@@ -371,7 +375,7 @@ public class DefaultPinusClient implements PinusClient {
 
             String clusterName = null;
             for (Object globalEntity : globalList) {
-                clusterName = BeanUtil.getClusterName(globalEntity.getClass());
+                clusterName = entityMetaManager.getClusterName(globalEntity.getClass());
                 List<Object> theSameClusterNameList = theSameClusterNameMap.get(clusterName);
                 if (theSameClusterNameList != null) {
                     theSameClusterNameList.add(globalEntity);
@@ -392,8 +396,8 @@ public class DefaultPinusClient implements PinusClient {
 
             ShardingKey<?> shardingKey = null;
             for (Object shardingEntity : shardingList) {
-                shardingKey = new ShardingKey(BeanUtil.getClusterName(shardingEntity.getClass()),
-                        BeanUtil.getShardingValue(shardingEntity));
+                shardingKey = new ShardingKey(entityMetaManager.getClusterName(shardingEntity.getClass()),
+                        entityMetaManager.getShardingValue(shardingEntity));
                 List<Object> theSameShardingKeyList = theSameShardingKeyMap.get(shardingKey);
                 if (theSameShardingKeyList != null) {
                     theSameShardingKeyList.add(shardingEntity);
@@ -418,13 +422,13 @@ public class DefaultPinusClient implements PinusClient {
 
         Class<?> clazz = entity.getClass();
 
-        if (BeanUtil.isShardingEntity(clazz)) {
+        if (entityMetaManager.isShardingEntity(clazz)) {
 
             CheckUtil.checkShardingEntity(entity);
 
-            EntityPK entityPk = BeanUtil.getEntityPK(entity);
-            String clusterName = BeanUtil.getClusterName(clazz);
-            Object shardingValue = BeanUtil.getShardingValue(entityPk);
+            EntityPK entityPk = entityMetaManager.getEntityPK(entity);
+            String clusterName = entityMetaManager.getClusterName(clazz);
+            Object shardingValue = entityMetaManager.getShardingValue(entityPk);
             IShardingKey<?> shardingKey = new ShardingKey(clusterName, shardingValue);
 
             this.shardingUpdater.removeByPk(entityPk, shardingKey, clazz);
@@ -433,8 +437,8 @@ public class DefaultPinusClient implements PinusClient {
 
             CheckUtil.checkGlobalEntity(entity);
 
-            EntityPK entityPk = BeanUtil.getEntityPK(entity);
-            String clusterName = BeanUtil.getClusterName(clazz);
+            EntityPK entityPk = entityMetaManager.getEntityPK(entity);
+            String clusterName = entityMetaManager.getClusterName(clazz);
 
             this.globalUpdater.removeByPk(entityPk, clazz, clusterName);
 
@@ -452,7 +456,7 @@ public class DefaultPinusClient implements PinusClient {
         List<Object> shardingList = Lists.newArrayList();
 
         for (Object entity : entityList) {
-            if (BeanUtil.isShardingEntity(entity.getClass())) {
+            if (entityMetaManager.isShardingEntity(entity.getClass())) {
                 shardingList.add(entity);
             } else {
                 globalList.add(entity);
@@ -467,7 +471,7 @@ public class DefaultPinusClient implements PinusClient {
 
             String clusterName = null;
             for (Object globalEntity : globalList) {
-                clusterName = BeanUtil.getClusterName(globalEntity.getClass());
+                clusterName = entityMetaManager.getClusterName(globalEntity.getClass());
                 List<Object> theSameClusterNameList = theSameClusterNameMap.get(clusterName);
                 if (theSameClusterNameList != null) {
                     theSameClusterNameList.add(globalEntity);
@@ -494,7 +498,7 @@ public class DefaultPinusClient implements PinusClient {
                     for (Map.Entry<Class<?>, List<Object>> sameClassEntry : theSameClassMap.entrySet()) {
                         List<EntityPK> pks = Lists.newArrayList();
                         for (Object sameClassEntity : sameClassEntry.getValue()) {
-                            pks.add(BeanUtil.getEntityPK(sameClassEntity));
+                            pks.add(entityMetaManager.getEntityPK(sameClassEntity));
                         }
                         this.globalUpdater.removeByPks(pks, sameClassEntry.getKey(), sameClusterNameEntry.getKey());
                     }
@@ -510,8 +514,8 @@ public class DefaultPinusClient implements PinusClient {
 
             ShardingKey<?> shardingKey = null;
             for (Object shardingEntity : shardingList) {
-                shardingKey = new ShardingKey(BeanUtil.getClusterName(shardingEntity.getClass()),
-                        BeanUtil.getShardingValue(shardingEntity));
+                shardingKey = new ShardingKey(entityMetaManager.getClusterName(shardingEntity.getClass()),
+                        entityMetaManager.getShardingValue(shardingEntity));
                 List<Object> theSameShardingKeyList = theSameShardingKeyMap.get(shardingKey);
                 if (theSameShardingKeyList != null) {
                     theSameShardingKeyList.add(shardingEntity);
@@ -538,7 +542,7 @@ public class DefaultPinusClient implements PinusClient {
                     for (Map.Entry<Class<?>, List<Object>> sameClassEntry : theSameClassMap.entrySet()) {
                         List<EntityPK> pks = Lists.newArrayList();
                         for (Object sameClassEntity : sameClassEntry.getValue()) {
-                            pks.add(BeanUtil.getEntityPK(sameClassEntity));
+                            pks.add(entityMetaManager.getEntityPK(sameClassEntity));
                         }
                         this.shardingUpdater.removeByPks(pks, sameShardingKeyEntry.getKey(), sameClassEntry.getKey());
                     }
@@ -572,10 +576,10 @@ public class DefaultPinusClient implements PinusClient {
 
         Object loadedEntity = null;
 
-        EntityPK entityPk = BeanUtil.getEntityPK(entity);
+        EntityPK entityPk = entityMetaManager.getEntityPK(entity);
 
         Class<?> clazz = entity.getClass();
-        if (BeanUtil.isShardingEntity(clazz)) {
+        if (entityMetaManager.isShardingEntity(clazz)) {
             loadedEntity = this.shardingQuery.findByPk(entityPk, clazz, useCache, masterSlave);
         } else {
             loadedEntity = this.globalQuery.findByPk(entityPk, clazz, useCache, masterSlave);
@@ -586,7 +590,7 @@ public class DefaultPinusClient implements PinusClient {
         }
 
         try {
-            BeanUtil.copyProperties(loadedEntity, entity);
+            BeansUtil.copyProperties(loadedEntity, entity);
         } catch (Exception e) {
             throw new DBOperationException(e);
         }
@@ -614,7 +618,7 @@ public class DefaultPinusClient implements PinusClient {
         CheckUtil.checkSQL(sql);
         CheckUtil.checkClass(clazz);
 
-        if (BeanUtil.isShardingEntity(clazz)) {
+        if (entityMetaManager.isShardingEntity(clazz)) {
             return this.shardingQuery.findBySql(sql, EnumDBMasterSlave.MASTER);
         } else {
             return this.globalQuery.findBySql(sql, clazz, EnumDBMasterSlave.MASTER);
@@ -679,7 +683,7 @@ public class DefaultPinusClient implements PinusClient {
 
     @Override
     public void setScanPackage(String scanPackage) {
-        if (StringUtils.isBlank(scanPackage)) {
+        if (StringUtil.isBlank(scanPackage)) {
             throw new IllegalArgumentException("参数错误，参数不能为空");
         }
 

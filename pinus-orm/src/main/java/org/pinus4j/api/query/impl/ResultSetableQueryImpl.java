@@ -22,7 +22,8 @@ import org.pinus4j.api.query.IQuery;
 import org.pinus4j.cluster.enums.EnumDBMasterSlave;
 import org.pinus4j.datalayer.query.IGlobalQuery;
 import org.pinus4j.datalayer.query.IShardingQuery;
-import org.pinus4j.utils.BeanUtil;
+import org.pinus4j.entity.DefaultEntityMetaManager;
+import org.pinus4j.entity.IEntityMetaManager;
 
 /**
  * 可以获取结果集的查询条件
@@ -31,15 +32,17 @@ import org.pinus4j.utils.BeanUtil;
  */
 public class ResultSetableQueryImpl<T> extends DefaultQueryImpl {
 
-    private Class<T>          clazz;
+    private Class<T>           clazz;
 
-    private IGlobalQuery      globalQuery;
+    private IGlobalQuery       globalQuery;
 
-    private IShardingQuery    shardingQuery;
+    private IShardingQuery     shardingQuery;
 
-    private boolean           useCache    = true;
+    private boolean            useCache          = true;
 
-    private EnumDBMasterSlave masterSlave = EnumDBMasterSlave.MASTER;
+    private EnumDBMasterSlave  masterSlave       = EnumDBMasterSlave.MASTER;
+
+    private IEntityMetaManager entityMetaManager = DefaultEntityMetaManager.getInstance();
 
     public ResultSetableQueryImpl(Class<T> clazz) {
         this.clazz = clazz;
@@ -49,7 +52,7 @@ public class ResultSetableQueryImpl<T> extends DefaultQueryImpl {
     public List<T> list() {
         List<T> result = null;
 
-        if (BeanUtil.isShardingEntity(clazz)) {
+        if (entityMetaManager.isShardingEntity(clazz)) {
             result = this.shardingQuery.findByQuery(this, this.clazz, this.useCache, this.masterSlave);
         } else {
             result = this.globalQuery.findByQuery(this, this.clazz, this.useCache, this.masterSlave);
@@ -62,7 +65,7 @@ public class ResultSetableQueryImpl<T> extends DefaultQueryImpl {
     public Number count() {
         Number count = 0;
 
-        if (BeanUtil.isShardingEntity(clazz)) {
+        if (entityMetaManager.isShardingEntity(clazz)) {
             count = this.shardingQuery.getCountByQuery(this, this.clazz, this.useCache, this.masterSlave);
         } else {
             count = this.globalQuery.getCountByQuery(this, this.clazz, this.useCache, this.masterSlave);

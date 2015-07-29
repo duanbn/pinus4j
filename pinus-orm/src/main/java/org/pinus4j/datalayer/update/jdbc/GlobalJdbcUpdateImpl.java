@@ -28,8 +28,6 @@ import org.pinus4j.datalayer.update.IGlobalUpdate;
 import org.pinus4j.entity.meta.EntityPK;
 import org.pinus4j.entity.meta.PKValue;
 import org.pinus4j.exceptions.DBOperationException;
-import org.pinus4j.utils.PKUtil;
-import org.pinus4j.utils.BeanUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,7 +52,7 @@ public class GlobalJdbcUpdateImpl extends AbstractJdbcUpdate implements IGlobalU
     @Override
     public PKValue[] saveBatch(List<? extends Object> entities, String clusterName) {
         Class<?> clazz = entities.get(0).getClass();
-        String tableName = BeanUtil.getTableName(clazz);
+        String tableName = entityMetaManager.getTableName(clazz);
 
         List<PKValue> pks = new ArrayList<PKValue>();
 
@@ -62,7 +60,7 @@ public class GlobalJdbcUpdateImpl extends AbstractJdbcUpdate implements IGlobalU
         IDBResource dbResource = null;
         try {
             tx = txManager.getTransaction();
-            dbResource = this.dbCluster.getMasterGlobalDBResource(clusterName, BeanUtil.getTableName(clazz));
+            dbResource = this.dbCluster.getMasterGlobalDBResource(clusterName, entityMetaManager.getTableName(clazz));
             Connection conn = dbResource.getConnection();
 
             List<PKValue> genPks = _saveBatchGlobal(conn, entities);
@@ -115,13 +113,13 @@ public class GlobalJdbcUpdateImpl extends AbstractJdbcUpdate implements IGlobalU
     @Override
     public void updateBatch(List<? extends Object> entities, String clusterName) {
         Class<?> clazz = entities.get(0).getClass();
-        String tableName = BeanUtil.getTableName(clazz);
+        String tableName = entityMetaManager.getTableName(clazz);
 
         Transaction tx = null;
         IDBResource dbResource = null;
         try {
             tx = txManager.getTransaction();
-            dbResource = this.dbCluster.getMasterGlobalDBResource(clusterName, BeanUtil.getTableName(clazz));
+            dbResource = this.dbCluster.getMasterGlobalDBResource(clusterName, entityMetaManager.getTableName(clazz));
 
             Connection conn = dbResource.getConnection();
 
@@ -137,7 +135,7 @@ public class GlobalJdbcUpdateImpl extends AbstractJdbcUpdate implements IGlobalU
             if (isCacheAvailable(clazz)) {
                 List<EntityPK> pks = new ArrayList(entities.size());
                 for (Object entity : entities) {
-                    pks.add(BeanUtil.getEntityPK(entity));
+                    pks.add(entityMetaManager.getEntityPK(entity));
                 }
                 primaryCache.removeGlobal(clusterName, tableName, pks);
             }
@@ -179,7 +177,7 @@ public class GlobalJdbcUpdateImpl extends AbstractJdbcUpdate implements IGlobalU
         IDBResource dbResource = null;
         try {
             tx = txManager.getTransaction();
-            dbResource = this.dbCluster.getMasterGlobalDBResource(clusterName, BeanUtil.getTableName(clazz));
+            dbResource = this.dbCluster.getMasterGlobalDBResource(clusterName, entityMetaManager.getTableName(clazz));
 
             Connection conn = dbResource.getConnection();
 
@@ -192,7 +190,7 @@ public class GlobalJdbcUpdateImpl extends AbstractJdbcUpdate implements IGlobalU
             }
 
             // 删除缓存
-            String tableName = BeanUtil.getTableName(clazz);
+            String tableName = entityMetaManager.getTableName(clazz);
             if (isCacheAvailable(clazz)) {
                 primaryCache.removeGlobal(clusterName, tableName, pks);
                 primaryCache.decrCountGlobal(clusterName, tableName, pks.size());

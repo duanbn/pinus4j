@@ -25,9 +25,7 @@ import net.spy.memcached.internal.OperationFuture;
 import org.pinus4j.cache.IPrimaryCache;
 import org.pinus4j.cluster.resources.ShardingDBResource;
 import org.pinus4j.entity.meta.EntityPK;
-import org.pinus4j.entity.meta.EntityPK;
-import org.pinus4j.utils.BeanUtil;
-import org.pinus4j.utils.StringUtils;
+import org.pinus4j.utils.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -100,7 +98,7 @@ public class MemCachedPrimaryCacheImpl extends AbstractMemCachedCache implements
 
         List<String> keys = new ArrayList<String>();
         for (Object d : data) {
-            EntityPK entityPk = BeanUtil.getEntityPK(d);
+            EntityPK entityPk = entityMetaManager.getEntityPK(d);
             keys.add(buildGlobalKey(clusterName, tableName, entityPk));
         }
         _put(keys, data);
@@ -309,7 +307,7 @@ public class MemCachedPrimaryCacheImpl extends AbstractMemCachedCache implements
     private long _getCount(String key) {
         try {
             String count = (String) memClient.get(key);
-            if (StringUtils.isNotBlank(count)) {
+            if (StringUtil.isNotBlank(count)) {
                 if (LOG.isDebugEnabled()) {
                     LOG.debug("[PRIMARY CACHE] - get " + key + " " + count);
                 }

@@ -40,6 +40,8 @@ import org.pinus4j.datalayer.query.IGlobalQuery;
 import org.pinus4j.datalayer.query.IShardingQuery;
 import org.pinus4j.datalayer.update.IGlobalUpdate;
 import org.pinus4j.datalayer.update.IShardingUpdate;
+import org.pinus4j.entity.DefaultEntityMetaManager;
+import org.pinus4j.entity.IEntityMetaManager;
 import org.pinus4j.entity.meta.EntityPK;
 import org.pinus4j.entity.meta.PKName;
 import org.pinus4j.entity.meta.PKValue;
@@ -53,8 +55,7 @@ import org.pinus4j.transaction.enums.EnumTransactionIsolationLevel;
 import org.pinus4j.transaction.impl.BestEffortsOnePCJtaTransactionManager;
 import org.pinus4j.utils.PKUtil;
 import org.pinus4j.utils.CheckUtil;
-import org.pinus4j.utils.BeanUtil;
-import org.pinus4j.utils.StringUtils;
+import org.pinus4j.utils.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -71,7 +72,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
     /**
      * 日志.
      */
-    public static final Logger           LOG        = LoggerFactory.getLogger(ShardingStorageClientImpl.class);
+    public static final Logger           LOG               = LoggerFactory.getLogger(ShardingStorageClientImpl.class);
 
     /**
      * reference it self;
@@ -81,12 +82,12 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
     /**
      * 数据库类型.
      */
-    private EnumDB                       enumDb     = EnumDB.MYSQL;
+    private EnumDB                       enumDb            = EnumDB.MYSQL;
 
     /**
      * 同步数据表操作.
      */
-    private EnumSyncAction               syncAction = EnumSyncAction.CREATE;
+    private EnumSyncAction               syncAction        = EnumSyncAction.CREATE;
 
     /**
      * 扫描数据对象的包. 数据对象是使用了@Table注解的javabean.
@@ -124,6 +125,8 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
      * sharding query.
      */
     private IShardingQuery               shardingQuery;
+
+    private IEntityMetaManager           entityMetaManager = DefaultEntityMetaManager.getInstance();
 
     /**
      * 初始化方法
@@ -215,7 +218,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
     public Number globalSave(Object entity) {
         CheckUtil.checkGlobalEntity(entity);
 
-        String clusterName = BeanUtil.getClusterName(entity.getClass());
+        String clusterName = entityMetaManager.getClusterName(entity.getClass());
         CheckUtil.checkClusterName(clusterName);
 
         PKValue pkValue = this.globalUpdater.save(entity, clusterName);
@@ -245,7 +248,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
     public void globalUpdate(Object entity) {
         CheckUtil.checkGlobalEntity(entity);
 
-        String clusterName = BeanUtil.getClusterName(entity.getClass());
+        String clusterName = entityMetaManager.getClusterName(entity.getClass());
         CheckUtil.checkClusterName(clusterName);
 
         this.globalUpdater.update(entity, clusterName);
@@ -265,7 +268,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
         CheckUtil.checkClass(clazz);
         CheckUtil.checkClusterName(clusterName);
 
-        PKName[] pkNames = new PKName[] { BeanUtil.getNotUnionPkName(clazz) };
+        PKName[] pkNames = new PKName[] { entityMetaManager.getNotUnionPkName(clazz) };
         PKValue[] pkValues = new PKValue[] { PKValue.valueOf(pk) };
 
         this.globalUpdater.removeByPk(EntityPK.valueOf(pkNames, pkValues), clazz, clusterName);
@@ -280,7 +283,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
         CheckUtil.checkClusterName(clusterName);
 
         List<EntityPK> entityPkList = Lists.newArrayListWithCapacity(pks.size());
-        PKName[] pkNames = new PKName[] { BeanUtil.getNotUnionPkName(clazz) };
+        PKName[] pkNames = new PKName[] { entityMetaManager.getNotUnionPkName(clazz) };
         PKValue[] pkValues = null;
         for (Number pk : pks) {
             pkValues = new PKValue[] { PKValue.valueOf(pk) };
@@ -303,8 +306,8 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
     public Number save(Object entity) {
         CheckUtil.checkShardingEntity(entity);
 
-        String clusterName = BeanUtil.getClusterName(entity.getClass());
-        Object shardingKey = BeanUtil.getShardingValue(entity);
+        String clusterName = entityMetaManager.getClusterName(entity.getClass());
+        Object shardingKey = entityMetaManager.getShardingValue(entity);
         IShardingKey<Object> sk = new ShardingKey<Object>(clusterName, shardingKey);
         CheckUtil.checkShardingKey(sk);
 
@@ -315,8 +318,8 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
     public void update(Object entity) {
         CheckUtil.checkShardingEntity(entity);
 
-        String clusterName = BeanUtil.getClusterName(entity.getClass());
-        Object shardingKey = BeanUtil.getShardingValue(entity);
+        String clusterName = entityMetaManager.getClusterName(entity.getClass());
+        Object shardingKey = entityMetaManager.getShardingValue(entity);
         IShardingKey<Object> sk = new ShardingKey<Object>(clusterName, shardingKey);
         CheckUtil.checkShardingKey(sk);
 
@@ -347,7 +350,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
         CheckUtil.checkShardingKey(shardingKey);
         CheckUtil.checkClass(clazz);
 
-        PKName[] pkNames = new PKName[] { BeanUtil.getNotUnionPkName(clazz) };
+        PKName[] pkNames = new PKName[] { entityMetaManager.getNotUnionPkName(clazz) };
         PKValue[] pkValues = new PKValue[] { PKValue.valueOf(pk) };
         this.shardingUpdater.removeByPk(EntityPK.valueOf(pkNames, pkValues), shardingKey, clazz);
     }
@@ -361,7 +364,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
         CheckUtil.checkClass(clazz);
 
         List<EntityPK> entityPkList = Lists.newArrayListWithCapacity(pks.size());
-        PKName[] pkNames = new PKName[] { BeanUtil.getNotUnionPkName(clazz) };
+        PKName[] pkNames = new PKName[] { entityMetaManager.getNotUnionPkName(clazz) };
         PKValue[] pkValues = null;
         for (Number pk : pks) {
             pkValues = new PKValue[] { PKValue.valueOf(pk) };
@@ -403,7 +406,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
     public Number getCount(Class<?> clazz, boolean useCache, EnumDBMasterSlave masterSlave) {
         CheckUtil.checkClass(clazz);
 
-        if (BeanUtil.isShardingEntity(clazz)) {
+        if (entityMetaManager.isShardingEntity(clazz)) {
             return this.shardingQuery.getCount(clazz, useCache, masterSlave);
         } else {
             return this.globalQuery.getCount(clazz, useCache, masterSlave);
@@ -452,7 +455,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
     public Number getCountByQuery(Class<?> clazz, IQuery query, boolean useCache, EnumDBMasterSlave masterSlave) {
         CheckUtil.checkClass(clazz);
 
-        if (BeanUtil.isShardingEntity(clazz)) {
+        if (entityMetaManager.isShardingEntity(clazz)) {
             return this.shardingQuery.getCountByQuery(query, clazz, useCache, masterSlave);
         } else {
             return this.globalQuery.getCountByQuery(query, clazz, useCache, masterSlave);
@@ -503,10 +506,10 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
     public <T> T findByPk(Number pk, Class<T> clazz, boolean useCache, EnumDBMasterSlave masterSlave) {
         CheckUtil.checkClass(clazz);
 
-        PKName[] pkNames = new PKName[] { BeanUtil.getNotUnionPkName(clazz) };
+        PKName[] pkNames = new PKName[] { entityMetaManager.getNotUnionPkName(clazz) };
         PKValue[] pkValues = new PKValue[] { PKValue.valueOf(pk) };
 
-        if (BeanUtil.isShardingEntity(clazz)) {
+        if (entityMetaManager.isShardingEntity(clazz)) {
             return this.shardingQuery.findByPk(EntityPK.valueOf(pkNames, pkValues), clazz, useCache, masterSlave);
         } else {
             return this.globalQuery.findByPk(EntityPK.valueOf(pkNames, pkValues), clazz, useCache, masterSlave);
@@ -534,13 +537,13 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
         CheckUtil.checkClass(clazz);
 
         List<EntityPK> entityPkList = Lists.newArrayList();
-        PKName[] pkNames = new PKName[] { BeanUtil.getNotUnionPkName(clazz) };
+        PKName[] pkNames = new PKName[] { entityMetaManager.getNotUnionPkName(clazz) };
         for (Number pkValue : pkList) {
             PKValue[] pkValues = new PKValue[] { PKValue.valueOf(pkValue) };
             entityPkList.add(EntityPK.valueOf(pkNames, pkValues));
         }
 
-        if (BeanUtil.isShardingEntity(clazz)) {
+        if (entityMetaManager.isShardingEntity(clazz)) {
             return this.shardingQuery.findByPkList(entityPkList, clazz, useCache, masterSlave);
         } else {
             return this.globalQuery.findByPkList(entityPkList, clazz, useCache, masterSlave);
@@ -566,7 +569,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
     public <T> T findOneByQuery(IQuery query, Class<T> clazz, boolean useCache, EnumDBMasterSlave masterSlave) {
         CheckUtil.checkClass(clazz);
 
-        if (BeanUtil.isShardingEntity(clazz)) {
+        if (entityMetaManager.isShardingEntity(clazz)) {
             return this.shardingQuery.findOneByQuery(query, clazz, useCache, masterSlave);
         } else {
             return this.globalQuery.findOneByQuery(query, clazz, useCache, masterSlave);
@@ -592,7 +595,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
     public <T> List<T> findByQuery(IQuery query, Class<T> clazz, boolean useCache, EnumDBMasterSlave masterSlave) {
         CheckUtil.checkClass(clazz);
 
-        if (BeanUtil.isShardingEntity(clazz)) {
+        if (entityMetaManager.isShardingEntity(clazz)) {
             return this.shardingQuery.findByQuery(query, clazz, useCache, masterSlave);
         } else {
             return this.globalQuery.findByQuery(query, clazz, useCache, masterSlave);
@@ -609,7 +612,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
         CheckUtil.checkSQL(sql);
         CheckUtil.checkClass(clazz);
 
-        if (BeanUtil.isShardingEntity(clazz)) {
+        if (entityMetaManager.isShardingEntity(clazz)) {
             return this.shardingQuery.findBySql(sql, masterSlave);
         } else {
             return this.globalQuery.findBySql(sql, clazz, masterSlave);
@@ -638,7 +641,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
         CheckUtil.checkShardingKey(shardingKey);
         CheckUtil.checkClass(clazz);
 
-        PKName[] pkNames = new PKName[] { BeanUtil.getNotUnionPkName(clazz) };
+        PKName[] pkNames = new PKName[] { entityMetaManager.getNotUnionPkName(clazz) };
         PKValue[] pkValues = new PKValue[] { PKValue.valueOf(pk) };
 
         return this.shardingQuery.findByPk(EntityPK.valueOf(pkNames, pkValues), shardingKey, clazz, useCache,
@@ -670,7 +673,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
         CheckUtil.checkClass(clazz);
 
         List<EntityPK> entityPkList = Lists.newArrayList();
-        PKName[] pkNames = new PKName[] { BeanUtil.getNotUnionPkName(clazz) };
+        PKName[] pkNames = new PKName[] { entityMetaManager.getNotUnionPkName(clazz) };
         for (Number pkValue : pkList) {
             PKValue[] pkValues = new PKValue[] { PKValue.valueOf(pkValue) };
             entityPkList.add(EntityPK.valueOf(pkNames, pkValues));
@@ -829,7 +832,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
 
     @Override
     public void setScanPackage(String scanPackage) {
-        if (StringUtils.isBlank(scanPackage)) {
+        if (StringUtil.isBlank(scanPackage)) {
             throw new IllegalArgumentException("参数错误，参数不能为空");
         }
 

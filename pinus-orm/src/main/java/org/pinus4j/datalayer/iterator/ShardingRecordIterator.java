@@ -21,11 +21,12 @@ import java.util.List;
 
 import org.pinus4j.api.query.IQuery;
 import org.pinus4j.api.query.impl.Condition;
-import org.pinus4j.api.query.impl.Order;
 import org.pinus4j.api.query.impl.DefaultQueryImpl;
+import org.pinus4j.api.query.impl.Order;
 import org.pinus4j.cluster.resources.ShardingDBResource;
+import org.pinus4j.entity.DefaultEntityMetaManager;
+import org.pinus4j.entity.IEntityMetaManager;
 import org.pinus4j.exceptions.DBOperationException;
-import org.pinus4j.utils.BeanUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,9 +37,11 @@ import org.slf4j.LoggerFactory;
  */
 public class ShardingRecordIterator<E> extends AbstractRecordIterator<E> {
 
-    public static final Logger LOG = LoggerFactory.getLogger(ShardingRecordIterator.class);
+    public static final Logger LOG               = LoggerFactory.getLogger(ShardingRecordIterator.class);
 
     private ShardingDBResource dbResource;
+
+    private IEntityMetaManager entityMetaManager = DefaultEntityMetaManager.getInstance();
 
     public ShardingRecordIterator(ShardingDBResource dbResource, Class<E> clazz) {
         super(clazz);
@@ -61,7 +64,7 @@ public class ShardingRecordIterator<E> extends AbstractRecordIterator<E> {
         }
         if (!one.isEmpty()) {
             E e = one.get(0);
-            maxId = BeanUtil.getNotUnionPkValue(e).getValueAsLong();
+            maxId = entityMetaManager.getNotUnionPkValue(e).getValueAsLong();
         }
 
         LOG.info("clazz " + clazz + " DB " + dbResource + " maxId=" + maxId);

@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.pinus4j.exceptions.DBPrimaryKeyException;
-import org.pinus4j.utils.StringUtils;
+import org.pinus4j.utils.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -104,7 +104,7 @@ public class DBTable implements Serializable {
      * @return
      */
     public boolean isSharding() {
-        return StringUtils.isNotBlank(this.shardingBy) && this.shardingNum > 0;
+        return StringUtil.isNotBlank(this.shardingBy) && this.shardingNum > 0;
     }
 
     /**
@@ -342,7 +342,7 @@ public class DBTable implements Serializable {
         } else {
             indexSql.append("CREATE INDEX");
         }
-        if (StringUtils.isBlank(index.getField())) {
+        if (StringUtil.isBlank(index.getField())) {
             throw new IllegalArgumentException("索引注解格式错误，field不能为空");
         }
         indexSql.append(" ").append(index.getIndexName()).append(" ON").append(" ").append(this.getNameWithIndex());

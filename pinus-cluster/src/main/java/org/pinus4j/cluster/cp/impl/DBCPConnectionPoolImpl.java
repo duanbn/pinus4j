@@ -24,7 +24,7 @@ import javax.sql.DataSource;
 import org.apache.commons.dbcp.BasicDataSource;
 import org.pinus4j.cluster.cp.IDBConnectionPool;
 import org.pinus4j.exceptions.LoadConfigException;
-import org.pinus4j.utils.BeanUtil;
+import org.pinus4j.utils.BeansUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,7 +59,7 @@ public class DBCPConnectionPoolImpl implements IDBConnectionPool {
         ds.setValidationQuery("SELECT 1");
         for (Map.Entry<String, String> entry : connectParam.entrySet()) {
             try {
-                BeanUtil.setProperty(ds, entry.getKey(), entry.getValue());
+                BeansUtil.setProperty(ds, entry.getKey(), entry.getValue());
             } catch (Exception e) {
                 LOG.warn("无法识别的连接池参数:" + entry);
             }

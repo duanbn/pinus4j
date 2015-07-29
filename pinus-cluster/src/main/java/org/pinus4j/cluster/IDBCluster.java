@@ -30,7 +30,6 @@ import org.pinus4j.cluster.beans.IShardingKey;
 import org.pinus4j.cluster.enums.EnumDBMasterSlave;
 import org.pinus4j.cluster.enums.EnumSyncAction;
 import org.pinus4j.cluster.resources.IDBResource;
-import org.pinus4j.entity.IEntityMetaManager;
 import org.pinus4j.entity.meta.DBTable;
 import org.pinus4j.exceptions.DBClusterException;
 import org.pinus4j.generator.IIdGenerator;
@@ -50,13 +49,6 @@ import org.pinus4j.generator.IIdGenerator;
  * @author duanbn
  */
 public interface IDBCluster {
-
-    /**
-     * get entity manager.
-     * 
-     * @return
-     */
-    IEntityMetaManager getEntityManager();
 
     /**
      * judge this cluster have global slave.

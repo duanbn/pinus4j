@@ -24,7 +24,7 @@ import org.pinus4j.cache.ISecondCache;
 import org.pinus4j.cluster.resources.ShardingDBResource;
 import org.pinus4j.utils.IOUtil;
 import org.pinus4j.utils.SecurityUtil;
-import org.pinus4j.utils.StringUtils;
+import org.pinus4j.utils.StringUtil;
 
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.ShardedJedis;
@@ -37,7 +37,7 @@ public class RedisSecondCacheImpl extends AbstractRedisCache implements ISecondC
 
     @Override
     public void putGlobal(String whereSql, String clusterName, String tableName, List data) {
-        if (StringUtils.isBlank(whereSql)) {
+        if (StringUtil.isBlank(whereSql)) {
             return;
         }
 
@@ -62,7 +62,7 @@ public class RedisSecondCacheImpl extends AbstractRedisCache implements ISecondC
 
     @Override
     public List getGlobal(String whereSql, String clusterName, String tableName) {
-        if (StringUtils.isBlank(whereSql)) {
+        if (StringUtil.isBlank(whereSql)) {
             return null;
         }
 
@@ -116,7 +116,7 @@ public class RedisSecondCacheImpl extends AbstractRedisCache implements ISecondC
 
     @Override
     public void put(String whereSql, ShardingDBResource db, List data) {
-        if (StringUtils.isBlank(whereSql)) {
+        if (StringUtil.isBlank(whereSql)) {
             return;
         }
 
@@ -139,7 +139,7 @@ public class RedisSecondCacheImpl extends AbstractRedisCache implements ISecondC
 
     @Override
     public List get(String whereSql, ShardingDBResource db) {
-        if (StringUtils.isBlank(whereSql)) {
+        if (StringUtil.isBlank(whereSql)) {
             return null;
         }
 
@@ -196,7 +196,7 @@ public class RedisSecondCacheImpl extends AbstractRedisCache implements ISecondC
         StringBuilder cacheKey = new StringBuilder("sec.");
         cacheKey.append(clusterName).append(".");
         cacheKey.append(tableName).append(".");
-        if (StringUtils.isNotBlank(whereSql))
+        if (StringUtil.isNotBlank(whereSql))
             cacheKey.append(SecurityUtil.md5(whereSql));
         else
             cacheKey.append("*");
@@ -217,7 +217,7 @@ public class RedisSecondCacheImpl extends AbstractRedisCache implements ISecondC
         cacheKey.append(".");
         cacheKey.append(shardingDBResource.getTableName()).append(shardingDBResource.getTableIndex());
         cacheKey.append(".");
-        if (StringUtils.isNotBlank(whereSql))
+        if (StringUtil.isNotBlank(whereSql))
             cacheKey.append(SecurityUtil.md5(whereSql));
         else
             cacheKey.append("*");

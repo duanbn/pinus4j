@@ -21,8 +21,8 @@ import java.util.List;
 
 import org.pinus4j.api.query.IQuery;
 import org.pinus4j.cluster.enums.EnumDBMasterSlave;
-import org.pinus4j.utils.BeanUtil;
-import org.pinus4j.utils.StringUtils;
+import org.pinus4j.utils.BeansUtil;
+import org.pinus4j.utils.StringUtil;
 
 /**
  * 查询对象实现.
@@ -87,7 +87,7 @@ public class DefaultQueryImpl implements IQuery, Cloneable {
     public IQuery setFields(Class<?> clazz, String... fields) {
         if (fields != null && fields.length > 0) {
             for (String field : fields) {
-                field = BeanUtil.getFieldName(BeanUtil.getField(clazz, field));
+                field = BeansUtil.getFieldName(BeansUtil.getField(clazz, field));
             }
             this.fields = fields;
         }
@@ -106,7 +106,7 @@ public class DefaultQueryImpl implements IQuery, Cloneable {
 
     @Override
     public IQuery orderBy(String field, Order order, Class<?> clazz) {
-        if (StringUtils.isBlank(field)) {
+        if (StringUtil.isBlank(field)) {
             throw new IllegalArgumentException("参数错误, field=" + field);
         }
         if (order == null) {
@@ -206,7 +206,7 @@ public class DefaultQueryImpl implements IQuery, Cloneable {
             }
             info.deleteCharAt(info.length() - 1);
         }
-        if (StringUtils.isNotBlank(getWhereSql())) {
+        if (StringUtil.isNotBlank(getWhereSql())) {
             info.append(" wheresql:").append(getWhereSql());
         }
         return info.toString();
@@ -236,7 +236,7 @@ public class DefaultQueryImpl implements IQuery, Cloneable {
         private Order  order;
 
         public OrderBy(String field, Order order, Class<?> clazz) {
-            this.field = BeanUtil.getFieldName(BeanUtil.getField(clazz, field));
+            this.field = BeansUtil.getFieldName(BeansUtil.getField(clazz, field));
             this.order = order;
         }
 
