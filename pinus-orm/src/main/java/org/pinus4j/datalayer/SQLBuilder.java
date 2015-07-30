@@ -448,7 +448,7 @@ public class SQLBuilder {
         Map<String, Object> entityProperty = null;
         for (Object dbEntity : entities) {
             try {
-                entityProperty = BeansUtil.describe(dbEntity, true);
+                entityProperty = BeansUtil.describe(dbEntity, false);
             } catch (Exception e) {
                 throw new SQLException("解析实体对象失败", e);
             }
