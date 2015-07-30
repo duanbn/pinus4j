@@ -10,7 +10,7 @@ import org.pinus4j.entity.TestEntity;
 import org.pinus4j.utils.BeansUtil;
 
 public class ReflectUtilTest extends BaseTest {
-
+    
     @Test
     public void testGetPropery() throws Exception {
         TestEntity entity = createEntity();

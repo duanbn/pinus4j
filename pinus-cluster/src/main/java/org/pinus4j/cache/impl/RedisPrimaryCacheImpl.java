@@ -348,9 +348,6 @@ public class RedisPrimaryCacheImpl extends AbstractRedisCache implements IPrimar
             redisClient.set(key.getBytes(), IOUtil.getBytes(data));
             redisClient.expire(key.getBytes(), expire);
 
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("[PRIMARY CACHE] - put " + key + " value=" + data);
-            }
         } catch (Exception e) {
             LOG.warn("操作缓存失败:" + e.getMessage());
         } finally {
@@ -408,10 +405,6 @@ public class RedisPrimaryCacheImpl extends AbstractRedisCache implements IPrimar
             }
         } catch (Exception e) {
             LOG.warn("操作缓存失败:" + e.getMessage());
-        }
-
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("[PRIMARY CACHE] - get" + keys + " hits = " + datas.size());
         }
 
         return datas;

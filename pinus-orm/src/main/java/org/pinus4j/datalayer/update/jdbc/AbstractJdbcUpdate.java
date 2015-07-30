@@ -16,6 +16,7 @@
 
 package org.pinus4j.datalayer.update.jdbc;
 
+import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -36,8 +37,8 @@ import org.pinus4j.entity.meta.EntityPK;
 import org.pinus4j.entity.meta.PKName;
 import org.pinus4j.entity.meta.PKValue;
 import org.pinus4j.exceptions.DBOperationException;
-import org.pinus4j.utils.JdbcUtil;
 import org.pinus4j.utils.BeansUtil;
+import org.pinus4j.utils.JdbcUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -102,9 +103,17 @@ public abstract class AbstractJdbcUpdate implements IDataUpdate {
                 if (!entityMetaManager.isUnionKey(clazz)) {
                     ResultSet rs = st.getGeneratedKeys();
                     PKName pkName = entityMetaManager.getNotUnionPkName(clazz);
+                    Field f = BeansUtil.getField(clazz, pkName.getValue());
+                    Object incrPK = null;
                     if (rs.next()) {
-                        BeansUtil.setProperty(entity, pkName.getValue(), rs.getObject(1));
-                        pks.add(PKValue.valueOf(rs.getObject(1)));
+                        incrPK = rs.getObject(1);
+                        if (f.getType() == Integer.TYPE || f.getType() == Integer.class) {
+                            BeansUtil.setProperty(entity, pkName.getValue(), ((Long) incrPK).intValue());
+                            pks.add(PKValue.valueOf(((Long) incrPK).intValue()));
+                        } else {
+                            BeansUtil.setProperty(entity, pkName.getValue(), incrPK);
+                            pks.add(PKValue.valueOf(incrPK));
+                        }
                     }
                 }
             } catch (SQLException e) {

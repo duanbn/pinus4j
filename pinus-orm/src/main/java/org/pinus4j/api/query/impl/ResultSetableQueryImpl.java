@@ -75,8 +75,9 @@ public class ResultSetableQueryImpl<T> extends DefaultQueryImpl {
             }
 
             // 判断单主键是否满足条件
-            if (pkNames.length == 1 && cond.getOrCond().length == 0 && cond.getAndCond().length == 0
-                    && cond.getOpt() == QueryOpt.EQ) {
+            if (pkNames.length == 1 && (cond.getOrCond() == null || cond.getOrCond().length == 0)
+                    && (cond.getAndCond() == null || cond.getAndCond().length == 0) && cond.getOpt() == QueryOpt.EQ
+                    && cond.getField().equals(pkNames[0].getValue())) {
                 PKValue[] pkValues = new PKValue[] { PKValue.valueOf(cond.getValue()) };
                 entityPkList.add(EntityPK.valueOf(pkNames, pkValues));
             } else {
@@ -85,10 +86,14 @@ public class ResultSetableQueryImpl<T> extends DefaultQueryImpl {
             }
 
             // 判断联合主键是否满足条件
-            if (pkNames.length > 1 && cond.getOrCond().length == 0 && cond.getAndCond().length == pkNames.length
-                    && cond.isAndCondAllEQ()) {
+            if (pkNames.length > 1 && (cond.getOrCond() == null || cond.getOrCond().length == 0)
+                    && cond.getAndCond() != null && cond.getAndCond().length == pkNames.length && cond.isAndCondAllEQ()) {
                 PKValue[] pkValues = new PKValue[cond.getAndCond().length];
                 for (int j = 0; j < cond.getAndCond().length; j++) {
+                    if (!pkNames[j].getValue().equals(cond.getAndCond()[j].getField())) {
+                        isMatch = false;
+                        break;
+                    }
                     pkValues[j] = PKValue.valueOf(cond.getAndCond()[j].getValue());
                 }
                 entityPkList.add(EntityPK.valueOf(pkNames, pkValues));

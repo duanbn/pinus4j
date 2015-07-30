@@ -50,8 +50,8 @@ import org.pinus4j.task.TaskExecutor;
 import org.pinus4j.task.TaskFuture;
 import org.pinus4j.transaction.enums.EnumTransactionIsolationLevel;
 import org.pinus4j.transaction.impl.BestEffortsOnePCJtaTransactionManager;
-import org.pinus4j.utils.CheckUtil;
 import org.pinus4j.utils.BeansUtil;
+import org.pinus4j.utils.CheckUtil;
 import org.pinus4j.utils.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -574,23 +574,25 @@ public class DefaultPinusClient implements PinusClient {
             throw new IllegalArgumentException("param should not be null");
         }
 
-        Object loadedEntity = null;
-
         EntityPK entityPk = entityMetaManager.getEntityPK(entity);
 
+        List<?> resultList = null;
         Class<?> clazz = entity.getClass();
         if (entityMetaManager.isShardingEntity(clazz)) {
-            loadedEntity = this.shardingQuery.findByPkList(Lists.newArrayList(entityPk), clazz, useCache, masterSlave);
+            resultList = this.shardingQuery.findByPkList(Lists.newArrayList(entityPk), clazz, useCache, masterSlave);
         } else {
-            loadedEntity = this.globalQuery.findByPkList(Lists.newArrayList(entityPk), clazz, useCache, masterSlave);
+            resultList = this.globalQuery.findByPkList(Lists.newArrayList(entityPk), clazz, useCache, masterSlave);
         }
 
-        if (loadedEntity == null) {
+        if (resultList.isEmpty()) {
             throw new DBOperationException("找不到记录, pk=" + entityPk);
+        }
+        if (resultList.size() > 1) {
+            throw new DBOperationException("找到多条记录");
         }
 
         try {
-            BeansUtil.copyProperties(loadedEntity, entity);
+            BeansUtil.copyProperties(resultList.get(0), entity);
         } catch (Exception e) {
             throw new DBOperationException(e);
         }

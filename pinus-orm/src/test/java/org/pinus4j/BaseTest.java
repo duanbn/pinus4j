@@ -7,7 +7,9 @@ import java.util.List;
 import java.util.Random;
 
 import org.junit.Test;
+import org.pinus4j.api.DefaultPinusClient;
 import org.pinus4j.api.IShardingStorageClient;
+import org.pinus4j.api.PinusClient;
 import org.pinus4j.api.ShardingStorageClientImpl;
 import org.pinus4j.cluster.beans.ShardingKey;
 import org.pinus4j.cluster.enums.EnumSyncAction;
@@ -36,8 +38,8 @@ public class BaseTest {
 
     public static TestEntity createEntity() {
         TestEntity testEntity = new TestEntity();
-        testEntity.setTestBool(r.nextBoolean());
-        testEntity.setOTestBool(r.nextBoolean());
+        testEntity.setTestBool(true);
+        testEntity.setOTestBool(false);
         testEntity.setTestByte((byte) 255);
         testEntity.setOTestByte((byte) 255);
         testEntity.setTestChar('a');
@@ -60,8 +62,8 @@ public class BaseTest {
 
     public static TestGlobalEntity createGlobalEntity() {
         TestGlobalEntity testEntity = new TestGlobalEntity();
-        testEntity.setTestBool(r.nextBoolean());
-        testEntity.setoTestBool(r.nextBoolean());
+        testEntity.setTestBool(true);
+        testEntity.setoTestBool(false);
         testEntity.setTestByte((byte) 255);
         testEntity.setoTestByte((byte) 255);
         testEntity.setTestChar('b');
@@ -84,8 +86,8 @@ public class BaseTest {
 
     public static TestGlobalUnionKeyEntity createGlobalUnionKeyEntity() {
         TestGlobalUnionKeyEntity testEntity = new TestGlobalUnionKeyEntity();
-        testEntity.setTestBool(r.nextBoolean());
-        testEntity.setoTestBool(r.nextBoolean());
+        testEntity.setTestBool(true);
+        testEntity.setoTestBool(false);
         testEntity.setTestByte((byte) 255);
         testEntity.setoTestByte((byte) 255);
         testEntity.setTestChar('b');
@@ -104,6 +106,18 @@ public class BaseTest {
         testEntity.setTestString(getContent(r.nextInt(100)));
         testEntity.setTestTime(new Timestamp(System.currentTimeMillis()));
         return testEntity;
+    }
+
+    public static PinusClient getPinusClient() {
+        PinusClient pinusClient = new DefaultPinusClient();
+        pinusClient.setScanPackage("org.pinus4j");
+//        pinusClient.setSyncAction(EnumSyncAction.UPDATE);
+        try {
+            pinusClient.init();
+        } catch (LoadConfigException e) {
+            throw new RuntimeException(e);
+        }
+        return pinusClient;
     }
 
     public static IShardingStorageClient getStorageClient() {

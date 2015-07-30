@@ -53,7 +53,7 @@ public class BestEffortsTransactionTest extends BaseTest {
 
 	@Test
 	public void testRollback() {
-		long globalId = 1;
+		int globalId = 1;
 		long shardingId = 1;
 		TestGlobalEntity testGlobalEntity = createGlobalEntity();
 		testGlobalEntity.setId(globalId);
