@@ -18,6 +18,7 @@ package org.pinus4j.api.query.impl;
 
 import java.lang.reflect.Array;
 
+import org.pinus4j.api.query.impl.DefaultQueryImpl.ConditionRelation;
 import org.pinus4j.datalayer.SQLBuilder;
 import org.pinus4j.utils.BeansUtil;
 import org.pinus4j.utils.StringUtil;
@@ -32,29 +33,35 @@ public class Condition {
     /**
      * 条件字段.
      */
-    private String      field;
+    private String            field;
     /**
      * 条件值.
      */
-    private Object      value;
+    private Object            value;
     /**
      * 条件枚举.
      */
-    private QueryOpt    opt;
+    private QueryOpt          opt;
 
     /**
-     * 保存or查询.
+     * 保存or查询条件.
      */
-    private Condition[] orCond;
+    private Condition[]       orCond;
+
+    /**
+     * 保存and查询条件.
+     */
+    private Condition[]       andCond;
+
+    /**
+     * 在一个Query中的条件
+     */
+    private ConditionRelation conditionRelation;
 
     /**
      * 构造方法. 防止调用者直接创建此对象.
      */
     private Condition() {
-    }
-
-    private Condition(Condition... conds) {
-        this.orCond = conds;
     }
 
     /**
@@ -105,14 +112,22 @@ public class Condition {
      *
      * @return sql语句
      */
-    public String getSql() {
+    String getSql() {
         StringBuilder SQL = new StringBuilder();
         if (orCond != null && orCond.length > 0) {
             SQL.append("(");
             for (Condition cond : orCond) {
-                SQL.append(cond.getSql()).append(" OR ");
+                SQL.append(cond.getSql()).append(" or ");
             }
-            SQL.delete(SQL.lastIndexOf(" OR "), SQL.length());
+            SQL.delete(SQL.lastIndexOf(" or "), SQL.length());
+            SQL.append(")");
+            return SQL.toString();
+        } else if (andCond != null && andCond.length > 0) {
+            SQL.append("(");
+            for (Condition cond : andCond) {
+                SQL.append(cond.getSql()).append(" and ");
+            }
+            SQL.delete(SQL.lastIndexOf(" and "), SQL.length());
             SQL.append(")");
             return SQL.toString();
         } else {
@@ -398,7 +413,7 @@ public class Condition {
     }
 
     /**
-     * 或查询.
+     * or查询.
      *
      * @param conds 查询条件
      */
@@ -406,7 +421,23 @@ public class Condition {
         if (conds == null || conds.length < 2) {
             throw new IllegalArgumentException("参数错误, or查询条件最少为2个");
         }
-        Condition cond = new Condition(conds);
+        Condition cond = new Condition();
+        cond.setOrCond(conds);
+        return cond;
+    }
+
+    /**
+     * and查询
+     * 
+     * @param conds
+     * @return
+     */
+    public static Condition and(Condition... conds) {
+        if (conds == null || conds.length < 2) {
+            throw new IllegalArgumentException("参数错误, and查询条件最少为2个");
+        }
+        Condition cond = new Condition();
+        cond.setAndCond(conds);
         return cond;
     }
 
@@ -438,5 +469,67 @@ public class Condition {
     public static Condition isNotNull(String field, Class<?> clazz) {
         Condition cond = new Condition(field, QueryOpt.ISNOTNULL, clazz);
         return cond;
+    }
+
+    boolean isAndCondAllEQ() {
+        if (andCond.length == 0) {
+            return false;
+        }
+
+        for (Condition oneAnd : andCond) {
+            if (oneAnd.getOpt() != QueryOpt.EQ) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    String getField() {
+        return field;
+    }
+
+    void setField(String field) {
+        this.field = field;
+    }
+
+    Object getValue() {
+        return value;
+    }
+
+    void setValue(Object value) {
+        this.value = value;
+    }
+
+    QueryOpt getOpt() {
+        return opt;
+    }
+
+    void setOpt(QueryOpt opt) {
+        this.opt = opt;
+    }
+
+    Condition[] getOrCond() {
+        return orCond;
+    }
+
+    void setOrCond(Condition[] orCond) {
+        this.orCond = orCond;
+    }
+
+    Condition[] getAndCond() {
+        return andCond;
+    }
+
+    void setAndCond(Condition[] andCond) {
+        this.andCond = andCond;
+    }
+
+    ConditionRelation getConditionRelation() {
+        return conditionRelation;
+    }
+
+    void setConditionRelation(ConditionRelation conditionRelation) {
+        this.conditionRelation = conditionRelation;
     }
 }

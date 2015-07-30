@@ -24,6 +24,11 @@ import org.pinus4j.datalayer.query.IGlobalQuery;
 import org.pinus4j.datalayer.query.IShardingQuery;
 import org.pinus4j.entity.DefaultEntityMetaManager;
 import org.pinus4j.entity.IEntityMetaManager;
+import org.pinus4j.entity.meta.EntityPK;
+import org.pinus4j.entity.meta.PKName;
+import org.pinus4j.entity.meta.PKValue;
+
+import com.google.common.collect.Lists;
 
 /**
  * 可以获取结果集的查询条件
@@ -44,6 +49,60 @@ public class ResultSetableQueryImpl<T> extends DefaultQueryImpl {
 
     private IEntityMetaManager entityMetaManager = DefaultEntityMetaManager.getInstance();
 
+    /**
+     * 将当前Query查询转换为PK查询，提高缓存的命中率.
+     * 
+     * @return
+     */
+    private List<EntityPK> coverToEntityPK() {
+        List<EntityPK> entityPkList = Lists.newArrayList();
+
+        // 判断查询条件是否和主键名数量一致
+        PKName[] pkNames = entityMetaManager.getPkName(this.clazz);
+        if (pkNames.length != this.condList.size()) {
+            return null;
+        }
+
+        // 判断查询条件是否满足只是包含主键查询并且条件之间是or关系
+        boolean isMatch = true;
+        Condition cond = null;
+        for (int i = 0; i < this.condList.size(); i++) {
+            cond = this.condList.get(i);
+            // 主键之间是or
+            if (i > 0 && cond.getConditionRelation() != ConditionRelation.OR) {
+                isMatch = false;
+                break;
+            }
+
+            // 判断单主键是否满足条件
+            if (pkNames.length == 1 && cond.getOrCond().length == 0 && cond.getAndCond().length == 0
+                    && cond.getOpt() == QueryOpt.EQ) {
+                PKValue[] pkValues = new PKValue[] { PKValue.valueOf(cond.getValue()) };
+                entityPkList.add(EntityPK.valueOf(pkNames, pkValues));
+            } else {
+                isMatch = false;
+                break;
+            }
+
+            // 判断联合主键是否满足条件
+            if (pkNames.length > 1 && cond.getOrCond().length == 0 && cond.getAndCond().length == pkNames.length
+                    && cond.isAndCondAllEQ()) {
+                PKValue[] pkValues = new PKValue[cond.getAndCond().length];
+                for (int j = 0; j < cond.getAndCond().length; j++) {
+                    pkValues[j] = PKValue.valueOf(cond.getAndCond()[j].getValue());
+                }
+                entityPkList.add(EntityPK.valueOf(pkNames, pkValues));
+            } else {
+                isMatch = false;
+            }
+        }
+        if (!isMatch) {
+            return null;
+        }
+
+        return entityPkList;
+    }
+
     public ResultSetableQueryImpl(Class<T> clazz) {
         this.clazz = clazz;
     }
@@ -63,10 +122,17 @@ public class ResultSetableQueryImpl<T> extends DefaultQueryImpl {
     public List<T> list() {
         List<T> result = null;
 
+        List<EntityPK> entityPkList = coverToEntityPK();
         if (entityMetaManager.isShardingEntity(clazz)) {
-            result = this.shardingQuery.findByQuery(this, this.clazz, this.useCache, this.masterSlave);
+            if (entityPkList != null && !entityPkList.isEmpty())
+                result = this.shardingQuery.findByPkList(entityPkList, this.clazz, this.useCache, this.masterSlave);
+            else
+                result = this.shardingQuery.findByQuery(this, this.clazz, this.useCache, this.masterSlave);
         } else {
-            result = this.globalQuery.findByQuery(this, this.clazz, this.useCache, this.masterSlave);
+            if (entityPkList != null && !entityPkList.isEmpty())
+                result = this.globalQuery.findByPkList(entityPkList, this.clazz, this.useCache, this.masterSlave);
+            else
+                result = this.globalQuery.findByQuery(this, this.clazz, this.useCache, this.masterSlave);
         }
 
         return result;

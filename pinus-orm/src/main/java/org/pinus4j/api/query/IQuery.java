@@ -23,7 +23,7 @@ import org.pinus4j.api.query.impl.Order;
 import org.pinus4j.cluster.enums.EnumDBMasterSlave;
 
 /**
- * 查询对象.
+ * 查询对象. 线程不安全
  * 
  * @author duanbn
  */
@@ -84,11 +84,28 @@ public interface IQuery {
     public IQuery setFields(Class<?> clazz, String... field);
 
     /**
-     * 添加查询条件.
+     * and查询条件. {@link and}
      * 
      * @param cond 一个查询条件
      */
+    @Deprecated
     public IQuery add(Condition cond);
+
+    /**
+     * and查询条件
+     * 
+     * @param cond
+     * @return
+     */
+    public IQuery and(Condition cond);
+
+    /**
+     * or查询条件.
+     * 
+     * @param cond 查询条件
+     * @return
+     */
+    public IQuery or(Condition cond);
 
     /**
      * 添加排序字段.
@@ -112,5 +129,10 @@ public interface IQuery {
      * @param limit limit
      */
     public IQuery limit(int limit);
+
+    /**
+     * 清除当前已经设置的查询条件.
+     */
+    public void clean();
 
 }

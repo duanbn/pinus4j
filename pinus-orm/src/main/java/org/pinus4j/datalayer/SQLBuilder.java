@@ -74,7 +74,7 @@ public class SQLBuilder {
     public static String buildSelectPkByQuery(Class<?> clazz, int tableIndex, IQuery query) {
         String tableName = entityMetaManager.getTableName(clazz, tableIndex);
 
-        List<PKName> pkNames = entityMetaManager.getPkName(clazz);
+        PKName[] pkNames = entityMetaManager.getPkName(clazz);
         StringBuilder pkField = new StringBuilder();
         for (PKName pkName : pkNames) {
             pkField.append(pkName.getValue()).append(',');
@@ -294,7 +294,7 @@ public class SQLBuilder {
         ResultSetMetaData rsmd = rs.getMetaData();
         T one = null;
         String fieldName = null;
-        PKName[] pkNames = entityMetaManager.getPkName(clazz).toArray(new PKName[0]);
+        PKName[] pkNames = entityMetaManager.getPkName(clazz);
         PKValue[] pkValues = new PKValue[pkNames.length];
 
         Field f = null;

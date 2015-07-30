@@ -100,15 +100,14 @@ public class DefaultEntityMetaManager implements IEntityMetaManager {
 
     @Override
     public EntityPK getEntityPK(Object obj) {
-        List<PKName> pkNames = getPkName(obj.getClass());
+        PKName[] pkNames = getPkName(obj.getClass());
         List<PKValue> pkValues = Lists.newArrayList();
         Object pkValue = null;
         for (PKName pkName : pkNames) {
             pkValue = BeansUtil.getProperty(obj, pkName.getValue());
             pkValues.add(PKValue.valueOf(pkValue));
         }
-        return EntityPK.valueOf(pkNames.toArray(new PKName[pkNames.size()]),
-                pkValues.toArray(new PKValue[pkValues.size()]));
+        return EntityPK.valueOf(pkNames, pkValues.toArray(new PKValue[pkValues.size()]));
     }
 
     @Override
@@ -128,7 +127,7 @@ public class DefaultEntityMetaManager implements IEntityMetaManager {
     }
 
     @Override
-    public List<PKName> getPkName(Class<?> clazz) {
+    public PKName[] getPkName(Class<?> clazz) {
         DBTable dbTable = this.getTableMeta(clazz);
 
         List<DBTablePK> primaryKeys = dbTable.getPrimaryKeys();
@@ -142,7 +141,7 @@ public class DefaultEntityMetaManager implements IEntityMetaManager {
             ePKList.add(primaryKey.getPKName());
         }
 
-        return ePKList;
+        return ePKList.toArray(new PKName[ePKList.size()]);
     }
 
     @Override

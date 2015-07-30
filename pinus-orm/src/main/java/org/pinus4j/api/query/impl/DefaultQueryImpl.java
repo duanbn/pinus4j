@@ -34,26 +34,26 @@ public class DefaultQueryImpl implements IQuery, Cloneable {
     /**
      * 保存取值的字段.
      */
-    private String[]        fields;
+    protected String[]        fields;
 
     /**
      * 保存查询条件.
      */
-    private List<Condition> condList  = new ArrayList<Condition>();
+    protected List<Condition> condList  = new ArrayList<Condition>();
 
     /**
      * 保存排序条件
      */
-    private List<OrderBy>   orderList = new ArrayList<OrderBy>();
+    protected List<OrderBy>   orderList = new ArrayList<OrderBy>();
 
     /**
      * 分页开始偏移量
      */
-    private int             start     = -1;
+    protected int             start     = -1;
     /**
      * 分页大小
      */
-    private int             limit     = -1;
+    protected int             limit     = -1;
 
     @Override
     public <T> T load() {
@@ -99,13 +99,37 @@ public class DefaultQueryImpl implements IQuery, Cloneable {
         return this;
     }
 
+    @Deprecated
     @Override
     public IQuery add(Condition cond) {
+        return and(cond);
+    }
+
+    @Override
+    public IQuery and(Condition cond) {
         if (cond == null) {
-            throw new IllegalArgumentException("参数错误, cond=null");
+            throw new IllegalArgumentException("param should not be null");
         }
 
+        if (!condList.isEmpty())
+            cond.setConditionRelation(ConditionRelation.AND);
+
         condList.add(cond);
+
+        return this;
+    }
+
+    @Override
+    public IQuery or(Condition cond) {
+        if (cond == null) {
+            throw new IllegalArgumentException("param should not be null");
+        }
+
+        if (!condList.isEmpty())
+            cond.setConditionRelation(ConditionRelation.OR);
+
+        condList.add(cond);
+
         return this;
     }
 
@@ -145,6 +169,16 @@ public class DefaultQueryImpl implements IQuery, Cloneable {
         return this;
     }
 
+    @Override
+    public void clean() {
+        this.fields = null;
+        this.condList.clear();
+        this.orderList.clear();
+        this.start = -1;
+        this.limit = -1;
+
+    }
+
     public int getStart() {
         return this.start;
     }
@@ -175,15 +209,21 @@ public class DefaultQueryImpl implements IQuery, Cloneable {
         StringBuilder SQL = new StringBuilder();
         // 添加查询条件
         if (!condList.isEmpty()) {
-            SQL.append(" WHERE ");
-            for (Condition cond : condList) {
-                SQL.append(cond.getSql()).append(" AND ");
+            SQL.append(" where ");
+
+            Condition cond = null;
+            for (int i = 0; i < condList.size(); i++) {
+                cond = condList.get(i);
+                if (i > 0) {
+                    SQL.append(" ").append(cond.getConditionRelation().getValue()).append(" ").append(cond.getSql());
+                } else {
+                    SQL.append(cond.getSql()); // first one
+                }
             }
-            SQL.delete(SQL.lastIndexOf(" AND "), SQL.length());
         }
         // 添加排序条件
         if (!orderList.isEmpty()) {
-            SQL.append(" ORDER BY ");
+            SQL.append(" order by ");
             for (OrderBy orderBy : orderList) {
                 SQL.append(orderBy.getField());
                 SQL.append(" ");
@@ -194,9 +234,9 @@ public class DefaultQueryImpl implements IQuery, Cloneable {
         }
         // 添加分页
         if (start > -1 && limit > -1) {
-            SQL.append(" LIMIT ").append(start).append(",").append(limit);
+            SQL.append(" limit ").append(start).append(",").append(limit);
         } else if (limit != -1) {
-            SQL.append(" LIMIT ").append(limit);
+            SQL.append(" limit ").append(limit);
         }
         return SQL.toString();
     }
@@ -253,6 +293,30 @@ public class DefaultQueryImpl implements IQuery, Cloneable {
             return order;
         }
 
+    }
+
+    /**
+     * 只给Condition使用.
+     * 
+     * @author shanwei Jul 29, 2015 7:06:33 PM
+     */
+    enum ConditionRelation {
+        AND("and"),
+        OR("or");
+
+        private String value;
+
+        private ConditionRelation(String value) {
+            this.value = value;
+        }
+
+        public String getValue() {
+            return value;
+        }
+
+        public void setValue(String value) {
+            this.value = value;
+        }
     }
 
 }

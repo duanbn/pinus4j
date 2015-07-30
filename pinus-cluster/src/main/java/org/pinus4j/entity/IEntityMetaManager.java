@@ -103,7 +103,7 @@ public interface IEntityMetaManager {
      * @param clazz
      * @return
      */
-    public List<PKName> getPkName(Class<?> clazz);
+    public PKName[] getPkName(Class<?> clazz);
 
     /**
      * 获取联合主键的主键名
