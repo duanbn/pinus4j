@@ -501,7 +501,7 @@ public class SQLBuilder {
         Map<String, Object> entityProperty = null;
         try {
             // 获取需要被插入数据库的字段.
-            entityProperty = BeansUtil.describe(entity, true);
+            entityProperty = BeansUtil.describe(entity, false);
         } catch (Exception e) {
             throw new SQLException("解析实体对象失败", e);
         }
