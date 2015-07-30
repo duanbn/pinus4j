@@ -295,7 +295,7 @@ public class SQLBuilder {
         T one = null;
         String fieldName = null;
         PKName[] pkNames = entityMetaManager.getPkName(clazz);
-        PKValue[] pkValues = new PKValue[pkNames.length];
+        PKValue[] pkValues = null;
 
         Field f = null;
         Object value = null;
@@ -310,6 +310,7 @@ public class SQLBuilder {
                     BeansUtil.setProperty(one, fieldName, value);
                 }
 
+                pkValues = new PKValue[pkNames.length];
                 for (int i = 0; i < pkNames.length; i++) {
                     pkValues[i] = PKValue.valueOf(rs.getObject(pkNames[i].getValue()));
                 }

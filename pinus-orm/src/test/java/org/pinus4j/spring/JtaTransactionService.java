@@ -19,7 +19,7 @@ public class JtaTransactionService {
 	@Transactional
 	public void saveData(long globalId, long shardingId) {
 		TestGlobalEntity testGlobalEntity = new TestGlobalEntity();
-		testGlobalEntity.setId((int)globalId);
+		testGlobalEntity.setId(globalId);
 		TestEntity testEntity = new TestEntity();
 		testEntity.setId(shardingId);
 		testEntity.setTestInt(10);
@@ -42,7 +42,7 @@ public class JtaTransactionService {
 	@Transactional
 	public void saveDataWithException(long globalId, long shardingId) {
 		TestGlobalEntity testGlobalEntity = new TestGlobalEntity();
-		testGlobalEntity.setId((int)globalId);
+		testGlobalEntity.setId(globalId);
 		TestEntity testEntity = new TestEntity();
 		testEntity.setId(shardingId);
 		testEntity.setTestInt(10);

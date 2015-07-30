@@ -20,7 +20,7 @@ public class TestGlobalEntity extends FashionEntity implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @PrimaryKey(comment = "主键", name = "pk", isAutoIncrement = true)
-    private Integer           id;
+    private long              id;
 
     @Field
     private byte              testByte;
@@ -183,11 +183,11 @@ public class TestGlobalEntity extends FashionEntity implements Serializable {
         return true;
     }
 
-    public Integer getId() {
+    public long getId() {
         return id;
     }
 
-    public void setId(Integer id) {
+    public void setId(long id) {
         this.id = id;
     }
 
