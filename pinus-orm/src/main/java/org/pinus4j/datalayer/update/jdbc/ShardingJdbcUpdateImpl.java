@@ -50,7 +50,7 @@ public class ShardingJdbcUpdateImpl extends AbstractJdbcUpdate implements IShard
     public PKValue save(Object entity, IShardingKey<?> shardingKey) {
 
         PKValue[] pkValues = saveBatch(Lists.newArrayList(entity), shardingKey, true);
-        if (pkValues != null && pkValues.length > 1) {
+        if (pkValues != null && pkValues.length > 0) {
             return pkValues[0];
         }
 
