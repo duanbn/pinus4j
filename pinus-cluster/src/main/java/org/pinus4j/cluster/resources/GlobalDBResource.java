@@ -33,177 +33,186 @@ import org.pinus4j.transaction.enums.EnumTransactionIsolationLevel;
  */
 public class GlobalDBResource extends AbstractXADBResource {
 
-	private IResourceId resId;
+    private IResourceId       resId;
 
-	private Connection conn;
+    private Connection        conn;
 
-	private String clusterName;
+    private String            clusterName;
 
-	private String dbName;
+    private String            dbName;
 
-	private EnumDBMasterSlave masterSlave;
+    private EnumDBMasterSlave masterSlave;
 
-	//
-	// database meta data.
-	//
-	private String databaseProductName;
-	private String host;
-	private String catalog;
+    //
+    // database meta data.
+    //
+    private String            databaseProductName;
+    private String            host;
+    private String            catalog;
 
-	private GlobalDBResource() {
-	}
+    private GlobalDBResource() {
+    }
 
-	/**
-	 * singleton
-	 * 
-	 * @param dbInfo
-	 * @return
-	 */
-	public static IDBResource valueOf(DBInfo dbInfo, String tableName) throws SQLException {
-		IResourceId resId = new DBResourceId(dbInfo.getClusterName(), dbInfo.getDbName(), tableName,
-				dbInfo.getMasterSlave());
+    /**
+     * singleton
+     * 
+     * @param dbInfo
+     * @return
+     */
+    public static IDBResource valueOf(DBInfo dbInfo, String tableName) throws SQLException {
+        IResourceId resId = new DBResourceId(dbInfo.getClusterName(), dbInfo.getDbName(), tableName,
+                dbInfo.getMasterSlave());
 
-		GlobalDBResource instance = (GlobalDBResource) DBResourceCache.getGlobalDBResource(resId);
+        GlobalDBResource instance = (GlobalDBResource) DBResourceCache.getGlobalDBResource(resId);
 
-		Connection conn = dbInfo.getDatasource().getConnection();
-		conn.setAutoCommit(false);
+        Connection conn = dbInfo.getDatasource().getConnection();
+        conn.setAutoCommit(false);
 
-		if (instance == null) {
-			instance = new GlobalDBResource();
+        if (instance == null) {
+            instance = new GlobalDBResource();
 
-			instance.setId(resId);
-			instance.setClusterName(dbInfo.getClusterName());
-			instance.setDbName(dbInfo.getDbName());
-			instance.setMasterSlave(dbInfo.getMasterSlave());
+            instance.setId(resId);
+            instance.setClusterName(dbInfo.getClusterName());
+            instance.setDbName(dbInfo.getDbName());
+            instance.setMasterSlave(dbInfo.getMasterSlave());
 
-			// get database meta info.
-			DatabaseMetaData dbMeta = conn.getMetaData();
-			String databaseProductName = dbMeta.getDatabaseProductName();
-			String url = dbMeta.getURL().substring(13);
-			String host = url.substring(0, url.indexOf("/"));
-			String catalog = conn.getCatalog();
+            // get database meta info.
+            DatabaseMetaData dbMeta = conn.getMetaData();
+            String databaseProductName = dbMeta.getDatabaseProductName();
+            String url = dbMeta.getURL().substring(13);
+            String host = url.substring(0, url.indexOf("/"));
+            String catalog = conn.getCatalog();
 
-			instance.setDatabaseProductName(databaseProductName);
-			instance.setHost(host);
-			instance.setCatalog(catalog);
+            instance.setDatabaseProductName(databaseProductName);
+            instance.setHost(host);
+            instance.setCatalog(catalog);
 
-			DBResourceCache.putGlobalDBResource(resId, instance);
-		}
+            DBResourceCache.putGlobalDBResource(resId, instance);
+        }
 
-		instance.setConnection(conn);
+        instance.setConnection(conn);
 
-		return instance;
-	}
+        return instance;
+    }
 
-	public void setId(IResourceId resId) {
-		this.resId = resId;
-	}
+    public void setId(IResourceId resId) {
+        this.resId = resId;
+    }
 
-	@Override
-	public IResourceId getId() {
-		return this.resId;
-	}
+    @Override
+    public IResourceId getId() {
+        return this.resId;
+    }
 
-	@Override
-	public void setTransactionIsolationLevel(EnumTransactionIsolationLevel txLevel) {
-		try {
-			this.conn.setTransactionIsolation(txLevel.getLevel());
-		} catch (SQLException e) {
-			throw new DBOperationException(e);
-		}
-	}
+    @Override
+    public void setTransactionIsolationLevel(EnumTransactionIsolationLevel txLevel) {
+        try {
+            this.conn.setTransactionIsolation(txLevel.getLevel());
+        } catch (SQLException e) {
+            throw new DBOperationException(e);
+        }
+    }
 
-	@Override
-	public Connection getConnection() {
-		return this.conn;
-	}
+    @Override
+    public Connection getConnection() {
+        return this.conn;
+    }
 
-	@Override
-	public void commit() {
-		try {
-			this.conn.commit();
-		} catch (SQLException e) {
-			throw new DBOperationException(e);
-		}
-	}
+    @Override
+    public void commit() {
+        try {
+            this.conn.commit();
+        } catch (SQLException e) {
+            throw new DBOperationException(e);
+        }
+    }
 
-	@Override
-	public void rollback() {
-		try {
-			this.conn.rollback();
-		} catch (SQLException e) {
-			throw new DBOperationException(e);
-		}
-	}
+    @Override
+    public void rollback() {
+        try {
+            this.conn.rollback();
+        } catch (SQLException e) {
+            throw new DBOperationException(e);
+        }
+    }
 
-	@Override
-	public void close() {
-		try {
-			if (!this.conn.isClosed()) {
-				this.conn.close();
-			}
-		} catch (SQLException e) {
-			throw new DBOperationException(e);
-		}
-	}
+    @Override
+    public void close() {
+        try {
+            if (!this.conn.isClosed()) {
+                this.conn.close();
+            }
+        } catch (SQLException e) {
+            throw new DBOperationException(e);
+        }
+    }
 
-	@Override
-	public boolean isGlobal() {
-		return true;
-	}
+    @Override
+    public boolean isClosed() {
+        try {
+            return this.conn.isClosed();
+        } catch (SQLException e) {
+            throw new DBOperationException(e);
+        }
+    }
 
-	@Override
-	public EnumDBMasterSlave getMasterSlave() {
-		return this.masterSlave;
-	}
+    @Override
+    public boolean isGlobal() {
+        return true;
+    }
 
-	@Override
-	public String getClusterName() {
-		return clusterName;
-	}
+    @Override
+    public EnumDBMasterSlave getMasterSlave() {
+        return this.masterSlave;
+    }
 
-	public void setClusterName(String clusterName) {
-		this.clusterName = clusterName;
-	}
+    @Override
+    public String getClusterName() {
+        return clusterName;
+    }
 
-	public String getDbName() {
-		return dbName;
-	}
+    public void setClusterName(String clusterName) {
+        this.clusterName = clusterName;
+    }
 
-	public void setDbName(String dbName) {
-		this.dbName = dbName;
-	}
+    public String getDbName() {
+        return dbName;
+    }
 
-	public String getDatabaseProductName() {
-		return databaseProductName;
-	}
+    public void setDbName(String dbName) {
+        this.dbName = dbName;
+    }
 
-	public void setDatabaseProductName(String databaseProductName) {
-		this.databaseProductName = databaseProductName;
-	}
+    public String getDatabaseProductName() {
+        return databaseProductName;
+    }
 
-	public String getHost() {
-		return host;
-	}
+    public void setDatabaseProductName(String databaseProductName) {
+        this.databaseProductName = databaseProductName;
+    }
 
-	public void setHost(String host) {
-		this.host = host;
-	}
+    public String getHost() {
+        return host;
+    }
 
-	public String getCatalog() {
-		return catalog;
-	}
+    public void setHost(String host) {
+        this.host = host;
+    }
 
-	public void setCatalog(String catalog) {
-		this.catalog = catalog;
-	}
+    public String getCatalog() {
+        return catalog;
+    }
 
-	public void setConnection(Connection conn) {
-		this.conn = conn;
-	}
+    public void setCatalog(String catalog) {
+        this.catalog = catalog;
+    }
 
-	public void setMasterSlave(EnumDBMasterSlave masterSlave) {
-		this.masterSlave = masterSlave;
-	}
+    public void setConnection(Connection conn) {
+        this.conn = conn;
+    }
+
+    public void setMasterSlave(EnumDBMasterSlave masterSlave) {
+        this.masterSlave = masterSlave;
+    }
 
 }

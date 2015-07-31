@@ -29,60 +29,66 @@ import org.pinus4j.transaction.enums.EnumTransactionIsolationLevel;
  */
 public interface IDBResource {
 
-	/**
-	 * get resource id.
-	 */
-	IResourceId getId();
+    /**
+     * get resource id.
+     */
+    IResourceId getId();
 
-	/**
-	 * set transaction isolation level.
-	 * 
-	 * @param txLevel
-	 *            isolation level
-	 */
-	void setTransactionIsolationLevel(EnumTransactionIsolationLevel txLevel);
+    /**
+     * set transaction isolation level.
+     * 
+     * @param txLevel isolation level
+     */
+    void setTransactionIsolationLevel(EnumTransactionIsolationLevel txLevel);
 
-	/**
-	 * get database connection.
-	 * 
-	 * @return
-	 */
-	Connection getConnection();
+    /**
+     * get database connection.
+     * 
+     * @return
+     */
+    Connection getConnection();
 
-	/**
-	 * commit.
-	 */
-	void commit();
+    /**
+     * commit.
+     */
+    void commit();
 
-	/**
-	 * rollback.
-	 */
-	void rollback();
+    /**
+     * rollback.
+     */
+    void rollback();
 
-	/**
-	 * close.
-	 */
-	void close();
+    /**
+     * close.
+     */
+    void close();
 
-	/**
-	 * cluster name of database resource.
-	 * 
-	 * @return
-	 */
-	String getClusterName();
+    /**
+     * is closed.
+     * 
+     * @return
+     */
+    boolean isClosed();
 
-	/**
-	 * global is ture, sharding is false.
-	 * 
-	 * @return
-	 */
-	boolean isGlobal();
+    /**
+     * cluster name of database resource.
+     * 
+     * @return
+     */
+    String getClusterName();
 
-	/**
-	 * get master slave mode.
-	 * 
-	 * @return
-	 */
-	EnumDBMasterSlave getMasterSlave();
+    /**
+     * global is ture, sharding is false.
+     * 
+     * @return
+     */
+    boolean isGlobal();
+
+    /**
+     * get master slave mode.
+     * 
+     * @return
+     */
+    EnumDBMasterSlave getMasterSlave();
 
 }

@@ -70,6 +70,11 @@ public class GlobalJdbcQueryImpl extends AbstractJdbcQuery implements IGlobalQue
             long count = selectCountWithCache(dbResource, clazz, useCache).longValue();
             if (count == 0) {
                 dbResource = this.dbCluster.getMasterGlobalDBResource(clusterName, tableName);
+
+                if (tx != null) {
+                    tx.enlistResource((XAResource) dbResource);
+                }
+
                 count = selectCountWithCache(dbResource, clazz, useCache).longValue();
             }
 
@@ -114,6 +119,11 @@ public class GlobalJdbcQueryImpl extends AbstractJdbcQuery implements IGlobalQue
             long count = selectCountByQuery(query, dbResource, clazz).longValue();
             if (count == 0) {
                 dbResource = this.dbCluster.getMasterGlobalDBResource(clusterName, tableName);
+
+                if (tx != null) {
+                    tx.enlistResource((XAResource) dbResource);
+                }
+
                 count = selectCountByQuery(query, dbResource, clazz).longValue();
             }
 
@@ -160,6 +170,11 @@ public class GlobalJdbcQueryImpl extends AbstractJdbcQuery implements IGlobalQue
             List<T> data = selectByPksWithCache(dbResource, clazz, entityPks, useCache);
             if (data.isEmpty()) {
                 dbResource = this.dbCluster.getMasterGlobalDBResource(clusterName, tableName);
+
+                if (tx != null) {
+                    tx.enlistResource((XAResource) dbResource);
+                }
+
                 data = selectByPksWithCache(dbResource, clazz, entityPks, useCache);
             }
 
@@ -230,12 +245,22 @@ public class GlobalJdbcQueryImpl extends AbstractJdbcQuery implements IGlobalQue
 
                     if (result == null) {
                         dbResource = this.dbCluster.getMasterGlobalDBResource(clusterName, tableName);
+                        
+                        if (tx != null) {
+                            tx.enlistResource((XAResource) dbResource);
+                        }
+                        
                         result = selectByPksWithCache(dbResource, clazz, entityPks, useCache);
                     }
                 } else {
                     result = selectByQuery(dbResource, query, clazz);
                     if (result == null) {
                         dbResource = this.dbCluster.getMasterGlobalDBResource(clusterName, tableName);
+                        
+                        if (tx != null) {
+                            tx.enlistResource((XAResource) dbResource);
+                        }
+                        
                         result = selectByQuery(dbResource, query, clazz);
                     }
                 }

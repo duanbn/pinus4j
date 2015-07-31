@@ -22,7 +22,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -436,52 +435,44 @@ public class SQLBuilder {
      * @return PreparedStatement
      * @throws SQLException
      */
-    public static Statement getUpdate(Connection conn, List<? extends Object> entities, int tableIndex)
-            throws SQLException {
-        Object entity = entities.get(0);
-
+    public static String getUpdate(Object entity, int tableIndex) throws SQLException {
         // 获取表名.
         String tableName = entityMetaManager.getTableName(entity, tableIndex);
 
         // 批量添加
-        Statement st = conn.createStatement();
         Map<String, Object> entityProperty = null;
-        for (Object dbEntity : entities) {
-            try {
-                entityProperty = BeansUtil.describe(dbEntity, false);
-            } catch (Exception e) {
-                throw new SQLException("解析实体对象失败", e);
-            }
-            // 拼装主键条件
-            EntityPK entityPk = entityMetaManager.getEntityPK(dbEntity);
-            StringBuilder pkWhereSql = new StringBuilder();
-            for (int i = 0; i < entityPk.getPkNames().length; i++) {
-                pkWhereSql.append(entityPk.getPkNames()[i].getValue());
-                pkWhereSql.append("=");
-                pkWhereSql.append(formatValue(entityPk.getPkValues()[i].getValue()));
-                pkWhereSql.append(" and ");
-            }
-            pkWhereSql.delete(pkWhereSql.length() - 5, pkWhereSql.length());
-
-            // 生成update语句.
-            Set<Map.Entry<String, Object>> propertyEntrySet = entityProperty.entrySet();
-            StringBuilder SQL = new StringBuilder("UPDATE " + tableName + " SET ");
-            Object value = null;
-            for (Map.Entry<String, Object> propertyEntry : propertyEntrySet) {
-                value = propertyEntry.getValue();
-                SQL.append(propertyEntry.getKey()).append("=");
-                SQL.append(formatValue(value));
-                SQL.append(",");
-            }
-            SQL.deleteCharAt(SQL.length() - 1);
-            SQL.append(" WHERE ").append(pkWhereSql.toString());
-
-            st.addBatch(SQL.toString());
-
-            debugSQL(SQL.toString());
+        try {
+            entityProperty = BeansUtil.describe(entity, false);
+        } catch (Exception e) {
+            throw new SQLException("解析实体对象失败", e);
         }
+        // 拼装主键条件
+        EntityPK entityPk = entityMetaManager.getEntityPK(entity);
+        StringBuilder pkWhereSql = new StringBuilder();
+        for (int i = 0; i < entityPk.getPkNames().length; i++) {
+            pkWhereSql.append(entityPk.getPkNames()[i].getValue());
+            pkWhereSql.append("=");
+            pkWhereSql.append(formatValue(entityPk.getPkValues()[i].getValue()));
+            pkWhereSql.append(" and ");
+        }
+        pkWhereSql.delete(pkWhereSql.length() - 5, pkWhereSql.length());
 
-        return st;
+        // 生成update语句.
+        Set<Map.Entry<String, Object>> propertyEntrySet = entityProperty.entrySet();
+        StringBuilder SQL = new StringBuilder("UPDATE " + tableName + " SET ");
+        Object value = null;
+        for (Map.Entry<String, Object> propertyEntry : propertyEntrySet) {
+            value = propertyEntry.getValue();
+            SQL.append(propertyEntry.getKey()).append("=");
+            SQL.append(formatValue(value));
+            SQL.append(",");
+        }
+        SQL.deleteCharAt(SQL.length() - 1);
+        SQL.append(" WHERE ").append(pkWhereSql.toString());
+
+        debugSQL(SQL.toString());
+
+        return SQL.toString();
     }
 
     /**

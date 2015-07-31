@@ -39,93 +39,97 @@ import org.pinus4j.transaction.enums.EnumTransactionIsolationLevel;
  */
 public class LocalTransaction implements ITransaction {
 
-	/**
-	 * db resource will do commit or rollback.
-	 */
-	private Map<IResourceId, IDBResource> txRes = new LinkedHashMap<IResourceId, IDBResource>();
+    /**
+     * db resource will do commit or rollback.
+     */
+    private Map<IResourceId, IDBResource> txRes  = new LinkedHashMap<IResourceId, IDBResource>();
 
-	/**
-	 * isolation level of transaction.
-	 */
-	private EnumTransactionIsolationLevel txLevel;
+    /**
+     * isolation level of transaction.
+     */
+    private EnumTransactionIsolationLevel txLevel;
 
-	private AtomicInteger status = new AtomicInteger(Status.STATUS_ACTIVE);
+    private AtomicInteger                 status = new AtomicInteger(Status.STATUS_ACTIVE);
 
-	@Override
-	public void setIsolationLevel(EnumTransactionIsolationLevel txLevel) {
-		this.txLevel = txLevel;
-	}
+    @Override
+    public void setIsolationLevel(EnumTransactionIsolationLevel txLevel) {
+        this.txLevel = txLevel;
+    }
 
-	/**
-	 * do commit.
-	 */
-	@Override
-	public void commit() {
-		status.set(Status.STATUS_COMMITTING);
-		// do commit
-		for (IDBResource dbResource : txRes.values()) {
-			dbResource.commit();
-			dbResource.close();
-		}
-		status.set(Status.STATUS_NO_TRANSACTION);
-	}
+    /**
+     * do commit.
+     */
+    @Override
+    public void commit() {
+        status.set(Status.STATUS_COMMITTING);
+        // do commit
+        for (IDBResource dbResource : txRes.values()) {
+            dbResource.commit();
+            dbResource.close();
+        }
+        status.set(Status.STATUS_NO_TRANSACTION);
+    }
 
-	/**
-	 * do rollback.
-	 */
-	@Override
-	public void rollback() {
-		status.set(Status.STATUS_ROLLING_BACK);
-		// do rollback.
-		for (IDBResource dbResource : txRes.values()) {
-			dbResource.rollback();
-			dbResource.close();
-		}
-		status.set(Status.STATUS_NO_TRANSACTION);
-	}
+    /**
+     * do rollback.
+     */
+    @Override
+    public void rollback() {
+        status.set(Status.STATUS_ROLLING_BACK);
+        
+        // do rollback.
+        for (IDBResource dbResource : txRes.values()) {
+            dbResource.rollback();
 
-	// jta implements.
-	@Override
-	public boolean delistResource(XAResource xaResource, int arg1) throws IllegalStateException, SystemException {
-		IDBResource dbResource = (IDBResource) xaResource;
-		IResourceId resId = dbResource.getId();
+            if (!dbResource.isClosed())
+                dbResource.close();
+        }
+        
+        status.set(Status.STATUS_NO_TRANSACTION);
+    }
 
-		txRes.remove(resId);
-		return true;
-	}
+    // jta implements.
+    @Override
+    public boolean delistResource(XAResource xaResource, int arg1) throws IllegalStateException, SystemException {
+        IDBResource dbResource = (IDBResource) xaResource;
+        IResourceId resId = dbResource.getId();
 
-	@Override
-	public boolean enlistResource(XAResource xaResource) throws RollbackException, IllegalStateException,
-			SystemException {
-		IDBResource dbResource = (IDBResource) xaResource;
-		IResourceId resId = dbResource.getId();
+        txRes.remove(resId);
+        return true;
+    }
 
-		if (txRes.get(resId) == null) {
-			synchronized (txRes) {
-				if (txRes.get(resId) == null) {
-					dbResource.setTransactionIsolationLevel(txLevel);
-					txRes.put(resId, dbResource);
-				}
-			}
-		}
+    @Override
+    public boolean enlistResource(XAResource xaResource) throws RollbackException, IllegalStateException,
+            SystemException {
+        IDBResource dbResource = (IDBResource) xaResource;
+        IResourceId resId = dbResource.getId();
 
-		return true;
-	}
+        if (txRes.get(resId) == null) {
+            synchronized (txRes) {
+                if (txRes.get(resId) == null) {
+                    dbResource.setTransactionIsolationLevel(txLevel);
+                    txRes.put(resId, dbResource);
+                }
+            }
+        }
 
-	@Override
-	public int getStatus() throws SystemException {
-		return status.get();
-	}
+        return true;
+    }
 
-	@Override
-	public void registerSynchronization(Synchronization arg0) throws RollbackException, IllegalStateException,
-			SystemException {
-		throw new UnsupportedOperationException();
-	}
+    @Override
+    public int getStatus() throws SystemException {
+        return status.get();
+    }
 
-	@Override
-	public void setRollbackOnly() throws IllegalStateException, SystemException {
-		// do nothing...
-	}
+    @Override
+    public void registerSynchronization(Synchronization arg0) throws RollbackException, IllegalStateException,
+            SystemException {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void setRollbackOnly() throws IllegalStateException, SystemException {
+        // do nothing...
+    }
 
 }

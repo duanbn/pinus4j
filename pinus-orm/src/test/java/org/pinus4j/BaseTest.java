@@ -6,7 +6,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Random;
 
-import org.junit.Test;
 import org.pinus4j.api.DefaultPinusClient;
 import org.pinus4j.api.IShardingStorageClient;
 import org.pinus4j.api.PinusClient;
@@ -49,7 +48,7 @@ public class BaseTest {
         testEntity.setOTestDouble(1.0);
         testEntity.setTestFloat(2.0f);
         testEntity.setOTestFloat(2.0f);
-        testEntity.setTestInt(5);
+        testEntity.setTestInt(r.nextInt(9999));
         testEntity.setOTestInt(5);
         testEntity.setTestLong(6l);
         testEntity.setOTestLong(6l);
@@ -86,9 +85,10 @@ public class BaseTest {
 
     public static TestGlobalUnionKeyEntity createGlobalUnionKeyEntity() {
         TestGlobalUnionKeyEntity testEntity = new TestGlobalUnionKeyEntity();
+        testEntity.setId(getContent(10));
         testEntity.setTestBool(true);
         testEntity.setoTestBool(false);
-        testEntity.setTestByte((byte) 255);
+        testEntity.setTestByte((byte) r.nextInt(255));
         testEntity.setoTestByte((byte) 255);
         testEntity.setTestChar('b');
         testEntity.setoTestChar('b');
@@ -111,7 +111,7 @@ public class BaseTest {
     public static PinusClient getPinusClient() {
         PinusClient pinusClient = new DefaultPinusClient();
         pinusClient.setScanPackage("org.pinus4j");
-//        pinusClient.setSyncAction(EnumSyncAction.UPDATE);
+        //        pinusClient.setSyncAction(EnumSyncAction.UPDATE);
         try {
             pinusClient.init();
         } catch (LoadConfigException e) {

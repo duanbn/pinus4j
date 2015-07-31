@@ -55,12 +55,14 @@ public class ShardingJdbcQueryImpl extends AbstractJdbcQuery implements IShardin
         try {
 
             tx = txManager.getTransaction();
+            boolean isFromSlave = false;
 
             String clusterName = entityMetaManager.getClusterName(clazz);
-            if (EnumDBMasterSlave.MASTER == masterSlave || this.dbCluster.isShardingSlaveExist(clusterName)) {
+            if (EnumDBMasterSlave.MASTER == masterSlave || !this.dbCluster.isShardingSlaveExist(clusterName)) {
                 dbResources = this.dbCluster.getAllMasterShardingDBResource(clazz);
             } else {
                 dbResources = this.dbCluster.getAllSlaveShardingDBResource(clazz, masterSlave);
+                isFromSlave = true;
             }
 
             long count = 0;
@@ -72,7 +74,7 @@ public class ShardingJdbcQueryImpl extends AbstractJdbcQuery implements IShardin
             }
 
             // query from master again
-            if (count == 0) {
+            if (count == 0 && isFromSlave) {
                 dbResources = this.dbCluster.getAllMasterShardingDBResource(clazz);
                 for (IDBResource dbResource : dbResources) {
                     if (tx != null) {
@@ -108,14 +110,15 @@ public class ShardingJdbcQueryImpl extends AbstractJdbcQuery implements IShardin
         ShardingDBResource dbResource = null;
         try {
             tx = txManager.getTransaction();
+            boolean isFromSlave = false;
 
             if (EnumDBMasterSlave.MASTER == masterSlave
-                    || this.dbCluster.isShardingSlaveExist(shardingKey.getClusterName())) {
+                    || !this.dbCluster.isShardingSlaveExist(shardingKey.getClusterName())) {
                 dbResource = _getDbFromMaster(clazz, shardingKey);
             } else {
                 dbResource = _getDbFromSlave(clazz, shardingKey, masterSlave);
+                isFromSlave = true;
             }
-
             if (tx != null) {
                 tx.enlistResource(dbResource);
             }
@@ -123,8 +126,11 @@ public class ShardingJdbcQueryImpl extends AbstractJdbcQuery implements IShardin
             long count = selectCountWithCache(dbResource, clazz, useCache).longValue();
 
             // quer from master again
-            if (count == 0) {
+            if (count == 0 && isFromSlave) {
                 dbResource = _getDbFromMaster(clazz, shardingKey);
+                if (tx != null) {
+                    tx.enlistResource(dbResource);
+                }
                 selectCountWithCache(dbResource, clazz, useCache);
             }
 
@@ -152,12 +158,14 @@ public class ShardingJdbcQueryImpl extends AbstractJdbcQuery implements IShardin
         List<IDBResource> dbResources = null;
         try {
             tx = txManager.getTransaction();
+            boolean isFromSlave = false;
 
             String clusterName = entityMetaManager.getClusterName(clazz);
-            if (EnumDBMasterSlave.MASTER == masterSlave || this.dbCluster.isShardingSlaveExist(clusterName)) {
+            if (EnumDBMasterSlave.MASTER == masterSlave || !this.dbCluster.isShardingSlaveExist(clusterName)) {
                 dbResources = this.dbCluster.getAllMasterShardingDBResource(clazz);
             } else {
                 dbResources = this.dbCluster.getAllSlaveShardingDBResource(clazz, masterSlave);
+                isFromSlave = true;
             }
 
             long count = 0;
@@ -169,7 +177,7 @@ public class ShardingJdbcQueryImpl extends AbstractJdbcQuery implements IShardin
             }
 
             // query from master again
-            if (count == 0) {
+            if (count == 0 && isFromSlave) {
                 dbResources = this.dbCluster.getAllMasterShardingDBResource(clazz);
                 for (IDBResource dbResource : dbResources) {
                     if (tx != null) {
@@ -207,14 +215,15 @@ public class ShardingJdbcQueryImpl extends AbstractJdbcQuery implements IShardin
 
         try {
             tx = txManager.getTransaction();
+            boolean isFromSlave = false;
 
             if (EnumDBMasterSlave.MASTER == masterSlave
-                    || this.dbCluster.isShardingSlaveExist(shardingKey.getClusterName())) {
+                    || !this.dbCluster.isShardingSlaveExist(shardingKey.getClusterName())) {
                 dbResource = _getDbFromMaster(clazz, shardingKey);
             } else {
                 dbResource = _getDbFromSlave(clazz, shardingKey, masterSlave);
+                isFromSlave = true;
             }
-
             if (tx != null) {
                 tx.enlistResource(dbResource);
             }
@@ -222,8 +231,11 @@ public class ShardingJdbcQueryImpl extends AbstractJdbcQuery implements IShardin
             long count = selectCountByQuery(query, dbResource, clazz).longValue();
 
             // query from master again
-            if (count == 0) {
+            if (count == 0 && isFromSlave) {
                 dbResource = _getDbFromMaster(clazz, shardingKey);
+                if (tx != null) {
+                    tx.enlistResource(dbResource);
+                }
                 count = selectCountByQuery(query, dbResource, clazz).longValue();
             }
 
@@ -253,14 +265,15 @@ public class ShardingJdbcQueryImpl extends AbstractJdbcQuery implements IShardin
         try {
 
             tx = txManager.getTransaction();
+            boolean isFromSlave = false;
 
             if (EnumDBMasterSlave.MASTER == masterSlave
-                    || this.dbCluster.isShardingSlaveExist(shardingKey.getClusterName())) {
+                    || !this.dbCluster.isShardingSlaveExist(shardingKey.getClusterName())) {
                 dbResource = _getDbFromMaster(clazz, shardingKey);
             } else {
                 dbResource = _getDbFromSlave(clazz, shardingKey, masterSlave);
+                isFromSlave = true;
             }
-
             if (tx != null) {
                 tx.enlistResource(dbResource);
             }
@@ -268,8 +281,11 @@ public class ShardingJdbcQueryImpl extends AbstractJdbcQuery implements IShardin
             List<T> data = selectByPksWithCache(dbResource, clazz, new EntityPK[] { pk }, useCache);
 
             // query from master again
-            if (data == null) {
+            if (data == null && isFromSlave) {
                 dbResource = _getDbFromMaster(clazz, shardingKey);
+                if (tx != null) {
+                    tx.enlistResource(dbResource);
+                }
                 data = selectByPksWithCache(dbResource, clazz, new EntityPK[] { pk }, useCache);
             }
 
@@ -303,12 +319,14 @@ public class ShardingJdbcQueryImpl extends AbstractJdbcQuery implements IShardin
         try {
 
             tx = txManager.getTransaction();
+            boolean isFromSlave = false;
 
             String clusterName = entityMetaManager.getClusterName(clazz);
-            if (EnumDBMasterSlave.MASTER == masterSlave || this.dbCluster.isShardingSlaveExist(clusterName)) {
+            if (EnumDBMasterSlave.MASTER == masterSlave || !this.dbCluster.isShardingSlaveExist(clusterName)) {
                 dbResources = this.dbCluster.getAllMasterShardingDBResource(clazz);
             } else {
                 dbResources = this.dbCluster.getAllSlaveShardingDBResource(clazz, masterSlave);
+                isFromSlave = true;
             }
 
             EntityPK[] entityPkList = pkList.toArray(new EntityPK[pkList.size()]);
@@ -323,7 +341,7 @@ public class ShardingJdbcQueryImpl extends AbstractJdbcQuery implements IShardin
             }
 
             // query from master again
-            if (data.isEmpty()) {
+            if (data.isEmpty() && isFromSlave) {
                 dbResources = this.dbCluster.getAllMasterShardingDBResource(clazz);
                 for (IDBResource dbResource : dbResources) {
                     if (tx != null) {
@@ -362,12 +380,14 @@ public class ShardingJdbcQueryImpl extends AbstractJdbcQuery implements IShardin
         try {
 
             tx = txManager.getTransaction();
+            boolean isFromSlave = false;
 
             if (EnumDBMasterSlave.MASTER == masterSlave
-                    || this.dbCluster.isShardingSlaveExist(shardingKey.getClusterName())) {
+                    || !this.dbCluster.isShardingSlaveExist(shardingKey.getClusterName())) {
                 dbResource = _getDbFromMaster(clazz, shardingKey);
             } else {
                 dbResource = _getDbFromSlave(clazz, shardingKey, masterSlave);
+                isFromSlave = true;
             }
 
             if (tx != null) {
@@ -378,8 +398,11 @@ public class ShardingJdbcQueryImpl extends AbstractJdbcQuery implements IShardin
 
             List<T> data = selectByPksWithCache(dbResource, clazz, entityPkList, useCache);
 
-            if (data.isEmpty()) {
+            if (data.isEmpty() && isFromSlave) {
                 dbResource = _getDbFromMaster(clazz, shardingKey);
+                if (tx != null) {
+                    tx.enlistResource(dbResource);
+                }
                 data = selectByPksWithCache(dbResource, clazz, entityPkList, useCache);
             }
 
@@ -427,14 +450,16 @@ public class ShardingJdbcQueryImpl extends AbstractJdbcQuery implements IShardin
     @Override
     public <T> List<T> findByQuery(IQuery query, Class<T> clazz, boolean useCache, EnumDBMasterSlave masterSlave) {
 
+        boolean isFromSlave = false;
         List<IDBResource> dbResources = null;
 
         try {
             String clusterName = entityMetaManager.getClusterName(clazz);
-            if (EnumDBMasterSlave.MASTER == masterSlave || this.dbCluster.isShardingSlaveExist(clusterName)) {
+            if (EnumDBMasterSlave.MASTER == masterSlave || !this.dbCluster.isShardingSlaveExist(clusterName)) {
                 dbResources = this.dbCluster.getAllMasterShardingDBResource(clazz);
             } else {
                 dbResources = this.dbCluster.getAllSlaveShardingDBResource(clazz, masterSlave);
+                isFromSlave = true;
             }
 
             List<T> mergeResult = new ArrayList<T>();
@@ -443,7 +468,7 @@ public class ShardingJdbcQueryImpl extends AbstractJdbcQuery implements IShardin
             }
 
             // query from master again
-            if (mergeResult.isEmpty()) {
+            if (mergeResult.isEmpty() && isFromSlave) {
                 dbResources = this.dbCluster.getAllMasterShardingDBResource(clazz);
                 for (IDBResource dbResource : dbResources) {
                     mergeResult.addAll(findByQuery(query, dbResource, clazz, useCache, masterSlave));
@@ -482,19 +507,21 @@ public class ShardingJdbcQueryImpl extends AbstractJdbcQuery implements IShardin
     public <T> List<T> findByQuery(IQuery query, IShardingKey<?> shardingKey, Class<T> clazz, boolean useCache,
                                    EnumDBMasterSlave masterSlave) {
 
+        boolean isFromSlave = false;
         ShardingDBResource dbResource = null;
 
         if (EnumDBMasterSlave.MASTER == masterSlave
-                || this.dbCluster.isShardingSlaveExist(shardingKey.getClusterName())) {
+                || !this.dbCluster.isShardingSlaveExist(shardingKey.getClusterName())) {
             dbResource = _getDbFromMaster(clazz, shardingKey);
         } else {
             dbResource = _getDbFromSlave(clazz, shardingKey, masterSlave);
+            isFromSlave = true;
         }
 
         List<T> data = findByQuery(query, dbResource, clazz, useCache, masterSlave);
 
         // query from master againe
-        if (data.isEmpty()) {
+        if (data.isEmpty() && isFromSlave) {
             dbResource = _getDbFromMaster(clazz, shardingKey);
             data = findByQuery(query, dbResource, clazz, useCache, masterSlave);
         }
@@ -572,9 +599,8 @@ public class ShardingJdbcQueryImpl extends AbstractJdbcQuery implements IShardin
 
     @Override
     public List<Map<String, Object>> findBySql(SQL sql, IShardingKey<?> shardingKey, EnumDBMasterSlave masterSlave) {
-        ShardingDBResource dbResource = _getDbBySQL(sql, shardingKey, masterSlave);
-
         Transaction tx = null;
+        ShardingDBResource dbResource = _getDbBySQL(sql, shardingKey, masterSlave);
         try {
             tx = txManager.getTransaction();
 
@@ -582,10 +608,16 @@ public class ShardingJdbcQueryImpl extends AbstractJdbcQuery implements IShardin
                 tx.enlistResource(dbResource);
             }
 
+            boolean isFromSlave = false;
+            if (EnumDBMasterSlave.MASTER != masterSlave
+                    && this.dbCluster.isShardingSlaveExist(shardingKey.getClusterName())) {
+                isFromSlave = true;
+            }
+
             List<Map<String, Object>> result = selectBySql(dbResource, sql);
 
             // query from master againe
-            if (result.isEmpty()) {
+            if (result.isEmpty() && isFromSlave) {
                 dbResource = _getDbBySQL(sql, shardingKey, EnumDBMasterSlave.MASTER);
                 result = selectBySql(dbResource, sql);
             }
@@ -614,7 +646,7 @@ public class ShardingJdbcQueryImpl extends AbstractJdbcQuery implements IShardin
 
             ShardingDBResource cur = null;
             if (EnumDBMasterSlave.MASTER == masterSlave
-                    || this.dbCluster.isShardingSlaveExist(shardingKey.getClusterName())) {
+                    || !this.dbCluster.isShardingSlaveExist(shardingKey.getClusterName())) {
                 cur = _getDbFromMaster(tableName, shardingKey);
             } else {
                 cur = _getDbFromSlave(tableName, shardingKey, masterSlave);

@@ -28,10 +28,10 @@
 
 	<datasource-bucket
 		cpclass="org.pinus4j.cluster.cp.impl.DruidConnectionPoolImpl"
-		maxActive="10" minIdle="10" maxIdle="10" initialSize="1"
-		removeAbandoned="true" removeAbandonedTimeout="10" maxWait="1000"
+		maxActive="10" minIdle="10" initialSize="1" removeAbandoned="true"
+		removeAbandonedTimeout="10" maxWait="1000"
 		timeBetweenEvictionRunsMillis="10000" numTestsPerEvictionRun="10"
-		minEvictableIdleTimeMillis="10000" filters="stat"
+		minEvictableIdleTimeMillis="50000" filters="stat"
 		poolPreparedStatements="true">
 		<!-- <envds id=""> <jndi></jndi> </envds> -->
 		<appds id="pinus-global">
