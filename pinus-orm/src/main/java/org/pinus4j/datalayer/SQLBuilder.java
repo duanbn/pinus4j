@@ -493,7 +493,7 @@ public class SQLBuilder {
      * @return SQL语句
      * @throws SQLException 操作失败
      */
-    public static String getInsert(Connection conn, Object entity, int tableIndex) throws SQLException {
+    public static String getInsert(Object entity, int tableIndex) throws SQLException {
         // 获取表名.
         String tableName = entityMetaManager.getTableName(entity, tableIndex);
 

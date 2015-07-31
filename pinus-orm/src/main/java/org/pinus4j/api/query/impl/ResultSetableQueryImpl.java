@@ -16,6 +16,7 @@
 
 package org.pinus4j.api.query.impl;
 
+import java.lang.reflect.Array;
 import java.util.List;
 
 import org.pinus4j.api.query.IQuery;
@@ -76,10 +77,22 @@ public class ResultSetableQueryImpl<T> extends DefaultQueryImpl {
 
             // 判断单主键是否满足条件
             if (pkNames.length == 1 && (cond.getOrCond() == null || cond.getOrCond().length == 0)
-                    && (cond.getAndCond() == null || cond.getAndCond().length == 0) && cond.getOpt() == QueryOpt.EQ
+                    && (cond.getAndCond() == null || cond.getAndCond().length == 0)
                     && cond.getField().equals(pkNames[0].getValue())) {
-                PKValue[] pkValues = new PKValue[] { PKValue.valueOf(cond.getValue()) };
-                entityPkList.add(EntityPK.valueOf(pkNames, pkValues));
+
+                if (cond.getOpt() == QueryOpt.EQ) {
+                    PKValue[] pkValues = new PKValue[] { PKValue.valueOf(cond.getValue()) };
+                    entityPkList.add(EntityPK.valueOf(pkNames, pkValues));
+                }
+                if (cond.getOpt() == QueryOpt.IN) {
+                    Object obj = null;
+                    PKValue[] pkValues = null;
+                    for (int j = 0; j < Array.getLength(cond.getValue()); j++) {
+                        obj = Array.get(cond.getValue(), j);
+                        pkValues = new PKValue[] { PKValue.valueOf(obj) };
+                        entityPkList.add(EntityPK.valueOf(pkNames, pkValues));
+                    }
+                }
             } else {
                 isMatch = false;
                 break;

@@ -235,7 +235,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
         CheckUtil.checkEntityList(entities);
         CheckUtil.checkClusterName(clusterName);
 
-        PKValue[] pkValues = this.globalUpdater.saveBatch(entities, clusterName);
+        PKValue[] pkValues = this.globalUpdater.saveBatch(entities, clusterName, true);
         Number[] pkNumbers = new Number[pkValues.length];
         for (int i = 0; i < pkValues.length; i++) {
             pkNumbers[i] = pkValues[i].getValueAsNumber();
@@ -331,7 +331,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
         CheckUtil.checkEntityList(entities);
         CheckUtil.checkShardingKey(shardingKey);
 
-        PKValue[] pkValues = this.shardingUpdater.saveBatch(entities, shardingKey);
+        PKValue[] pkValues = this.shardingUpdater.saveBatch(entities, shardingKey, true);
 
         return PKUtil.parseNumberArray(pkValues);
     }

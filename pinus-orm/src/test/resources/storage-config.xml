@@ -34,74 +34,39 @@
 		minEvictableIdleTimeMillis="10000" filters="stat"
 		poolPreparedStatements="true">
 		<!-- <envds id=""> <jndi></jndi> </envds> -->
-		<appds id="pinus">
+		<appds id="pinus-global">
 			<username>root</username>
 			<password>root%1234</password>
 			<url>
 				jdbc:mysql://127.0.0.1:3306/pinus?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
 			</url>
 		</appds>
-		<appds id="pinus0">
+		<appds id="pinus-sharding1">
 			<username>root</username>
 			<password>root%1234</password>
 			<url>
 				jdbc:mysql://127.0.0.1:3306/pinus0?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
 			</url>
 		</appds>
-		<appds id="pinus1">
+		<appds id="pinus-sharding2">
 			<username>root</username>
 			<password>root%1234</password>
 			<url>
 				jdbc:mysql://127.0.0.1:3306/pinus1?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
 			</url>
 		</appds>
-		<appds id="pinus2">
+		<appds id="pinus-sharding3">
 			<username>root</username>
 			<password>root%1234</password>
 			<url>
 				jdbc:mysql://127.0.0.1:3306/pinus2?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
 			</url>
 		</appds>
-		<appds id="pinus3">
+		<appds id="pinus-sharding4">
 			<username>root</username>
 			<password>root%1234</password>
 			<url>
 				jdbc:mysql://127.0.0.1:3306/pinus3?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
-			</url>
-		</appds>
-		<appds id="pinus4">
-			<username>root</username>
-			<password>root%1234</password>
-			<url>
-				jdbc:mysql://127.0.0.1:3306/pinus4?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
-			</url>
-		</appds>
-		<appds id="pinus5">
-			<username>root</username>
-			<password>root%1234</password>
-			<url>
-				jdbc:mysql://127.0.0.1:3306/pinus5?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
-			</url>
-		</appds>
-		<appds id="pinus6">
-			<username>root</username>
-			<password>root%1234</password>
-			<url>
-				jdbc:mysql://127.0.0.1:3306/pinus6?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
-			</url>
-		</appds>
-		<appds id="pinus7">
-			<username>root</username>
-			<password>root%1234</password>
-			<url>
-				jdbc:mysql://127.0.0.1:3306/pinus7?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
-			</url>
-		</appds>
-		<appds id="pinus8">
-			<username>root</username>
-			<password>root%1234</password>
-			<url>
-				jdbc:mysql://127.0.0.1:3306/pinus8?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
 			</url>
 		</appds>
 	</datasource-bucket>
@@ -109,27 +74,27 @@
 	<!-- cluster config -->
 	<cluster name="pinus">
 		<global>
-			<master>pinus</master>
-			<slave>pinus0</slave>
+			<master>pinus-global</master>
+			<slave>pinus-global</slave>
 		</global>
 		<region capacity="1-30000000">
 			<master>
-				<sharding>pinus1</sharding>
-				<sharding>pinus2</sharding>
+				<sharding>pinus-sharding1</sharding>
+				<sharding>pinus-sharding2</sharding>
 			</master>
 			<slave>
-				<sharding>pinus3</sharding>
-				<sharding>pinus4</sharding>
+				<sharding>pinus-sharding1</sharding>
+				<sharding>pinus-sharding2</sharding>
 			</slave>
 		</region>
 		<region capacity="30000001-60000000">
 			<master>
-				<sharding>pinus5</sharding>
-				<sharding>pinus6</sharding>
+				<sharding>pinus-sharding3</sharding>
+				<sharding>pinus-sharding4</sharding>
 			</master>
 			<slave>
-				<sharding>pinus7</sharding>
-				<sharding>pinus8</sharding>
+				<sharding>pinus-sharding3</sharding>
+				<sharding>pinus-sharding4</sharding>
 			</slave>
 		</region>
 	</cluster>
