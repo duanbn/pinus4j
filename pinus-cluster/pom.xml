@@ -51,11 +51,9 @@
 			<artifactId>javax.transaction-api</artifactId>
 		</dependency>
 
-		<!-- test -->
 		<dependency>
 			<groupId>mysql</groupId>
 			<artifactId>mysql-connector-java</artifactId>
-			<scope>test</scope>
 		</dependency>
 	</dependencies>
 

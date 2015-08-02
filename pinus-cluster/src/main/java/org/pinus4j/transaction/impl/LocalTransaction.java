@@ -52,6 +52,11 @@ public class LocalTransaction implements ITransaction {
     private AtomicInteger                 status = new AtomicInteger(Status.STATUS_ACTIVE);
 
     @Override
+    public void flush() {
+        commit(false);
+    }
+
+    @Override
     public void setIsolationLevel(EnumTransactionIsolationLevel txLevel) {
         this.txLevel = txLevel;
     }
@@ -61,12 +66,20 @@ public class LocalTransaction implements ITransaction {
      */
     @Override
     public void commit() {
+        commit(true);
+    }
+
+    private void commit(boolean withCloseConnection) {
         status.set(Status.STATUS_COMMITTING);
+
         // do commit
         for (IDBResource dbResource : txRes.values()) {
             dbResource.commit();
-            dbResource.close();
+
+            if (withCloseConnection && !dbResource.isClosed())
+                dbResource.close();
         }
+
         status.set(Status.STATUS_NO_TRANSACTION);
     }
 

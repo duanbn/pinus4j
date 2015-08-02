@@ -64,7 +64,7 @@ public class DefaultCacheBuilder implements ICacheBuilder {
      * build primary cache.
      */
     public IPrimaryCache buildPrimaryCache() {
-        if (!this.isCacheEnabled) {
+        if (!this.isCacheEnabled || this.primaryCacheInfo == null) {
             return null;
         }
 
@@ -105,7 +105,7 @@ public class DefaultCacheBuilder implements ICacheBuilder {
      * build second cache.
      */
     public ISecondCache buildSecondCache() {
-        if (!this.isCacheEnabled) {
+        if (!this.isCacheEnabled || this.secondCacheInfo == null) {
             return null;
         }
 

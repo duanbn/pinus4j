@@ -28,6 +28,11 @@ import org.pinus4j.transaction.enums.EnumTransactionIsolationLevel;
  */
 public interface ITransaction extends Transaction {
 
+    /**
+     * flush to db.
+     */
+    void flush();
+
 	/**
 	 * set isolation level for this transaction.
 	 * 

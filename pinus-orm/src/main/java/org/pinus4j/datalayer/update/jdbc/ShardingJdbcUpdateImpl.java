@@ -93,17 +93,8 @@ public class ShardingJdbcUpdateImpl extends AbstractJdbcUpdate implements IShard
                 secondCache.remove(dbResource);
             }
         } catch (Exception e) {
-            if (tx != null) {
-                try {
-                    tx.rollback();
-                } catch (Exception e1) {
-                    throw new DBOperationException(e1);
-                }
-            } else {
-                if (dbResource != null) {
-                    dbResource.rollback();
-                }
-            }
+            if (tx == null && dbResource != null)
+                dbResource.rollback();
 
             throw new DBOperationException(e);
         } finally {
@@ -155,17 +146,8 @@ public class ShardingJdbcUpdateImpl extends AbstractJdbcUpdate implements IShard
                 secondCache.remove(dbResource);
             }
         } catch (Exception e) {
-            if (tx != null) {
-                try {
-                    tx.rollback();
-                } catch (Exception e1) {
-                    throw new DBOperationException(e1);
-                }
-            } else {
-                if (dbResource != null) {
-                    dbResource.rollback();
-                }
-            }
+            if (tx == null && dbResource != null)
+                dbResource.rollback();
 
             throw new DBOperationException(e);
         } finally {
@@ -212,17 +194,8 @@ public class ShardingJdbcUpdateImpl extends AbstractJdbcUpdate implements IShard
                 secondCache.remove(dbResource);
             }
         } catch (Exception e) {
-            if (tx != null) {
-                try {
-                    tx.rollback();
-                } catch (Exception e1) {
-                    throw new DBOperationException(e1);
-                }
-            } else {
-                if (dbResource != null) {
-                    dbResource.rollback();
-                }
-            }
+            if (tx == null && dbResource != null)
+                dbResource.rollback();
 
             throw new DBOperationException(e);
         } finally {

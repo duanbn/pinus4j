@@ -44,6 +44,8 @@
         <slf4j.version>1.7.7</slf4j.version>
         <jta.version>1.2</jta.version>
         <spring.version>3.2.2.RELEASE</spring.version>
+        <dbcp.version>1.4</dbcp.version>
+        <druid.version>1.0.15</druid.version>
     </properties>
 
     <dependencyManagement>
@@ -84,19 +86,18 @@
                 <artifactId>javax.transaction-api</artifactId>
                 <version>${jta.version}</version>
             </dependency>
-
             <dependency>
                 <groupId>commons-dbcp</groupId>
                 <artifactId>commons-dbcp</artifactId>
-                <version>1.4</version>
-                <scope>test</scope>
+                <version>${dbcp.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.alibaba</groupId>
                 <artifactId>druid</artifactId>
-                <version>1.0.15</version>
-                <scope>test</scope>
+                <version>${druid.version}</version>
             </dependency>
+
+            <!-- test -->
             <dependency>
                 <groupId>commons-lang</groupId>
                 <artifactId>commons-lang</artifactId>

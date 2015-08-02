@@ -52,6 +52,11 @@ public interface PinusClient {
 
     void rollback();
 
+    /**
+     * do commit but don't close db connection.
+     */
+    void flush();
+
     /**********************************************************
      * 数据处理相关
      *********************************************************/

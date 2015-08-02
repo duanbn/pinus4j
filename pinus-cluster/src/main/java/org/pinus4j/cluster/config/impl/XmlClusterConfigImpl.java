@@ -106,28 +106,23 @@ public class XmlClusterConfigImpl implements IClusterConfig {
             throw new LoadConfigException("can not found root node");
         }
 
-        try {
-            // load id generator
-            _loadIdGeneratorBatch(root);
+        // load id generator
+        _loadIdGeneratorBatch(root);
 
-            // load zookeeper url
-            _loadZkUrl(root);
+        // load zookeeper url
+        _loadZkUrl(root);
 
-            // load hash algo
-            _loadHashAlgo(root);
+        // load hash algo
+        _loadHashAlgo(root);
 
-            // load datasource bucket
-            _loadDatasourceBucket(root);
+        // load datasource bucket
+        _loadDatasourceBucket(root);
 
-            // load cluster info
-            _loadDBClusterInfo(root);
+        // load cluster info
+        _loadDBClusterInfo(root);
 
-            // load cache info
-            _loadCacheInfo(root);
-        } catch (Exception e) {
-            throw new LoadConfigException(e);
-        }
-
+        // load cache info
+        _loadCacheInfo(root);
     }
 
     private void _loadDatasourceBucket(Node root) throws LoadConfigException {
@@ -392,7 +387,7 @@ public class XmlClusterConfigImpl implements IClusterConfig {
     private void _loadCacheInfo(Node root) throws LoadConfigException {
         Node dbClusterCacheNode = xmlUtil.getFirstChildByName(root, Const.PROP_DB_CLUSTER_CACHE);
         if (dbClusterCacheNode == null) {
-            throw new LoadConfigException("can not found node " + Const.PROP_DB_CLUSTER_CACHE);
+            return;
         }
 
         try {
