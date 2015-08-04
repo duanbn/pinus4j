@@ -24,6 +24,7 @@ import org.pinus4j.cluster.beans.DBRegionInfo;
 import org.pinus4j.cluster.beans.DBInfo;
 import org.pinus4j.cluster.enums.EnumDBMasterSlave;
 import org.pinus4j.exceptions.DBOperationException;
+import org.pinus4j.transaction.ITransaction;
 import org.pinus4j.transaction.enums.EnumTransactionIsolationLevel;
 
 /**
@@ -74,44 +75,53 @@ public class ShardingDBResource extends AbstractXADBResource {
     private ShardingDBResource() {
     }
 
-    public static ShardingDBResource valueOf(DBInfo dbInfo, DBRegionInfo regionInfo, String tableName, int tableIndex)
-            throws SQLException {
+    public static ShardingDBResource valueOf(ITransaction tx, DBInfo dbInfo, DBRegionInfo regionInfo, String tableName,
+                                             int tableIndex) throws SQLException {
         IResourceId resId = new DBResourceId(dbInfo.getClusterName(), dbInfo.getDbName(), regionInfo.getCapacity(),
                 tableName, tableIndex, dbInfo.getMasterSlave());
 
-        ShardingDBResource instance = (ShardingDBResource) DBResourceCache.getShardingDBResource(resId);
+        ShardingDBResource dbResource = null;
 
-        Connection conn = dbInfo.getDatasource().getConnection();
-        conn.setAutoCommit(false);
+        if (tx != null && tx.isContain(resId)) {
 
-        if (instance == null) {
-            instance = new ShardingDBResource();
+            dbResource = (ShardingDBResource) tx.getDBResource(resId);
 
-            instance.setId(resId);
-            instance.setClusterName(dbInfo.getClusterName());
-            instance.setDbName(dbInfo.getDbName());
-            instance.setRegionCapacity(regionInfo.getCapacity());
-            instance.setTableName(tableName);
-            instance.setTableIndex(tableIndex);
-            instance.setMasterSlave(dbInfo.getMasterSlave());
+        } else {
 
-            // get database meta info.
-            DatabaseMetaData dbMeta = conn.getMetaData();
-            String databaseProductName = dbMeta.getDatabaseProductName();
-            String url = dbMeta.getURL().substring(13);
-            String host = url.substring(0, url.indexOf("/"));
-            String catalog = conn.getCatalog();
+            dbResource = (ShardingDBResource) DBResourceCache.getShardingDBResource(resId);
 
-            instance.setDatabaseProductName(databaseProductName);
-            instance.setHost(host);
-            instance.setCatalog(catalog);
+            Connection conn = dbInfo.getDatasource().getConnection();
+            conn.setAutoCommit(false);
 
-            DBResourceCache.putShardingDBResource(resId, instance);
+            if (dbResource == null) {
+                dbResource = new ShardingDBResource();
+
+                dbResource.setId(resId);
+                dbResource.setClusterName(dbInfo.getClusterName());
+                dbResource.setDbName(dbInfo.getDbName());
+                dbResource.setRegionCapacity(regionInfo.getCapacity());
+                dbResource.setTableName(tableName);
+                dbResource.setTableIndex(tableIndex);
+                dbResource.setMasterSlave(dbInfo.getMasterSlave());
+
+                // get database meta info.
+                DatabaseMetaData dbMeta = conn.getMetaData();
+                String databaseProductName = dbMeta.getDatabaseProductName();
+                String url = dbMeta.getURL().substring(13);
+                String host = url.substring(0, url.indexOf("/"));
+                String catalog = conn.getCatalog();
+
+                dbResource.setDatabaseProductName(databaseProductName);
+                dbResource.setHost(host);
+                dbResource.setCatalog(catalog);
+
+                DBResourceCache.putShardingDBResource(resId, dbResource);
+            }
+
+            dbResource.setConnection(conn);
         }
 
-        instance.setConnection(conn);
-
-        return instance;
+        return dbResource;
     }
 
     public void setId(IResourceId resId) {

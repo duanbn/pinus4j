@@ -206,7 +206,6 @@ public class GlobalJdbcQueryImpl extends AbstractJdbcQuery implements IGlobalQue
         return entities.get(0);
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public <T> List<T> findByQuery(IQuery query, Class<T> clazz, boolean useCache, EnumDBMasterSlave masterSlave) {
         if (query == null) {
@@ -245,22 +244,22 @@ public class GlobalJdbcQueryImpl extends AbstractJdbcQuery implements IGlobalQue
 
                     if (result == null) {
                         dbResource = this.dbCluster.getMasterGlobalDBResource(clusterName, tableName);
-                        
+
                         if (tx != null) {
                             tx.enlistResource((XAResource) dbResource);
                         }
-                        
+
                         result = selectByPksWithCache(dbResource, clazz, entityPks, useCache);
                     }
                 } else {
                     result = selectByQuery(dbResource, query, clazz);
                     if (result == null) {
                         dbResource = this.dbCluster.getMasterGlobalDBResource(clusterName, tableName);
-                        
+
                         if (tx != null) {
                             tx.enlistResource((XAResource) dbResource);
                         }
-                        
+
                         result = selectByQuery(dbResource, query, clazz);
                     }
                 }

@@ -233,7 +233,7 @@ public class DBTable implements Serializable {
 
         StringBuilder sql = new StringBuilder();
         // 创建表
-        sql.append("CREATE TABLE " + getNameWithIndex()).append("(");
+        sql.append("CREATE TABLE `" + getNameWithIndex()).append("` (");
         for (DBTableColumn column : this.columns) {
             sql.append(_sqlFieldPhrase(column)).append(",");
         }
@@ -280,7 +280,7 @@ public class DBTable implements Serializable {
             }
         }
         if (isPrimaryKeyChanged) {
-            String updatePkSql = "ALTER TABLE " + this.getNameWithIndex() + " DROP PRIMARY KEY,ADD PRIMARY KEY ("
+            String updatePkSql = "ALTER TABLE `" + this.getNameWithIndex() + "` DROP PRIMARY KEY,ADD PRIMARY KEY ("
                     + _sqlPrimaryKey() + ");";
             sqls.add(updatePkSql);
         }
@@ -294,11 +294,11 @@ public class DBTable implements Serializable {
                 dbColumnMap.remove(entityColumn.getField());
             }
             if (dbColumn == null) {
-                String addSql = "ALTER TABLE " + this.getNameWithIndex() + " ADD COLUMN "
+                String addSql = "ALTER TABLE `" + this.getNameWithIndex() + "` ADD COLUMN "
                         + _sqlFieldPhrase(entityColumn) + ";";
                 sqls.add(addSql);
             } else if (!entityColumn.equals(dbColumn)) {
-                String modifySql = "ALTER TABLE " + this.getNameWithIndex() + " MODIFY "
+                String modifySql = "ALTER TABLE `" + this.getNameWithIndex() + "` MODIFY "
                         + _sqlFieldPhrase(entityColumn) + ";";
                 sqls.add(modifySql);
             }
@@ -315,17 +315,18 @@ public class DBTable implements Serializable {
             if (dbIndex == null) {
                 sqls.add(_sqlCreateIndex(entityIndex));
             } else if (!entityIndex.equals(dbIndex)) {
-                sqls.add("DROP INDEX " + dbIndex.getIndexName() + " ON " + this.getNameWithIndex());
+                sqls.add("DROP INDEX `" + dbIndex.getIndexName() + " ON " + this.getNameWithIndex() + "`");
                 sqls.add(_sqlCreateIndex(entityIndex));
             }
         }
 
+        // 删除多余的列
         if (isDelete) {
             for (String field : dbColumnMap.keySet()) {
-                sqls.add("ALTER TABLE " + this.getNameWithIndex() + " DROP COLUMN " + field + ";");
+                sqls.add("ALTER TABLE `" + this.getNameWithIndex() + "` DROP COLUMN `" + field + "`;");
             }
             for (DBTableIndex index : dbIndexMap.values()) {
-                sqls.add("DROP INDEX " + index.getIndexName() + " ON " + this.getNameWithIndex());
+                sqls.add("DROP INDEX `" + index.getIndexName() + "` ON `" + this.getNameWithIndex() + "`");
             }
         }
 
@@ -337,16 +338,24 @@ public class DBTable implements Serializable {
      */
     private String _sqlCreateIndex(DBTableIndex index) {
         StringBuilder indexSql = new StringBuilder();
+
         if (index.isUnique()) {
             indexSql.append("CREATE UNIQUE INDEX");
         } else {
             indexSql.append("CREATE INDEX");
         }
-        if (StringUtil.isBlank(index.getField())) {
+
+        if (index.getFields() == null || index.getFields().isEmpty()) {
             throw new IllegalArgumentException("索引注解格式错误，field不能为空");
         }
-        indexSql.append(" ").append(index.getIndexName()).append(" ON").append(" ").append(this.getNameWithIndex());
-        indexSql.append("(").append(index.getField()).append(");");
+        StringBuilder indexFields = new StringBuilder();
+        for (String field : index.getFields()) {
+            indexFields.append('`').append(field).append('`').append(",");
+        }
+        indexFields.deleteCharAt(indexFields.length() - 1);
+
+        indexSql.append(" `").append(index.getIndexName()).append("` ON").append(" `").append(this.getNameWithIndex());
+        indexSql.append("` (").append(indexFields.toString()).append(");");
 
         return indexSql.toString();
     }
@@ -354,7 +363,7 @@ public class DBTable implements Serializable {
     private String _sqlPrimaryKey() {
         StringBuilder primaryKey = new StringBuilder();
         for (DBTablePK pk : this.primaryKeys) {
-            primaryKey.append(pk.getField()).append(',');
+            primaryKey.append('`').append(pk.getField()).append('`').append(',');
         }
         primaryKey.deleteCharAt(primaryKey.length() - 1);
         return primaryKey.toString();
@@ -369,7 +378,7 @@ public class DBTable implements Serializable {
     private String _sqlFieldPhrase(DBTableColumn column) {
         StringBuilder pharse = new StringBuilder();
 
-        pharse.append(column.getField()).append(" ");
+        pharse.append('`').append(column.getField()).append("` ");
         switch (DataTypeBind.getEnum(column.getType())) {
             case UPDATETIME:
                 pharse.append("timestamp");

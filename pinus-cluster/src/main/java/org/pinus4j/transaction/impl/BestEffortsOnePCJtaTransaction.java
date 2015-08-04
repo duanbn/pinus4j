@@ -37,7 +37,7 @@ import org.pinus4j.transaction.enums.EnumTransactionIsolationLevel;
  * @author duanbn
  * @since 1.1.0
  */
-public class LocalTransaction implements ITransaction {
+public class BestEffortsOnePCJtaTransaction implements ITransaction {
 
     /**
      * db resource will do commit or rollback.
@@ -52,8 +52,18 @@ public class LocalTransaction implements ITransaction {
     private AtomicInteger                 status = new AtomicInteger(Status.STATUS_ACTIVE);
 
     @Override
+    public boolean isContain(IResourceId resId) {
+        return this.txRes.containsKey(resId);
+    }
+
+    @Override
+    public IDBResource getDBResource(IResourceId resId) {
+        return this.txRes.get(resId);
+    }
+
+    @Override
     public void flush() {
-        commit(false);
+        commit(true);
     }
 
     @Override
@@ -66,18 +76,25 @@ public class LocalTransaction implements ITransaction {
      */
     @Override
     public void commit() {
-        commit(true);
+        commit(false);
     }
 
-    private void commit(boolean withCloseConnection) {
+    private void commit(boolean isFlush) {
+        // do flush
+        if (isFlush) {
+            for (IDBResource dbResource : txRes.values()) {
+                dbResource.commit();
+            }
+
+            return;
+        }
+
         status.set(Status.STATUS_COMMITTING);
 
         // do commit
         for (IDBResource dbResource : txRes.values()) {
             dbResource.commit();
-
-            if (withCloseConnection && !dbResource.isClosed())
-                dbResource.close();
+            dbResource.close();
         }
 
         status.set(Status.STATUS_NO_TRANSACTION);
@@ -89,7 +106,7 @@ public class LocalTransaction implements ITransaction {
     @Override
     public void rollback() {
         status.set(Status.STATUS_ROLLING_BACK);
-        
+
         // do rollback.
         for (IDBResource dbResource : txRes.values()) {
             dbResource.rollback();
@@ -97,7 +114,7 @@ public class LocalTransaction implements ITransaction {
             if (!dbResource.isClosed())
                 dbResource.close();
         }
-        
+
         status.set(Status.STATUS_NO_TRANSACTION);
     }
 

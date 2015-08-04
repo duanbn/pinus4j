@@ -70,8 +70,8 @@ public class BestEffortsOnePCJtaTransactionManager implements TransactionManager
 		if (tx == null) {
 			synchronized (this) {
 				if (tx == null) {
-					tx = new LocalTransaction();
-					((LocalTransaction) tx).setIsolationLevel(getTransactionIsolationLevel());
+					tx = new BestEffortsOnePCJtaTransaction();
+					((BestEffortsOnePCJtaTransaction) tx).setIsolationLevel(getTransactionIsolationLevel());
 					txLocal.set(tx);
 				}
 			}

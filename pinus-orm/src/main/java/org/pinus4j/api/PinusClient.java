@@ -77,7 +77,7 @@ public interface PinusClient {
      * @param query 查询条件
      * @return
      */
-    <T> TaskFuture submit(ITask<T> task, Class<T> clazz, IQuery query);
+    <T> TaskFuture submit(ITask<T> task, Class<T> clazz, IQuery<T> query);
 
     /**********************************************************
      * 数据操作相关
@@ -121,7 +121,7 @@ public interface PinusClient {
 
     public void load(Object entity, boolean useCache, EnumDBMasterSlave masterSlave);
 
-    public IQuery createQuery(Class<?> clazz);
+    public <T> IQuery<T> createQuery(Class<T> clazz);
 
     public List<Map<String, Object>> findBySQL(SQL sql, Class<?> clazz);
 

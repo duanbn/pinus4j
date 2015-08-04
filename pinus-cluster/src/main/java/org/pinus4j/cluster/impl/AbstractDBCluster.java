@@ -25,6 +25,7 @@ import java.util.Random;
 import java.util.concurrent.locks.Lock;
 
 import javax.sql.DataSource;
+import javax.transaction.SystemException;
 import javax.transaction.TransactionManager;
 
 import org.apache.curator.framework.CuratorFramework;
@@ -76,6 +77,7 @@ import org.pinus4j.generator.IDBGenerator;
 import org.pinus4j.generator.IDBGeneratorBuilder;
 import org.pinus4j.generator.IIdGenerator;
 import org.pinus4j.generator.impl.DistributedSequenceIdGeneratorImpl;
+import org.pinus4j.transaction.ITransaction;
 import org.pinus4j.transaction.impl.BestEffortsOnePCJtaTransactionManager;
 import org.pinus4j.utils.CuratorDistributeedLock;
 import org.pinus4j.utils.IOUtil;
@@ -385,9 +387,12 @@ public abstract class AbstractDBCluster implements IDBCluster {
 
         IDBResource masterDBResource;
         try {
-            masterDBResource = GlobalDBResource.valueOf(masterDBInfo, tableName);
+            ITransaction tx = (ITransaction) txManager.getTransaction();
+            masterDBResource = GlobalDBResource.valueOf(tx, masterDBInfo, tableName);
         } catch (SQLException e) {
             throw new DBClusterException(e);
+        } catch (SystemException e) {
+            throw new DBOperationException(e);
         }
 
         return masterDBResource;
@@ -416,9 +421,12 @@ public abstract class AbstractDBCluster implements IDBCluster {
 
         IDBResource slaveDBResource;
         try {
-            slaveDBResource = GlobalDBResource.valueOf(slaveDBInfo, tableName);
+            ITransaction tx = (ITransaction) txManager.getTransaction();
+            slaveDBResource = GlobalDBResource.valueOf(tx, slaveDBInfo, tableName);
         } catch (SQLException e) {
             throw new DBClusterException(e);
+        } catch (SystemException e) {
+            throw new DBOperationException(e);
         }
 
         return slaveDBResource;
@@ -460,9 +468,12 @@ public abstract class AbstractDBCluster implements IDBCluster {
         // 返回分库分表信息
         ShardingDBResource db;
         try {
-            db = ShardingDBResource.valueOf(dbInfo, regionInfo, tableName, tableIndex);
+            ITransaction tx = (ITransaction) txManager.getTransaction();
+            db = ShardingDBResource.valueOf(tx, dbInfo, regionInfo, tableName, tableIndex);
         } catch (SQLException e) {
             throw new DBClusterException(e);
+        } catch (SystemException e) {
+            throw new DBOperationException(e);
         }
 
         return db;
@@ -507,15 +518,19 @@ public abstract class AbstractDBCluster implements IDBCluster {
         // 返回分库分表信息
         ShardingDBResource db;
         try {
-            db = ShardingDBResource.valueOf(dbInfo, regionInfo, tableName, tableIndex);
+            ITransaction tx = (ITransaction) txManager.getTransaction();
+            db = ShardingDBResource.valueOf(tx, dbInfo, regionInfo, tableName, tableIndex);
         } catch (SQLException e) {
             throw new DBClusterException(e);
+        } catch (SystemException e) {
+            throw new DBOperationException(e);
         }
+
         return db;
     }
 
     @Override
-    public List<IDBResource> getAllMasterShardingDBResource(Class<?> clazz) throws SQLException {
+    public List<IDBResource> getAllMasterShardingDBResource(Class<?> clazz) throws SQLException, SystemException {
         int tableNum = entityMetaManager.getTableNum(clazz);
         if (tableNum == 0) {
             throw new IllegalStateException("table number is 0");
@@ -535,21 +550,24 @@ public abstract class AbstractDBCluster implements IDBCluster {
      * @param tableName
      * @return
      * @throws SQLException
+     * @throws SystemException
      */
     public List<IDBResource> getAllMasterShardingDBResource(int tableNum, String clusterName, String tableName)
-            throws SQLException {
+            throws SQLException, SystemException {
         List<IDBResource> dbResources = new ArrayList<IDBResource>();
 
         if (tableNum == 0) {
             throw new IllegalStateException("table number is 0");
         }
 
+        ITransaction tx = (ITransaction) txManager.getTransaction();
+
         IDBResource dbResource = null;
         DBClusterInfo dbClusterInfo = this.getDBClusterInfo(clusterName);
         for (DBRegionInfo region : dbClusterInfo.getDbRegions()) {
             for (DBInfo dbInfo : region.getMasterDBInfos()) {
                 for (int tableIndex = 0; tableIndex < tableNum; tableIndex++) {
-                    dbResource = ShardingDBResource.valueOf(dbInfo, region, tableName, tableIndex);
+                    dbResource = ShardingDBResource.valueOf(tx, dbInfo, region, tableName, tableIndex);
                     dbResources.add(dbResource);
                 }
             }
@@ -560,7 +578,7 @@ public abstract class AbstractDBCluster implements IDBCluster {
 
     @Override
     public List<IDBResource> getAllSlaveShardingDBResource(Class<?> clazz, EnumDBMasterSlave masterSlave)
-            throws SQLException, DBClusterException {
+            throws SQLException, DBClusterException, SystemException {
         List<IDBResource> dbResources = new ArrayList<IDBResource>();
 
         int tableNum = entityMetaManager.getTableNum(clazz);
@@ -570,6 +588,8 @@ public abstract class AbstractDBCluster implements IDBCluster {
 
         String clusterName = entityMetaManager.getClusterName(clazz);
         String tableName = entityMetaManager.getTableName(clazz);
+
+        ITransaction tx = (ITransaction) txManager.getTransaction();
 
         IDBResource dbResource = null;
         DBClusterInfo dbClusterInfo = this.getDBClusterInfo(clusterName);
@@ -589,7 +609,7 @@ public abstract class AbstractDBCluster implements IDBCluster {
 
             for (DBInfo dbInfo : slaveDBInfos) {
                 for (int tableIndex = 0; tableIndex < tableNum; tableIndex++) {
-                    dbResource = ShardingDBResource.valueOf(dbInfo, region, tableName, tableIndex);
+                    dbResource = ShardingDBResource.valueOf(tx, dbInfo, region, tableName, tableIndex);
                     dbResources.add(dbResource);
                 }
             }
@@ -658,7 +678,7 @@ public abstract class AbstractDBCluster implements IDBCluster {
             byte[] tableData = null;
             for (String zkTableNode : zkTableNodes) {
                 tableData = zkClient.getData(Const.ZK_SHARDINGINFO + "/" + zkTableNode, false, null);
-                tables.add(IOUtil.getObject(tableData, DBTable.class));
+                tables.add(IOUtil.getObjectByJava(tableData, DBTable.class));
             }
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -692,7 +712,7 @@ public abstract class AbstractDBCluster implements IDBCluster {
             byte[] tableData = null;
             String tableName = null;
             for (DBTable table : tables) {
-                tableData = IOUtil.getBytes(table);
+                tableData = IOUtil.getBytesByJava(table);
                 tableName = table.getName();
 
                 // toBeCleanInfo.remove(tableName);

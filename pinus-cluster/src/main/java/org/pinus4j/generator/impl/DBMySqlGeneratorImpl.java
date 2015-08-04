@@ -22,6 +22,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.pinus4j.cluster.enums.EnumSyncAction;
@@ -34,6 +35,8 @@ import org.pinus4j.generator.IDBGenerator;
 import org.pinus4j.utils.JdbcUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.Lists;
 
 /**
  * MYSQL数据库生成器的实现. 用于生成MYSQL相关的数据表.
@@ -81,7 +84,7 @@ public class DBMySqlGeneratorImpl implements IDBGenerator {
                         }
                     }
                 } catch (SQLException e) {
-                    throw new DDLException("update table =" + table.getName() + " failure", e);
+                    throw new DDLException("update table = " + table.getName() + " failure", e);
                 }
             }
             return;
@@ -177,7 +180,7 @@ public class DBMySqlGeneratorImpl implements IDBGenerator {
         ResultSet indexRs = null;
         Statement s = dbconn.createStatement();
         try {
-            indexRs = s.executeQuery("SHOW INDEX FROM " + table.getName());
+            indexRs = s.executeQuery("SHOW INDEX FROM `" + table.getName() + "`");
             Map<String, String> map = new HashMap<String, String>();
             while (indexRs.next()) {
                 String keyName = indexRs.getString("Key_name");
@@ -198,18 +201,19 @@ public class DBMySqlGeneratorImpl implements IDBGenerator {
             }
 
             DBTableIndex index = null;
-            StringBuilder field = new StringBuilder();
+            List<String> indexFields = null;
             for (Map.Entry<String, String> entry : map.entrySet()) {
                 index = new DBTableIndex();
+                indexFields = Lists.newArrayList();
+
                 String[] fieldInfos = entry.getValue().split("\\^");
                 for (String fieldInfo : fieldInfos) {
                     String[] ss = fieldInfo.split(":");
-                    field.append(ss[0]).append(",");
+                    indexFields.add(ss[0]);
                     index.setUnique(Boolean.valueOf(ss[1]));
                 }
-                field.deleteCharAt(field.length() - 1);
-                index.setField(field.toString());
-                field.setLength(0);
+
+                index.setFields(indexFields);
                 table.addIndex(index);
             }
         } finally {
@@ -234,7 +238,7 @@ public class DBMySqlGeneratorImpl implements IDBGenerator {
         Statement s = dbconn.createStatement();
 
         try {
-            colRs = s.executeQuery("show full fields from " + table.getName());
+            colRs = s.executeQuery("show full fields from `" + table.getName() + "`");
             while (colRs.next()) {
 
                 String field = colRs.getString(1);

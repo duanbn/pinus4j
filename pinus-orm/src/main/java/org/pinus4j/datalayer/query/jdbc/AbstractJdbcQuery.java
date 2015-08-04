@@ -171,7 +171,8 @@ public abstract class AbstractJdbcQuery implements IDataQuery {
         return count;
     }
 
-    protected Number selectCountByQuery(IQuery query, IDBResource dbResource, Class<?> clazz) throws SQLException {
+    protected <T> Number selectCountByQuery(IQuery<T> query, IDBResource dbResource, Class<T> clazz)
+            throws SQLException {
         long count = -1;
 
         PreparedStatement ps = null;
@@ -233,7 +234,7 @@ public abstract class AbstractJdbcQuery implements IDataQuery {
                 SlowQueryLogger.write(conn, sql, constTime);
             }
 
-            result = SQLBuilder.buildResultObject(clazz, rs);
+            result = SQLBuilder.createResultObject(clazz, rs);
         } finally {
             JdbcUtil.close(ps, rs);
         }
@@ -266,7 +267,7 @@ public abstract class AbstractJdbcQuery implements IDataQuery {
                 SlowQueryLogger.write(conn, sql, constTime);
             }
 
-            result = SQLBuilder.buildResultObjectAsMap(clazz, rs);
+            result = SQLBuilder.createResultObjectAsMap(clazz, rs);
         } finally {
             JdbcUtil.close(ps, rs);
         }
@@ -367,7 +368,7 @@ public abstract class AbstractJdbcQuery implements IDataQuery {
             if (constTime > Const.SLOWQUERY_SQL) {
                 SlowQueryLogger.write(conn, sql, constTime);
             }
-            result = (List<Map<String, Object>>) SQLBuilder.buildResultObject(rs);
+            result = (List<Map<String, Object>>) SQLBuilder.createResultObject(rs);
         } finally {
             JdbcUtil.close(ps, rs);
         }
@@ -378,8 +379,8 @@ public abstract class AbstractJdbcQuery implements IDataQuery {
     // //////////////////////////////////////////////////////////////////////////////////////
     // findByQuery相关
     // //////////////////////////////////////////////////////////////////////////////////////
-    protected <T> List<T> selectByQuery(IDBResource dbResource, IQuery query, Class<T> clazz) throws SQLException {
-        List<T> result = new ArrayList<T>();
+    protected <T> List<T> selectByQuery(IDBResource dbResource, IQuery<T> query, Class<T> clazz) throws SQLException {
+        List<T> result = null;
 
         PreparedStatement ps = null;
         ResultSet rs = null;
@@ -402,7 +403,9 @@ public abstract class AbstractJdbcQuery implements IDataQuery {
                 SlowQueryLogger.write(conn, sql, constTime);
             }
 
-            result = (List<T>) SQLBuilder.buildResultObject(clazz, rs);
+            long start = System.currentTimeMillis();
+            result = (List<T>) SQLBuilder.createResultObject(clazz, rs);
+            System.out.println("const " + (System.currentTimeMillis() - start) + "ms");
         } finally {
             JdbcUtil.close(ps, rs);
         }
@@ -413,7 +416,8 @@ public abstract class AbstractJdbcQuery implements IDataQuery {
     // //////////////////////////////////////////////////////////////////////////////////////
     // getPk相关
     // //////////////////////////////////////////////////////////////////////////////////////
-    protected <T> EntityPK[] selectPksByQuery(IDBResource dbResource, IQuery query, Class<T> clazz) throws SQLException {
+    protected <T> EntityPK[] selectPksByQuery(IDBResource dbResource, IQuery<T> query, Class<T> clazz)
+            throws SQLException {
         List<EntityPK> result = Lists.newArrayList();
 
         PreparedStatement ps = null;

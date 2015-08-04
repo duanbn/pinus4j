@@ -16,7 +16,19 @@
 
 package org.pinus4j.utils;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+
+import org.pinus4j.exceptions.DBOperationException;
+import org.pinus4j.serializer.DeserializeException;
+import org.pinus4j.serializer.Deserializer;
+import org.pinus4j.serializer.MyDeserializer;
+import org.pinus4j.serializer.MySerializer;
+import org.pinus4j.serializer.SerializeException;
+import org.pinus4j.serializer.Serializer;
 
 /**
  * input output utility.
@@ -25,11 +37,11 @@ import java.io.*;
  */
 public class IOUtil {
 
-    public static byte[] getBytes(Object obj) {
-        if (obj == null) {
-            throw new IllegalArgumentException("input param is null");
-        }
+    private static Serializer   ser   = MySerializer.getInstance();
 
+    private static Deserializer deser = MyDeserializer.getInstance();
+
+    public static byte[] getBytesByJava(Object obj) {
         ObjectOutputStream oos = null;
         ByteArrayOutputStream baos = null;
 
@@ -55,7 +67,7 @@ public class IOUtil {
         return baos.toByteArray();
     }
 
-    public static <T> T getObject(byte[] data, Class<T> clazz) {
+    public static <T> T getObjectByJava(byte[] data, Class<T> clazz) {
         if (data == null)
             return null;
 
@@ -77,6 +89,29 @@ public class IOUtil {
                 }
             } catch (IOException e) {
             }
+        }
+    }
+
+    public static byte[] getBytes(Object obj) {
+        if (obj == null) {
+            throw new IllegalArgumentException("param should not be null");
+        }
+
+        try {
+            return ser.ser(obj);
+        } catch (SerializeException e) {
+            throw new DBOperationException(e);
+        }
+    }
+
+    public static <T> T getObject(byte[] data, Class<T> clazz) {
+        if (data == null)
+            return null;
+
+        try {
+            return deser.deser(data, clazz);
+        } catch (DeserializeException e) {
+            throw new DBOperationException(e);
         }
     }
 

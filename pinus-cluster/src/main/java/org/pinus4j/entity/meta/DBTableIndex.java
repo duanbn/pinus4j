@@ -17,12 +17,12 @@
 package org.pinus4j.entity.meta;
 
 import java.io.Serializable;
+import java.util.List;
 
 import org.pinus4j.utils.StringUtil;
 
 /**
- * 数据库索引bean.
- * 抽象一个数据库索引
+ * 数据库索引bean. 抽象一个数据库索引
  *
  * @author duanbn
  */
@@ -36,28 +36,33 @@ public class DBTableIndex implements Serializable {
     /**
      * 被索引的字段名.
      */
-    private String field;
+    private List<String>      fields;
 
     /**
      * 是否是唯一索引
      */
-    private boolean isUnique;
+    private boolean           isUnique;
 
     /**
      * 生成索引名
      */
     public String getIndexName() {
         StringBuilder indexName = new StringBuilder();
-        indexName.append("index__").append(StringUtil.removeBlank(field).replaceAll(",", "__"));
+        StringBuilder fieldPhrase = new StringBuilder();
+        for (String field : fields) {
+            fieldPhrase.append(field).append("_");
+        }
+        fieldPhrase.deleteCharAt(fieldPhrase.length() - 1);
+        indexName.append("index__").append(fieldPhrase.toString());
         return indexName.toString();
     }
 
-    public String getField() {
-        return field;
+    public List<String> getFields() {
+        return fields;
     }
 
-    public void setField(String field) {
-        this.field = field;
+    public void setFields(List<String> fields) {
+        this.fields = fields;
     }
 
     public boolean isUnique() {
@@ -69,15 +74,15 @@ public class DBTableIndex implements Serializable {
     }
 
     @Override
-	public String toString() {
-		return "DBIndex [field=" + field + ", isUnique=" + isUnique + "]";
-	}
+    public String toString() {
+        return "DBTableIndex [fields=" + fields + ", isUnique=" + isUnique + "]";
+    }
 
-	@Override
+    @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((field == null) ? 0 : field.hashCode());
+        result = prime * result + ((fields == null) ? 0 : fields.hashCode());
         result = prime * result + (isUnique ? 1231 : 1237);
         return result;
     }
@@ -91,10 +96,10 @@ public class DBTableIndex implements Serializable {
         if (getClass() != obj.getClass())
             return false;
         DBTableIndex other = (DBTableIndex) obj;
-        if (field == null) {
-            if (other.field != null)
+        if (fields == null) {
+            if (other.fields != null)
                 return false;
-        } else if (!field.equals(other.field))
+        } else if (!fields.equals(other.fields))
             return false;
         if (isUnique != other.isUnique)
             return false;

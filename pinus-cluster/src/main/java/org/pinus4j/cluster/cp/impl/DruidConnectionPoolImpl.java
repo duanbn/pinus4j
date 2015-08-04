@@ -20,7 +20,6 @@ import java.util.Map;
 
 import javax.sql.DataSource;
 
-import org.pinus4j.cluster.cp.IDBConnectionPool;
 import org.pinus4j.exceptions.LoadConfigException;
 import org.pinus4j.utils.BeansUtil;
 import org.slf4j.Logger;
@@ -33,7 +32,7 @@ import com.alibaba.druid.pool.DruidDataSource;
  * 
  * @author shanwei Jul 28, 2015 3:44:47 PM
  */
-public class DruidConnectionPoolImpl implements IDBConnectionPool {
+public class DruidConnectionPoolImpl extends AbstractConnectionPool {
 
     public static Logger LOG = LoggerFactory.getLogger(DruidConnectionPoolImpl.class);
 
@@ -61,7 +60,7 @@ public class DruidConnectionPoolImpl implements IDBConnectionPool {
                 }
             } else {
                 try {
-                    BeansUtil.setProperty(ds, entry.getKey(), entry.getValue());
+                    setConnectionParam(ds, entry.getKey(), entry.getValue());
                 } catch (Exception e) {
                     LOG.warn("无法识别的连接池参数:" + entry);
                 }

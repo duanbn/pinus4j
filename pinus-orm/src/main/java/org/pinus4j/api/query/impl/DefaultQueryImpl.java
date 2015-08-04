@@ -29,7 +29,7 @@ import org.pinus4j.utils.StringUtil;
  * 
  * @author duanbn
  */
-public class DefaultQueryImpl implements IQuery, Cloneable {
+public class DefaultQueryImpl<T> implements IQuery<T>, Cloneable {
 
     /**
      * 保存取值的字段.
@@ -56,12 +56,12 @@ public class DefaultQueryImpl implements IQuery, Cloneable {
     protected int             limit     = -1;
 
     @Override
-    public <T> T load() {
+    public T load() {
         throw new UnsupportedOperationException("not support");
     }
 
     @Override
-    public <T> List<T> list() {
+    public List<T> list() {
         throw new UnsupportedOperationException("not support");
     }
 
@@ -71,17 +71,17 @@ public class DefaultQueryImpl implements IQuery, Cloneable {
     }
 
     @Override
-    public IQuery setMasterSlave(EnumDBMasterSlave masterSlave) {
+    public IQuery<T> setMasterSlave(EnumDBMasterSlave masterSlave) {
         throw new UnsupportedOperationException("not support");
     }
 
     @Override
-    public IQuery setUseCache(boolean useCache) {
+    public IQuery<T> setUseCache(boolean useCache) {
         throw new UnsupportedOperationException("not support");
     }
 
     @Override
-    public IQuery setFields(String... fields) {
+    public IQuery<T> setFields(String... fields) {
         if (fields != null && fields.length > 0) {
             this.fields = fields;
         }
@@ -89,7 +89,7 @@ public class DefaultQueryImpl implements IQuery, Cloneable {
     }
 
     @Override
-    public IQuery setFields(Class<?> clazz, String... fields) {
+    public IQuery<T> setFields(Class<?> clazz, String... fields) {
         if (fields != null && fields.length > 0) {
             for (String field : fields) {
                 field = BeansUtil.getFieldName(BeansUtil.getField(clazz, field));
@@ -101,12 +101,12 @@ public class DefaultQueryImpl implements IQuery, Cloneable {
 
     @Deprecated
     @Override
-    public IQuery add(Condition cond) {
+    public IQuery<T> add(Condition cond) {
         return and(cond);
     }
 
     @Override
-    public IQuery and(Condition cond) {
+    public IQuery<T> and(Condition cond) {
         if (cond == null) {
             throw new IllegalArgumentException("param should not be null");
         }
@@ -120,7 +120,7 @@ public class DefaultQueryImpl implements IQuery, Cloneable {
     }
 
     @Override
-    public IQuery or(Condition cond) {
+    public IQuery<T> or(Condition cond) {
         if (cond == null) {
             throw new IllegalArgumentException("param should not be null");
         }
@@ -134,7 +134,12 @@ public class DefaultQueryImpl implements IQuery, Cloneable {
     }
 
     @Override
-    public IQuery orderBy(String field, Order order, Class<?> clazz) {
+    public IQuery<T> orderBy(String field, Order order) {
+        return orderBy(field, order, null);
+    }
+
+    @Override
+    public IQuery<T> orderBy(String field, Order order, Class<?> clazz) {
         if (StringUtil.isBlank(field)) {
             throw new IllegalArgumentException("参数错误, field=" + field);
         }
@@ -147,7 +152,7 @@ public class DefaultQueryImpl implements IQuery, Cloneable {
     }
 
     @Override
-    public IQuery limit(int start, int limit) {
+    public IQuery<T> limit(int start, int limit) {
         if (start < 0 || limit <= 0) {
             throw new IllegalArgumentException("分页参数错误, start" + start + ", limit=" + limit);
         }
@@ -159,7 +164,7 @@ public class DefaultQueryImpl implements IQuery, Cloneable {
     }
 
     @Override
-    public IQuery limit(int limit) {
+    public IQuery<T> limit(int limit) {
         if (limit <= 0) {
             throw new IllegalArgumentException("设置limit参数错误， limit=" + limit);
         }
@@ -191,13 +196,13 @@ public class DefaultQueryImpl implements IQuery, Cloneable {
         return this.fields != null && this.fields.length > 0;
     }
 
-    public IQuery clone() {
-        DefaultQueryImpl clone = new DefaultQueryImpl();
-        clone.setFields(this.fields);
-        clone.setCondList(new ArrayList<Condition>(this.condList));
-        clone.setOrderList(new ArrayList<OrderBy>(this.orderList));
-        clone.setStart(this.start);
-        clone.setLimit(this.limit);
+    public IQuery<T> clone() {
+        DefaultQueryImpl<T> clone = new DefaultQueryImpl<T>();
+        clone.fields = this.fields;
+        clone.condList.addAll(this.condList);
+        clone.orderList.addAll(this.orderList);
+        clone.start = this.start;
+        clone.limit = this.limit;
         return clone;
     }
 
@@ -221,17 +226,19 @@ public class DefaultQueryImpl implements IQuery, Cloneable {
                 }
             }
         }
+        
         // 添加排序条件
         if (!orderList.isEmpty()) {
             SQL.append(" order by ");
             for (OrderBy orderBy : orderList) {
-                SQL.append(orderBy.getField());
+                SQL.append('`').append(orderBy.getField()).append('`');
                 SQL.append(" ");
                 SQL.append(orderBy.getOrder().getValue());
                 SQL.append(",");
             }
             SQL.deleteCharAt(SQL.length() - 1);
         }
+        
         // 添加分页
         if (start > -1 && limit > -1) {
             SQL.append(" limit ").append(start).append(",").append(limit);
@@ -281,7 +288,10 @@ public class DefaultQueryImpl implements IQuery, Cloneable {
         private Order  order;
 
         public OrderBy(String field, Order order, Class<?> clazz) {
-            this.field = BeansUtil.getFieldName(BeansUtil.getField(clazz, field));
+            if (clazz != null)
+                this.field = BeansUtil.getFieldName(BeansUtil.getField(clazz, field));
+            else
+                this.field = field;
             this.order = order;
         }
 

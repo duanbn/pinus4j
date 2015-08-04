@@ -23,6 +23,7 @@ import java.sql.SQLException;
 import org.pinus4j.cluster.beans.DBInfo;
 import org.pinus4j.cluster.enums.EnumDBMasterSlave;
 import org.pinus4j.exceptions.DBOperationException;
+import org.pinus4j.transaction.ITransaction;
 import org.pinus4j.transaction.enums.EnumTransactionIsolationLevel;
 
 /**
@@ -59,40 +60,49 @@ public class GlobalDBResource extends AbstractXADBResource {
      * @param dbInfo
      * @return
      */
-    public static IDBResource valueOf(DBInfo dbInfo, String tableName) throws SQLException {
+    public static IDBResource valueOf(ITransaction tx, DBInfo dbInfo, String tableName) throws SQLException {
         IResourceId resId = new DBResourceId(dbInfo.getClusterName(), dbInfo.getDbName(), tableName,
                 dbInfo.getMasterSlave());
 
-        GlobalDBResource instance = (GlobalDBResource) DBResourceCache.getGlobalDBResource(resId);
+        GlobalDBResource dbResource = null;
 
-        Connection conn = dbInfo.getDatasource().getConnection();
-        conn.setAutoCommit(false);
+        if (tx != null && tx.isContain(resId)) {
 
-        if (instance == null) {
-            instance = new GlobalDBResource();
+            dbResource = (GlobalDBResource) tx.getDBResource(resId);
 
-            instance.setId(resId);
-            instance.setClusterName(dbInfo.getClusterName());
-            instance.setDbName(dbInfo.getDbName());
-            instance.setMasterSlave(dbInfo.getMasterSlave());
+        } else {
 
-            // get database meta info.
-            DatabaseMetaData dbMeta = conn.getMetaData();
-            String databaseProductName = dbMeta.getDatabaseProductName();
-            String url = dbMeta.getURL().substring(13);
-            String host = url.substring(0, url.indexOf("/"));
-            String catalog = conn.getCatalog();
+            dbResource = (GlobalDBResource) DBResourceCache.getGlobalDBResource(resId);
 
-            instance.setDatabaseProductName(databaseProductName);
-            instance.setHost(host);
-            instance.setCatalog(catalog);
+            Connection conn = dbInfo.getDatasource().getConnection();
+            conn.setAutoCommit(false);
 
-            DBResourceCache.putGlobalDBResource(resId, instance);
+            if (dbResource == null) {
+                dbResource = new GlobalDBResource();
+
+                dbResource.setId(resId);
+                dbResource.setClusterName(dbInfo.getClusterName());
+                dbResource.setDbName(dbInfo.getDbName());
+                dbResource.setMasterSlave(dbInfo.getMasterSlave());
+
+                // get database meta info.
+                DatabaseMetaData dbMeta = conn.getMetaData();
+                String databaseProductName = dbMeta.getDatabaseProductName();
+                String url = dbMeta.getURL().substring(13);
+                String host = url.substring(0, url.indexOf("/"));
+                String catalog = conn.getCatalog();
+
+                dbResource.setDatabaseProductName(databaseProductName);
+                dbResource.setHost(host);
+                dbResource.setCatalog(catalog);
+
+                DBResourceCache.putGlobalDBResource(resId, dbResource);
+            }
+
+            dbResource.setConnection(conn);
         }
 
-        instance.setConnection(conn);
-
-        return instance;
+        return dbResource;
     }
 
     public void setId(IResourceId resId) {

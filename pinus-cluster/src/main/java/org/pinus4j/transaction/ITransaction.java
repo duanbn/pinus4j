@@ -18,6 +18,8 @@ package org.pinus4j.transaction;
 
 import javax.transaction.Transaction;
 
+import org.pinus4j.cluster.resources.IDBResource;
+import org.pinus4j.cluster.resources.IResourceId;
 import org.pinus4j.transaction.enums.EnumTransactionIsolationLevel;
 
 /**
@@ -29,15 +31,31 @@ import org.pinus4j.transaction.enums.EnumTransactionIsolationLevel;
 public interface ITransaction extends Transaction {
 
     /**
+     * current transaction whether container a db resource.
+     * 
+     * @param resId
+     * @return
+     */
+    boolean isContain(IResourceId resId);
+
+    /**
+     * get db resource by id.
+     * 
+     * @param resId
+     * @return
+     */
+    IDBResource getDBResource(IResourceId resId);
+
+    /**
      * flush to db.
      */
     void flush();
 
-	/**
-	 * set isolation level for this transaction.
-	 * 
-	 * @param txLevel
-	 */
-	void setIsolationLevel(EnumTransactionIsolationLevel txLevel);
+    /**
+     * set isolation level for this transaction.
+     * 
+     * @param txLevel
+     */
+    void setIsolationLevel(EnumTransactionIsolationLevel txLevel);
 
 }

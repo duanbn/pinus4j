@@ -24,7 +24,6 @@ import org.pinus4j.cache.IPrimaryCache;
 import org.pinus4j.cluster.resources.ShardingDBResource;
 import org.pinus4j.entity.meta.EntityPK;
 import org.pinus4j.utils.IOUtil;
-import org.pinus4j.utils.BeansUtil;
 import org.pinus4j.utils.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

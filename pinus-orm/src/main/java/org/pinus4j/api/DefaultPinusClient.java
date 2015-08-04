@@ -49,6 +49,7 @@ import org.pinus4j.task.ITask;
 import org.pinus4j.task.TaskExecutor;
 import org.pinus4j.task.TaskFuture;
 import org.pinus4j.transaction.enums.EnumTransactionIsolationLevel;
+import org.pinus4j.transaction.impl.BestEffortsOnePCJtaTransaction;
 import org.pinus4j.transaction.impl.BestEffortsOnePCJtaTransactionManager;
 import org.pinus4j.utils.BeansUtil;
 import org.pinus4j.utils.CheckUtil;
@@ -210,6 +211,14 @@ public class DefaultPinusClient implements PinusClient {
 
     @Override
     public void flush() {
+        try {
+            BestEffortsOnePCJtaTransaction localTx = (BestEffortsOnePCJtaTransaction) this.txManager.getTransaction();
+
+            if (localTx != null)
+                localTx.flush();
+        } catch (Exception e) {
+            throw new DBOperationException(e);
+        }
     }
 
     // ////////////////////////////////////////////////////////
@@ -223,7 +232,7 @@ public class DefaultPinusClient implements PinusClient {
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
     @Override
-    public <T> TaskFuture submit(ITask<T> task, Class<T> clazz, IQuery query) {
+    public <T> TaskFuture submit(ITask<T> task, Class<T> clazz, IQuery<T> query) {
         TaskExecutor taskExecutor = new TaskExecutor(clazz, this.dbCluster);
         return taskExecutor.execute(task, query);
     }
@@ -564,12 +573,12 @@ public class DefaultPinusClient implements PinusClient {
 
     @Override
     public void load(Object entity) {
-        load(entity, true, EnumDBMasterSlave.MASTER);
+        load(entity, true, EnumDBMasterSlave.AUTO);
     }
 
     @Override
     public void load(Object entity, boolean useCache) {
-        load(entity, useCache, EnumDBMasterSlave.MASTER);
+        load(entity, useCache, EnumDBMasterSlave.AUTO);
     }
 
     @Override
@@ -608,10 +617,9 @@ public class DefaultPinusClient implements PinusClient {
 
     }
 
-    @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
-    public IQuery createQuery(Class<?> clazz) {
-        ResultSetableQueryImpl query = new ResultSetableQueryImpl(clazz);
+    public <T> IQuery<T> createQuery(Class<T> clazz) {
+        ResultSetableQueryImpl<T> query = new ResultSetableQueryImpl<T>(clazz);
         query.setGlobalQuery(this.globalQuery);
         query.setShardingQuery(this.shardingQuery);
         return query;
@@ -630,9 +638,9 @@ public class DefaultPinusClient implements PinusClient {
         CheckUtil.checkClass(clazz);
 
         if (entityMetaManager.isShardingEntity(clazz)) {
-            return this.shardingQuery.findBySql(sql, EnumDBMasterSlave.MASTER);
+            return this.shardingQuery.findBySql(sql, EnumDBMasterSlave.AUTO);
         } else {
-            return this.globalQuery.findBySql(sql, clazz, EnumDBMasterSlave.MASTER);
+            return this.globalQuery.findBySql(sql, clazz, EnumDBMasterSlave.AUTO);
         }
     }
 

@@ -131,7 +131,7 @@ public class Condition {
             SQL.append(")");
             return SQL.toString();
         } else {
-            SQL.append(field).append(" ").append(opt.getSymbol()).append(" ");
+            SQL.append('`').append(field).append('`').append(" ").append(opt.getSymbol()).append(" ");
             switch (opt) {
                 case IN:
                     SQL.append("(");

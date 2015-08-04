@@ -39,12 +39,12 @@ import org.slf4j.LoggerFactory;
  */
 public class GlobalRecordIterator<E> extends AbstractRecordIterator<E> {
 
-    public static final Logger LOG = LoggerFactory.getLogger(GlobalRecordIterator.class);
+    public static final Logger LOG               = LoggerFactory.getLogger(GlobalRecordIterator.class);
 
     private IDBResource        dbResource;
 
     private IEntityMetaManager entityMetaManager = DefaultEntityMetaManager.getInstance();
-    
+
     public GlobalRecordIterator(GlobalDBResource dbResource, Class<E> clazz) {
         super(clazz);
 
@@ -88,7 +88,7 @@ public class GlobalRecordIterator<E> extends AbstractRecordIterator<E> {
         if (this.recordQ.isEmpty()) {
             IQuery query = ((DefaultQueryImpl) this.query).clone();
             long high = this.latestId + step;
-            query.add(Condition.gte(pkName, latestId, clazz)).add(Condition.lt(pkName, high, clazz));
+            query.and(Condition.gte(pkName, latestId, clazz)).and(Condition.lt(pkName, high, clazz));
             try {
                 List<E> recrods = selectByQuery(this.dbResource, query, clazz);
                 this.latestId = high;
@@ -96,7 +96,7 @@ public class GlobalRecordIterator<E> extends AbstractRecordIterator<E> {
                 while (recrods.isEmpty() && this.latestId < maxId) {
                     query = ((DefaultQueryImpl) this.query).clone();
                     high = this.latestId + step;
-                    query.add(Condition.gte(pkName, this.latestId, clazz)).add(Condition.lt(pkName, high, clazz));
+                    query.and(Condition.gte(pkName, this.latestId, clazz)).and(Condition.lt(pkName, high, clazz));
                     recrods = selectByQuery(this.dbResource, query, clazz);
                     this.latestId = high;
                 }

@@ -36,7 +36,7 @@ import com.google.common.collect.Lists;
  * 
  * @author shanwei Jul 27, 2015 6:12:23 PM
  */
-public class ResultSetableQueryImpl<T> extends DefaultQueryImpl {
+public class ResultSetableQueryImpl<T> extends DefaultQueryImpl<T> {
 
     private Class<T>           clazz;
 
@@ -46,7 +46,7 @@ public class ResultSetableQueryImpl<T> extends DefaultQueryImpl {
 
     private boolean            useCache          = true;
 
-    private EnumDBMasterSlave  masterSlave       = EnumDBMasterSlave.MASTER;
+    private EnumDBMasterSlave  masterSlave       = EnumDBMasterSlave.AUTO;
 
     private IEntityMetaManager entityMetaManager = DefaultEntityMetaManager.getInstance();
 
@@ -167,17 +167,35 @@ public class ResultSetableQueryImpl<T> extends DefaultQueryImpl {
     }
 
     @Override
-    public IQuery setMasterSlave(EnumDBMasterSlave masterSlave) {
+    public IQuery<T> setMasterSlave(EnumDBMasterSlave masterSlave) {
         this.masterSlave = masterSlave;
 
         return this;
     }
 
     @Override
-    public IQuery setUseCache(boolean useCache) {
+    public IQuery<T> setUseCache(boolean useCache) {
         this.useCache = useCache;
 
         return this;
+    }
+
+    @Override
+    public IQuery<T> clone() {
+        ResultSetableQueryImpl<T> clone = new ResultSetableQueryImpl<T>(this.clazz);
+        clone.fields = this.fields;
+        clone.condList.addAll(this.condList);
+        clone.orderList.addAll(this.orderList);
+        clone.start = this.start;
+        clone.limit = this.limit;
+
+        clone.globalQuery = this.globalQuery;
+        clone.shardingQuery = this.shardingQuery;
+        clone.useCache = this.useCache;
+        clone.masterSlave = this.masterSlave;
+        clone.entityMetaManager = this.entityMetaManager;
+
+        return clone;
     }
 
     public IGlobalQuery getGlobalQuery() {

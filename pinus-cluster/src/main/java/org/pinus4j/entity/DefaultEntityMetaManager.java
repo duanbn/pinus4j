@@ -23,6 +23,7 @@ import java.net.JarURLConnection;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -519,7 +520,8 @@ public class DefaultEntityMetaManager implements IEntityMetaManager {
         DBTableIndex dbIndex = null;
         for (Index index : indexes) {
             dbIndex = new DBTableIndex();
-            dbIndex.setField(StringUtil.removeBlank(index.field()));
+            List<String> indexFields = Arrays.asList(StringUtil.removeBlank(index.field()).split(","));
+            dbIndex.setFields(indexFields);
             dbIndex.setUnique(index.isUnique());
             table.addIndex(dbIndex);
         }

@@ -21,6 +21,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.locks.Lock;
 
+import javax.transaction.SystemException;
 import javax.transaction.TransactionManager;
 
 import org.pinus4j.cache.IPrimaryCache;
@@ -195,7 +196,7 @@ public interface IDBCluster {
      * @param clazz 数据对象
      * @return
      */
-    List<IDBResource> getAllMasterShardingDBResource(Class<?> clazz) throws SQLException, DBClusterException;
+    List<IDBResource> getAllMasterShardingDBResource(Class<?> clazz) throws SQLException, SystemException;
 
     /**
      * get all master sharding info.
@@ -206,7 +207,7 @@ public interface IDBCluster {
      * @return
      */
     List<IDBResource> getAllMasterShardingDBResource(int tableNum, String clusterName, String tableName)
-            throws SQLException, DBClusterException;
+            throws SQLException, SystemException;
 
     /**
      * 获取集群从库列表.
@@ -215,7 +216,7 @@ public interface IDBCluster {
      * @param slave 从库号
      */
     List<IDBResource> getAllSlaveShardingDBResource(Class<?> clazz, EnumDBMasterSlave slave) throws SQLException,
-            DBClusterException;
+            DBClusterException, SystemException;
 
     /**
      * 设置数据表同步动作.

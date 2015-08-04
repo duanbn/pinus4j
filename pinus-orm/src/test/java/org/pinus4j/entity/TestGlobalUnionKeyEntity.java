@@ -13,7 +13,7 @@ import org.pinus4j.entity.annotations.Table;
 import org.pinus4j.entity.annotations.UpdateTime;
 
 @Table(cluster = "pinus", cache = true)
-@Indexes({ @Index(field = "testInt") })
+@Indexes({ @Index(field = "testInt,oTestBool") })
 public class TestGlobalUnionKeyEntity implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -63,6 +63,9 @@ public class TestGlobalUnionKeyEntity implements Serializable {
 
     @Field
     private String            testString;
+
+    @Field
+    private String            index;
 
     @DateTime
     private Date              testDate;
@@ -148,6 +151,14 @@ public class TestGlobalUnionKeyEntity implements Serializable {
 
     public void setTestString(String testString) {
         this.testString = testString;
+    }
+
+    public String getIndex() {
+        return index;
+    }
+
+    public void setIndex(String index) {
+        this.index = index;
     }
 
     public Date getTestDate() {

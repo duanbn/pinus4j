@@ -20,6 +20,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -40,12 +41,19 @@ public class BeansUtil {
     /**
      * 字段别名缓存，当没有指定别名时，使用字段名作为别名. key: 别名/字段名
      */
-    public static final Map<String, Field>     _aliasFieldCache = new ConcurrentHashMap<String, Field>();
+    public static final Map<String, Field>       _aliasFieldCache = new ConcurrentHashMap<String, Field>();
 
     /**
      * 类属性缓存. 缓存反射结果
      */
-    public static final Map<Class<?>, Field[]> _fieldCache      = new ConcurrentHashMap<Class<?>, Field[]>();
+    public static final Map<Class<?>, Field[]>   _fieldCache      = new ConcurrentHashMap<Class<?>, Field[]>();
+
+    /**
+     * 接口的缓存
+     */
+    private static final Map<String, Class<?>[]> interfaceCache   = new HashMap<String, Class<?>[]>();
+
+    public static final Map<String, Class<?>>    classCache       = new HashMap<String, Class<?>>();
 
     /**
      * 通过反射获取对象的属性值.
@@ -80,53 +88,56 @@ public class BeansUtil {
 
         Class<?> clazz = obj.getClass();
 
-        // 优先使用使用set设置
-        Method[] setMethods = clazz.getMethods();
-        for (Method setMethod : setMethods) {
-            if (setMethod.getName().equals("set" + StringUtil.upperFirstLetter(propertyName))) {
-                if (setMethod.getParameterTypes().length == 1) {
-                    try {
-                        setMethod.invoke(obj, value);
-                    } catch (Exception e) {
-                        throw new RuntimeException(e);
-                    }
+        Field f = getField(clazz, propertyName);
+
+        if (f != null) {
+            try {
+                f.setAccessible(true);
+
+                if (value == null) {
+                    f.set(obj, null);
                     return;
+                }
+
+                // 这里不能支持装箱类型，否则反射会报错
+                if (f.getType() == Boolean.TYPE) {
+                    f.setBoolean(obj, ((Boolean) value).booleanValue());
+                } else if (f.getType() == Integer.TYPE) {
+                    f.setInt(obj, ((Number) value).intValue());
+                } else if (f.getType() == Byte.TYPE) {
+                    f.setByte(obj, ((Number) value).byteValue());
+                } else if (f.getType() == Long.TYPE) {
+                    f.setLong(obj, ((Number) value).longValue());
+                } else if (f.getType() == Short.TYPE) {
+                    f.setShort(obj, ((Number) value).shortValue());
+                } else if (f.getType() == Float.TYPE) {
+                    f.setFloat(obj, ((Number) value).floatValue());
+                } else if (f.getType() == Double.TYPE) {
+                    f.setDouble(obj, ((Number) value).doubleValue());
+                } else if (f.getType() == Character.TYPE) {
+                    f.setChar(obj, ((Character) value).charValue());
+                } else {
+                    f.set(obj, value);
+                }
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        } else {
+            Method[] setMethods = clazz.getMethods();
+            for (Method setMethod : setMethods) {
+                if (setMethod.getName().equals("set" + StringUtil.upperFirstLetter(propertyName))) {
+                    if (setMethod.getParameterTypes().length == 1) {
+                        try {
+                            setMethod.invoke(obj, value);
+                        } catch (Exception e) {
+                            throw new RuntimeException(e);
+                        }
+                        return;
+                    }
                 }
             }
         }
 
-        Field f = getField(clazz, propertyName);
-        f.setAccessible(true);
-
-        try {
-            if (value == null) {
-                f.set(obj, null);
-                return;
-            }
-
-            // 这里不能支持装箱类型，否则反射会报错
-            if (f.getType() == Boolean.TYPE) {
-                f.setBoolean(obj, ((Boolean) value).booleanValue());
-            } else if (f.getType() == Integer.TYPE) {
-                f.setInt(obj, ((Number) value).intValue());
-            } else if (f.getType() == Byte.TYPE) {
-                f.setByte(obj, ((Number) value).byteValue());
-            } else if (f.getType() == Long.TYPE) {
-                f.setLong(obj, ((Number) value).longValue());
-            } else if (f.getType() == Short.TYPE) {
-                f.setShort(obj, ((Number) value).shortValue());
-            } else if (f.getType() == Float.TYPE) {
-                f.setFloat(obj, ((Number) value).floatValue());
-            } else if (f.getType() == Double.TYPE) {
-                f.setDouble(obj, ((Number) value).doubleValue());
-            } else if (f.getType() == Character.TYPE) {
-                f.setChar(obj, ((Character) value).charValue());
-            } else {
-                f.set(obj, value);
-            }
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
     }
 
     public static void setProperty(Object obj, String propertyName, String value) {
@@ -136,71 +147,71 @@ public class BeansUtil {
 
         Class<?> clazz = obj.getClass();
 
-        // 优先使用set设置
-        Method[] setMethods = clazz.getMethods();
-        for (Method setMethod : setMethods) {
-            if (setMethod.getName().equals("set" + StringUtil.upperFirstLetter(propertyName))) {
-                if (setMethod.getParameterTypes().length == 1) {
-                    Class<?> paramType = setMethod.getParameterTypes()[0];
-                    try {
-                        if (paramType == Boolean.TYPE || paramType == Boolean.class) {
-                            setMethod.invoke(obj, (Boolean.valueOf(value)).booleanValue());
-                        } else if (paramType == Integer.TYPE || paramType == Integer.class) {
-                            setMethod.invoke(obj, Integer.parseInt(value));
-                        } else if (paramType == Byte.TYPE || paramType == Byte.class) {
-                            setMethod.invoke(obj, Byte.parseByte(value));
-                        } else if (paramType == Long.TYPE || paramType == Long.class) {
-                            setMethod.invoke(obj, Long.parseLong(value));
-                        } else if (paramType == Short.TYPE || paramType == Short.class) {
-                            setMethod.invoke(obj, Short.valueOf(value));
-                        } else if (paramType == Float.TYPE || paramType == Float.class) {
-                            setMethod.invoke(obj, Float.valueOf(value));
-                        } else if (paramType == Double.TYPE || paramType == Double.class) {
-                            setMethod.invoke(obj, Double.valueOf(value));
-                        } else if (paramType == Character.TYPE || paramType == Character.class) {
-                            setMethod.invoke(obj, value.charAt(0));
-                        } else {
-                            setMethod.invoke(obj, value);
-                        }
-                    } catch (Exception e) {
-                        throw new RuntimeException(e);
-                    }
+        Field f = getField(clazz, propertyName);
+        if (f != null) {
+            try {
+                f.setAccessible(true);
+                if (value == null) {
+                    f.set(obj, null);
                     return;
                 }
-            }
-        }
 
-        Field f = getField(clazz, propertyName);
-        f.setAccessible(true);
-
-        try {
-            if (value == null) {
-                f.set(obj, null);
-                return;
+                // 这里不能支持装箱类型，否则反射会报错
+                if (f.getType() == Boolean.TYPE || f.getType() == Boolean.class) {
+                    f.setBoolean(obj, (Boolean.valueOf(value)).booleanValue());
+                } else if (f.getType() == Integer.TYPE || f.getType() == Integer.class) {
+                    f.setInt(obj, Integer.parseInt(value));
+                } else if (f.getType() == Byte.TYPE || f.getType() == Byte.class) {
+                    f.setByte(obj, Byte.parseByte(value));
+                } else if (f.getType() == Long.TYPE || f.getType() == Long.class) {
+                    f.setLong(obj, Long.parseLong(value));
+                } else if (f.getType() == Short.TYPE || f.getType() == Short.class) {
+                    f.setShort(obj, Short.valueOf(value));
+                } else if (f.getType() == Float.TYPE || f.getType() == Float.class) {
+                    f.setFloat(obj, Float.valueOf(value));
+                } else if (f.getType() == Double.TYPE || f.getType() == Double.class) {
+                    f.setDouble(obj, Double.valueOf(value));
+                } else if (f.getType() == Character.TYPE || f.getType() == Character.class) {
+                    f.setChar(obj, value.charAt(0));
+                } else {
+                    f.set(obj, value);
+                }
+            } catch (Exception e) {
+                throw new RuntimeException(e);
             }
-
-            // 这里不能支持装箱类型，否则反射会报错
-            if (f.getType() == Boolean.TYPE || f.getType() == Boolean.class) {
-                f.setBoolean(obj, (Boolean.valueOf(value)).booleanValue());
-            } else if (f.getType() == Integer.TYPE || f.getType() == Integer.class) {
-                f.setInt(obj, Integer.parseInt(value));
-            } else if (f.getType() == Byte.TYPE || f.getType() == Byte.class) {
-                f.setByte(obj, Byte.parseByte(value));
-            } else if (f.getType() == Long.TYPE || f.getType() == Long.class) {
-                f.setLong(obj, Long.parseLong(value));
-            } else if (f.getType() == Short.TYPE || f.getType() == Short.class) {
-                f.setShort(obj, Short.valueOf(value));
-            } else if (f.getType() == Float.TYPE || f.getType() == Float.class) {
-                f.setFloat(obj, Float.valueOf(value));
-            } else if (f.getType() == Double.TYPE || f.getType() == Double.class) {
-                f.setDouble(obj, Double.valueOf(value));
-            } else if (f.getType() == Character.TYPE || f.getType() == Character.class) {
-                f.setChar(obj, value.charAt(0));
-            } else {
-                f.set(obj, value);
+        } else {
+            Method[] setMethods = clazz.getMethods();
+            for (Method setMethod : setMethods) {
+                if (setMethod.getName().equals("set" + StringUtil.upperFirstLetter(propertyName))) {
+                    if (setMethod.getParameterTypes().length == 1) {
+                        Class<?> paramType = setMethod.getParameterTypes()[0];
+                        try {
+                            if (paramType == Boolean.TYPE || paramType == Boolean.class) {
+                                setMethod.invoke(obj, (Boolean.valueOf(value)).booleanValue());
+                            } else if (paramType == Integer.TYPE || paramType == Integer.class) {
+                                setMethod.invoke(obj, Integer.parseInt(value));
+                            } else if (paramType == Byte.TYPE || paramType == Byte.class) {
+                                setMethod.invoke(obj, Byte.parseByte(value));
+                            } else if (paramType == Long.TYPE || paramType == Long.class) {
+                                setMethod.invoke(obj, Long.parseLong(value));
+                            } else if (paramType == Short.TYPE || paramType == Short.class) {
+                                setMethod.invoke(obj, Short.valueOf(value));
+                            } else if (paramType == Float.TYPE || paramType == Float.class) {
+                                setMethod.invoke(obj, Float.valueOf(value));
+                            } else if (paramType == Double.TYPE || paramType == Double.class) {
+                                setMethod.invoke(obj, Double.valueOf(value));
+                            } else if (paramType == Character.TYPE || paramType == Character.class) {
+                                setMethod.invoke(obj, value.charAt(0));
+                            } else {
+                                setMethod.invoke(obj, value);
+                            }
+                        } catch (Exception e) {
+                            throw new RuntimeException(e);
+                        }
+                        return;
+                    }
+                }
             }
-        } catch (Exception e) {
-            throw new RuntimeException(e);
         }
     }
 
@@ -429,6 +440,56 @@ public class BeansUtil {
             setProperty(clone, fieldName, value);
         }
         return clone;
+    }
+
+    /**
+     * 根据字符串获取Class
+     *
+     * @param name class全名
+     * @return Class
+     */
+    public static Class<?> getClass(String name) {
+        try {
+            ClassLoader loader = Thread.currentThread().getContextClassLoader();
+            Class<?> c = classCache.get(name);
+            if (c == null) {
+                c = loader.loadClass(name);
+                classCache.put(name, c);
+            }
+            return c;
+        } catch (ClassNotFoundException e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
+    /**
+     * 获取一个对象实现的接口.
+     *
+     * @param clazz 对象的class
+     * @return 接口的class
+     */
+    public static Class<?>[] getInterfaces(Class<?> clazz) {
+        Class<?>[] interfaces = interfaceCache.get(clazz.getName());
+        if (interfaces == null) {
+
+            List<Class<?>> classList = new ArrayList<Class<?>>();
+
+            Class<?> curClass = clazz;
+            while (curClass != Object.class) {
+                for (Class<?> interf : curClass.getInterfaces()) {
+                    if (!classList.contains(interf)) {
+                        classList.add(interf);
+                    }
+                }
+                curClass = curClass.getSuperclass();
+            }
+
+            interfaces = classList.toArray(new Class<?>[classList.size()]);
+
+            interfaceCache.put(clazz.getName(), interfaces);
+        }
+
+        return interfaces;
     }
 
 }
