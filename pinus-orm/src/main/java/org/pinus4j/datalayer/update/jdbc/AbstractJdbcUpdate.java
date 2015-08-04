@@ -32,8 +32,8 @@ import org.pinus4j.datalayer.SQLBuilder;
 import org.pinus4j.datalayer.update.IDataUpdate;
 import org.pinus4j.entity.DefaultEntityMetaManager;
 import org.pinus4j.entity.IEntityMetaManager;
+import org.pinus4j.entity.meta.DBTablePK;
 import org.pinus4j.entity.meta.EntityPK;
-import org.pinus4j.entity.meta.PKName;
 import org.pinus4j.entity.meta.PKValue;
 import org.pinus4j.utils.BeansUtil;
 import org.pinus4j.utils.JdbcUtil;
@@ -103,19 +103,23 @@ public abstract class AbstractJdbcUpdate implements IDataUpdate {
                 // 获取自增主键
                 clazz = entity.getClass();
                 if (!entityMetaManager.isUnionKey(clazz)) {
-                    ResultSet rs = st.getGeneratedKeys();
-                    PKName pkName = entityMetaManager.getNotUnionPkName(clazz);
-                    Field f = BeansUtil.getField(clazz, pkName.getValue());
-                    Object incrPK = null;
-                    if (rs.next()) {
-                        incrPK = rs.getObject(1);
-                        if (f.getType() == Integer.TYPE || f.getType() == Integer.class) {
-                            BeansUtil.setProperty(entity, pkName.getValue(), ((Long) incrPK).intValue());
-                            pks.add(PKValue.valueOf(((Long) incrPK).intValue()));
-                        } else {
-                            BeansUtil.setProperty(entity, pkName.getValue(), incrPK);
-                            pks.add(PKValue.valueOf(incrPK));
+                    DBTablePK dbTablePK = entityMetaManager.getNotUnionPrimaryKey(clazz);
+                    if (dbTablePK.isAutoIncrement()) {
+                        ResultSet rs = st.getGeneratedKeys();
+                        Field f = BeansUtil.getField(clazz, dbTablePK.getField());
+                        Object incrPK = null;
+                        if (rs.next()) {
+                            incrPK = rs.getObject(1);
+                            if (f.getType() == Integer.TYPE || f.getType() == Integer.class) {
+                                BeansUtil.setProperty(entity, dbTablePK.getField(), ((Long) incrPK).intValue());
+                                pks.add(PKValue.valueOf(((Long) incrPK).intValue()));
+                            } else {
+                                BeansUtil.setProperty(entity, dbTablePK.getField(), incrPK);
+                                pks.add(PKValue.valueOf(incrPK));
+                            }
                         }
+                    } else {
+                        pks.add(PKValue.valueOf(BeansUtil.getProperty(entity, dbTablePK.getField())));
                     }
                 }
             } finally {

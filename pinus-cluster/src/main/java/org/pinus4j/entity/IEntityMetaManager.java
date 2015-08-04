@@ -142,7 +142,7 @@ public interface IEntityMetaManager {
      * 
      * @return
      */
-    public DBTablePK getAutoIncrementField(Class<?> clazz);
+    public DBTablePK getNotUnionPrimaryKey(Class<?> clazz);
 
     /**
      * 清理已经加载的@Table对象，并重新扫描

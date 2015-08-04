@@ -20,6 +20,7 @@ import java.util.List;
 
 import org.pinus4j.api.query.impl.Condition;
 import org.pinus4j.api.query.impl.Order;
+import org.pinus4j.cluster.beans.IShardingKey;
 import org.pinus4j.cluster.enums.EnumDBMasterSlave;
 
 /**
@@ -49,6 +50,14 @@ public interface IQuery<T> {
      * @return
      */
     public Number count();
+
+    /**
+     * set sharding key.
+     * 
+     * @param shardingKey
+     * @return
+     */
+    public IQuery<T> setShardingKey(IShardingKey<?> shardingKey);
 
     /**
      * 设置查询主从库.

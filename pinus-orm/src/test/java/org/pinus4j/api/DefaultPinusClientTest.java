@@ -31,8 +31,10 @@ public class DefaultPinusClientTest extends BaseTest {
     @Test
     public void testSave() throws Exception {
         TestGlobalEntity globalEntity = createGlobalEntity();
+        globalEntity.setId(pinusClient.genClusterUniqueLongId("test"));
         TestGlobalUnionKeyEntity globalUKEntity = createGlobalUnionKeyEntity();
         TestEntity shardingEntity = createEntity();
+        shardingEntity.setId(pinusClient.genClusterUniqueLongId("test"));
 
         pinusClient.save(globalEntity);
         System.out.println(globalEntity.getId());

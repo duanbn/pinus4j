@@ -26,7 +26,6 @@ import org.pinus4j.cluster.enums.EnumDBMasterSlave;
 import org.pinus4j.cluster.enums.EnumSyncAction;
 import org.pinus4j.exceptions.DBOperationException;
 import org.pinus4j.exceptions.LoadConfigException;
-import org.pinus4j.generator.IIdGenerator;
 import org.pinus4j.task.ITask;
 import org.pinus4j.task.TaskFuture;
 import org.pinus4j.transaction.enums.EnumTransactionIsolationLevel;
@@ -137,19 +136,6 @@ public interface PinusClient {
     Lock createLock(String lockName);
 
     /**
-     * 设置ID生成器.
-     * 
-     * @param idGenerator
-     */
-    void setIdGenerator(IIdGenerator idGenerator);
-
-    /**
-     * 获取ID生成器
-     * 
-     * @return ID生成器
-     */
-    IIdGenerator getIdGenerator();
-
     /**
      * 获取当前使用的数据库集群.
      * 

@@ -108,22 +108,6 @@ public class DBTable implements Serializable {
     }
 
     /**
-     * 获取自增主键列，如果没有则返回null
-     * 
-     * @return
-     */
-    public DBTablePK getAutoIncrementField() {
-        if (primaryKeys.size() == 1) {
-            DBTablePK aiPrimaryKey = primaryKeys.get(0);
-            if (aiPrimaryKey.isAutoIncrement()) {
-                return aiPrimaryKey;
-            }
-        }
-
-        return null;
-    }
-
-    /**
      * 校验主键配置
      */
     public void checkPrimaryKey() {

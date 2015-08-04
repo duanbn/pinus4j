@@ -140,6 +140,7 @@ public class BeansUtil {
 
     }
 
+    @Deprecated
     public static void setProperty(Object obj, String propertyName, String value) {
         if (obj == null) {
             throw new IllegalArgumentException("param should not be null");

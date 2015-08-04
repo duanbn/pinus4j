@@ -670,21 +670,8 @@ public class DefaultPinusClient implements PinusClient {
     }
 
     @Override
-    public IIdGenerator getIdGenerator() {
-        return idGenerator;
-    }
-
-    @Override
     public Lock createLock(String lockName) {
         return this.dbCluster.createLock(lockName);
-    }
-
-    @Override
-    public void setIdGenerator(IIdGenerator idGenerator) {
-        if (idGenerator == null) {
-            throw new IllegalArgumentException("参数错误, 参数不能为空");
-        }
-        this.idGenerator = idGenerator;
     }
 
     public EnumSyncAction getSyncAction() {

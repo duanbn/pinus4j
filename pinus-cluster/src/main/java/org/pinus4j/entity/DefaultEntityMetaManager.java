@@ -221,10 +221,15 @@ public class DefaultEntityMetaManager implements IEntityMetaManager {
     }
 
     @Override
-    public DBTablePK getAutoIncrementField(Class<?> clazz) {
+    public DBTablePK getNotUnionPrimaryKey(Class<?> clazz) {
         DBTable dbTable = getTableMeta(clazz);
 
-        return dbTable.getAutoIncrementField();
+        List<DBTablePK> dbTablePK = dbTable.getPrimaryKeys();
+        if (dbTablePK.size() > 1) {
+            throw new IllegalStateException("不支持联合主键, class=" + clazz);
+        }
+
+        return dbTablePK.get(0);
     }
 
     @Override
@@ -430,6 +435,9 @@ public class DefaultEntityMetaManager implements IEntityMetaManager {
 
                 if (f.getType() == java.sql.Timestamp.class) {
                     throw new IllegalArgumentException(clazz + " " + f.getName() + "应该是时间戳类型，必须使用@UpdateTime标注");
+                }
+                if (f.getType() == java.util.Date.class) {
+                    throw new IllegalArgumentException(clazz + " " + f.getName() + "应该是日期类型，必须使用@DateTime标注");
                 }
 
                 String fieldName = f.getName();

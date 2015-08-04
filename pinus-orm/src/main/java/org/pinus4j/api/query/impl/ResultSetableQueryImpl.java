@@ -20,6 +20,7 @@ import java.lang.reflect.Array;
 import java.util.List;
 
 import org.pinus4j.api.query.IQuery;
+import org.pinus4j.cluster.beans.IShardingKey;
 import org.pinus4j.cluster.enums.EnumDBMasterSlave;
 import org.pinus4j.datalayer.query.IGlobalQuery;
 import org.pinus4j.datalayer.query.IShardingQuery;
@@ -43,6 +44,8 @@ public class ResultSetableQueryImpl<T> extends DefaultQueryImpl<T> {
     private IGlobalQuery       globalQuery;
 
     private IShardingQuery     shardingQuery;
+
+    private IShardingKey<?>    shardingKey;
 
     private boolean            useCache          = true;
 
@@ -139,15 +142,26 @@ public class ResultSetableQueryImpl<T> extends DefaultQueryImpl<T> {
 
         List<EntityPK> entityPkList = coverToEntityPK();
         if (entityMetaManager.isShardingEntity(clazz)) {
+
             if (entityPkList != null && !entityPkList.isEmpty())
-                result = this.shardingQuery.findByPkList(entityPkList, this.clazz, this.useCache, this.masterSlave);
+                if (this.shardingKey != null)
+                    result = this.shardingQuery.findByPkList(entityPkList, this.shardingKey, this.clazz, this.useCache,
+                            this.masterSlave);
+                else
+                    result = this.shardingQuery.findByPkList(entityPkList, this.clazz, this.useCache, this.masterSlave);
+            else if (this.shardingKey != null)
+                result = this.shardingQuery.findByQuery(this, this.shardingKey, this.clazz, this.useCache,
+                        this.masterSlave);
             else
                 result = this.shardingQuery.findByQuery(this, this.clazz, this.useCache, this.masterSlave);
+
         } else {
+
             if (entityPkList != null && !entityPkList.isEmpty())
                 result = this.globalQuery.findByPkList(entityPkList, this.clazz, this.useCache, this.masterSlave);
             else
                 result = this.globalQuery.findByQuery(this, this.clazz, this.useCache, this.masterSlave);
+
         }
 
         return result;
@@ -158,12 +172,23 @@ public class ResultSetableQueryImpl<T> extends DefaultQueryImpl<T> {
         Number count = 0;
 
         if (entityMetaManager.isShardingEntity(clazz)) {
-            count = this.shardingQuery.getCountByQuery(this, this.clazz, this.useCache, this.masterSlave);
+            if (this.shardingKey != null)
+                count = this.shardingQuery.getCountByQuery(this, this.shardingKey, this.clazz, this.useCache,
+                        this.masterSlave);
+            else
+                count = this.shardingQuery.getCountByQuery(this, this.clazz, this.useCache, this.masterSlave);
         } else {
             count = this.globalQuery.getCountByQuery(this, this.clazz, this.useCache, this.masterSlave);
         }
 
         return count;
+    }
+
+    @Override
+    public IQuery<T> setShardingKey(IShardingKey<?> shardingKey) {
+        this.shardingKey = shardingKey;
+
+        return this;
     }
 
     @Override
@@ -183,6 +208,7 @@ public class ResultSetableQueryImpl<T> extends DefaultQueryImpl<T> {
     @Override
     public IQuery<T> clone() {
         ResultSetableQueryImpl<T> clone = new ResultSetableQueryImpl<T>(this.clazz);
+
         clone.fields = this.fields;
         clone.condList.addAll(this.condList);
         clone.orderList.addAll(this.orderList);
@@ -191,11 +217,21 @@ public class ResultSetableQueryImpl<T> extends DefaultQueryImpl<T> {
 
         clone.globalQuery = this.globalQuery;
         clone.shardingQuery = this.shardingQuery;
+        clone.shardingKey = this.shardingKey;
         clone.useCache = this.useCache;
         clone.masterSlave = this.masterSlave;
         clone.entityMetaManager = this.entityMetaManager;
 
         return clone;
+    }
+
+    @Override
+    public void clean() {
+        super.clean();
+
+        this.shardingKey = null;
+        this.useCache = true;
+        this.masterSlave = EnumDBMasterSlave.AUTO;
     }
 
     public IGlobalQuery getGlobalQuery() {

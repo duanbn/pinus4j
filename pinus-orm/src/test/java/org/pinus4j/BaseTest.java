@@ -111,7 +111,7 @@ public class BaseTest {
     public static PinusClient getPinusClient() {
         PinusClient pinusClient = new DefaultPinusClient();
         pinusClient.setScanPackage("org.pinus4j");
-        //        pinusClient.setSyncAction(EnumSyncAction.UPDATE);
+        pinusClient.setSyncAction(EnumSyncAction.UPDATE);
         try {
             pinusClient.init();
         } catch (LoadConfigException e) {

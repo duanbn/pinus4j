@@ -21,7 +21,7 @@ package org.pinus4j.cluster.beans;
  * 
  * @author duanbn
  */
-public class ShardingKey<T> implements IShardingKey<T> {
+public class ShardingKey<T> implements IShardingKey<T>, Cloneable {
 
     /**
      * 集群数据库名称.

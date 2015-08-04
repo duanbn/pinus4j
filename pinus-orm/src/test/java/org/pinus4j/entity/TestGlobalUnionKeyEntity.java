@@ -64,9 +64,6 @@ public class TestGlobalUnionKeyEntity implements Serializable {
     @Field
     private String            testString;
 
-    @Field
-    private String            index;
-
     @DateTime
     private Date              testDate;
 
@@ -151,14 +148,6 @@ public class TestGlobalUnionKeyEntity implements Serializable {
 
     public void setTestString(String testString) {
         this.testString = testString;
-    }
-
-    public String getIndex() {
-        return index;
-    }
-
-    public void setIndex(String index) {
-        this.index = index;
     }
 
     public Date getTestDate() {

@@ -30,16 +30,15 @@ public class UpdateTimeTest extends BaseTest {
         TestGlobalEntity globalEntity = createGlobalEntity();
         TestGlobalUnionKeyEntity globalUKEntity = createGlobalUnionKeyEntity();
         globalUKEntity.setId("aaa");
-        globalUKEntity.setIndex("index");
 
         try {
             storageClient.beginTransaction();
 
-            storageClient.save(entity);
+//            storageClient.save(entity);
 
             storageClient.globalSave(globalEntity);
 
-            storageClient.globalSave(globalUKEntity);
+//            storageClient.globalSave(globalUKEntity);
 
             storageClient.commit();
         } catch (Exception e) {

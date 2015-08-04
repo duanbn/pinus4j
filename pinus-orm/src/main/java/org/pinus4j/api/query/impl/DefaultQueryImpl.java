@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.pinus4j.api.query.IQuery;
+import org.pinus4j.cluster.beans.IShardingKey;
 import org.pinus4j.cluster.enums.EnumDBMasterSlave;
 import org.pinus4j.utils.BeansUtil;
 import org.pinus4j.utils.StringUtil;
@@ -67,6 +68,11 @@ public class DefaultQueryImpl<T> implements IQuery<T>, Cloneable {
 
     @Override
     public Number count() {
+        throw new UnsupportedOperationException("not support");
+    }
+
+    @Override
+    public IQuery<T> setShardingKey(IShardingKey<?> shardingKey) {
         throw new UnsupportedOperationException("not support");
     }
 
@@ -226,7 +232,7 @@ public class DefaultQueryImpl<T> implements IQuery<T>, Cloneable {
                 }
             }
         }
-        
+
         // 添加排序条件
         if (!orderList.isEmpty()) {
             SQL.append(" order by ");
@@ -238,7 +244,7 @@ public class DefaultQueryImpl<T> implements IQuery<T>, Cloneable {
             }
             SQL.deleteCharAt(SQL.length() - 1);
         }
-        
+
         // 添加分页
         if (start > -1 && limit > -1) {
             SQL.append(" limit ").append(start).append(",").append(limit);
