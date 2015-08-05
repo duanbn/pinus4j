@@ -44,6 +44,11 @@ public abstract class AbstractMemCachedCache extends AbstractCache {
     }
 
     @Override
+    public Object getCacheClient() {
+        return this.memClient;
+    }
+
+    @Override
     public void init() {
         try {
             List<InetSocketAddress> servers = new ArrayList<InetSocketAddress>();

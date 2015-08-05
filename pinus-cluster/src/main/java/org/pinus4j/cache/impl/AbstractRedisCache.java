@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+import org.pinus4j.utils.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,12 +38,15 @@ public abstract class AbstractRedisCache extends AbstractCache {
 
     public static final Logger LOG = LoggerFactory.getLogger(AbstractRedisCache.class);
 
-    //    protected ShardedJedis     redisClient;
-
     protected ShardedJedisPool jedisPool;
 
     public AbstractRedisCache(String address, int expire) {
         super(address, expire);
+    }
+
+    @Override
+    public Object getCacheClient() {
+        return this.jedisPool;
     }
 
     @Override
@@ -51,12 +55,25 @@ public abstract class AbstractRedisCache extends AbstractCache {
             String[] addresses = address.split(",");
 
             List<JedisShardInfo> shardInfos = Lists.newArrayListWithCapacity(addresses.length);
+            JedisShardInfo shardInfo = null;
             for (String addr : addresses) {
-                String[] pair = addr.split(":");
-                shardInfos.add(new JedisShardInfo(pair[0], Integer.parseInt(pair[1])));
-            }
 
-            //            this.redisClient = new ShardedJedis(shardInfos);
+                int firstSplitPos = addr.indexOf(':');
+                int secondSplitPos = addr.indexOf(':', firstSplitPos + 1);
+
+                String host = addr.substring(0, firstSplitPos);
+                if (secondSplitPos == -1) {
+                    int port = Integer.parseInt(addr.substring(firstSplitPos + 1));
+                    shardInfo = new JedisShardInfo(host, port);
+                } else {
+                    int port = Integer.parseInt(addr.substring(firstSplitPos + 1, secondSplitPos));
+                    String pwd = addr.substring(secondSplitPos + 1);
+                    shardInfo = new JedisShardInfo(host, port);
+                    shardInfo.setPassword(pwd);
+                }
+
+                shardInfos.add(shardInfo);
+            }
 
             Map<String, String> properties = getProperties();
 

@@ -36,11 +36,11 @@ public class DefaultPinusClientTest extends BaseTest {
         TestEntity shardingEntity = createEntity();
         shardingEntity.setId(pinusClient.genClusterUniqueLongId("test"));
 
-        pinusClient.save(globalEntity);
+//        pinusClient.save(globalEntity);
         System.out.println(globalEntity.getId());
         pinusClient.save(globalUKEntity);
         System.out.println(globalUKEntity);
-        pinusClient.save(shardingEntity);
+//        pinusClient.save(shardingEntity);
         System.out.println(shardingEntity.getId());
     }
 

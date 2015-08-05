@@ -311,7 +311,12 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
         IShardingKey<Object> sk = new ShardingKey<Object>(clusterName, shardingKey);
         CheckUtil.checkShardingKey(sk);
 
-        return this.shardingUpdater.save(entity, sk).getValueAsNumber();
+        PKValue pkValue = this.shardingUpdater.save(entity, sk);
+        if (pkValue != null) {
+            return pkValue.getValueAsNumber();
+        }
+
+        return null;
     }
 
     @Override

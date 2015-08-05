@@ -28,6 +28,14 @@ import java.util.Map;
 public interface ICache {
 
     /**
+     * 获取缓存客户端，不同的缓存会有不同的实现<br/>
+     * <b>expert</b>
+     * 
+     * @return
+     */
+    public Object getCacheClient();
+
+    /**
      * 初始化缓存
      */
     public void init();
