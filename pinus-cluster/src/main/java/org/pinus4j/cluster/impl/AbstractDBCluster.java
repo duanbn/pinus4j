@@ -598,7 +598,7 @@ public abstract class AbstractDBCluster implements IDBCluster {
 
             // auto select
             if (EnumDBMasterSlave.AUTO == masterSlave) {
-                slaveDBInfos = region.getSlaveDBInfos().get(r.nextInt(region.getSlaveDBInfos().size() - 1));
+                slaveDBInfos = region.getSlaveDBInfos().get(r.nextInt(region.getSlaveDBInfos().size()));
             } else {
                 slaveDBInfos = region.getSlaveDBInfos().get(masterSlave.getValue());
             }
