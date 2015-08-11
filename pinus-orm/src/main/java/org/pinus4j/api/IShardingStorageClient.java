@@ -325,26 +325,26 @@ public interface IShardingStorageClient {
 	<T> List<T> findByPkList(List<? extends Number> pkList, Class<T> clazz, boolean useCache,
 			EnumDBMasterSlave masterSlave);
 
-	<T> T findOneByQuery(IQuery query, Class<T> clazz);
+	<T> T findOneByQuery(IQuery<T> query, Class<T> clazz);
 
-	<T> T findOneByQuery(IQuery query, Class<T> clazz, boolean useCache);
+	<T> T findOneByQuery(IQuery<T> query, Class<T> clazz, boolean useCache);
 
-	<T> T findOneByQuery(IQuery query, Class<T> clazz, EnumDBMasterSlave masterSlave);
+	<T> T findOneByQuery(IQuery<T> query, Class<T> clazz, EnumDBMasterSlave masterSlave);
 
-	<T> T findOneByQuery(IQuery query, Class<T> clazz, boolean useCache, EnumDBMasterSlave masterSlave);
+	<T> T findOneByQuery(IQuery<T> query, Class<T> clazz, boolean useCache, EnumDBMasterSlave masterSlave);
 
     /**
      * 根据IQuery条件进行查询
      *
      * @param query 查询条件，null表示查询整张表.
      */
-	<T> List<T> findByQuery(IQuery query, Class<T> clazz);
+	<T> List<T> findByQuery(IQuery<T> query, Class<T> clazz);
 
-	<T> List<T> findByQuery(IQuery query, Class<T> clazz, boolean useCache);
+	<T> List<T> findByQuery(IQuery<T> query, Class<T> clazz, boolean useCache);
 
-	<T> List<T> findByQuery(IQuery query, Class<T> clazz, EnumDBMasterSlave masterSlave);
+	<T> List<T> findByQuery(IQuery<T> query, Class<T> clazz, EnumDBMasterSlave masterSlave);
 
-	<T> List<T> findByQuery(IQuery query, Class<T> clazz, boolean useCache, EnumDBMasterSlave masterSlave);
+	<T> List<T> findByQuery(IQuery<T> query, Class<T> clazz, boolean useCache, EnumDBMasterSlave masterSlave);
 
 	List<Map<String, Object>> findBySql(SQL sql, Class<?> clazz);
 
@@ -369,22 +369,22 @@ public interface IShardingStorageClient {
 	<T> List<T> findByPkList(List<? extends Number> pks, IShardingKey<?> shardingKey, Class<T> clazz, boolean useCache,
 			EnumDBMasterSlave masterSlave);
 
-	<T> T findOneByQuery(IQuery query, IShardingKey<?> shardingKey, Class<T> clazz);
+	<T> T findOneByQuery(IQuery<T> query, IShardingKey<?> shardingKey, Class<T> clazz);
 
-	<T> T findOneByQuery(IQuery query, IShardingKey<?> shardingKey, Class<T> clazz, boolean useCache);
+	<T> T findOneByQuery(IQuery<T> query, IShardingKey<?> shardingKey, Class<T> clazz, boolean useCache);
 
-	<T> T findOneByQuery(IQuery query, IShardingKey<?> shardingKey, Class<T> clazz, EnumDBMasterSlave masterSlave);
+	<T> T findOneByQuery(IQuery<T> query, IShardingKey<?> shardingKey, Class<T> clazz, EnumDBMasterSlave masterSlave);
 
-	<T> T findOneByQuery(IQuery query, IShardingKey<?> shardingKey, Class<T> clazz, boolean useCache,
+	<T> T findOneByQuery(IQuery<T> query, IShardingKey<?> shardingKey, Class<T> clazz, boolean useCache,
 			EnumDBMasterSlave masterSlave);
 
-	<T> List<T> findByQuery(IQuery query, IShardingKey<?> shardingKey, Class<T> clazz);
+	<T> List<T> findByQuery(IQuery<T> query, IShardingKey<?> shardingKey, Class<T> clazz);
 
-	<T> List<T> findByQuery(IQuery query, IShardingKey<?> shardingKey, Class<T> clazz, boolean useCache);
+	<T> List<T> findByQuery(IQuery<T> query, IShardingKey<?> shardingKey, Class<T> clazz, boolean useCache);
 
-	<T> List<T> findByQuery(IQuery query, IShardingKey<?> shardingKey, Class<T> clazz, EnumDBMasterSlave masterSlave);
+	<T> List<T> findByQuery(IQuery<T> query, IShardingKey<?> shardingKey, Class<T> clazz, EnumDBMasterSlave masterSlave);
 
-	<T> List<T> findByQuery(IQuery query, IShardingKey<?> shardingKey, Class<T> clazz, boolean useCache,
+	<T> List<T> findByQuery(IQuery<T> query, IShardingKey<?> shardingKey, Class<T> clazz, boolean useCache,
 			EnumDBMasterSlave masterSlave);
 
 	List<Map<String, Object>> findBySql(SQL sql, IShardingKey<?> shardingKey);

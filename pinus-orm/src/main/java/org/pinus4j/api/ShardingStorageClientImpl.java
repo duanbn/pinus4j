@@ -553,22 +553,22 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
     }
 
     @Override
-    public <T> T findOneByQuery(IQuery query, Class<T> clazz) {
+    public <T> T findOneByQuery(IQuery<T> query, Class<T> clazz) {
         return findOneByQuery(query, clazz, true);
     }
 
     @Override
-    public <T> T findOneByQuery(IQuery query, Class<T> clazz, boolean useCache) {
+    public <T> T findOneByQuery(IQuery<T> query, Class<T> clazz, boolean useCache) {
         return findOneByQuery(query, clazz, useCache, EnumDBMasterSlave.MASTER);
     }
 
     @Override
-    public <T> T findOneByQuery(IQuery query, Class<T> clazz, EnumDBMasterSlave masterSlave) {
+    public <T> T findOneByQuery(IQuery<T> query, Class<T> clazz, EnumDBMasterSlave masterSlave) {
         return findOneByQuery(query, clazz, true, masterSlave);
     }
 
     @Override
-    public <T> T findOneByQuery(IQuery query, Class<T> clazz, boolean useCache, EnumDBMasterSlave masterSlave) {
+    public <T> T findOneByQuery(IQuery<T> query, Class<T> clazz, boolean useCache, EnumDBMasterSlave masterSlave) {
         CheckUtil.checkClass(clazz);
 
         if (entityMetaManager.isShardingEntity(clazz)) {
@@ -579,22 +579,22 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
     }
 
     @Override
-    public <T> List<T> findByQuery(IQuery query, Class<T> clazz) {
+    public <T> List<T> findByQuery(IQuery<T> query, Class<T> clazz) {
         return findByQuery(query, clazz, true);
     }
 
     @Override
-    public <T> List<T> findByQuery(IQuery query, Class<T> clazz, boolean useCache) {
+    public <T> List<T> findByQuery(IQuery<T> query, Class<T> clazz, boolean useCache) {
         return findByQuery(query, clazz, useCache, EnumDBMasterSlave.MASTER);
     }
 
     @Override
-    public <T> List<T> findByQuery(IQuery query, Class<T> clazz, EnumDBMasterSlave masterSlave) {
+    public <T> List<T> findByQuery(IQuery<T> query, Class<T> clazz, EnumDBMasterSlave masterSlave) {
         return findByQuery(query, clazz, true, masterSlave);
     }
 
     @Override
-    public <T> List<T> findByQuery(IQuery query, Class<T> clazz, boolean useCache, EnumDBMasterSlave masterSlave) {
+    public <T> List<T> findByQuery(IQuery<T> query, Class<T> clazz, boolean useCache, EnumDBMasterSlave masterSlave) {
         CheckUtil.checkClass(clazz);
 
         if (entityMetaManager.isShardingEntity(clazz)) {
@@ -685,22 +685,22 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
     }
 
     @Override
-    public <T> T findOneByQuery(IQuery query, IShardingKey<?> shardingKey, Class<T> clazz) {
+    public <T> T findOneByQuery(IQuery<T> query, IShardingKey<?> shardingKey, Class<T> clazz) {
         return findOneByQuery(query, shardingKey, clazz, true);
     }
 
     @Override
-    public <T> T findOneByQuery(IQuery query, IShardingKey<?> shardingKey, Class<T> clazz, boolean useCache) {
+    public <T> T findOneByQuery(IQuery<T> query, IShardingKey<?> shardingKey, Class<T> clazz, boolean useCache) {
         return findOneByQuery(query, shardingKey, clazz, useCache, EnumDBMasterSlave.MASTER);
     }
 
     @Override
-    public <T> T findOneByQuery(IQuery query, IShardingKey<?> shardingKey, Class<T> clazz, EnumDBMasterSlave masterSlave) {
+    public <T> T findOneByQuery(IQuery<T> query, IShardingKey<?> shardingKey, Class<T> clazz, EnumDBMasterSlave masterSlave) {
         return findOneByQuery(query, shardingKey, clazz, true, masterSlave);
     }
 
     @Override
-    public <T> T findOneByQuery(IQuery query, IShardingKey<?> shardingKey, Class<T> clazz, boolean useCache,
+    public <T> T findOneByQuery(IQuery<T> query, IShardingKey<?> shardingKey, Class<T> clazz, boolean useCache,
                                 EnumDBMasterSlave masterSlave) {
         CheckUtil.checkShardingKey(shardingKey);
         CheckUtil.checkClass(clazz);
@@ -709,23 +709,23 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
     }
 
     @Override
-    public <T> List<T> findByQuery(IQuery query, IShardingKey<?> shardingKey, Class<T> clazz) {
+    public <T> List<T> findByQuery(IQuery<T> query, IShardingKey<?> shardingKey, Class<T> clazz) {
         return findByQuery(query, shardingKey, clazz, true);
     }
 
     @Override
-    public <T> List<T> findByQuery(IQuery query, IShardingKey<?> shardingKey, Class<T> clazz, boolean useCache) {
+    public <T> List<T> findByQuery(IQuery<T> query, IShardingKey<?> shardingKey, Class<T> clazz, boolean useCache) {
         return findByQuery(query, shardingKey, clazz, useCache, EnumDBMasterSlave.MASTER);
     }
 
     @Override
-    public <T> List<T> findByQuery(IQuery query, IShardingKey<?> shardingKey, Class<T> clazz,
+    public <T> List<T> findByQuery(IQuery<T> query, IShardingKey<?> shardingKey, Class<T> clazz,
                                    EnumDBMasterSlave masterSlave) {
         return findByQuery(query, shardingKey, clazz, true, masterSlave);
     }
 
     @Override
-    public <T> List<T> findByQuery(IQuery query, IShardingKey<?> shardingKey, Class<T> clazz, boolean useCache,
+    public <T> List<T> findByQuery(IQuery<T> query, IShardingKey<?> shardingKey, Class<T> clazz, boolean useCache,
                                    EnumDBMasterSlave masterSlave) {
         CheckUtil.checkQuery(query);
         CheckUtil.checkShardingKey(shardingKey);

@@ -37,9 +37,9 @@ public interface IShardingQuery extends IDataQuery {
 
     Number getCount(IShardingKey<?> shardingKey, Class<?> clazz, boolean useCache, EnumDBMasterSlave masterSlave);
 
-    Number getCountByQuery(IQuery query, Class<?> clazz, boolean useCache, EnumDBMasterSlave masterSlave);
+    <T> Number getCountByQuery(IQuery<T> query, Class<T> clazz, boolean useCache, EnumDBMasterSlave masterSlave);
 
-    Number getCountByQuery(IQuery query, IShardingKey<?> shardingKey, Class<?> clazz, boolean useCache,
+    <T> Number getCountByQuery(IQuery<T> query, IShardingKey<?> shardingKey, Class<T> clazz, boolean useCache,
                            EnumDBMasterSlave masterSlave);
 
     <T> T findByPk(EntityPK pk, IShardingKey<?> shardingKey, Class<T> clazz, boolean useCache,
@@ -50,14 +50,14 @@ public interface IShardingQuery extends IDataQuery {
     <T> List<T> findByPkList(List<EntityPK> pkList, IShardingKey<?> shardingKey, Class<T> clazz, boolean useCache,
                              EnumDBMasterSlave masterSlave);
 
-    <T> T findOneByQuery(IQuery query, Class<T> clazz, boolean useCache, EnumDBMasterSlave masterSlave);
+    <T> T findOneByQuery(IQuery<T> query, Class<T> clazz, boolean useCache, EnumDBMasterSlave masterSlave);
 
-    <T> T findOneByQuery(IQuery query, IShardingKey<?> shardingKey, Class<T> clazz, boolean useCache,
+    <T> T findOneByQuery(IQuery<T> query, IShardingKey<?> shardingKey, Class<T> clazz, boolean useCache,
                          EnumDBMasterSlave masterSlave);
 
-    <T> List<T> findByQuery(IQuery query, Class<T> clazz, boolean useCache, EnumDBMasterSlave masterSlave);
+    <T> List<T> findByQuery(IQuery<T> query, Class<T> clazz, boolean useCache, EnumDBMasterSlave masterSlave);
 
-    <T> List<T> findByQuery(IQuery query, IShardingKey<?> shardingKey, Class<T> clazz, boolean useCache,
+    <T> List<T> findByQuery(IQuery<T> query, IShardingKey<?> shardingKey, Class<T> clazz, boolean useCache,
                             EnumDBMasterSlave masterSlave);
 
     List<Map<String, Object>> findBySql(SQL sql, EnumDBMasterSlave masterSlave);
