@@ -16,6 +16,7 @@
 
 package org.pinus4j.api.query.impl;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -31,6 +32,8 @@ import org.pinus4j.utils.StringUtil;
  * @author duanbn
  */
 public class DefaultQueryImpl<T> implements IQuery<T>, Cloneable {
+    
+    protected Class<T>           clazz;
 
     /**
      * 保存取值的字段.
@@ -141,7 +144,7 @@ public class DefaultQueryImpl<T> implements IQuery<T>, Cloneable {
 
     @Override
     public IQuery<T> orderBy(String field, Order order) {
-        return orderBy(field, order, null);
+        return orderBy(field, order, clazz);
     }
 
     @Override
@@ -179,7 +182,7 @@ public class DefaultQueryImpl<T> implements IQuery<T>, Cloneable {
 
         return this;
     }
-
+    
     @Override
     public void clean() {
         this.fields = null;
@@ -188,6 +191,18 @@ public class DefaultQueryImpl<T> implements IQuery<T>, Cloneable {
         this.start = -1;
         this.limit = -1;
 
+    }
+
+    public String[] getFields() {
+        return this.fields;
+    }
+
+    public List<Condition> getCondList() {
+        return this.condList;
+    }
+
+    public List<OrderBy> getOrderList() {
+        return this.orderList;
     }
 
     public int getStart() {
@@ -210,10 +225,6 @@ public class DefaultQueryImpl<T> implements IQuery<T>, Cloneable {
         clone.start = this.start;
         clone.limit = this.limit;
         return clone;
-    }
-
-    public String[] getFields() {
-        return this.fields;
     }
 
     public String getWhereSql() {
@@ -289,15 +300,20 @@ public class DefaultQueryImpl<T> implements IQuery<T>, Cloneable {
     /**
      * 排序条件.
      */
-    private class OrderBy {
-        private String field;
-        private Order  order;
+    public static class OrderBy {
+        private String   field;
+        private Class<?> fieldType;
+        private Order    order;
 
         public OrderBy(String field, Order order, Class<?> clazz) {
+            Field f = BeansUtil.getField(clazz, field);
+
             if (clazz != null)
-                this.field = BeansUtil.getFieldName(BeansUtil.getField(clazz, field));
+                this.field = BeansUtil.getFieldName(f);
             else
                 this.field = field;
+
+            this.fieldType = f.getType();
             this.order = order;
         }
 
@@ -305,8 +321,17 @@ public class DefaultQueryImpl<T> implements IQuery<T>, Cloneable {
             return field;
         }
 
+        public Class<?> getFieldType() {
+            return this.fieldType;
+        }
+
         public Order getOrder() {
             return order;
+        }
+
+        @Override
+        public String toString() {
+            return "OrderBy [field=" + field + ", fieldType=" + fieldType + ", order=" + order + "]";
         }
 
     }

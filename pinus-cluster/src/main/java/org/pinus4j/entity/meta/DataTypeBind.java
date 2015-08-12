@@ -16,6 +16,8 @@
 
 package org.pinus4j.entity.meta;
 
+import java.sql.Timestamp;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -137,6 +139,10 @@ public enum DataTypeBind {
             return DOUBLE;
         } else if (fieldType == String.class) {
             return STRING;
+        } else if (fieldType == Date.class) {
+            return DATETIME;
+        } else if (fieldType == Timestamp.class) {
+            return UPDATETIME;
         }
 
         throw new IllegalStateException("不支持的的类型" + fieldType);

@@ -16,7 +16,11 @@
 
 package org.pinus4j.datalayer.query.jdbc;
 
+import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -26,6 +30,8 @@ import javax.transaction.xa.XAResource;
 import org.pinus4j.api.SQL;
 import org.pinus4j.api.query.IQuery;
 import org.pinus4j.api.query.impl.DefaultQueryImpl;
+import org.pinus4j.api.query.impl.Order;
+import org.pinus4j.api.query.impl.DefaultQueryImpl.OrderBy;
 import org.pinus4j.cluster.beans.IShardingKey;
 import org.pinus4j.cluster.enums.EnumDBMasterSlave;
 import org.pinus4j.cluster.resources.IDBResource;
@@ -465,28 +471,108 @@ public class ShardingJdbcQueryImpl extends AbstractJdbcQuery implements IShardin
 
             int start = internalQuery.getStart();
             int limit = internalQuery.getLimit();
+            int sum = start + limit;
+            if (start >= 0 && limit > 0)
+                internalQuery.limit(0, sum);
 
-            // clear pagination param
-            internalQuery.limit(-1, -1);
+            final List<OrderBy> orderList = internalQuery.getOrderList();
+
+            boolean isOrderQuery = false;
+            if (orderList != null && !orderList.isEmpty()) {
+                isOrderQuery = true;
+            }
 
             List<T> mergeResult = new ArrayList<T>();
             for (IDBResource dbResource : dbResources) {
-                mergeResult.addAll(findByQuery(internalQuery, dbResource, clazz, useCache, masterSlave));
+                if (isOrderQuery) {
+                    mergeResult.addAll(findByQuery(internalQuery, dbResource, clazz, useCache, masterSlave));
+                } else {
+                    mergeResult.addAll(findByQuery(internalQuery, dbResource, clazz, useCache, masterSlave));
+                    if (mergeResult.size() >= sum) {
+                        break;
+                    }
+                }
             }
 
             // query from master again
             if (mergeResult.isEmpty() && isFromSlave) {
                 dbResources = this.dbCluster.getAllMasterShardingDBResource(clazz);
                 for (IDBResource dbResource : dbResources) {
-                    mergeResult.addAll(findByQuery(internalQuery, dbResource, clazz, useCache, masterSlave));
+                    if (isOrderQuery) {
+                        mergeResult.addAll(findByQuery(internalQuery, dbResource, clazz, useCache, masterSlave));
+                    } else {
+                        mergeResult.addAll(findByQuery(internalQuery, dbResource, clazz, useCache, masterSlave));
+                        if (mergeResult.size() >= sum) {
+                            break;
+                        }
+                    }
                 }
             }
 
+            // if order by exists, sort by order.
+            if (orderList != null && !orderList.isEmpty()) {
+                Collections.sort(mergeResult, new Comparator<T>() {
+
+                    @Override
+                    public int compare(T o1, T o2) {
+                        Object v1 = null, v2 = null;
+                        Class<?> fieldType = null;
+                        int compareVal = 0;
+
+                        for (OrderBy order : orderList) {
+                            v1 = BeansUtil.getProperty(o1, order.getField());
+                            v2 = BeansUtil.getProperty(o2, order.getField());
+                            fieldType = order.getFieldType();
+
+                            if (fieldType == Boolean.class || fieldType == Boolean.TYPE) {
+                                compareVal = ((Boolean) v1).compareTo((Boolean) v2);
+                            } else if (fieldType == Character.class || fieldType == Character.TYPE) {
+                                compareVal = ((Character) v1).compareTo((Character) v2);
+                            } else if (fieldType == Byte.class || fieldType == Byte.TYPE) {
+                                compareVal = ((Byte) v1).compareTo((Byte) v2);
+                            } else if (fieldType == Short.class || fieldType == Short.TYPE) {
+                                compareVal = ((Short) v1).compareTo((Short) v2);
+                            } else if (fieldType == Integer.class || fieldType == Integer.TYPE) {
+                                compareVal = ((Integer) v1).compareTo((Integer) v2);
+                            } else if (fieldType == Long.class || fieldType == Long.TYPE) {
+                                compareVal = ((Long) v1).compareTo((Long) v2);
+                            } else if (fieldType == Float.class || fieldType == Float.TYPE) {
+                                compareVal = ((Float) v1).compareTo((Float) v2);
+                            } else if (fieldType == Double.class || fieldType == Double.TYPE) {
+                                compareVal = ((Double) v1).compareTo((Double) v2);
+                            } else if (fieldType == String.class) {
+                                compareVal = ((String) v1).compareTo((String) v2);
+                            } else if (fieldType == Date.class) {
+                                compareVal = ((Date) v1).compareTo((Date) v2);
+                            } else if (fieldType == Timestamp.class) {
+                                compareVal = ((Timestamp) v1).compareTo((Timestamp) v2);
+                            } else {
+                                throw new RuntimeException("无法排序的类型" + order);
+                            }
+
+                            if (order.getOrder() == Order.DESC) {
+                                compareVal *= -1;
+                            }
+
+                            if (compareVal != 0) {
+                                break;
+                            }
+                        }
+
+                        return compareVal;
+                    }
+
+                });
+            }
+
+            // get result
             List<T> result = null;
             if (start > -1 && limit > -1) {
-                result = mergeResult.subList(start, start + limit);
+                int fromIndex = start;
+                int endIndex = sum > mergeResult.size() ? mergeResult.size() : sum;
+                result = mergeResult.subList(fromIndex, endIndex);
             } else if (limit > -1) {
-                result = mergeResult.subList(0, limit);
+                result = mergeResult.subList(0, limit - 1);
             } else {
                 result = mergeResult;
             }

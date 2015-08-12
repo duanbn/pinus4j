@@ -46,7 +46,7 @@ public class MemCachedSecondCacheImpl extends AbstractMemCachedCache implements 
 
     @Override
     public void putGlobal(String whereSql, String clusterName, String tableName, List data) {
-        if (StringUtil.isBlank(whereSql)) {
+        if (StringUtil.isBlank(whereSql) || data == null || data.isEmpty()) {
             return;
         }
 
@@ -110,7 +110,7 @@ public class MemCachedSecondCacheImpl extends AbstractMemCachedCache implements 
 
     @Override
     public void put(String whereSql, ShardingDBResource db, List data) {
-        if (StringUtil.isBlank(whereSql)) {
+        if (StringUtil.isBlank(whereSql) || data == null || data.isEmpty()) {
             return;
         }
 

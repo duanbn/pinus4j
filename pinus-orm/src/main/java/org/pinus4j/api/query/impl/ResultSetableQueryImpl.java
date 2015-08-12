@@ -39,8 +39,6 @@ import com.google.common.collect.Lists;
  */
 public class ResultSetableQueryImpl<T> extends DefaultQueryImpl<T> {
 
-    private Class<T>           clazz;
-
     private IGlobalQuery       globalQuery;
 
     private IShardingQuery     shardingQuery;
@@ -122,7 +120,7 @@ public class ResultSetableQueryImpl<T> extends DefaultQueryImpl<T> {
     }
 
     public ResultSetableQueryImpl(Class<T> clazz) {
-        this.clazz = clazz;
+        super.clazz = clazz;
     }
 
     @Override

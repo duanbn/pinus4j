@@ -16,7 +16,7 @@ public class TestEntity extends FashionEntity implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    @PrimaryKey(comment = "主键")
+    @PrimaryKey(comment = "主键", isAutoIncrement = true)
     private Long              id;
 
     @Field(comment = "测试byte类型的字段")
@@ -51,7 +51,7 @@ public class TestEntity extends FashionEntity implements Serializable {
 
     @Field
     private float             testFloat;
-    @Field
+    @Field(isCanNull = true)
     private Float             oTestFloat;
 
     @Field

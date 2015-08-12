@@ -340,6 +340,10 @@ public class RedisPrimaryCacheImpl extends AbstractRedisCache implements IPrimar
     }
 
     private void _put(String key, Object data) {
+        if (data == null) {
+            return;
+        }
+        
         ShardedJedis redisClient = null;
         try {
             redisClient = jedisPool.getResource();
@@ -356,6 +360,10 @@ public class RedisPrimaryCacheImpl extends AbstractRedisCache implements IPrimar
     }
 
     private void _put(List<String> keys, List<? extends Object> data) {
+        if (data == null || data.isEmpty()) {
+            return;
+        }
+        
         try {
             for (int i = 0; i < keys.size(); i++) {
                 _put(keys.get(i), data.get(i));

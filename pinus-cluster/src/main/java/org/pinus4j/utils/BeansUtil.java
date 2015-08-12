@@ -65,7 +65,9 @@ public class BeansUtil {
      */
     public static Object getProperty(Object obj, String propertyName) {
         Field f = getField(obj.getClass(), propertyName);
+        
         f.setAccessible(true);
+        
         try {
             return f.get(obj);
         } catch (Exception e) {
@@ -332,12 +334,18 @@ public class BeansUtil {
     }
 
     /**
+     * 支持通过别名获取Field
+     * 
      * @param clazz
      * @param field
      * @return
      */
     public static Field getField(Class<?> clazz, String fieldName) {
+
+        // 优先根据别名来获取
         Field field = _aliasFieldCache.get(clazz.getName() + fieldName);
+
+        // 根据别名获取不到时
         if (field == null) {
             try {
                 field = clazz.getDeclaredField(fieldName);
@@ -346,6 +354,7 @@ public class BeansUtil {
             }
         }
 
+        // 查找父类
         if (field == null) {
             Class<?> superClass = clazz.getSuperclass();
             if (superClass != null) {

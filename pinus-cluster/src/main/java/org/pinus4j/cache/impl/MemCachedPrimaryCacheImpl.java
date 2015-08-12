@@ -321,6 +321,10 @@ public class MemCachedPrimaryCacheImpl extends AbstractMemCachedCache implements
     }
 
     private void _put(String key, Object data) {
+        if (data == null) {
+            return;
+        }
+        
         try {
             OperationFuture<Boolean> rst = memClient.set(key, expire, data);
             if (!rst.get()) {
@@ -336,6 +340,10 @@ public class MemCachedPrimaryCacheImpl extends AbstractMemCachedCache implements
     }
 
     private void _put(List<String> keys, List<? extends Object> data) {
+        if (data == null || data.isEmpty()) {
+            return;
+        }
+        
         try {
             for (int i = 0; i < keys.size(); i++) {
                 memClient.set(keys.get(i), expire, data.get(i));

@@ -19,6 +19,7 @@ package org.pinus4j.cache.impl;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 import org.pinus4j.cache.ISecondCache;
 import org.pinus4j.cluster.resources.ShardingDBResource;
@@ -37,7 +38,7 @@ public class RedisSecondCacheImpl extends AbstractRedisCache implements ISecondC
 
     @Override
     public void putGlobal(String whereSql, String clusterName, String tableName, List data) {
-        if (StringUtil.isBlank(whereSql)) {
+        if (StringUtil.isBlank(whereSql) || data == null || data.isEmpty()) {
             return;
         }
 
@@ -93,15 +94,16 @@ public class RedisSecondCacheImpl extends AbstractRedisCache implements ISecondC
     @Override
     public void removeGlobal(String clusterName, String tableName) {
         ShardedJedis redisClient = null;
+        String cacheKey = _buildGlobalCacheKey(null, clusterName, tableName);
         try {
             redisClient = jedisPool.getResource();
-            List<String> keys = new ArrayList<String>();
             Collection<Jedis> shards = redisClient.getAllShards();
-            String cacheKey = _buildGlobalCacheKey(null, clusterName, tableName);
+            Set<String> keys = null;
             for (Jedis shard : shards) {
-                keys.addAll(shard.keys(cacheKey));
+                keys = shard.keys(cacheKey);
 
-                shard.del(keys.toArray(new String[0]));
+                if (keys != null && !keys.isEmpty())
+                    shard.del(keys.toArray(new String[keys.size()]));
             }
 
             if (LOG.isDebugEnabled()) {
@@ -117,7 +119,7 @@ public class RedisSecondCacheImpl extends AbstractRedisCache implements ISecondC
 
     @Override
     public void put(String whereSql, ShardingDBResource db, List data) {
-        if (StringUtil.isBlank(whereSql)) {
+        if (StringUtil.isBlank(whereSql) || data == null || data.isEmpty()) {
             return;
         }
 
@@ -169,22 +171,24 @@ public class RedisSecondCacheImpl extends AbstractRedisCache implements ISecondC
     @Override
     public void remove(ShardingDBResource db) {
         ShardedJedis redisClient = null;
+        String cacheKey = _buildShardingCacheKey(null, db);
         try {
             redisClient = jedisPool.getResource();
-            List<String> keys = new ArrayList<String>();
             Collection<Jedis> shards = redisClient.getAllShards();
-            String cacheKey = _buildShardingCacheKey(null, db);
-            for (Jedis shard : shards) {
-                keys.addAll(shard.keys(cacheKey));
 
-                shard.del(keys.toArray(new String[0]));
+            Set<String> keys = null;
+            for (Jedis shard : shards) {
+                keys = shard.keys(cacheKey);
+
+                if (keys != null && !keys.isEmpty())
+                    shard.del(keys.toArray(new String[keys.size()]));
             }
 
             if (LOG.isDebugEnabled()) {
                 LOG.debug("[SECOND CACHE] - " + cacheKey + " clean");
             }
         } catch (Exception e) {
-            LOG.warn("remove second cache failure");
+            LOG.warn("remove second cache failure " + cacheKey);
         } finally {
             if (redisClient != null)
                 redisClient.close();
