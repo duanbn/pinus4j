@@ -28,18 +28,6 @@ public class ReflectUtilTest extends BaseTest {
     }
 
     @Test
-    public void testDescribe() throws Exception {
-        TestEntity entity = createEntity();
-        entity.setTestString(null);
-        entity.setTestInt(0);
-        Map<String, Object> map = BeansUtil.describe(entity);
-        map.remove("testByte");
-        Assert.assertNull(map.get("testByte"));
-        Assert.assertTrue(map.containsKey("testString"));
-        Assert.assertTrue(map.containsKey("testInt"));
-    }
-
-    @Test
     public void testCloneWithGivenFieldObjectString() throws Exception {
         TestEntity entity = createEntity();
         TestEntity clone = (TestEntity) BeansUtil.cloneWithGivenField(entity, "testInt", "testDouble");

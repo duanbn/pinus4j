@@ -60,7 +60,7 @@ public class DefaultPinusClientTest extends BaseTest {
     @Test
     public void testQuery() throws Exception {
         IQuery<TestEntity> query = pinusClient.createQuery(TestEntity.class);
-        query.limit(4, 2);
+        query.orderBy("testInt", Order.DESC);
         List<TestEntity> testEntityList = query.list();
 
         for (TestEntity testEntity : testEntityList) {

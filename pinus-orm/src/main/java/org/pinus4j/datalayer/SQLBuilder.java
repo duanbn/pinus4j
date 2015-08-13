@@ -217,6 +217,170 @@ public class SQLBuilder {
     }
 
     /**
+     * 拼装select sql. SELECT field, field FROM tableName WHERE pk in (?, ?, ?)
+     * 
+     * @param clazz 数据对象
+     * @param tableIndex 表下标
+     * @param pks 主键
+     * @return sql语句
+     * @throws SQLException
+     */
+    public static String buildSelectByPks(EntityPK[] pks, Class<?> clazz, int tableIndex) throws SQLException {
+        Field[] fields = BeansUtil.getFields(clazz);
+        String tableName = entityMetaManager.getTableName(clazz, tableIndex);
+
+        StringBuilder whereSql = new StringBuilder();
+        for (EntityPK pk : pks) {
+            whereSql.append("(");
+            for (int i = 0; i < pk.getPkNames().length; i++) {
+                whereSql.append('`').append(pk.getPkNames()[i].getValue()).append('`');
+                whereSql.append("=").append(formatValue(pk.getPkValues()[i].getValue()));
+                whereSql.append(" and ");
+            }
+            whereSql.delete(whereSql.length() - 5, whereSql.length());
+            whereSql.append(")");
+            whereSql.append(" or ");
+        }
+        whereSql.delete(whereSql.length() - 4, whereSql.length());
+
+        StringBuilder SQL = new StringBuilder("SELECT ");
+        for (Field field : fields) {
+            SQL.append('`').append(BeansUtil.getFieldName(field)).append('`').append(",");
+        }
+        SQL.deleteCharAt(SQL.length() - 1);
+        SQL.append(" FROM ").append('`').append(tableName).append('`');
+        SQL.append(" WHERE ").append(whereSql.toString());
+
+        debugSQL(SQL.toString());
+
+        return SQL.toString();
+    }
+
+    /**
+     * 拼装sql. DELETE FROM tableName WHERE pk in (...)
+     * 
+     * @return DELETE语句
+     * @throws SQLException
+     */
+    public static String buildDeleteByPks(Class<?> clazz, int tableIndex, List<EntityPK> pks) throws SQLException {
+        String tableName = entityMetaManager.getTableName(clazz, tableIndex);
+
+        StringBuilder whereSql = new StringBuilder();
+        for (EntityPK pk : pks) {
+            whereSql.append("(");
+            for (int i = 0; i < pk.getPkNames().length; i++) {
+                whereSql.append('`').append(pk.getPkNames()[i].getValue()).append('`');
+                whereSql.append("=").append(formatValue(pk.getPkValues()[i].getValue()));
+                whereSql.append(" and ");
+            }
+            whereSql.delete(whereSql.length() - 5, whereSql.length());
+            whereSql.append(")");
+            whereSql.append(" or ");
+        }
+        whereSql.delete(whereSql.length() - 4, whereSql.length());
+
+        StringBuilder SQL = new StringBuilder("DELETE FROM ").append('`').append(tableName).append('`');
+        SQL.append(" WHERE ").append(whereSql.toString());
+
+        debugSQL(SQL.toString());
+
+        return SQL.toString();
+    }
+
+    /**
+     * 获取update PreparedStatement.
+     * 
+     * @param conn 数据库连接
+     * @param entities 数据对象
+     * @param tableIndex 分表下标
+     * @return PreparedStatement
+     * @throws SQLException
+     */
+    public static String getUpdate(Object entity, int tableIndex) throws SQLException {
+        // 获取表名.
+        String tableName = entityMetaManager.getTableName(entity, tableIndex);
+
+        // 批量添加
+        Map<String, Object> entityProperty = null;
+        try {
+            entityProperty = BeansUtil.describe(entity, true);
+        } catch (Exception e) {
+            throw new SQLException("解析实体对象失败", e);
+        }
+        // 拼装主键条件
+        EntityPK entityPk = entityMetaManager.getEntityPK(entity);
+        StringBuilder pkWhereSql = new StringBuilder();
+        for (int i = 0; i < entityPk.getPkNames().length; i++) {
+            pkWhereSql.append('`').append(entityPk.getPkNames()[i].getValue()).append('`');
+            pkWhereSql.append("=");
+            pkWhereSql.append(formatValue(entityPk.getPkValues()[i].getValue()));
+            pkWhereSql.append(" and ");
+        }
+        pkWhereSql.delete(pkWhereSql.length() - 5, pkWhereSql.length());
+
+        // 生成update语句.
+        Set<Map.Entry<String, Object>> propertyEntrySet = entityProperty.entrySet();
+        StringBuilder SQL = new StringBuilder("UPDATE `" + tableName + "` SET ");
+        Object value = null;
+        for (Map.Entry<String, Object> propertyEntry : propertyEntrySet) {
+            value = propertyEntry.getValue();
+            SQL.append('`').append(propertyEntry.getKey()).append('`').append("=");
+            SQL.append(formatValue(value));
+            SQL.append(",");
+        }
+        SQL.deleteCharAt(SQL.length() - 1);
+        SQL.append(" WHERE ").append(pkWhereSql.toString());
+
+        debugSQL(SQL.toString());
+
+        return SQL.toString();
+    }
+
+    /**
+     * 根据指定对象创建一个SQL语句.
+     * 
+     * @param conn 数据库连接引用
+     * @param entity 数据对象
+     * @param tableIndex 分表下标
+     * @return SQL语句
+     * @throws SQLException 操作失败
+     */
+    public static String getInsert(Object entity, int tableIndex) throws SQLException {
+        // 获取表名.
+        String tableName = entityMetaManager.getTableName(entity, tableIndex);
+
+        // 批量添加
+        Map<String, Object> entityProperty = null;
+        try {
+            // 获取需要被插入数据库的字段.
+            entityProperty = BeansUtil.describe(entity, true);
+        } catch (Exception e) {
+            throw new SQLException("解析实体对象失败", e);
+        }
+
+        // 生成insert语句.
+        Set<Map.Entry<String, Object>> propertyEntrySet = entityProperty.entrySet();
+
+        StringBuilder SQL = new StringBuilder("INSERT INTO `" + tableName + "` (");
+        StringBuilder var = new StringBuilder();
+        Object value = null;
+        for (Map.Entry<String, Object> propertyEntry : propertyEntrySet) {
+            value = propertyEntry.getValue();
+            SQL.append('`').append(propertyEntry.getKey()).append('`').append(",");
+            var.append(formatValue(value));
+            var.append(",");
+        }
+        SQL.deleteCharAt(SQL.length() - 1);
+        SQL.append(") VALUES (");
+        SQL.append(var.deleteCharAt(var.length() - 1).toString());
+        SQL.append(")");
+
+        debugSQL(SQL.toString());
+
+        return SQL.toString();
+    }
+
+    /**
      * 给定数据库查询结果集创建数据对性.
      * 
      * @param rs 数据库查询结果集
@@ -353,170 +517,6 @@ public class SQLBuilder {
         }
 
         return value;
-    }
-
-    /**
-     * 拼装select sql. SELECT field, field FROM tableName WHERE pk in (?, ?, ?)
-     * 
-     * @param clazz 数据对象
-     * @param tableIndex 表下标
-     * @param pks 主键
-     * @return sql语句
-     * @throws SQLException
-     */
-    public static String buildSelectByPks(EntityPK[] pks, Class<?> clazz, int tableIndex) throws SQLException {
-        Field[] fields = BeansUtil.getFields(clazz);
-        String tableName = entityMetaManager.getTableName(clazz, tableIndex);
-
-        StringBuilder whereSql = new StringBuilder();
-        for (EntityPK pk : pks) {
-            whereSql.append("(");
-            for (int i = 0; i < pk.getPkNames().length; i++) {
-                whereSql.append('`').append(pk.getPkNames()[i].getValue()).append('`');
-                whereSql.append("=").append(formatValue(pk.getPkValues()[i].getValue()));
-                whereSql.append(" and ");
-            }
-            whereSql.delete(whereSql.length() - 5, whereSql.length());
-            whereSql.append(")");
-            whereSql.append(" or ");
-        }
-        whereSql.delete(whereSql.length() - 4, whereSql.length());
-
-        StringBuilder SQL = new StringBuilder("SELECT ");
-        for (Field field : fields) {
-            SQL.append('`').append(BeansUtil.getFieldName(field)).append('`').append(",");
-        }
-        SQL.deleteCharAt(SQL.length() - 1);
-        SQL.append(" FROM ").append('`').append(tableName).append('`');
-        SQL.append(" WHERE ").append(whereSql.toString());
-
-        debugSQL(SQL.toString());
-
-        return SQL.toString();
-    }
-
-    /**
-     * 拼装sql. DELETE FROM tableName WHERE pk in (...)
-     * 
-     * @return DELETE语句
-     * @throws SQLException
-     */
-    public static String buildDeleteByPks(Class<?> clazz, int tableIndex, List<EntityPK> pks) throws SQLException {
-        String tableName = entityMetaManager.getTableName(clazz, tableIndex);
-
-        StringBuilder whereSql = new StringBuilder();
-        for (EntityPK pk : pks) {
-            whereSql.append("(");
-            for (int i = 0; i < pk.getPkNames().length; i++) {
-                whereSql.append('`').append(pk.getPkNames()[i].getValue()).append('`');
-                whereSql.append("=").append(formatValue(pk.getPkValues()[i].getValue()));
-                whereSql.append(" and ");
-            }
-            whereSql.delete(whereSql.length() - 5, whereSql.length());
-            whereSql.append(")");
-            whereSql.append(" or ");
-        }
-        whereSql.delete(whereSql.length() - 4, whereSql.length());
-
-        StringBuilder SQL = new StringBuilder("DELETE FROM ").append('`').append(tableName).append('`');
-        SQL.append(" WHERE ").append(whereSql.toString());
-
-        debugSQL(SQL.toString());
-
-        return SQL.toString();
-    }
-
-    /**
-     * 获取update PreparedStatement.
-     * 
-     * @param conn 数据库连接
-     * @param entities 数据对象
-     * @param tableIndex 分表下标
-     * @return PreparedStatement
-     * @throws SQLException
-     */
-    public static String getUpdate(Object entity, int tableIndex) throws SQLException {
-        // 获取表名.
-        String tableName = entityMetaManager.getTableName(entity, tableIndex);
-
-        // 批量添加
-        Map<String, Object> entityProperty = null;
-        try {
-            entityProperty = BeansUtil.describe(entity, false);
-        } catch (Exception e) {
-            throw new SQLException("解析实体对象失败", e);
-        }
-        // 拼装主键条件
-        EntityPK entityPk = entityMetaManager.getEntityPK(entity);
-        StringBuilder pkWhereSql = new StringBuilder();
-        for (int i = 0; i < entityPk.getPkNames().length; i++) {
-            pkWhereSql.append('`').append(entityPk.getPkNames()[i].getValue()).append('`');
-            pkWhereSql.append("=");
-            pkWhereSql.append(formatValue(entityPk.getPkValues()[i].getValue()));
-            pkWhereSql.append(" and ");
-        }
-        pkWhereSql.delete(pkWhereSql.length() - 5, pkWhereSql.length());
-
-        // 生成update语句.
-        Set<Map.Entry<String, Object>> propertyEntrySet = entityProperty.entrySet();
-        StringBuilder SQL = new StringBuilder("UPDATE `" + tableName + "` SET ");
-        Object value = null;
-        for (Map.Entry<String, Object> propertyEntry : propertyEntrySet) {
-            value = propertyEntry.getValue();
-            SQL.append('`').append(propertyEntry.getKey()).append('`').append("=");
-            SQL.append(formatValue(value));
-            SQL.append(",");
-        }
-        SQL.deleteCharAt(SQL.length() - 1);
-        SQL.append(" WHERE ").append(pkWhereSql.toString());
-
-        debugSQL(SQL.toString());
-
-        return SQL.toString();
-    }
-
-    /**
-     * 根据指定对象创建一个SQL语句.
-     * 
-     * @param conn 数据库连接引用
-     * @param entity 数据对象
-     * @param tableIndex 分表下标
-     * @return SQL语句
-     * @throws SQLException 操作失败
-     */
-    public static String getInsert(Object entity, int tableIndex) throws SQLException {
-        // 获取表名.
-        String tableName = entityMetaManager.getTableName(entity, tableIndex);
-
-        // 批量添加
-        Map<String, Object> entityProperty = null;
-        try {
-            // 获取需要被插入数据库的字段.
-            entityProperty = BeansUtil.describe(entity, false);
-        } catch (Exception e) {
-            throw new SQLException("解析实体对象失败", e);
-        }
-
-        // 生成insert语句.
-        Set<Map.Entry<String, Object>> propertyEntrySet = entityProperty.entrySet();
-
-        StringBuilder SQL = new StringBuilder("INSERT INTO `" + tableName + "` (");
-        StringBuilder var = new StringBuilder();
-        Object value = null;
-        for (Map.Entry<String, Object> propertyEntry : propertyEntrySet) {
-            value = propertyEntry.getValue();
-            SQL.append('`').append(propertyEntry.getKey()).append('`').append(",");
-            var.append(formatValue(value));
-            var.append(",");
-        }
-        SQL.deleteCharAt(SQL.length() - 1);
-        SQL.append(") VALUES (");
-        SQL.append(var.deleteCharAt(var.length() - 1).toString());
-        SQL.append(")");
-
-        debugSQL(SQL.toString());
-
-        return SQL.toString();
     }
 
     /**
