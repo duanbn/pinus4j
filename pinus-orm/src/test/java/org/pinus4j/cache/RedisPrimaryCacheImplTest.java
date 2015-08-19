@@ -11,7 +11,6 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.pinus4j.BaseTest;
-import org.pinus4j.api.IShardingStorageClient;
 import org.pinus4j.cluster.beans.IShardingKey;
 import org.pinus4j.cluster.beans.ShardingKey;
 import org.pinus4j.cluster.resources.ShardingDBResource;
@@ -27,17 +26,15 @@ public class RedisPrimaryCacheImplTest extends BaseTest {
 
     private static ShardingDBResource     db;
 
-    private static IShardingStorageClient storageClient;
     private static IPrimaryCache          primaryCache;
 
     @BeforeClass
     public static void beforeClass() {
-        storageClient = getStorageClient();
-        primaryCache = storageClient.getDBCluster().getPrimaryCache();
+        primaryCache = pinusClient.getDBCluster().getPrimaryCache();
 
         IShardingKey<?> shardingValue = new ShardingKey<Integer>(CLUSTER_KLSTORAGE, 1);
         try {
-            db = (ShardingDBResource) storageClient.getDBCluster().selectDBResourceFromMaster(tableName, shardingValue);
+            db = (ShardingDBResource) pinusClient.getDBCluster().selectDBResourceFromMaster(tableName, shardingValue);
         } catch (DBClusterException e) {
             e.printStackTrace();
         }
@@ -45,7 +42,7 @@ public class RedisPrimaryCacheImplTest extends BaseTest {
 
     @AfterClass
     public static void afterClass() {
-        storageClient.destroy();
+        pinusClient.destroy();
     }
 
     @Test

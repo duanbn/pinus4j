@@ -22,7 +22,6 @@ import java.util.List;
 import org.pinus4j.api.query.IQuery;
 import org.pinus4j.api.query.impl.Condition;
 import org.pinus4j.cluster.beans.IShardingKey;
-import org.pinus4j.cluster.beans.ShardingKey;
 import org.pinus4j.entity.DefaultEntityMetaManager;
 import org.pinus4j.entity.IEntityMetaManager;
 import org.pinus4j.entity.meta.EntityPK;
@@ -39,6 +38,11 @@ import com.google.common.collect.Lists;
 public abstract class FashionEntity {
 
     private IEntityMetaManager entityMetaManager = DefaultEntityMetaManager.getInstance();
+    
+    public void load() {
+        PinusClient pinusClient = DefaultPinusClient.instance;
+        pinusClient.load(this);
+    }
 
     /**
      * 保存
@@ -76,9 +80,7 @@ public abstract class FashionEntity {
         query.and(Condition.or(orCond.toArray(new Condition[orCond.size()])));
 
         if (entityMetaManager.isShardingEntity(clazz)) {
-            String clusterName = entityMetaManager.getClusterName(clazz);
-            Object shardingValue = entityMetaManager.getShardingValue(this);
-            IShardingKey<Object> sk = new ShardingKey<Object>(clusterName, shardingValue);
+            IShardingKey<?> sk = entityMetaManager.getShardingKey(this);
             query.setShardingKey(sk);
         }
 

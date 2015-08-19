@@ -16,7 +16,7 @@ public class TestEntity extends FashionEntity implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    @PrimaryKey(comment = "主键", isAutoIncrement = true)
+    @PrimaryKey(comment = "主键")
     private Long              id;
 
     @Field(comment = "测试byte类型的字段")

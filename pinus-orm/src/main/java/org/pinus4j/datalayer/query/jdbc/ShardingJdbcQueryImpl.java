@@ -81,6 +81,9 @@ public class ShardingJdbcQueryImpl extends AbstractJdbcQuery implements IShardin
 
             // query from master again
             if (count == 0 && isFromSlave) {
+                for (IDBResource dbResource : dbResources) {
+                    dbResource.close();
+                }
                 dbResources = this.dbCluster.getAllMasterShardingDBResource(clazz);
                 for (IDBResource dbResource : dbResources) {
                     if (tx != null) {
@@ -133,6 +136,7 @@ public class ShardingJdbcQueryImpl extends AbstractJdbcQuery implements IShardin
 
             // quer from master again
             if (count == 0 && isFromSlave) {
+                dbResource.close();
                 dbResource = _getDbFromMaster(clazz, shardingKey);
                 if (tx != null) {
                     tx.enlistResource(dbResource);
@@ -184,6 +188,9 @@ public class ShardingJdbcQueryImpl extends AbstractJdbcQuery implements IShardin
 
             // query from master again
             if (count == 0 && isFromSlave) {
+                for (IDBResource dbResource : dbResources) {
+                    dbResource.close();
+                }
                 dbResources = this.dbCluster.getAllMasterShardingDBResource(clazz);
                 for (IDBResource dbResource : dbResources) {
                     if (tx != null) {
@@ -238,6 +245,7 @@ public class ShardingJdbcQueryImpl extends AbstractJdbcQuery implements IShardin
 
             // query from master again
             if (count == 0 && isFromSlave) {
+                dbResource.close();
                 dbResource = _getDbFromMaster(clazz, shardingKey);
                 if (tx != null) {
                     tx.enlistResource(dbResource);
@@ -288,6 +296,7 @@ public class ShardingJdbcQueryImpl extends AbstractJdbcQuery implements IShardin
 
             // query from master again
             if (data == null && isFromSlave) {
+                dbResource.close();
                 dbResource = _getDbFromMaster(clazz, shardingKey);
                 if (tx != null) {
                     tx.enlistResource(dbResource);
@@ -348,6 +357,9 @@ public class ShardingJdbcQueryImpl extends AbstractJdbcQuery implements IShardin
 
             // query from master again
             if (data.isEmpty() && isFromSlave) {
+                for (IDBResource dbResource : dbResources) {
+                    dbResource.close();
+                }
                 dbResources = this.dbCluster.getAllMasterShardingDBResource(clazz);
                 for (IDBResource dbResource : dbResources) {
                     if (tx != null) {
@@ -405,6 +417,7 @@ public class ShardingJdbcQueryImpl extends AbstractJdbcQuery implements IShardin
             List<T> data = selectByPksWithCache(dbResource, clazz, entityPkList, useCache);
 
             if (data.isEmpty() && isFromSlave) {
+                dbResource.close();
                 dbResource = _getDbFromMaster(clazz, shardingKey);
                 if (tx != null) {
                     tx.enlistResource(dbResource);
@@ -496,6 +509,9 @@ public class ShardingJdbcQueryImpl extends AbstractJdbcQuery implements IShardin
 
             // query from master again
             if (mergeResult.isEmpty() && isFromSlave) {
+                for (IDBResource dbResource : dbResources) {
+                    dbResource.close();
+                }
                 dbResources = this.dbCluster.getAllMasterShardingDBResource(clazz);
                 for (IDBResource dbResource : dbResources) {
                     if (isOrderQuery) {
@@ -603,6 +619,7 @@ public class ShardingJdbcQueryImpl extends AbstractJdbcQuery implements IShardin
 
         // query from master againe
         if (data.isEmpty() && isFromSlave) {
+            dbResource.close();
             dbResource = _getDbFromMaster(clazz, shardingKey);
             data = findByQuery(query, dbResource, clazz, useCache, masterSlave);
         }
@@ -626,7 +643,7 @@ public class ShardingJdbcQueryImpl extends AbstractJdbcQuery implements IShardin
             List<T> result = null;
 
             if (isSecondCacheAvailable(clazz, useCache)) {
-                result = (List<T>) secondCache.get(((DefaultQueryImpl<T>) query).getWhereSql(),
+                result = (List<T>) secondCache.get(((DefaultQueryImpl<T>) query).getWhereSql().getSql(),
                         (ShardingDBResource) dbResource);
             }
 
@@ -639,7 +656,7 @@ public class ShardingJdbcQueryImpl extends AbstractJdbcQuery implements IShardin
                 }
 
                 if (isSecondCacheAvailable(clazz, useCache)) {
-                    secondCache.put(((DefaultQueryImpl<T>) query).getWhereSql(), (ShardingDBResource) dbResource,
+                    secondCache.put(((DefaultQueryImpl<T>) query).getWhereSql().getSql(), (ShardingDBResource) dbResource,
                             result);
                 }
             }

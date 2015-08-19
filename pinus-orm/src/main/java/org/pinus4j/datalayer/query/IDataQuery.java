@@ -16,11 +16,8 @@
 
 package org.pinus4j.datalayer.query;
 
-import javax.transaction.TransactionManager;
+import org.pinus4j.datalayer.IDataLayer;
 
-import org.pinus4j.cache.IPrimaryCache;
-import org.pinus4j.cache.ISecondCache;
-import org.pinus4j.cluster.IDBCluster;
 
 /**
  * base data query interface.
@@ -28,50 +25,8 @@ import org.pinus4j.cluster.IDBCluster;
  * @author duanbn
  * @since 0.7.1
  */
-public interface IDataQuery {
+public interface IDataQuery extends IDataLayer {
 
-    /**
-	 *  set db cluster.
-	 */
-	public void setDBCluster(IDBCluster dbCluster);
-
-    /**
-     * get db cluster.
-     */
-    public IDBCluster getDBCluster();
-
-    /**
-	 * set primary cache.
-	 */
-	public void setPrimaryCache(IPrimaryCache primaryCache);
-
-    /**
-     * get second cache.
-     */
-    public IPrimaryCache getPrimaryCache();
-
-	/**
-	 * set second cache.
-	 * 
-	 * @param secondCache
-	 */
-	public void setSecondCache(ISecondCache secondCache);
-
-    /**
-     * get second cache.
-     */
-    public ISecondCache getSecondCache();
     
-    /**
-     * set transaction manager.
-     * @param txManager
-     */
-    public void setTransactionManager(TransactionManager txManager);
-    
-    /**
-     * get transaction manster.
-     * @return
-     */
-    public TransactionManager getTransactionManager();
     
 }

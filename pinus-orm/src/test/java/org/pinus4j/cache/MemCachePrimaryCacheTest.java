@@ -28,17 +28,15 @@ public class MemCachePrimaryCacheTest extends BaseTest {
 
     private static ShardingDBResource     db;
 
-    private static IShardingStorageClient storageClient;
     private static IPrimaryCache          primaryCache;
 
     @BeforeClass
     public static void before() {
-        storageClient = getStorageClient();
-        primaryCache = storageClient.getDBCluster().getPrimaryCache();
+        primaryCache = pinusClient.getDBCluster().getPrimaryCache();
 
         IShardingKey<?> shardingValue = new ShardingKey<Integer>(CLUSTER_KLSTORAGE, 1);
         try {
-            db = (ShardingDBResource) storageClient.getDBCluster().selectDBResourceFromMaster(tableName, shardingValue);
+            db = (ShardingDBResource) pinusClient.getDBCluster().selectDBResourceFromMaster(tableName, shardingValue);
         } catch (DBClusterException e) {
             e.printStackTrace();
         }
@@ -46,7 +44,7 @@ public class MemCachePrimaryCacheTest extends BaseTest {
 
     @AfterClass
     public static void after() {
-        storageClient.destroy();
+        pinusClient.destroy();
     }
 
     @Test

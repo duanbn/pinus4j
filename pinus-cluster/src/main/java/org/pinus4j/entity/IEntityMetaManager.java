@@ -18,6 +18,7 @@ package org.pinus4j.entity;
 
 import java.util.List;
 
+import org.pinus4j.cluster.beans.IShardingKey;
 import org.pinus4j.entity.meta.DBTable;
 import org.pinus4j.entity.meta.DBTablePK;
 import org.pinus4j.entity.meta.EntityPK;
@@ -87,7 +88,7 @@ public interface IEntityMetaManager {
      * @param entity
      * @return
      */
-    public Object getShardingValue(Object entity);
+    public IShardingKey<?> getShardingKey(Object entity);
 
     /**
      * 判断是否是分片

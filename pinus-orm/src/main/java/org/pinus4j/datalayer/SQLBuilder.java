@@ -24,7 +24,6 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -45,6 +44,7 @@ import org.pinus4j.utils.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 /**
@@ -70,7 +70,7 @@ public class SQLBuilder {
      * 
      * @return sql语句.
      */
-    public static <T> String buildSelectPkByQuery(Class<T> clazz, int tableIndex, IQuery<T> query) {
+    public static <T> SQL buildSelectPkByQuery(Class<T> clazz, int tableIndex, IQuery<T> query) {
         String tableName = entityMetaManager.getTableName(clazz, tableIndex);
 
         PKName[] pkNames = entityMetaManager.getPkName(clazz);
@@ -80,15 +80,19 @@ public class SQLBuilder {
         }
         pkField.deleteCharAt(pkField.length() - 1);
 
-        StringBuilder SQL = new StringBuilder("SELECT " + pkField.toString() + " FROM ");
-        SQL.append('`').append(tableName).append('`');
-        String whereSql = ((DefaultQueryImpl<T>) query).getWhereSql();
+        SQL querySQL = ((DefaultQueryImpl<T>) query).getWhereSql();
+
+        StringBuilder sqlText = new StringBuilder("SELECT " + pkField.toString() + " FROM ");
+        sqlText.append('`').append(tableName).append('`');
+        String whereSql = querySQL.getSql();
         if (StringUtil.isNotBlank(whereSql))
-            SQL.append(((DefaultQueryImpl<T>) query).getWhereSql());
+            sqlText.append(whereSql);
 
-        debugSQL(SQL.toString());
+        SQL sql = SQL.valueOf(sqlText.toString(), querySQL.getParams());
 
-        return SQL.toString();
+        debugSQL(sql);
+
+        return sql;
     }
 
     /**
@@ -96,7 +100,7 @@ public class SQLBuilder {
      * 
      * @return sql语句.
      */
-    public static <T> String buildSelectByQuery(Class<T> clazz, int tableIndex, IQuery<T> query) {
+    public static <T> SQL buildSelectByQuery(Class<T> clazz, int tableIndex, IQuery<T> query) {
         String tableName = entityMetaManager.getTableName(clazz, tableIndex);
 
         StringBuilder fields = new StringBuilder();
@@ -109,44 +113,52 @@ public class SQLBuilder {
             fields.append("*");
         }
 
-        StringBuilder SQL = new StringBuilder("SELECT ");
-        SQL.append(fields.toString()).append(" FROM ");
-        SQL.append('`').append(tableName).append('`');
-        String whereSql = ((DefaultQueryImpl<T>) query).getWhereSql();
+        SQL querySQL = ((DefaultQueryImpl<T>) query).getWhereSql();
+
+        StringBuilder sqlText = new StringBuilder("SELECT ");
+        sqlText.append(fields.toString()).append(" FROM ");
+        sqlText.append('`').append(tableName).append('`');
+        String whereSql = querySQL.getSql();
         if (StringUtil.isNotBlank(whereSql))
-            SQL.append(((DefaultQueryImpl<T>) query).getWhereSql());
+            sqlText.append(((DefaultQueryImpl<T>) query).getWhereSql());
 
-        debugSQL(SQL.toString());
+        SQL sql = SQL.valueOf(sqlText.toString(), querySQL.getParams());
 
-        return SQL.toString();
+        debugSQL(sql);
+
+        return sql;
     }
 
-    public static <T> String buildSelectCountByQuery(Class<T> clazz, int tableIndex, IQuery<T> query) {
+    public static <T> SQL buildSelectCountByQuery(Class<T> clazz, int tableIndex, IQuery<T> query) {
         String tableName = entityMetaManager.getTableName(clazz, tableIndex);
-        StringBuilder SQL = new StringBuilder("SELECT count(*) FROM ");
-        SQL.append('`').append(tableName).append('`');
 
-        if (query != null) {
-            String whereSql = ((DefaultQueryImpl<T>) query).getWhereSql();
-            if (StringUtil.isNotBlank(whereSql))
-                SQL.append(((DefaultQueryImpl<T>) query).getWhereSql());
-        }
+        StringBuilder sqlText = new StringBuilder("SELECT count(*) FROM ");
+        sqlText.append('`').append(tableName).append('`');
 
-        debugSQL(SQL.toString());
+        SQL querySQL = ((DefaultQueryImpl<T>) query).getWhereSql();
 
-        return SQL.toString();
+        String whereSql = querySQL.getSql();
+        if (StringUtil.isNotBlank(whereSql))
+            sqlText.append(((DefaultQueryImpl<T>) query).getWhereSql());
+
+        SQL sql = SQL.valueOf(sqlText.toString(), querySQL.getParams());
+
+        debugSQL(sql);
+
+        return sql;
     }
 
     public static PreparedStatement buildSelectBySqlGlobal(Connection conn, SQL sql) throws SQLException {
-        debugSQL(sql.toString());
-
         PreparedStatement ps = conn.prepareStatement(sql.getSql());
-        Object[] params = sql.getParams();
+        List<Object> params = sql.getParams();
         if (params != null) {
-            for (int i = 1; i <= params.length; i++) {
-                ps.setObject(i, params[i - 1]);
+            for (int i = 1; i <= params.size(); i++) {
+                ps.setObject(i, params.get(i - 1));
             }
         }
+
+        debugSQL(sql);
+
         return ps;
     }
 
@@ -162,30 +174,25 @@ public class SQLBuilder {
     public static PreparedStatement buildSelectBySql(Connection conn, SQL sql, int tableIndex) throws SQLException {
         String s = SQLParser.addTableIndex(sql.getSql(), tableIndex);
 
-        debugSQL(sql.toString());
-
         PreparedStatement ps = conn.prepareStatement(s);
-        Object[] params = sql.getParams();
+        List<Object> params = sql.getParams();
         if (params != null) {
-            for (int i = 1; i <= params.length; i++) {
-                ps.setObject(i, params[i - 1]);
+            for (int i = 1; i <= params.size(); i++) {
+                ps.setObject(i, params.get(i - 1));
             }
         }
+
+        debugSQL(sql);
+
         return ps;
     }
 
     public static String buildSelectCountGlobalSql(Class<?> clazz) {
-        return buildSelectCountGlobalSql(clazz, null);
-    }
-
-    public static <T> String buildSelectCountGlobalSql(Class<T> clazz, IQuery<T> query) {
         String tableName = entityMetaManager.getTableName(clazz, -1);
 
         StringBuilder SQL = new StringBuilder("SELECT count(*) ").append("FROM ");
         SQL.append('`').append(tableName).append('`');
-        if (query != null) {
-            SQL.append(((DefaultQueryImpl<T>) query).getWhereSql());
-        }
+
         debugSQL(SQL.toString());
 
         return SQL.toString();
@@ -209,9 +216,10 @@ public class SQLBuilder {
 
         StringBuilder SQL = new StringBuilder("SELECT count(*) ").append("FROM ");
         SQL.append('`').append(tableName).append('`');
-        debugSQL(SQL.toString());
 
         _selectCountCache.put(clazz.getName() + tableIndex, SQL.toString());
+
+        debugSQL(SQL.toString());
 
         return SQL.toString();
     }
@@ -225,17 +233,20 @@ public class SQLBuilder {
      * @return sql语句
      * @throws SQLException
      */
-    public static String buildSelectByPks(EntityPK[] pks, Class<?> clazz, int tableIndex) throws SQLException {
+    public static SQL buildSelectByPks(EntityPK[] pks, Class<?> clazz, int tableIndex) throws SQLException {
         Field[] fields = BeansUtil.getFields(clazz);
         String tableName = entityMetaManager.getTableName(clazz, tableIndex);
 
         StringBuilder whereSql = new StringBuilder();
+        List<Object> paramList = Lists.newArrayList();
         for (EntityPK pk : pks) {
             whereSql.append("(");
             for (int i = 0; i < pk.getPkNames().length; i++) {
                 whereSql.append('`').append(pk.getPkNames()[i].getValue()).append('`');
-                whereSql.append("=").append(formatValue(pk.getPkValues()[i].getValue()));
+                whereSql.append("=").append('?');
                 whereSql.append(" and ");
+
+                paramList.add(formatValue(pk.getPkValues()[i].getValue()));
             }
             whereSql.delete(whereSql.length() - 5, whereSql.length());
             whereSql.append(")");
@@ -243,17 +254,19 @@ public class SQLBuilder {
         }
         whereSql.delete(whereSql.length() - 4, whereSql.length());
 
-        StringBuilder SQL = new StringBuilder("SELECT ");
+        StringBuilder sqlText = new StringBuilder("SELECT ");
         for (Field field : fields) {
-            SQL.append('`').append(BeansUtil.getFieldName(field)).append('`').append(",");
+            sqlText.append('`').append(BeansUtil.getFieldName(field)).append('`').append(",");
         }
-        SQL.deleteCharAt(SQL.length() - 1);
-        SQL.append(" FROM ").append('`').append(tableName).append('`');
-        SQL.append(" WHERE ").append(whereSql.toString());
+        sqlText.deleteCharAt(sqlText.length() - 1);
+        sqlText.append(" FROM ").append('`').append(tableName).append('`');
+        sqlText.append(" WHERE ").append(whereSql.toString());
 
-        debugSQL(SQL.toString());
+        SQL sql = SQL.valueOf(sqlText.toString(), paramList);
 
-        return SQL.toString();
+        debugSQL(sql);
+
+        return sql;
     }
 
     /**
@@ -262,16 +275,19 @@ public class SQLBuilder {
      * @return DELETE语句
      * @throws SQLException
      */
-    public static String buildDeleteByPks(Class<?> clazz, int tableIndex, List<EntityPK> pks) throws SQLException {
+    public static SQL buildDeleteByPks(Class<?> clazz, int tableIndex, List<EntityPK> pks) throws SQLException {
         String tableName = entityMetaManager.getTableName(clazz, tableIndex);
 
         StringBuilder whereSql = new StringBuilder();
+        List<Object> paramList = Lists.newArrayList();
         for (EntityPK pk : pks) {
             whereSql.append("(");
             for (int i = 0; i < pk.getPkNames().length; i++) {
                 whereSql.append('`').append(pk.getPkNames()[i].getValue()).append('`');
-                whereSql.append("=").append(formatValue(pk.getPkValues()[i].getValue()));
+                whereSql.append("=").append('?');
                 whereSql.append(" and ");
+
+                paramList.add(formatValue(pk.getPkValues()[i].getValue()));
             }
             whereSql.delete(whereSql.length() - 5, whereSql.length());
             whereSql.append(")");
@@ -279,12 +295,14 @@ public class SQLBuilder {
         }
         whereSql.delete(whereSql.length() - 4, whereSql.length());
 
-        StringBuilder SQL = new StringBuilder("DELETE FROM ").append('`').append(tableName).append('`');
-        SQL.append(" WHERE ").append(whereSql.toString());
+        StringBuilder sqlText = new StringBuilder("DELETE FROM ").append('`').append(tableName).append('`');
+        sqlText.append(" WHERE ").append(whereSql.toString());
 
-        debugSQL(SQL.toString());
+        SQL sql = SQL.valueOf(sqlText.toString(), paramList);
 
-        return SQL.toString();
+        debugSQL(sql);
+
+        return sql;
     }
 
     /**
@@ -296,7 +314,7 @@ public class SQLBuilder {
      * @return PreparedStatement
      * @throws SQLException
      */
-    public static String getUpdate(Object entity, int tableIndex) throws SQLException {
+    public static SQL getUpdate(Object entity, int tableIndex) throws SQLException {
         // 获取表名.
         String tableName = entityMetaManager.getTableName(entity, tableIndex);
 
@@ -310,30 +328,38 @@ public class SQLBuilder {
         // 拼装主键条件
         EntityPK entityPk = entityMetaManager.getEntityPK(entity);
         StringBuilder pkWhereSql = new StringBuilder();
+        List<Object> whereParam = Lists.newArrayList();
         for (int i = 0; i < entityPk.getPkNames().length; i++) {
             pkWhereSql.append('`').append(entityPk.getPkNames()[i].getValue()).append('`');
-            pkWhereSql.append("=");
-            pkWhereSql.append(formatValue(entityPk.getPkValues()[i].getValue()));
+            pkWhereSql.append("=").append('?');
             pkWhereSql.append(" and ");
+
+            whereParam.add(formatValue(entityPk.getPkValues()[i].getValue()));
         }
         pkWhereSql.delete(pkWhereSql.length() - 5, pkWhereSql.length());
 
         // 生成update语句.
+        List<Object> paramList = Lists.newArrayList();
         Set<Map.Entry<String, Object>> propertyEntrySet = entityProperty.entrySet();
-        StringBuilder SQL = new StringBuilder("UPDATE `" + tableName + "` SET ");
+        StringBuilder sqlText = new StringBuilder("UPDATE `" + tableName + "` SET ");
         Object value = null;
         for (Map.Entry<String, Object> propertyEntry : propertyEntrySet) {
             value = propertyEntry.getValue();
-            SQL.append('`').append(propertyEntry.getKey()).append('`').append("=");
-            SQL.append(formatValue(value));
-            SQL.append(",");
+            sqlText.append('`').append(propertyEntry.getKey()).append('`');
+            sqlText.append("=").append("?");
+            sqlText.append(",");
+
+            paramList.add(formatValue(value));
         }
-        SQL.deleteCharAt(SQL.length() - 1);
-        SQL.append(" WHERE ").append(pkWhereSql.toString());
+        sqlText.deleteCharAt(sqlText.length() - 1);
+        sqlText.append(" WHERE ").append(pkWhereSql.toString());
+        paramList.addAll(whereParam);
 
-        debugSQL(SQL.toString());
+        SQL sql = SQL.valueOf(sqlText.toString(), paramList);
 
-        return SQL.toString();
+        debugSQL(sql);
+
+        return sql;
     }
 
     /**
@@ -345,7 +371,7 @@ public class SQLBuilder {
      * @return SQL语句
      * @throws SQLException 操作失败
      */
-    public static String getInsert(Object entity, int tableIndex) throws SQLException {
+    public static SQL getInsert(Object entity, int tableIndex) throws SQLException {
         // 获取表名.
         String tableName = entityMetaManager.getTableName(entity, tableIndex);
 
@@ -361,23 +387,25 @@ public class SQLBuilder {
         // 生成insert语句.
         Set<Map.Entry<String, Object>> propertyEntrySet = entityProperty.entrySet();
 
-        StringBuilder SQL = new StringBuilder("INSERT INTO `" + tableName + "` (");
+        List<Object> paramList = Lists.newArrayList();
+        StringBuilder sqlText = new StringBuilder("INSERT INTO `" + tableName + "` (");
         StringBuilder var = new StringBuilder();
-        Object value = null;
         for (Map.Entry<String, Object> propertyEntry : propertyEntrySet) {
-            value = propertyEntry.getValue();
-            SQL.append('`').append(propertyEntry.getKey()).append('`').append(",");
-            var.append(formatValue(value));
-            var.append(",");
+            sqlText.append('`').append(propertyEntry.getKey()).append('`').append(",");
+            var.append('?').append(',');
+
+            paramList.add(formatValue(propertyEntry.getValue()));
         }
-        SQL.deleteCharAt(SQL.length() - 1);
-        SQL.append(") VALUES (");
-        SQL.append(var.deleteCharAt(var.length() - 1).toString());
-        SQL.append(")");
+        sqlText.deleteCharAt(sqlText.length() - 1);
+        sqlText.append(") VALUES (");
+        sqlText.append(var.deleteCharAt(var.length() - 1).toString());
+        sqlText.append(")");
 
-        debugSQL(SQL.toString());
+        SQL sql = SQL.valueOf(sqlText.toString(), paramList);
 
-        return SQL.toString();
+        debugSQL(sql);
+
+        return sql;
     }
 
     /**
@@ -525,17 +553,8 @@ public class SQLBuilder {
     public static Object formatValue(Object value) {
         Object format = null;
 
-        if (value instanceof String) {
-            String content = (String) value;
-            format = "'" + content.replaceAll("'", "''") + "'";
-        } else if (value instanceof Character) {
-            if (((int) (Character) value) == 39) {
-                format = "'\\" + (Character) value + "'";
-            } else {
-                format = "'" + (Character) value + "'";
-            }
-        } else if (value instanceof Date) {
-            format = "'" + sdf.format((Date) value) + "'";
+        if (value instanceof Character && ((int) (Character) value) == 39) {
+            format = "'\\" + (Character) value + "'";
         } else {
             format = value;
         }
@@ -543,12 +562,27 @@ public class SQLBuilder {
         return format;
     }
 
-    /**
-     * 打印SQL日志.
-     */
     public static void debugSQL(String sql) {
         if (LOG.isDebugEnabled()) {
             LOG.debug(sql);
+        }
+    }
+
+    /**
+     * 打印SQL日志.
+     */
+    public static void debugSQL(SQL sql) {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug(sql.getSql());
+
+            if (!sql.getParams().isEmpty()) {
+                StringBuilder paramText = new StringBuilder();
+                for (Object param : sql.getParams()) {
+                    paramText.append(param).append(',');
+                }
+                paramText.deleteCharAt(paramText.length() - 1);
+                LOG.debug(paramText.toString());
+            }
         }
     }
 

@@ -17,11 +17,16 @@
 package org.pinus4j.api.query.impl;
 
 import java.lang.reflect.Array;
+import java.util.List;
+import java.util.Set;
 
+import org.pinus4j.api.SQL;
 import org.pinus4j.api.query.impl.DefaultQueryImpl.ConditionRelation;
 import org.pinus4j.datalayer.SQLBuilder;
 import org.pinus4j.utils.BeansUtil;
 import org.pinus4j.utils.StringUtil;
+
+import com.google.common.collect.Lists;
 
 /**
  * 查询条件.
@@ -112,47 +117,54 @@ public class Condition {
      *
      * @return sql语句
      */
-    String getSql() {
-        StringBuilder SQL = new StringBuilder();
+    SQL getSql() {
+        StringBuilder sqlText = new StringBuilder();
         if (orCond != null && orCond.length > 0) {
-            SQL.append("(");
+            List<Object> paramList = Lists.newArrayList();
+            sqlText.append("(");
             for (Condition cond : orCond) {
-                SQL.append(cond.getSql()).append(" or ");
+                sqlText.append(cond.getSql().getSql()).append(" or ");
+                paramList.addAll(cond.getSql().getParams());
             }
-            SQL.delete(SQL.lastIndexOf(" or "), SQL.length());
-            SQL.append(")");
-            return SQL.toString();
+            sqlText.delete(sqlText.lastIndexOf(" or "), sqlText.length());
+            sqlText.append(")");
+            return SQL.valueOf(sqlText.toString(), paramList.toArray(new Object[paramList.size()]));
         } else if (andCond != null && andCond.length > 0) {
-            SQL.append("(");
+            List<Object> paramList = Lists.newArrayList();
+            sqlText.append("(");
             for (Condition cond : andCond) {
-                SQL.append(cond.getSql()).append(" and ");
+                sqlText.append(cond.getSql().getSql()).append(" and ");
+                paramList.addAll(cond.getSql().getParams());
             }
-            SQL.delete(SQL.lastIndexOf(" and "), SQL.length());
-            SQL.append(")");
-            return SQL.toString();
+            sqlText.delete(sqlText.lastIndexOf(" and "), sqlText.length());
+            sqlText.append(")");
+            return SQL.valueOf(sqlText.toString(), paramList.toArray(new Object[paramList.size()]));
         } else {
-            SQL.append('`').append(field).append('`').append(" ").append(opt.getSymbol()).append(" ");
+            sqlText.append('`').append(field).append('`').append(" ").append(opt.getSymbol()).append(" ");
+            List<Object> paramList = Lists.newArrayList();
             switch (opt) {
                 case IN:
-                    SQL.append("(");
-                    for (int i = 0; i < Array.getLength(this.value); i++) {
+                    int paramLength = Array.getLength(this.value);
+
+                    sqlText.append("(");
+                    for (int i = 0; i < paramLength; i++) {
+                        sqlText.append('?').append(',');
+
                         Object val = Array.get(this.value, i);
+
                         Class<?> clazz = val.getClass();
-                        if (clazz == String.class) {
-                            SQL.append("'").append(val).append("'");
-                        } else if (clazz == Boolean.class || clazz == Boolean.TYPE) {
+                        if (clazz == Boolean.class || clazz == Boolean.TYPE) {
                             if ((Boolean) val) {
-                                SQL.append("'").append("1").append("'");
+                                paramList.add("1");
                             } else {
-                                SQL.append("'").append("0").append("'");
+                                paramList.add("0");
                             }
                         } else {
-                            SQL.append(val);
+                            paramList.add(val);
                         }
-                        SQL.append(",");
                     }
-                    SQL.deleteCharAt(SQL.length() - 1);
-                    SQL.append(")");
+                    sqlText.deleteCharAt(sqlText.length() - 1);
+                    sqlText.append(")");
 
                     break;
                 case ISNULL:
@@ -160,27 +172,27 @@ public class Condition {
                 case ISNOTNULL:
                     break;
                 default:
+                    sqlText.append('?');
                     Object value = this.value;
-                    if (value instanceof String) {
-                        SQL.append(value);
-                    } else if (value instanceof Boolean) {
+                    if (value instanceof Boolean) {
                         if ((Boolean) value) {
-                            SQL.append("'").append("1").append("'");
+                            paramList.add("1");
                         } else {
-                            SQL.append("'").append("0").append("'");
+                            paramList.add("0");
                         }
                     } else {
-                        SQL.append(value);
+                        paramList.add(value);
                     }
                     break;
             }
-            return SQL.toString().trim();
+
+            return SQL.valueOf(sqlText.toString(), paramList);
         }
     }
 
     @Override
     public String toString() {
-        return getSql();
+        return getSql().toString();
     }
 
     public static Condition eq(String field, Object value) {
@@ -289,6 +301,22 @@ public class Condition {
         }
         Condition cond = new Condition(field, value, QueryOpt.LTE, clazz);
         return cond;
+    }
+
+    public static Condition in(String field, List<? extends Object> values) {
+        return in(field, values, null);
+    }
+
+    public static Condition in(String field, List<? extends Object> values, Class<?> clazz) {
+        return in(field, clazz, values.toArray(new Object[values.size()]));
+    }
+
+    public static Condition in(String field, Set<? extends Object> values) {
+        return in(field, values, null);
+    }
+
+    public static Condition in(String field, Set<? extends Object> values, Class<?> clazz) {
+        return in(field, clazz, values.toArray(new Object[values.size()]));
     }
 
     public static Condition in(String field, Object... values) {

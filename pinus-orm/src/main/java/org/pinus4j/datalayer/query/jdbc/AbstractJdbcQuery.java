@@ -25,21 +25,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import javax.transaction.TransactionManager;
-
 import org.pinus4j.api.SQL;
 import org.pinus4j.api.query.IQuery;
-import org.pinus4j.cache.IPrimaryCache;
-import org.pinus4j.cache.ISecondCache;
-import org.pinus4j.cluster.IDBCluster;
 import org.pinus4j.cluster.resources.IDBResource;
 import org.pinus4j.cluster.resources.ShardingDBResource;
 import org.pinus4j.constant.Const;
+import org.pinus4j.datalayer.AbstractDataLayer;
 import org.pinus4j.datalayer.SQLBuilder;
 import org.pinus4j.datalayer.SlowQueryLogger;
 import org.pinus4j.datalayer.query.IDataQuery;
-import org.pinus4j.entity.DefaultEntityMetaManager;
-import org.pinus4j.entity.IEntityMetaManager;
 import org.pinus4j.entity.meta.EntityPK;
 import org.pinus4j.entity.meta.PKName;
 import org.pinus4j.entity.meta.PKValue;
@@ -53,44 +47,7 @@ import com.google.common.collect.Maps;
  * 
  * @author duanbn
  */
-public abstract class AbstractJdbcQuery implements IDataQuery {
-
-    /**
-     * 数据库集群引用.
-     */
-    protected IDBCluster         dbCluster;
-
-    /**
-     * 一级缓存.
-     */
-    protected IPrimaryCache      primaryCache;
-
-    /**
-     * 二级缓存.
-     */
-    protected ISecondCache       secondCache;
-
-    protected TransactionManager txManager;
-
-    protected IEntityMetaManager entityMetaManager = DefaultEntityMetaManager.getInstance();
-
-    /**
-     * 判断一级缓存是否可用
-     * 
-     * @return true:启用cache, false:不启用
-     */
-    protected boolean isCacheAvailable(Class<?> clazz, boolean useCache) {
-        return primaryCache != null && entityMetaManager.isCache(clazz) && useCache;
-    }
-
-    /**
-     * 判断二级缓存是否可用
-     * 
-     * @return true:启用cache, false:不启用
-     */
-    protected boolean isSecondCacheAvailable(Class<?> clazz, boolean useCache) {
-        return secondCache != null && entityMetaManager.isCache(clazz) && useCache;
-    }
+public abstract class AbstractJdbcQuery extends AbstractDataLayer implements IDataQuery {
 
     // //////////////////////////////////////////////////////////////////////////////////////
     // count相关
@@ -180,14 +137,15 @@ public abstract class AbstractJdbcQuery implements IDataQuery {
         try {
             Connection conn = dbResource.getConnection();
 
-            String sql = null;
+            SQL sql = null;
             if (dbResource.isGlobal())
                 sql = SQLBuilder.buildSelectCountByQuery(clazz, -1, query);
             else
                 sql = SQLBuilder.buildSelectCountByQuery(clazz, ((ShardingDBResource) dbResource).getTableIndex(),
                         query);
 
-            ps = conn.prepareStatement(sql);
+            ps = conn.prepareStatement(sql.getSql());
+            fillParam(ps, sql);
 
             long begin = System.currentTimeMillis();
             rs = ps.executeQuery();
@@ -218,13 +176,14 @@ public abstract class AbstractJdbcQuery implements IDataQuery {
         try {
             Connection conn = dbResource.getConnection();
 
-            String sql = null;
+            SQL sql = null;
             if (dbResource.isGlobal())
                 sql = SQLBuilder.buildSelectByPks(pks, clazz, -1);
             else
                 sql = SQLBuilder.buildSelectByPks(pks, clazz, ((ShardingDBResource) dbResource).getTableIndex());
 
-            ps = conn.prepareStatement(sql);
+            ps = conn.prepareStatement(sql.getSql());
+            fillParam(ps, sql);
 
             long begin = System.currentTimeMillis();
             rs = ps.executeQuery();
@@ -251,13 +210,14 @@ public abstract class AbstractJdbcQuery implements IDataQuery {
         try {
             Connection conn = dbResource.getConnection();
 
-            String sql = null;
+            SQL sql = null;
             if (dbResource.isGlobal())
                 sql = SQLBuilder.buildSelectByPks(pks, clazz, -1);
             else
                 sql = SQLBuilder.buildSelectByPks(pks, clazz, ((ShardingDBResource) dbResource).getTableIndex());
 
-            ps = conn.prepareStatement(sql);
+            ps = conn.prepareStatement(sql.getSql());
+            fillParam(ps, sql);
 
             long begin = System.currentTimeMillis();
             rs = ps.executeQuery();
@@ -387,13 +347,14 @@ public abstract class AbstractJdbcQuery implements IDataQuery {
         try {
             Connection conn = dbResource.getConnection();
 
-            String sql = null;
+            SQL sql = null;
             if (dbResource.isGlobal())
                 sql = SQLBuilder.buildSelectByQuery(clazz, -1, query);
             else
                 sql = SQLBuilder.buildSelectByQuery(clazz, ((ShardingDBResource) dbResource).getTableIndex(), query);
 
-            ps = conn.prepareStatement(sql);
+            ps = conn.prepareStatement(sql.getSql());
+            fillParam(ps, sql);
 
             long begin = System.currentTimeMillis();
             rs = ps.executeQuery();
@@ -425,13 +386,14 @@ public abstract class AbstractJdbcQuery implements IDataQuery {
         try {
             Connection conn = dbResource.getConnection();
 
-            String sql = null;
+            SQL sql = null;
             if (dbResource.isGlobal())
                 sql = SQLBuilder.buildSelectPkByQuery(clazz, -1, query);
             else
                 sql = SQLBuilder.buildSelectPkByQuery(clazz, ((ShardingDBResource) dbResource).getTableIndex(), query);
 
-            ps = conn.prepareStatement(sql);
+            ps = conn.prepareStatement(sql.getSql());
+            fillParam(ps, sql);
 
             long begin = System.currentTimeMillis();
             rs = ps.executeQuery();
@@ -482,43 +444,4 @@ public abstract class AbstractJdbcQuery implements IDataQuery {
         return map;
     }
 
-    @Override
-    public IDBCluster getDBCluster() {
-        return dbCluster;
-    }
-
-    @Override
-    public void setDBCluster(IDBCluster dbCluster) {
-        this.dbCluster = dbCluster;
-    }
-
-    @Override
-    public void setPrimaryCache(IPrimaryCache primaryCache) {
-        this.primaryCache = primaryCache;
-    }
-
-    @Override
-    public IPrimaryCache getPrimaryCache() {
-        return this.primaryCache;
-    }
-
-    @Override
-    public void setSecondCache(ISecondCache secondCache) {
-        this.secondCache = secondCache;
-    }
-
-    @Override
-    public ISecondCache getSecondCache() {
-        return this.secondCache;
-    }
-
-    @Override
-    public void setTransactionManager(TransactionManager txManager) {
-        this.txManager = txManager;
-    }
-
-    @Override
-    public TransactionManager getTransactionManager() {
-        return this.txManager;
-    }
 }

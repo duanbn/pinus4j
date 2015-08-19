@@ -21,53 +21,60 @@ import org.pinus4j.utils.StringUtil;
 
 public class EnvDBInfo extends DBInfo {
 
-	private String envDsName;
+    private String envDsName;
 
-	@Override
-	public boolean check() throws LoadConfigException {
-		if (StringUtil.isBlank(envDsName)) {
-			throw new LoadConfigException("env ds name is empty");
-		}
-		return true;
-	}
+    @Override
+    public boolean check() throws LoadConfigException {
+        if (StringUtil.isBlank(envDsName)) {
+            throw new LoadConfigException("env ds name is empty");
+        }
+        return true;
+    }
 
-	@Override
-	public String toString() {
-		return "EnvDBConnectionInfo [clusterName=" + clusterName + ", masterSlave=" + masterSlave + ", envDsName="
-				+ envDsName + "]";
-	}
+    @Override
+    public DBInfo clone() {
+        EnvDBInfo clone = new EnvDBInfo();
+        clone.setEnvDsName(this.envDsName);
+        return clone;
+    }
 
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((envDsName == null) ? 0 : envDsName.hashCode());
-		return result;
-	}
+    @Override
+    public String toString() {
+        return "EnvDBConnectionInfo [clusterName=" + clusterName + ", masterSlave=" + masterSlave + ", envDsName="
+                + envDsName + "]";
+    }
 
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		EnvDBInfo other = (EnvDBInfo) obj;
-		if (envDsName == null) {
-			if (other.envDsName != null)
-				return false;
-		} else if (!envDsName.equals(other.envDsName))
-			return false;
-		return true;
-	}
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((envDsName == null) ? 0 : envDsName.hashCode());
+        return result;
+    }
 
-	public String getEnvDsName() {
-		return envDsName;
-	}
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        EnvDBInfo other = (EnvDBInfo) obj;
+        if (envDsName == null) {
+            if (other.envDsName != null)
+                return false;
+        } else if (!envDsName.equals(other.envDsName))
+            return false;
+        return true;
+    }
 
-	public void setEnvDsName(String envDsName) {
-		this.envDsName = envDsName;
-	}
+    public String getEnvDsName() {
+        return envDsName;
+    }
+
+    public void setEnvDsName(String envDsName) {
+        this.envDsName = envDsName;
+    }
 
 }

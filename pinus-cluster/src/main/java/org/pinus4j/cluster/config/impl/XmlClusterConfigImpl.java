@@ -264,10 +264,10 @@ public class XmlClusterConfigImpl implements IClusterConfig {
             // load master global
             Node masterGlobal = xmlUtil.getFirstChildByName(global, "master");
             String dsId = masterGlobal.getTextContent().trim();
-            DBInfo masterGlobalDBInfo = dsBucketMap.get(dsId);
-            if (masterGlobalDBInfo == null) {
+            if (dsBucketMap.get(dsId) == null) {
                 throw new LoadConfigException("配置错误，找不到datasource id=" + dsId);
             }
+            DBInfo masterGlobalDBInfo = dsBucketMap.get(dsId).clone();
             masterGlobalDBInfo.setClusterName(clusterName);
             masterGlobalDBInfo.setMasterSlave(EnumDBMasterSlave.MASTER);
             // set custom property
@@ -285,10 +285,10 @@ public class XmlClusterConfigImpl implements IClusterConfig {
                 int slaveIndex = 0;
                 for (Node slaveGlobal : slaveGlobalList) {
                     dsId = slaveGlobal.getTextContent().trim();
-                    DBInfo slaveGlobalDBInfo = dsBucketMap.get(dsId);
-                    if (slaveGlobalDBInfo == null) {
+                    if (dsBucketMap.get(dsId) == null) {
                         throw new LoadConfigException("配置错误，找不到datasource id=" + dsId);
                     }
+                    DBInfo slaveGlobalDBInfo = dsBucketMap.get(dsId).clone();
                     slaveGlobalDBInfo.setClusterName(clusterName);
                     slaveGlobalDBInfo.setMasterSlave(EnumDBMasterSlave.getSlaveEnum(slaveIndex++));
                     // set custom property
@@ -326,10 +326,10 @@ public class XmlClusterConfigImpl implements IClusterConfig {
             List<Node> shardingNodeList = xmlUtil.getChildByName(master, "sharding");
             for (Node shardingNode : shardingNodeList) {
                 String dsId = shardingNode.getTextContent().trim();
-                DBInfo masterShardingDBInfo = dsBucketMap.get(dsId);
-                if (masterShardingDBInfo == null) {
+                if (dsBucketMap.get(dsId) == null) {
                     throw new LoadConfigException("配置错误，找不到datasource id=" + dsId);
                 }
+                DBInfo masterShardingDBInfo = dsBucketMap.get(dsId).clone();
                 masterShardingDBInfo.setClusterName(clusterName);
                 masterShardingDBInfo.setMasterSlave(EnumDBMasterSlave.MASTER);
                 // set custom property
@@ -350,10 +350,10 @@ public class XmlClusterConfigImpl implements IClusterConfig {
                 List<DBInfo> slaveConnections = new ArrayList<DBInfo>();
                 for (Node shardingNode : shardingNodeList) {
                     String dsId = shardingNode.getTextContent().trim();
-                    DBInfo slaveShardingDBInfo = dsBucketMap.get(dsId);
-                    if (slaveShardingDBInfo == null) {
+                    if (dsBucketMap.get(dsId) == null) {
                         throw new LoadConfigException("配置错误，找不到datasource id=" + dsId);
                     }
+                    DBInfo slaveShardingDBInfo = dsBucketMap.get(dsId).clone();
                     slaveShardingDBInfo.setClusterName(clusterName);
                     slaveShardingDBInfo.setMasterSlave(EnumDBMasterSlave.getSlaveEnum(slaveIndex++));
                     // set custom property

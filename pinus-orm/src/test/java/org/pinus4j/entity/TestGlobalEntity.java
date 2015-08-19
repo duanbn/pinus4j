@@ -19,7 +19,7 @@ public class TestGlobalEntity extends FashionEntity implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    @PrimaryKey(comment = "主键", name = "pk")
+    @PrimaryKey(comment = "主键", name = "pk", isAutoIncrement = true)
     private Long              id;
 
     @Field

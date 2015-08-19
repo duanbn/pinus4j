@@ -57,6 +57,8 @@ public abstract class DBInfo {
 	protected Map<String, String> customProperties;
 
 	public abstract boolean check() throws LoadConfigException;
+	
+	public abstract DBInfo clone();
 
 	public String getClusterName() {
 		return clusterName;

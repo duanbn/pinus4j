@@ -28,7 +28,6 @@ import org.pinus4j.api.query.impl.DefaultQueryImpl;
 import org.pinus4j.cluster.IDBCluster;
 import org.pinus4j.cluster.IDBClusterBuilder;
 import org.pinus4j.cluster.beans.IShardingKey;
-import org.pinus4j.cluster.beans.ShardingKey;
 import org.pinus4j.cluster.enums.EnumDB;
 import org.pinus4j.cluster.enums.EnumDBMasterSlave;
 import org.pinus4j.cluster.enums.EnumSyncAction;
@@ -53,8 +52,8 @@ import org.pinus4j.task.TaskExecutor;
 import org.pinus4j.task.TaskFuture;
 import org.pinus4j.transaction.enums.EnumTransactionIsolationLevel;
 import org.pinus4j.transaction.impl.BestEffortsOnePCJtaTransactionManager;
-import org.pinus4j.utils.PKUtil;
 import org.pinus4j.utils.CheckUtil;
+import org.pinus4j.utils.PKUtil;
 import org.pinus4j.utils.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -306,9 +305,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
     public Number save(Object entity) {
         CheckUtil.checkShardingEntity(entity);
 
-        String clusterName = entityMetaManager.getClusterName(entity.getClass());
-        Object shardingKey = entityMetaManager.getShardingValue(entity);
-        IShardingKey<Object> sk = new ShardingKey<Object>(clusterName, shardingKey);
+        IShardingKey<?> sk = entityMetaManager.getShardingKey(entity);
         CheckUtil.checkShardingKey(sk);
 
         PKValue pkValue = this.shardingUpdater.save(entity, sk);
@@ -323,9 +320,7 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
     public void update(Object entity) {
         CheckUtil.checkShardingEntity(entity);
 
-        String clusterName = entityMetaManager.getClusterName(entity.getClass());
-        Object shardingKey = entityMetaManager.getShardingValue(entity);
-        IShardingKey<Object> sk = new ShardingKey<Object>(clusterName, shardingKey);
+        IShardingKey<?> sk = entityMetaManager.getShardingKey(entity);
         CheckUtil.checkShardingKey(sk);
 
         this.shardingUpdater.update(entity, sk);
@@ -695,7 +690,8 @@ public class ShardingStorageClientImpl implements IShardingStorageClient {
     }
 
     @Override
-    public <T> T findOneByQuery(IQuery<T> query, IShardingKey<?> shardingKey, Class<T> clazz, EnumDBMasterSlave masterSlave) {
+    public <T> T findOneByQuery(IQuery<T> query, IShardingKey<?> shardingKey, Class<T> clazz,
+                                EnumDBMasterSlave masterSlave) {
         return findOneByQuery(query, shardingKey, clazz, true, masterSlave);
     }
 

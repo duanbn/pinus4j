@@ -16,11 +16,7 @@
 
 package org.pinus4j.datalayer.update;
 
-import javax.transaction.TransactionManager;
-
-import org.pinus4j.cache.IPrimaryCache;
-import org.pinus4j.cache.ISecondCache;
-import org.pinus4j.cluster.IDBCluster;
+import org.pinus4j.datalayer.IDataLayer;
 
 /**
  * base data update interface.
@@ -28,42 +24,6 @@ import org.pinus4j.cluster.IDBCluster;
  * @author duanbn
  * @since 0.7.1
  */
-public interface IDataUpdate {
-
-    /**
-	 *  set db cluster.
-	 */
-	public void setDBCluster(IDBCluster dbCluster);
-
-    /**
-     * get db cluster.
-     */
-    public IDBCluster getDBCluster();
-
-	/**
-	 * set primary cache.
-	 */
-	public void setPrimaryCache(IPrimaryCache primaryCache);
-
-    /**
-     * get second cache.
-     */
-    public IPrimaryCache getPrimaryCache();
-
-	/**
-	 * set second cache.
-	 * 
-	 * @param secondCache
-	 */
-	public void setSecondCache(ISecondCache secondCache);
-
-    /**
-     * get second cache.
-     */
-    public ISecondCache getSecondCache();
-    
-    public void setTransactionManager(TransactionManager txManager);
-    
-    public TransactionManager getTransactionManager();
+public interface IDataUpdate extends IDataLayer {
 
 }

@@ -59,6 +59,16 @@ public class AppDBInfo extends DBInfo {
     }
 
     @Override
+    public DBInfo clone() {
+        AppDBInfo clone = new AppDBInfo();
+        clone.setUsername(this.username);
+        clone.setPassword(this.password);
+        clone.setUrl(this.url);
+        clone.setConnPoolInfo(this.connPoolInfo);
+        return clone;
+    }
+
+    @Override
     public String toString() {
         return "AppDBConnectionInfo [username=" + username + ", clusterName=" + clusterName + ", masterSlave="
                 + masterSlave + ", url=" + url + "]";

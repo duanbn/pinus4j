@@ -32,6 +32,8 @@ import java.util.Map;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
+import org.pinus4j.cluster.beans.IShardingKey;
+import org.pinus4j.cluster.beans.ShardingKey;
 import org.pinus4j.constant.Const;
 import org.pinus4j.entity.annotations.DateTime;
 import org.pinus4j.entity.annotations.Index;
@@ -153,10 +155,11 @@ public class DefaultEntityMetaManager implements IEntityMetaManager {
     }
 
     @Override
-    public Object getShardingValue(Object entity) {
+    public IShardingKey<?> getShardingKey(Object entity) {
         Class<?> clazz = entity.getClass();
         DBTable dbTable = this.getTableMeta(clazz);
 
+        String clusterName = dbTable.getCluster();
         String shardingField = dbTable.getShardingBy();
         Object shardingValue = null;
         try {
@@ -168,7 +171,7 @@ public class DefaultEntityMetaManager implements IEntityMetaManager {
             throw new IllegalStateException("shardingValue is null, clazz=" + clazz + " field=" + shardingField);
         }
 
-        return shardingValue;
+        return new ShardingKey(clusterName, shardingValue);
     }
 
     @Override

@@ -20,24 +20,22 @@ import org.pinus4j.exceptions.DBClusterException;
 
 public class MemCachedSecondCacheTest extends BaseTest {
 
-    private static IQuery                 query;
-    private static ShardingDBResource     db;
+    private static IQuery             query;
+    private static ShardingDBResource db;
 
-    private static IShardingStorageClient storageClient;
-    private static ISecondCache           secondCache;
+    private static ISecondCache       secondCache;
 
     @BeforeClass
     public static void before() {
-        storageClient = getStorageClient();
-        secondCache = storageClient.getDBCluster().getSecondCache();
+        secondCache = pinusClient.getDBCluster().getSecondCache();
 
-        query = storageClient.createQuery();
+        query = pinusClient.createQuery(Object.class);
         query.add(Condition.eq("aa", "aa", TestEntity.class));
         query.add(Condition.eq("bb", "bb", TestEntity.class));
 
         IShardingKey<?> shardingValue = new ShardingKey<Integer>(CLUSTER_KLSTORAGE, 1);
         try {
-            db = (ShardingDBResource) storageClient.getDBCluster().selectDBResourceFromMaster("test_entity",
+            db = (ShardingDBResource) pinusClient.getDBCluster().selectDBResourceFromMaster("test_entity",
                     shardingValue);
         } catch (DBClusterException e) {
             e.printStackTrace();
@@ -47,7 +45,7 @@ public class MemCachedSecondCacheTest extends BaseTest {
 
     @AfterClass
     public static void after() {
-        storageClient.destroy();
+        pinusClient.destroy();
     }
 
     @Test
@@ -55,15 +53,18 @@ public class MemCachedSecondCacheTest extends BaseTest {
         List<String> data = new ArrayList<String>();
         data.add("aaa");
         data.add("bbb");
-        secondCache.putGlobal(((DefaultQueryImpl) query).getWhereSql(), CLUSTER_KLSTORAGE, "testglobalentity", data);
+        secondCache.putGlobal(((DefaultQueryImpl) query).getWhereSql().getSql(), CLUSTER_KLSTORAGE, "testglobalentity",
+                data);
 
-        data = secondCache.getGlobal(((DefaultQueryImpl) query).getWhereSql(), CLUSTER_KLSTORAGE, "testglobalentity");
+        data = secondCache.getGlobal(((DefaultQueryImpl) query).getWhereSql().getSql(), CLUSTER_KLSTORAGE,
+                "testglobalentity");
         Assert.assertEquals("aaa", data.get(0));
         Assert.assertEquals("bbb", data.get(1));
 
         secondCache.removeGlobal(CLUSTER_KLSTORAGE, "testglobalentity");
 
-        data = secondCache.getGlobal(((DefaultQueryImpl) query).getWhereSql(), CLUSTER_KLSTORAGE, "testglobalentity");
+        data = secondCache.getGlobal(((DefaultQueryImpl) query).getWhereSql().getSql(), CLUSTER_KLSTORAGE,
+                "testglobalentity");
         Assert.assertNull(data);
     }
 
@@ -72,15 +73,15 @@ public class MemCachedSecondCacheTest extends BaseTest {
         List<String> data = new ArrayList<String>();
         data.add("ccc");
         data.add("ddd");
-        secondCache.put(((DefaultQueryImpl) query).getWhereSql(), db, data);
+        secondCache.put(((DefaultQueryImpl) query).getWhereSql().getSql(), db, data);
 
-        data = secondCache.get(((DefaultQueryImpl) query).getWhereSql(), db);
+        data = secondCache.get(((DefaultQueryImpl) query).getWhereSql().getSql(), db);
         Assert.assertEquals("ccc", data.get(0));
         Assert.assertEquals("ddd", data.get(1));
 
         secondCache.remove(db);
 
-        data = secondCache.get(((DefaultQueryImpl) query).getWhereSql(), db);
+        data = secondCache.get(((DefaultQueryImpl) query).getWhereSql().getSql(), db);
         Assert.assertNull(data);
     }
 

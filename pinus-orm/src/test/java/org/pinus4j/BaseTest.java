@@ -1,16 +1,11 @@
 package org.pinus4j;
 
 import java.sql.Timestamp;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 import java.util.Random;
 
 import org.pinus4j.api.DefaultPinusClient;
-import org.pinus4j.api.IShardingStorageClient;
 import org.pinus4j.api.PinusClient;
-import org.pinus4j.api.ShardingStorageClientImpl;
-import org.pinus4j.cluster.beans.ShardingKey;
 import org.pinus4j.cluster.enums.EnumSyncAction;
 import org.pinus4j.entity.TestEntity;
 import org.pinus4j.entity.TestGlobalEntity;
@@ -19,13 +14,26 @@ import org.pinus4j.exceptions.LoadConfigException;
 
 public class BaseTest {
 
-    public static final String      CLUSTER_KLSTORAGE = "pinus";
+    public static final String         CLUSTER_KLSTORAGE = "pinus";
 
-    public static final String      CACHE_HOST        = "127.0.0.1:11211";
+    public static final String         CACHE_HOST        = "127.0.0.1:11211";
 
-    protected static final Random   r                 = new Random();
+    protected static final Random      r                 = new Random();
 
-    protected static final String[] seeds             = new String[] { "a", "b", "c", "d", "e", "f", "g", "h", "i" };
+    protected static final String[]    seeds             = new String[] { "a", "b", "c", "d", "e", "f", "g", "h", "i" };
+
+    protected static final PinusClient pinusClient;
+
+    static {
+        pinusClient = new DefaultPinusClient();
+        pinusClient.setScanPackage("org.pinus4j");
+        pinusClient.setSyncAction(EnumSyncAction.UPDATE);
+        try {
+            pinusClient.init();
+        } catch (LoadConfigException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     public static String getContent(int len) {
         StringBuilder content = new StringBuilder();
@@ -37,6 +45,7 @@ public class BaseTest {
 
     public static TestEntity createEntity() {
         TestEntity testEntity = new TestEntity();
+        testEntity.setId(pinusClient.genClusterUniqueLongId("test_entity"));
         testEntity.setTestBool(true);
         testEntity.setOTestBool(false);
         testEntity.setTestByte((byte) 255);
@@ -106,51 +115,6 @@ public class BaseTest {
         testEntity.setTestString(getContent(r.nextInt(100)));
         testEntity.setTestTime(new Timestamp(System.currentTimeMillis()));
         return testEntity;
-    }
-
-    public static PinusClient getPinusClient() {
-        PinusClient pinusClient = new DefaultPinusClient();
-        pinusClient.setScanPackage("org.pinus4j");
-        pinusClient.setSyncAction(EnumSyncAction.UPDATE);
-        try {
-            pinusClient.init();
-        } catch (LoadConfigException e) {
-            throw new RuntimeException(e);
-        }
-        return pinusClient;
-    }
-
-    public static IShardingStorageClient getStorageClient() {
-        IShardingStorageClient storageClient = new ShardingStorageClientImpl();
-
-        storageClient.setScanPackage("org.pinus4j");
-        storageClient.setSyncAction(EnumSyncAction.UPDATE);
-        try {
-            storageClient.init();
-        } catch (LoadConfigException e) {
-            throw new RuntimeException(e);
-        }
-
-        return storageClient;
-    }
-
-    //    @Test
-    public void genData() throws Exception {
-        IShardingStorageClient storageClient = getStorageClient();
-
-        List<TestEntity> dataList = new ArrayList<TestEntity>(3000);
-        int i = 0;
-        while (true) {
-            dataList.add(createEntity());
-            if (i++ % 1000 == 0) {
-                long start = System.currentTimeMillis();
-                Number[] pks = storageClient.saveBatch(dataList,
-                        new ShardingKey<Integer>(CLUSTER_KLSTORAGE, r.nextInt(60000000)));
-                System.out
-                        .println("save " + pks.length + ", const time " + (System.currentTimeMillis() - start) + "ms");
-                dataList.clear();
-            }
-        }
     }
 
 }

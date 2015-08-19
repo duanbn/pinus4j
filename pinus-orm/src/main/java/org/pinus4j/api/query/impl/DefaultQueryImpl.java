@@ -20,11 +20,14 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.pinus4j.api.SQL;
 import org.pinus4j.api.query.IQuery;
 import org.pinus4j.cluster.beans.IShardingKey;
 import org.pinus4j.cluster.enums.EnumDBMasterSlave;
 import org.pinus4j.utils.BeansUtil;
 import org.pinus4j.utils.StringUtil;
+
+import com.google.common.collect.Lists;
 
 /**
  * 查询对象实现.
@@ -32,8 +35,8 @@ import org.pinus4j.utils.StringUtil;
  * @author duanbn
  */
 public class DefaultQueryImpl<T> implements IQuery<T>, Cloneable {
-    
-    protected Class<T>           clazz;
+
+    protected Class<T>        clazz;
 
     /**
      * 保存取值的字段.
@@ -182,7 +185,7 @@ public class DefaultQueryImpl<T> implements IQuery<T>, Cloneable {
 
         return this;
     }
-    
+
     @Override
     public void clean() {
         this.fields = null;
@@ -227,42 +230,50 @@ public class DefaultQueryImpl<T> implements IQuery<T>, Cloneable {
         return clone;
     }
 
-    public String getWhereSql() {
-        StringBuilder SQL = new StringBuilder();
+    public SQL getWhereSql() {
+        StringBuilder sqlText = new StringBuilder();
+        List<Object> paramList = Lists.newArrayList();
+
         // 添加查询条件
         if (!condList.isEmpty()) {
-            SQL.append(" where ");
+            sqlText.append(" where ");
 
             Condition cond = null;
             for (int i = 0; i < condList.size(); i++) {
                 cond = condList.get(i);
                 if (i > 0) {
-                    SQL.append(" ").append(cond.getConditionRelation().getValue()).append(" ").append(cond.getSql());
+                    sqlText.append(" ").append(cond.getConditionRelation().getValue()).append(" ")
+                            .append(cond.getSql().getSql());
                 } else {
-                    SQL.append(cond.getSql()); // first one
+                    sqlText.append(cond.getSql().getSql()); // first one
                 }
+                paramList.addAll(cond.getSql().getParams());
             }
         }
 
         // 添加排序条件
         if (!orderList.isEmpty()) {
-            SQL.append(" order by ");
+            sqlText.append(" order by ");
             for (OrderBy orderBy : orderList) {
-                SQL.append('`').append(orderBy.getField()).append('`');
-                SQL.append(" ");
-                SQL.append(orderBy.getOrder().getValue());
-                SQL.append(",");
+                sqlText.append('`').append(orderBy.getField()).append('`');
+                sqlText.append(" ");
+                sqlText.append(orderBy.getOrder().getValue());
+                sqlText.append(",");
             }
-            SQL.deleteCharAt(SQL.length() - 1);
+            sqlText.deleteCharAt(sqlText.length() - 1);
         }
 
         // 添加分页
         if (start > -1 && limit > -1) {
-            SQL.append(" limit ").append(start).append(",").append(limit);
+            sqlText.append(" limit ?,?");
+            paramList.add(start);
+            paramList.add(limit);
         } else if (limit != -1) {
-            SQL.append(" limit ").append(limit);
+            sqlText.append(" limit ?");
+            paramList.add(limit);
         }
-        return SQL.toString();
+
+        return SQL.valueOf(sqlText.toString(), paramList);
     }
 
     @Override
@@ -275,7 +286,7 @@ public class DefaultQueryImpl<T> implements IQuery<T>, Cloneable {
             }
             info.deleteCharAt(info.length() - 1);
         }
-        if (StringUtil.isNotBlank(getWhereSql())) {
+        if (StringUtil.isNotBlank(getWhereSql().getSql())) {
             info.append(" wheresql:").append(getWhereSql());
         }
         return info.toString();
