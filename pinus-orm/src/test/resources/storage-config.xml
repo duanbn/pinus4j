@@ -13,8 +13,8 @@
 	<db.cluster.generateid.batch>1</db.cluster.generateid.batch>
 
 	<!-- db query cache expire is seconds -->
-	<!-- <db.cluster.cache enabled="true"> <primary expire="300"> <address>127.0.0.1:11211</address> 
-		</primary> <second expire="300"> <address>127.0.0.1:11211</address> </second> 
+	<!-- <db.cluster.cache enabled="true"> <primary expire="1800"> <address>127.0.0.1:11211</address> 
+		</primary> <second expire="1800"> <address>127.0.0.1:11211</address> </second> 
 		</db.cluster.cache> -->
 	<db.cluster.cache enabled="true">
 		<primary expire="1800" class="org.pinus4j.cache.impl.RedisPrimaryCacheImpl"
@@ -29,10 +29,10 @@
 
 	<datasource-bucket
 		cpclass="org.pinus4j.cluster.cp.impl.DruidConnectionPoolImpl"
-		maxActive="10" minIdle="10" initialSize="1" removeAbandoned="false"
-		removeAbandonedTimeout="10" maxWait="1000"
-		timeBetweenEvictionRunsMillis="1000000" numTestsPerEvictionRun="10"
-		minEvictableIdleTimeMillis="5000000" filters="stat"
+		maxActive="1000" minIdle="10" initialSize="1" removeAbandoned="false"
+		removeAbandonedTimeout="100" maxWait="10000"
+		timeBetweenEvictionRunsMillis="100000" numTestsPerEvictionRun="10"
+		minEvictableIdleTimeMillis="500000" filters="stat"
 		poolPreparedStatements="true">
 		<!-- <envds id=""> <jndi></jndi> </envds> -->
 		<appds id="pinus-global">

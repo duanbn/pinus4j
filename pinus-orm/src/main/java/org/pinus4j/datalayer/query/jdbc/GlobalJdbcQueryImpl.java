@@ -102,7 +102,7 @@ public class GlobalJdbcQueryImpl extends AbstractJdbcQuery implements IGlobalQue
     }
 
     @Override
-    public Number getCountByQuery(IQuery query, Class<?> clazz, boolean useCache, EnumDBMasterSlave masterSlave) {
+    public <T> Number getCountByQuery(IQuery<T> query, Class<T> clazz, boolean useCache, EnumDBMasterSlave masterSlave) {
         String clusterName = entityMetaManager.getClusterName(clazz);
         String tableName = entityMetaManager.getTableName(clazz);
 
@@ -155,17 +155,19 @@ public class GlobalJdbcQueryImpl extends AbstractJdbcQuery implements IGlobalQue
     @Override
     public <T> T findByPk(EntityPK pk, Class<T> clazz, boolean useCache, EnumDBMasterSlave masterSlave) {
         List<T> result = findByPkList(Lists.newArrayList(pk), clazz, useCache, masterSlave);
-        
+
         if (!result.isEmpty()) {
             return result.get(0);
         }
-        
+
         return null;
     }
 
     @Override
     public <T> List<T> findByPkList(List<EntityPK> pkList, Class<T> clazz, boolean useCache,
                                     EnumDBMasterSlave masterSlave) {
+        List<T> result = Lists.newArrayList();
+
         String clusterName = entityMetaManager.getClusterName(clazz);
         String tableName = entityMetaManager.getTableName(clazz);
 
@@ -186,7 +188,7 @@ public class GlobalJdbcQueryImpl extends AbstractJdbcQuery implements IGlobalQue
             }
 
             EntityPK[] entityPks = pkList.toArray(new EntityPK[pkList.size()]);
-            List<T> data = selectByPksWithCache(dbResource, clazz, entityPks, useCache);
+            Map<EntityPK, T> data = selectByPksWithCache(dbResource, clazz, entityPks, null, useCache);
             if (data.isEmpty() && isFromSlave) {
                 dbResource.close();
                 dbResource = this.dbCluster.getMasterGlobalDBResource(clusterName, tableName);
@@ -195,10 +197,11 @@ public class GlobalJdbcQueryImpl extends AbstractJdbcQuery implements IGlobalQue
                     tx.enlistResource((XAResource) dbResource);
                 }
 
-                data = selectByPksWithCache(dbResource, clazz, entityPks, useCache);
+                data = selectByPksWithCache(dbResource, clazz, entityPks, null, useCache);
             }
 
-            return data;
+            result.addAll(data.values());
+            return result;
         } catch (Exception e) {
             if (tx != null) {
                 try {
@@ -215,90 +218,85 @@ public class GlobalJdbcQueryImpl extends AbstractJdbcQuery implements IGlobalQue
         }
     }
 
+    @SuppressWarnings("unchecked")
     @Override
-    public <T> T findOneByQuery(IQuery query, Class<T> clazz, boolean useCache, EnumDBMasterSlave masterSlave) {
-        List<T> entities = findByQuery(query, clazz, useCache, masterSlave);
+    public <T> List<T> findByQuery(IQuery<T> query, Class<T> clazz, boolean useCache, EnumDBMasterSlave masterSlave) {
+        List<T> result = Lists.newArrayList();
 
-        if (entities.isEmpty()) {
-            return null;
-        }
-
-        return entities.get(0);
-    }
-
-    @Override
-    public <T> List<T> findByQuery(IQuery query, Class<T> clazz, boolean useCache, EnumDBMasterSlave masterSlave) {
         if (query == null) {
-            query = new DefaultQueryImpl();
+            query = new DefaultQueryImpl<T>();
         }
 
         String clusterName = entityMetaManager.getClusterName(clazz);
         String tableName = entityMetaManager.getTableName(clazz);
 
+        if (isSecondCacheAvailable(clazz, useCache)) {
+            List<T> sCacheData = secondCache.getGlobal(((DefaultQueryImpl<T>) query).getWhereSql().getSql(),
+                    clusterName, tableName);
+            if (sCacheData != null) {
+                return sCacheData;
+            }
+        }
+
         Transaction tx = null;
         IDBResource dbResource = null;
         try {
-            List<T> result = null;
+            tx = txManager.getTransaction();
+            boolean isFromSlave = false;
 
-            if (isSecondCacheAvailable(clazz, useCache)) {
-                result = (List<T>) secondCache.getGlobal(((DefaultQueryImpl) query).getWhereSql().getSql(),
-                        clusterName, tableName);
+            if (EnumDBMasterSlave.MASTER == masterSlave || !this.dbCluster.isGlobalSlaveExist(clusterName)) {
+                dbResource = this.dbCluster.getMasterGlobalDBResource(clusterName, tableName);
+            } else {
+                dbResource = this.dbCluster.getSlaveGlobalDBResource(clusterName, tableName, masterSlave);
+                isFromSlave = true;
             }
 
-            if (result == null || result.isEmpty()) {
-                tx = txManager.getTransaction();
-                boolean isFromSlave = false;
+            if (tx != null) {
+                tx.enlistResource((XAResource) dbResource);
+            }
 
-                if (EnumDBMasterSlave.MASTER == masterSlave || !this.dbCluster.isGlobalSlaveExist(clusterName)) {
+            if (isCacheAvailable(clazz, useCache)) {
+                EntityPK[] entityPks = selectPksByQuery(dbResource, query, clazz);
+                Map<EntityPK, T> datas = selectByPksWithCache(dbResource, clazz, entityPks,
+                        ((DefaultQueryImpl<T>) query).getOrderList(), useCache);
+
+                if ((datas == null || datas.isEmpty()) && isFromSlave) {
+                    dbResource.close();
                     dbResource = this.dbCluster.getMasterGlobalDBResource(clusterName, tableName);
-                } else {
-                    dbResource = this.dbCluster.getSlaveGlobalDBResource(clusterName, tableName, masterSlave);
-                    isFromSlave = true;
-                }
 
-                if (tx != null) {
-                    tx.enlistResource((XAResource) dbResource);
-                }
-
-                if (isCacheAvailable(clazz, useCache)) {
-                    EntityPK[] entityPks = selectPksByQuery(dbResource, query, clazz);
-                    result = selectByPksWithCache(dbResource, clazz, entityPks, useCache);
-
-                    if (result == null && isFromSlave) {
-                        dbResource.close();
-                        dbResource = this.dbCluster.getMasterGlobalDBResource(clusterName, tableName);
-
-                        if (tx != null) {
-                            tx.enlistResource((XAResource) dbResource);
-                        }
-
-                        result = selectByPksWithCache(dbResource, clazz, entityPks, useCache);
+                    if (tx != null) {
+                        tx.enlistResource((XAResource) dbResource);
                     }
-                } else {
+
+                    datas = selectByPksWithCache(dbResource, clazz, entityPks,
+                            ((DefaultQueryImpl<T>) query).getOrderList(), useCache);
+                }
+
+                result.addAll(datas.values());
+            } else {
+                result = selectByQuery(dbResource, query, clazz);
+                if ((result == null || result.isEmpty()) && isFromSlave) {
+                    dbResource.close();
+                    dbResource = this.dbCluster.getMasterGlobalDBResource(clusterName, tableName);
+
+                    if (tx != null) {
+                        tx.enlistResource((XAResource) dbResource);
+                    }
+
                     result = selectByQuery(dbResource, query, clazz);
-                    if (result == null && isFromSlave) {
-                        dbResource.close();
-                        dbResource = this.dbCluster.getMasterGlobalDBResource(clusterName, tableName);
-
-                        if (tx != null) {
-                            tx.enlistResource((XAResource) dbResource);
-                        }
-
-                        result = selectByQuery(dbResource, query, clazz);
-                    }
                 }
+            }
 
-                if (isSecondCacheAvailable(clazz, useCache)) {
-                    secondCache.putGlobal(((DefaultQueryImpl) query).getWhereSql().getSql(), clusterName, tableName,
-                            result);
-                }
+            if (isSecondCacheAvailable(clazz, useCache)) {
+                secondCache.putGlobal(((DefaultQueryImpl<T>) query).getWhereSql().getSql(), clusterName, tableName,
+                        result);
             }
 
             // 过滤从缓存结果, 将没有指定的字段设置为默认值.
             List<T> filteResult = new ArrayList<T>(result.size());
-            if (((DefaultQueryImpl) query).hasQueryFields()) {
+            if (((DefaultQueryImpl<T>) query).hasQueryFields()) {
                 for (T obj : result) {
-                    filteResult.add((T) BeansUtil.cloneWithGivenField(obj, ((DefaultQueryImpl) query).getFields()));
+                    filteResult.add((T) BeansUtil.cloneWithGivenField(obj, ((DefaultQueryImpl<T>) query).getFields()));
                 }
                 result = filteResult;
             }

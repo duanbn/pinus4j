@@ -39,13 +39,6 @@ public interface IPrimaryCache extends ICache {
     public void setCountGlobal(String clusterName, String tableName, long count);
 
     /**
-     * 删除count数.
-     * 
-     * @param db 分库分表
-     */
-    public void removeCountGlobal(String clusterName, String tableName);
-
-    /**
      * 减少分表count数.
      * 
      * @param db 分库分表
@@ -72,23 +65,6 @@ public interface IPrimaryCache extends ICache {
     public long getCountGlobal(String clusterName, String tableName);
 
     /**
-     * 添加一条记录. 如果存在则替换.
-     * 
-     * @param db 分库分表
-     * @param pk 主键
-     * @param data 记录
-     */
-    public void putGlobal(String clusterName, String tableName, EntityPK pk, Object data);
-
-    /**
-     * 批量添加记录.
-     * 
-     * @param db 分库分表
-     * @param data 批量数据
-     */
-    public void putGlobal(String clusterName, String tableName, List<? extends Object> data);
-
-    /**
      * 批量添加记录
      * 
      * @param clusterName
@@ -98,30 +74,13 @@ public interface IPrimaryCache extends ICache {
     public void putGlobal(String clusterName, String tableName, Map<EntityPK, ? extends Object> data);
 
     /**
-     * 获取记录.
-     * 
-     * @param db 分库分表
-     * @param pk 主键
-     * @return 记录
-     */
-    public <T> T getGlobal(String clusterName, String tableName, EntityPK pk);
-
-    /**
      * 获取多条记录.
      * 
      * @param db 分库分表
      * @param pks 主键
      * @return 多条数据
      */
-    public <T> List<T> getGlobal(String clusterName, String tableName, EntityPK[] pks);
-
-    /**
-     * 删除一条记录.
-     * 
-     * @param db 分库分表
-     * @param pk 主键
-     */
-    public void removeGlobal(String clusterName, String tableName, EntityPK pk);
+    public <T> Map<EntityPK, T> getGlobal(String clusterName, String tableName, EntityPK[] pks);
 
     /**
      * 批量删除缓存.
@@ -138,13 +97,6 @@ public interface IPrimaryCache extends ICache {
      * @param count count数
      */
     public void setCount(ShardingDBResource db, long count);
-
-    /**
-     * 删除count数.
-     * 
-     * @param db 分库分表
-     */
-    public void removeCount(ShardingDBResource db);
 
     /**
      * 减少分表count数.
@@ -173,24 +125,6 @@ public interface IPrimaryCache extends ICache {
     public long getCount(ShardingDBResource db);
 
     /**
-     * 添加一条记录. 如果存在则替换.
-     * 
-     * @param db 分库分表
-     * @param pk 主键
-     * @param data 记录
-     */
-    public void put(ShardingDBResource db, EntityPK pk, Object data);
-
-    /**
-     * 批量添加记录.
-     * 
-     * @param db 分库分表
-     * @param pks 主键
-     * @param data 批量数据
-     */
-    public void put(ShardingDBResource db, EntityPK[] pks, List<? extends Object> data);
-
-    /**
      * 批量添加记录.
      * 
      * @param db
@@ -199,30 +133,13 @@ public interface IPrimaryCache extends ICache {
     public void put(ShardingDBResource db, Map<EntityPK, ? extends Object> data);
 
     /**
-     * 获取记录.
-     * 
-     * @param db 分库分表
-     * @param pk 主键
-     * @return 记录
-     */
-    public <T> T get(ShardingDBResource db, EntityPK pk);
-
-    /**
      * 获取多条记录.
      * 
      * @param db 分库分表
      * @param ids 主键
      * @return 多条数据
      */
-    public <T> List<T> get(ShardingDBResource db, EntityPK[] ids);
-
-    /**
-     * 删除一条记录.
-     * 
-     * @param db 分库分表
-     * @param pk 主键
-     */
-    public void remove(ShardingDBResource db, EntityPK pk);
+    public <T> Map<EntityPK, T> get(ShardingDBResource db, EntityPK[] ids);
 
     /**
      * 批量删除缓存.

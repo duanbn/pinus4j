@@ -20,14 +20,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import net.spy.memcached.internal.OperationFuture;
-
 import org.pinus4j.cache.IPrimaryCache;
 import org.pinus4j.cluster.resources.ShardingDBResource;
 import org.pinus4j.entity.meta.EntityPK;
 import org.pinus4j.utils.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 /**
  * memcached缓存实现. Pinus存储主缓存的实现. 缓存中的数据不设置过期时间，Pinus存储负责缓存与数据库之间的数据一致性.
@@ -57,12 +58,6 @@ public class MemCachedPrimaryCacheImpl extends AbstractMemCachedCache implements
     }
 
     @Override
-    public void removeCountGlobal(String clusterName, String tableName) {
-        String key = buildGlobalCountKey(clusterName, tableName);
-        _removeCount(key);
-    }
-
-    @Override
     public long decrCountGlobal(String clusterName, String tableName, int delta) {
         String key = buildGlobalCountKey(clusterName, tableName);
         return _decrCount(key, delta);
@@ -81,30 +76,6 @@ public class MemCachedPrimaryCacheImpl extends AbstractMemCachedCache implements
     }
 
     @Override
-    public void putGlobal(String clusterName, String tableName, EntityPK id, Object data) {
-        if (data == null) {
-            return;
-        }
-
-        String key = buildGlobalKey(clusterName, tableName, id);
-        _put(key, data);
-    }
-
-    @Override
-    public void putGlobal(String clusterName, String tableName, List<? extends Object> data) {
-        if (data == null || data.isEmpty()) {
-            return;
-        }
-
-        List<String> keys = new ArrayList<String>();
-        for (Object d : data) {
-            EntityPK entityPk = entityMetaManager.getEntityPK(d);
-            keys.add(buildGlobalKey(clusterName, tableName, entityPk));
-        }
-        _put(keys, data);
-    }
-
-    @Override
     public void putGlobal(String clusterName, String tableName, Map<EntityPK, ? extends Object> data) {
         if (data == null || data.isEmpty()) {
             return;
@@ -120,25 +91,26 @@ public class MemCachedPrimaryCacheImpl extends AbstractMemCachedCache implements
     }
 
     @Override
-    public <T> T getGlobal(String clusterName, String tableName, EntityPK id) {
-        String key = buildGlobalKey(clusterName, tableName, id);
-        return _get(key);
-    }
-
-    @Override
-    public List<Object> getGlobal(String clusterName, String tableName, EntityPK[] ids) {
+    public <T> Map<EntityPK, T> getGlobal(String clusterName, String tableName, EntityPK[] ids) {
         List<String> keys = new ArrayList<String>();
         for (EntityPK id : ids) {
             String key = buildGlobalKey(clusterName, tableName, id);
             keys.add(key);
         }
-        return _get(keys);
-    }
 
-    @Override
-    public void removeGlobal(String clusterName, String tableName, EntityPK id) {
-        String key = buildGlobalKey(clusterName, tableName, id);
-        _remove(key);
+        Map<EntityPK, T> result = Maps.newLinkedHashMap();
+
+        Map<String, Object> data = _get(keys);
+        if (data != null) {
+            T value = null;
+            for (int i = 0; i < ids.length; i++) {
+                value = (T) data.get(keys.get(i));
+                if (value != null)
+                    result.put(ids[i], value);
+            }
+        }
+
+        return result;
     }
 
     @Override
@@ -154,12 +126,6 @@ public class MemCachedPrimaryCacheImpl extends AbstractMemCachedCache implements
     public void setCount(ShardingDBResource db, long count) {
         String key = buildCountKey(db);
         _setCount(key, count);
-    }
-
-    @Override
-    public void removeCount(ShardingDBResource db) {
-        String key = buildCountKey(db);
-        _removeCount(key);
     }
 
     @Override
@@ -181,29 +147,6 @@ public class MemCachedPrimaryCacheImpl extends AbstractMemCachedCache implements
     }
 
     @Override
-    public void put(ShardingDBResource db, EntityPK id, Object data) {
-        if (data == null) {
-            return;
-        }
-
-        String key = buildKey(db, id);
-        _put(key, data);
-    }
-
-    @Override
-    public void put(ShardingDBResource db, EntityPK[] ids, List<? extends Object> data) {
-        if (data == null || data.isEmpty()) {
-            return;
-        }
-
-        List<String> keys = new ArrayList<String>();
-        for (EntityPK id : ids) {
-            keys.add(buildKey(db, id));
-        }
-        _put(keys, data);
-    }
-
-    @Override
     public void put(ShardingDBResource db, Map<EntityPK, ? extends Object> data) {
         if (data == null || data.isEmpty()) {
             return;
@@ -219,24 +162,24 @@ public class MemCachedPrimaryCacheImpl extends AbstractMemCachedCache implements
     }
 
     @Override
-    public <T> T get(ShardingDBResource db, EntityPK id) {
-        String key = buildKey(db, id);
-        return _get(key);
-    }
+    public <T> Map<EntityPK, T> get(ShardingDBResource db, EntityPK[] ids) {
+        Map<EntityPK, T> result = Maps.newLinkedHashMap();
 
-    @Override
-    public List<Object> get(ShardingDBResource db, EntityPK... ids) {
         List<String> keys = new ArrayList<String>();
         for (EntityPK id : ids) {
             keys.add(buildKey(db, id));
         }
-        return _get(keys);
-    }
+        Map<String, Object> data = _get(keys);
+        if (data != null) {
+            T value = null;
+            for (int i = 0; i < ids.length; i++) {
+                value = (T) data.get(keys.get(i));
+                if (value != null)
+                    result.put(ids[i], value);
+            }
+        }
 
-    @Override
-    public void remove(ShardingDBResource db, EntityPK id) {
-        String key = buildKey(db, id);
-        _remove(key);
+        return result;
     }
 
     @Override
@@ -320,30 +263,11 @@ public class MemCachedPrimaryCacheImpl extends AbstractMemCachedCache implements
         return -1l;
     }
 
-    private void _put(String key, Object data) {
-        if (data == null) {
-            return;
-        }
-        
-        try {
-            OperationFuture<Boolean> rst = memClient.set(key, expire, data);
-            if (!rst.get()) {
-                LOG.warn("操作缓存失败");
-            } else {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("[PRIMARY CACHE] - put " + key + " value=" + data);
-                }
-            }
-        } catch (Exception e) {
-            LOG.warn("操作缓存失败:" + e.getMessage());
-        }
-    }
-
     private void _put(List<String> keys, List<? extends Object> data) {
         if (data == null || data.isEmpty()) {
             return;
         }
-        
+
         try {
             for (int i = 0; i < keys.size(); i++) {
                 memClient.set(keys.get(i), expire, data.get(i));
@@ -357,45 +281,20 @@ public class MemCachedPrimaryCacheImpl extends AbstractMemCachedCache implements
         }
     }
 
-    private <T> T _get(String key) {
+    private Map<String, Object> _get(List<String> keys) {
         try {
-            T obj = (T) memClient.get(key);
+            Map<String, Object> dataMap = memClient.getBulk(keys);
+
             if (LOG.isDebugEnabled()) {
-                int hit = 0;
-                if (obj != null) {
-                    hit = 1;
-                }
-                LOG.debug("[PRIMARY CACHE] - get " + key + " hit=" + hit);
+                LOG.debug("[PRIMARY CACHE] - get" + keys + " hits = " + dataMap.size());
             }
-            return obj;
+
+            return dataMap;
         } catch (Exception e) {
             LOG.warn("操作缓存失败:" + e.getMessage());
         }
 
         return null;
-    }
-
-    private List<Object> _get(List<String> keys) {
-        List<Object> datas = new ArrayList<Object>();
-        try {
-            Map<String, Object> dataMap = memClient.getBulk(keys);
-            if (dataMap != null) {
-                Object data = null;
-                for (String key : keys) {
-                    data = dataMap.get(key);
-                    if (data != null)
-                        datas.add(data);
-                }
-            }
-        } catch (Exception e) {
-            LOG.warn("操作缓存失败:" + e.getMessage());
-        }
-
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("[PRIMARY CACHE] - get" + keys + " hits = " + datas.size());
-        }
-
-        return datas;
     }
 
     private void _remove(String key) {

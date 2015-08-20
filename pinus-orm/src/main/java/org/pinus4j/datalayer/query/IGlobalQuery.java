@@ -33,15 +33,13 @@ public interface IGlobalQuery extends IDataQuery {
 
     Number getCount(Class<?> clazz, boolean useCache, EnumDBMasterSlave masterSlave);
 
-    Number getCountByQuery(IQuery query, Class<?> clazz, boolean useCache, EnumDBMasterSlave masterSlave);
+    <T> Number getCountByQuery(IQuery<T> query, Class<T> clazz, boolean useCache, EnumDBMasterSlave masterSlave);
     
     <T> T findByPk(EntityPK pk, Class<T> clazz, boolean useCache, EnumDBMasterSlave masterSlave);
 
     <T> List<T> findByPkList(List<EntityPK> pks, Class<T> clazz, boolean useCache, EnumDBMasterSlave masterSlave);
 
-    <T> T findOneByQuery(IQuery query, Class<T> clazz, boolean useCache, EnumDBMasterSlave masterSlave);
-
-    <T> List<T> findByQuery(IQuery query, Class<T> clazz, boolean useCache, EnumDBMasterSlave masterSlave);
+    <T> List<T> findByQuery(IQuery<T> query, Class<T> clazz, boolean useCache, EnumDBMasterSlave masterSlave);
 
     List<Map<String, Object>> findBySql(SQL sql, Class<?> clazz, EnumDBMasterSlave masterSlave);
 

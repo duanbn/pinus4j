@@ -16,7 +16,6 @@
 
 package org.pinus4j.cache.impl;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -30,6 +29,8 @@ import org.slf4j.LoggerFactory;
 
 import redis.clients.jedis.ShardedJedis;
 
+import com.google.common.collect.Maps;
+
 public class RedisPrimaryCacheImpl extends AbstractRedisCache implements IPrimaryCache {
 
     public static final Logger LOG = LoggerFactory.getLogger(RedisPrimaryCacheImpl.class);
@@ -42,12 +43,6 @@ public class RedisPrimaryCacheImpl extends AbstractRedisCache implements IPrimar
     public void setCountGlobal(String clusterName, String tableName, long count) {
         String key = buildGlobalCountKey(clusterName, tableName);
         _setCount(key, count);
-    }
-
-    @Override
-    public void removeCountGlobal(String clusterName, String tableName) {
-        String key = buildGlobalCountKey(clusterName, tableName);
-        _removeCount(key);
     }
 
     @Override
@@ -69,85 +64,34 @@ public class RedisPrimaryCacheImpl extends AbstractRedisCache implements IPrimar
     }
 
     @Override
-    public void putGlobal(String clusterName, String tableName, EntityPK id, Object data) {
-        if (data == null) {
-            return;
-        }
-
-        String key = buildGlobalKey(clusterName, tableName, id);
-        _put(key, data);
-    }
-
-    @Override
-    public void putGlobal(String clusterName, String tableName, List<? extends Object> data) {
-        if (data == null || data.isEmpty()) {
-            return;
-        }
-
-        List<String> keys = new ArrayList<String>();
-        for (Object d : data) {
-            EntityPK entityPk = entityMetaManager.getEntityPK(d);
-            keys.add(buildGlobalKey(clusterName, tableName, entityPk));
-        }
-        _put(keys, data);
-    }
-
-    @Override
     public void putGlobal(String clusterName, String tableName, Map<EntityPK, ? extends Object> data) {
         if (data == null || data.isEmpty()) {
             return;
         }
 
-        List<String> keys = new ArrayList<String>();
-        List<Object> datas = new ArrayList<Object>();
-        for (Map.Entry<EntityPK, ? extends Object> entry : data.entrySet()) {
-            keys.add(buildGlobalKey(clusterName, tableName, entry.getKey()));
-            datas.add(entry.getValue());
-        }
-        _put(keys, datas);
+        String key = buildGlobalKey(clusterName, tableName, null);
+
+        _put(key, data);
     }
 
     @Override
-    public <T> T getGlobal(String clusterName, String tableName, EntityPK id) {
-        String key = buildGlobalKey(clusterName, tableName, id);
-        return _get(key);
+    public <T> Map<EntityPK, T> getGlobal(String clusterName, String tableName, EntityPK[] pks) {
+        String key = buildGlobalKey(clusterName, tableName, null);
+
+        return _get(key, pks);
     }
 
     @Override
-    public List<Object> getGlobal(String clusterName, String tableName, EntityPK[] ids) {
-        List<String> keys = new ArrayList<String>();
-        for (EntityPK id : ids) {
-            String key = buildGlobalKey(clusterName, tableName, id);
-            keys.add(key);
-        }
-        return _get(keys);
-    }
+    public void removeGlobal(String clusterName, String tableName, List<EntityPK> pks) {
+        String key = buildGlobalKey(clusterName, tableName, null);
 
-    @Override
-    public void removeGlobal(String clusterName, String tableName, EntityPK id) {
-        String key = buildGlobalKey(clusterName, tableName, id);
-        _remove(key);
-    }
-
-    @Override
-    public void removeGlobal(String clusterName, String tableName, List<EntityPK> ids) {
-        List<String> keys = new ArrayList<String>();
-        for (EntityPK id : ids) {
-            keys.add(buildGlobalKey(clusterName, tableName, id));
-        }
-        _remove(keys);
+        _remove(key, pks);
     }
 
     @Override
     public void setCount(ShardingDBResource db, long count) {
         String key = buildCountKey(db);
         _setCount(key, count);
-    }
-
-    @Override
-    public void removeCount(ShardingDBResource db) {
-        String key = buildCountKey(db);
-        _removeCount(key);
     }
 
     @Override
@@ -169,71 +113,28 @@ public class RedisPrimaryCacheImpl extends AbstractRedisCache implements IPrimar
     }
 
     @Override
-    public void put(ShardingDBResource db, EntityPK id, Object data) {
-        if (data == null) {
-            return;
-        }
-
-        String key = buildKey(db, id);
-        _put(key, data);
-    }
-
-    @Override
-    public void put(ShardingDBResource db, EntityPK[] ids, List<? extends Object> data) {
-        if (data == null || data.isEmpty()) {
-            return;
-        }
-
-        List<String> keys = new ArrayList<String>();
-        for (EntityPK id : ids) {
-            keys.add(buildKey(db, id));
-        }
-        _put(keys, data);
-    }
-
-    @Override
     public void put(ShardingDBResource db, Map<EntityPK, ? extends Object> data) {
         if (data == null || data.isEmpty()) {
             return;
         }
 
-        List<String> keys = new ArrayList<String>();
-        List<Object> datas = new ArrayList<Object>();
-        for (Map.Entry<EntityPK, ? extends Object> entry : data.entrySet()) {
-            keys.add(buildKey(db, entry.getKey()));
-            datas.add(entry.getValue());
-        }
-        _put(keys, datas);
+        String key = buildKey(db, null);
+
+        _put(key, data);
     }
 
     @Override
-    public <T> T get(ShardingDBResource db, EntityPK id) {
-        String key = buildKey(db, id);
-        return _get(key);
+    public <T> Map<EntityPK, T> get(ShardingDBResource dbResource, EntityPK[] pks) {
+        String key = buildKey(dbResource, null);
+
+        return _get(key, pks);
     }
 
     @Override
-    public List<Object> get(ShardingDBResource db, EntityPK... ids) {
-        List<String> keys = new ArrayList<String>();
-        for (EntityPK id : ids) {
-            keys.add(buildKey(db, id));
-        }
-        return _get(keys);
-    }
+    public void remove(ShardingDBResource db, List<EntityPK> pks) {
+        String key = buildKey(db, null);
 
-    @Override
-    public void remove(ShardingDBResource db, EntityPK id) {
-        String key = buildKey(db, id);
-        _remove(key);
-    }
-
-    @Override
-    public void remove(ShardingDBResource db, List<EntityPK> ids) {
-        List<String> keys = new ArrayList<String>();
-        for (EntityPK id : ids) {
-            keys.add(buildKey(db, id));
-        }
-        _remove(keys);
+        _remove(key, pks);
     }
 
     private void _setCount(String key, long count) {
@@ -339,92 +240,82 @@ public class RedisPrimaryCacheImpl extends AbstractRedisCache implements IPrimar
         return -1l;
     }
 
-    private void _put(String key, Object data) {
-        if (data == null) {
+    private <T> void _put(String key, Map<EntityPK, T> param) {
+        if (param == null || param.isEmpty()) {
             return;
         }
-        
+
         ShardedJedis redisClient = null;
         try {
             redisClient = jedisPool.getResource();
 
-            redisClient.set(key.getBytes(), IOUtil.getBytes(data));
-            redisClient.expire(key.getBytes(), expire);
-
-        } catch (Exception e) {
-            LOG.warn("操作缓存失败:" + e.getMessage());
-        } finally {
-            if (redisClient != null)
-                redisClient.close();
-        }
-    }
-
-    private void _put(List<String> keys, List<? extends Object> data) {
-        if (data == null || data.isEmpty()) {
-            return;
-        }
-        
-        try {
-            for (int i = 0; i < keys.size(); i++) {
-                _put(keys.get(i), data.get(i));
+            Map<byte[], byte[]> data = Maps.newLinkedHashMap();
+            for (Map.Entry<EntityPK, T> entry : param.entrySet()) {
+                data.put(IOUtil.getBytesByJava(entry.getKey()), IOUtil.getBytesByJava(entry.getValue()));
             }
-        } catch (Exception e) {
-            LOG.warn("操作缓存失败:" + e.getMessage());
-        }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("[PRIMARY CACHE] - put (" + keys.size() + ") to cache " + keys);
-        }
-    }
+            redisClient.hmset(key.getBytes(), data);
 
-    @SuppressWarnings("unchecked")
-    private <T> T _get(String key) {
-        ShardedJedis redisClient = null;
-        try {
-            redisClient = jedisPool.getResource();
-            T obj = (T) IOUtil.getObject(redisClient.get(key.getBytes()), Object.class);
             if (LOG.isDebugEnabled()) {
-                int hit = 0;
-                if (obj != null) {
-                    hit = 1;
-                }
-                LOG.debug("[PRIMARY CACHE] - get " + key + " hit=" + hit);
+                LOG.debug("[PRIMARY CACHE] - put (" + data.size() + ") to cache " + key);
             }
-            return obj;
+
         } catch (Exception e) {
             LOG.warn("操作缓存失败:" + e.getMessage());
         } finally {
             if (redisClient != null)
                 redisClient.close();
         }
-
-        return null;
     }
 
-    private List<Object> _get(List<String> keys) {
-        List<Object> datas = new ArrayList<Object>();
+    private <T> Map<EntityPK, T> _get(String key, EntityPK[] pks) {
+        Map<EntityPK, T> datas = Maps.newLinkedHashMap();
+
+        ShardedJedis redisClient = null;
         try {
-            Object value = null;
-            for (String key : keys) {
-                value = _get(key);
-                if (value != null)
-                    datas.add(value);
+            redisClient = jedisPool.getResource();
+
+            byte[][] fields = new byte[pks.length][];
+            for (int i = 0; i < pks.length; i++) {
+                fields[i] = IOUtil.getBytesByJava(pks[i]);
             }
+
+            List<byte[]> result = redisClient.hmget(key.getBytes(), fields);
+
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("[PRIMARY CACHE] - get " + key + " hits = " + result.size());
+            }
+
+            T value = null;
+            for (int i = 0; i < pks.length; i++) {
+                value = (T) IOUtil.getObjectByJava(result.get(i), Object.class);
+                if (value != null)
+                    datas.put(pks[i], value);
+            }
+
         } catch (Exception e) {
             LOG.warn("操作缓存失败:" + e.getMessage());
+        } finally {
+            if (redisClient != null)
+                redisClient.close();
         }
 
         return datas;
     }
 
-    private void _remove(String key) {
+    private void _remove(String key, List<EntityPK> pks) {
         ShardedJedis redisClient = null;
         try {
             redisClient = jedisPool.getResource();
 
-            redisClient.del(key);
+            byte[][] fields = new byte[pks.size()][];
+            for (int i = 0; i < pks.size(); i++) {
+                fields[i] = IOUtil.getBytesByJava(pks.get(i));
+            }
+            redisClient.hdel(key.getBytes(), fields);
+
             if (LOG.isDebugEnabled()) {
-                LOG.debug("[PRIMARY CACHE] - remove " + key);
+                LOG.debug("[PRIMARY CACHE] - remove " + key + " " + pks);
             }
         } catch (Exception e) {
             LOG.warn("操作缓存失败:" + e.getMessage());
@@ -433,15 +324,4 @@ public class RedisPrimaryCacheImpl extends AbstractRedisCache implements IPrimar
                 redisClient.close();
         }
     }
-
-    private void _remove(List<String> keys) {
-        try {
-            for (String key : keys) {
-                _remove(key);
-            }
-        } catch (Exception e) {
-            LOG.warn("操作缓存失败:" + e.getMessage());
-        }
-    }
-
 }

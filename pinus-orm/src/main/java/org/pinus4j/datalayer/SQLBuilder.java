@@ -22,7 +22,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -33,6 +32,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.pinus4j.api.SQL;
 import org.pinus4j.api.query.IQuery;
 import org.pinus4j.api.query.impl.DefaultQueryImpl;
+import org.pinus4j.api.query.impl.DefaultQueryImpl.OrderBy;
 import org.pinus4j.constant.Const;
 import org.pinus4j.entity.DefaultEntityMetaManager;
 import org.pinus4j.entity.IEntityMetaManager;
@@ -60,8 +60,6 @@ public class SQLBuilder {
      * select count语句缓存.
      */
     private static final Map<String, String> _selectCountCache = new ConcurrentHashMap<String, String>();
-
-    private static final SimpleDateFormat    sdf               = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
     private static IEntityMetaManager        entityMetaManager = DefaultEntityMetaManager.getInstance();
 
@@ -233,10 +231,12 @@ public class SQLBuilder {
      * @return sql语句
      * @throws SQLException
      */
-    public static SQL buildSelectByPks(EntityPK[] pks, Class<?> clazz, int tableIndex) throws SQLException {
-        Field[] fields = BeansUtil.getFields(clazz);
+    public static SQL buildSelectByPks(EntityPK[] pks, List<OrderBy> orders, Class<?> clazz, int tableIndex)
+            throws SQLException {
+        Field[] fields = BeansUtil.getFields(clazz, true);
         String tableName = entityMetaManager.getTableName(clazz, tableIndex);
 
+        // build where
         StringBuilder whereSql = new StringBuilder();
         List<Object> paramList = Lists.newArrayList();
         for (EntityPK pk : pks) {
@@ -254,6 +254,7 @@ public class SQLBuilder {
         }
         whereSql.delete(whereSql.length() - 4, whereSql.length());
 
+        // build sql
         StringBuilder sqlText = new StringBuilder("SELECT ");
         for (Field field : fields) {
             sqlText.append('`').append(BeansUtil.getFieldName(field)).append('`').append(",");
@@ -261,6 +262,18 @@ public class SQLBuilder {
         sqlText.deleteCharAt(sqlText.length() - 1);
         sqlText.append(" FROM ").append('`').append(tableName).append('`');
         sqlText.append(" WHERE ").append(whereSql.toString());
+
+        // build order
+        if (orders != null && !orders.isEmpty()) {
+            sqlText.append(" order by ");
+            for (OrderBy orderBy : orders) {
+                sqlText.append('`').append(orderBy.getField()).append('`');
+                sqlText.append(" ");
+                sqlText.append(orderBy.getOrder().getValue());
+                sqlText.append(",");
+            }
+            sqlText.deleteCharAt(sqlText.length() - 1);
+        }
 
         SQL sql = SQL.valueOf(sqlText.toString(), paramList);
 
@@ -480,7 +493,7 @@ public class SQLBuilder {
      * @throws SQLException
      */
     public static <T> Map<EntityPK, T> createResultObjectAsMap(Class<T> clazz, ResultSet rs) throws SQLException {
-        Map<EntityPK, T> map = Maps.newHashMap();
+        Map<EntityPK, T> map = Maps.newLinkedHashMap();
 
         ResultSetMetaData rsmd = rs.getMetaData();
         T one = null;

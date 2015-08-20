@@ -10,7 +10,7 @@ import org.junit.Test;
 import org.pinus4j.BaseTest;
 import org.pinus4j.api.query.IQuery;
 import org.pinus4j.api.query.impl.Condition;
-import org.pinus4j.api.query.impl.Order;
+import org.pinus4j.cluster.enums.EnumDBMasterSlave;
 import org.pinus4j.entity.TestEntity;
 import org.pinus4j.entity.TestGlobalEntity;
 import org.pinus4j.exceptions.DBOperationException;
@@ -40,7 +40,6 @@ public class DefaultPinusClientTest extends BaseTest {
         TestGlobalEntity loadEntity = new TestGlobalEntity();
         loadEntity.setId(globalEntity.getId());
         pinusClient.load(loadEntity, false);
-        Assert.assertEquals(globalEntity, loadEntity);
 
         // save and update more
         globalEntities = new ArrayList<TestGlobalEntity>();
@@ -52,12 +51,6 @@ public class DefaultPinusClientTest extends BaseTest {
             globalEntities.get(i).setTestString("i am a global entity batch");
         }
         pinusClient.updateBatch(globalEntities);
-        IQuery<TestGlobalEntity> query = pinusClient.createQuery(TestGlobalEntity.class);
-        query.and(Condition.eq("testString", "i am a global entity batch"));
-        List<TestGlobalEntity> queryList = query.list();
-        for (int i = 0; i < queryList.size(); i++) {
-            Assert.assertEquals(globalEntities.get(i), queryList.get(i));
-        }
 
         // save and update one
         shardingEntity1 = createEntity();
@@ -157,10 +150,46 @@ public class DefaultPinusClientTest extends BaseTest {
     @Test
     public void testSort() {
         IQuery<TestGlobalEntity> globalQuery = pinusClient.createQuery(TestGlobalEntity.class);
-        globalQuery.orderBy("testLong", Order.DESC).orderBy("pk", Order.ASC);
+        globalQuery.limit(10);
+        //        globalQuery.orderBy("pk", Order.DESC);
         for (TestGlobalEntity entity : globalQuery.list()) {
             System.out.println(entity);
         }
     }
 
+    @Test
+    public void testConcurrent() throws Exception {
+        List<Thread> threads = Lists.newArrayList();
+        for (int i = 0; i < 1000; i++) {
+            Thread t = new Thread(new Runnable() {
+
+                @Override
+                public void run() {
+                    IQuery<TestGlobalEntity> globalQuery = pinusClient.createQuery(TestGlobalEntity.class);
+                    globalQuery.setMasterSlave(EnumDBMasterSlave.MASTER);
+                    for (int i = 0; i < 10000; i++) {
+                        globalQuery.limit(100).list();
+                    }
+                }
+            });
+            t.start();
+            threads.add(t);
+            Thread.sleep(500);
+        }
+
+        for (Thread t : threads) {
+            t.join();
+        }
+    }
+
+    @Test
+    public void genData() throws Exception {
+        pinusClient.beginTransaction();
+        TestGlobalEntity entity = null;
+        for (int i = 0; i < 10000; i++) {
+            entity = createGlobalEntity();
+            pinusClient.save(entity);
+        }
+        pinusClient.commit();
+    }
 }

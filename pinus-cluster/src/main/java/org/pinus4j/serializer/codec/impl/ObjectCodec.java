@@ -49,7 +49,7 @@ public class ObjectCodec implements Codec<Object> {
             Object fvalue = null;
             Codec codec = null;
 
-            for (Field f : BeansUtil.getFields(oc)) { // write field
+            for (Field f : BeansUtil.getFields(oc, false)) { // write field
                 if (!f.isAccessible()) {
                     f.setAccessible(true);
                 }
@@ -118,7 +118,7 @@ public class ObjectCodec implements Codec<Object> {
 
             Object fvalue = null;
             Codec codec = null;
-            for (Field f : BeansUtil.getFields(oc)) { // read field
+            for (Field f : BeansUtil.getFields(oc, false)) { // read field
                 if (!f.isAccessible()) {
                     f.setAccessible(true);
                 }

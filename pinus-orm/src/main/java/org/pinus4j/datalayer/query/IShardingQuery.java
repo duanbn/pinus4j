@@ -50,11 +50,6 @@ public interface IShardingQuery extends IDataQuery {
     <T> List<T> findByPkList(List<EntityPK> pkList, IShardingKey<?> shardingKey, Class<T> clazz, boolean useCache,
                              EnumDBMasterSlave masterSlave);
 
-    <T> T findOneByQuery(IQuery<T> query, Class<T> clazz, boolean useCache, EnumDBMasterSlave masterSlave);
-
-    <T> T findOneByQuery(IQuery<T> query, IShardingKey<?> shardingKey, Class<T> clazz, boolean useCache,
-                         EnumDBMasterSlave masterSlave);
-
     <T> List<T> findByQuery(IQuery<T> query, Class<T> clazz, boolean useCache, EnumDBMasterSlave masterSlave);
 
     <T> List<T> findByQuery(IQuery<T> query, IShardingKey<?> shardingKey, Class<T> clazz, boolean useCache,

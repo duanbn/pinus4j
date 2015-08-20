@@ -8,7 +8,6 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.pinus4j.BaseTest;
-import org.pinus4j.api.IShardingStorageClient;
 import org.pinus4j.api.query.IQuery;
 import org.pinus4j.api.query.impl.Condition;
 import org.pinus4j.api.query.impl.DefaultQueryImpl;
@@ -18,7 +17,7 @@ import org.pinus4j.cluster.resources.ShardingDBResource;
 import org.pinus4j.entity.TestEntity;
 import org.pinus4j.exceptions.DBClusterException;
 
-public class MemCachedSecondCacheTest extends BaseTest {
+public class SecondCacheTest extends BaseTest {
 
     private static IQuery             query;
     private static ShardingDBResource db;

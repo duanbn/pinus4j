@@ -16,6 +16,7 @@
 
 package org.pinus4j.entity.meta;
 
+import java.io.Serializable;
 import java.util.Arrays;
 
 /**
@@ -23,7 +24,7 @@ import java.util.Arrays;
  * 
  * @author shanwei Jul 24, 2015 4:28:49 PM
  */
-public class EntityPK {
+public class EntityPK implements Serializable {
 
     private PKName[]  pkNames;
 
@@ -53,6 +54,16 @@ public class EntityPK {
 
     public void setPkValues(PKValue[] pkValues) {
         this.pkValues = pkValues;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder info = new StringBuilder();
+        for (int i = 0; i < pkNames.length; i++) {
+            info.append(pkNames[i].getValue()).append("=").append(pkValues[i].getValue()).append(",");
+        }
+        info.deleteCharAt(info.length() - 1);
+        return info.toString();
     }
 
     @Override

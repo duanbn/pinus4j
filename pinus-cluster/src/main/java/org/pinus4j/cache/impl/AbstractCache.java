@@ -76,7 +76,9 @@ public abstract class AbstractCache implements ICache {
      */
     protected String buildCountKey(ShardingDBResource shardingDBResource) {
         StringBuilder key = new StringBuilder();
-        key.append(shardingDBResource.getClusterName()).append(shardingDBResource.getDbName());
+        key.append(shardingDBResource.getClusterName());
+        key.append(".");
+        key.append(shardingDBResource.getDbName());
         key.append(".");
         key.append(shardingDBResource.getRegionCapacity());
         key.append(".");
@@ -90,12 +92,15 @@ public abstract class AbstractCache implements ICache {
      */
     protected String buildGlobalKey(String clusterName, String tableName, EntityPK entityPk) {
         StringBuilder key = new StringBuilder();
-        key.append(clusterName).append(".").append(tableName).append(".");
-        StringBuilder pks = new StringBuilder();
-        for (PKValue pkValue : entityPk.getPkValues()) {
-            pks.append(pkValue.getValueAsString());
+        key.append(clusterName).append(".").append(tableName);
+        if (entityPk != null) {
+            key.append(".");
+            StringBuilder pks = new StringBuilder();
+            for (PKValue pkValue : entityPk.getPkValues()) {
+                pks.append(pkValue.getValueAsString());
+            }
+            key.append(pks.toString());
         }
-        key.append(pks.toString());
         return key.toString();
     }
 
@@ -105,17 +110,21 @@ public abstract class AbstractCache implements ICache {
      */
     protected String buildKey(ShardingDBResource shardingDBResource, EntityPK entityPk) {
         StringBuilder key = new StringBuilder();
-        key.append(shardingDBResource.getClusterName()).append(shardingDBResource.getDbName());
+        key.append(shardingDBResource.getClusterName());
+        key.append(".");
+        key.append(shardingDBResource.getDbName());
         key.append(".");
         key.append(shardingDBResource.getRegionCapacity());
         key.append(".");
         key.append(shardingDBResource.getTableName()).append(shardingDBResource.getTableIndex());
-        key.append(".");
-        StringBuilder pks = new StringBuilder();
-        for (PKValue pkValue : entityPk.getPkValues()) {
-            pks.append(pkValue.getValueAsString());
+        if (entityPk != null) {
+            key.append(".");
+            StringBuilder pks = new StringBuilder();
+            for (PKValue pkValue : entityPk.getPkValues()) {
+                pks.append(pkValue.getValueAsString());
+            }
+            key.append(pks.toString());
         }
-        key.append(pks.toString());
         return key.toString();
     }
 

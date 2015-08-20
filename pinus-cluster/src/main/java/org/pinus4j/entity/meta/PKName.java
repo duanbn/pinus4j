@@ -16,12 +16,14 @@
 
 package org.pinus4j.entity.meta;
 
+import java.io.Serializable;
+
 /**
  * 表示一个主键名
  * 
  * @author shanwei Jul 24, 2015 5:01:51 PM
  */
-public class PKName {
+public class PKName implements Serializable {
 
     private String value;
 

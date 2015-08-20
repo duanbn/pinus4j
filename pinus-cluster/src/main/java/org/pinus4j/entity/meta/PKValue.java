@@ -16,12 +16,14 @@
 
 package org.pinus4j.entity.meta;
 
+import java.io.Serializable;
+
 /**
  * 表示一个主键值
  * 
  * @author shanwei Jul 24, 2015 4:29:02 PM
  */
-public class PKValue {
+public class PKValue implements Serializable {
 
     private Object value;
 

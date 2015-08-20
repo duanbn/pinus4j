@@ -233,7 +233,7 @@ public class BeansUtil {
         Class<?> objClass = obj.getClass();
         Map<String, Object> map = new TreeMap<String, Object>();
         Object value = null;
-        for (Field f : getFields(objClass)) {
+        for (Field f : getFields(objClass, true)) {
             f.setAccessible(true);
 
             if (f.getAnnotation(UpdateTime.class) != null) {
@@ -307,7 +307,7 @@ public class BeansUtil {
         }
 
         Field targetField = null;
-        for (Field sourceField : getFields(source.getClass())) {
+        for (Field sourceField : getFields(source.getClass(), true)) {
             sourceField.setAccessible(true);
 
             targetField = target.getClass().getDeclaredField(sourceField.getName());
@@ -393,7 +393,7 @@ public class BeansUtil {
      * 
      * @return 字段名
      */
-    public static Field[] getFields(Class<?> clazz) {
+    public static Field[] getFields(Class<?> clazz, boolean isCheckEmpty) {
         Field[] fields = _fieldCache.get(clazz);
         if (fields != null) {
             return fields;
@@ -411,7 +411,7 @@ public class BeansUtil {
                 mappingFields.add(f);
             }
         }
-        if (mappingFields.isEmpty()) {
+        if (mappingFields.isEmpty() && isCheckEmpty) {
             throw new IllegalStateException("没有包含可以操作的列属性" + clazz);
         }
 
