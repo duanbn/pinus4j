@@ -158,15 +158,25 @@ public class DefaultPinusClientTest extends BaseTest {
     }
 
     @Test
+    public void testQuery() throws Exception {
+        IQuery<TestGlobalEntity> query = pinusClient.createQuery(TestGlobalEntity.class);
+        Long[] pks = new Long[] { 1l, 2l, 3l, 4l, 5l, 6l, 19l };
+        query.and(Condition.in("pk", pks));
+        List<TestGlobalEntity> datas = query.list();
+        for (TestGlobalEntity data : datas) {
+            System.out.println(data);
+        }
+    }
+
+    @Test
     public void testConcurrent() throws Exception {
         List<Thread> threads = Lists.newArrayList();
-        for (int i = 0; i < 1000; i++) {
+        for (int i = 0; i < 500; i++) {
             Thread t = new Thread(new Runnable() {
 
                 @Override
                 public void run() {
                     IQuery<TestGlobalEntity> globalQuery = pinusClient.createQuery(TestGlobalEntity.class);
-                    globalQuery.setMasterSlave(EnumDBMasterSlave.MASTER);
                     for (int i = 0; i < 10000; i++) {
                         globalQuery.limit(100).list();
                     }
@@ -174,7 +184,7 @@ public class DefaultPinusClientTest extends BaseTest {
             });
             t.start();
             threads.add(t);
-            Thread.sleep(500);
+            Thread.sleep(100);
         }
 
         for (Thread t : threads) {
