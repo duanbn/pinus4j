@@ -472,6 +472,9 @@ public class SQLBuilder {
                 for (int i = 1; i <= rsmd.getColumnCount(); i++) {
                     fieldName = rsmd.getColumnName(i);
                     f = BeansUtil.getField(clazz, fieldName);
+                    if (f == null) {
+                        continue;
+                    }
                     value = _getRsValue(rs, f, i);
                     BeansUtil.setProperty(one, fieldName, value);
                 }
@@ -510,6 +513,9 @@ public class SQLBuilder {
                 for (int i = 1; i <= rsmd.getColumnCount(); i++) {
                     fieldName = rsmd.getColumnName(i);
                     f = BeansUtil.getField(clazz, fieldName);
+                    if (f == null) {
+                        continue;
+                    }
                     value = _getRsValue(rs, f, i);
                     BeansUtil.setProperty(one, fieldName, value);
                 }
