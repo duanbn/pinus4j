@@ -56,20 +56,6 @@
 				jdbc:mysql://127.0.0.1:3306/pinus1?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
 			</url>
 		</appds>
-		<appds id="pinus-sharding3">
-			<username>root</username>
-			<password>root%1234</password>
-			<url>
-				jdbc:mysql://127.0.0.1:3306/pinus2?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
-			</url>
-		</appds>
-		<appds id="pinus-sharding4">
-			<username>root</username>
-			<password>root%1234</password>
-			<url>
-				jdbc:mysql://127.0.0.1:3306/pinus3?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
-			</url>
-		</appds>
 	</datasource-bucket>
 
 	<!-- cluster config -->
@@ -78,24 +64,20 @@
 			<master>pinus-global</master>
 			<slave>pinus-global</slave>
 		</global>
-		<region capacity="1-30000000">
+		<region capacity="0-30000000">
 			<master>
 				<sharding>pinus-sharding1</sharding>
-				<sharding>pinus-sharding2</sharding>
 			</master>
 			<slave>
 				<sharding>pinus-sharding1</sharding>
-				<sharding>pinus-sharding2</sharding>
 			</slave>
 		</region>
 		<region capacity="30000001-60000000">
 			<master>
-				<sharding>pinus-sharding3</sharding>
-				<sharding>pinus-sharding4</sharding>
+				<sharding>pinus-sharding2</sharding>
 			</master>
 			<slave>
-				<sharding>pinus-sharding3</sharding>
-				<sharding>pinus-sharding4</sharding>
+				<sharding>pinus-sharding2</sharding>
 			</slave>
 		</region>
 	</cluster>

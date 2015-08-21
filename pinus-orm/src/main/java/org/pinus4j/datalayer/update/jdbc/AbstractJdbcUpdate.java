@@ -124,7 +124,7 @@ public abstract class AbstractJdbcUpdate extends AbstractDataLayer implements ID
             for (Object entity : entities) {
                 if (ps == null) {
                     sql = SQLBuilder.getInsert(entity, tableIndex);
-                    ps = conn.prepareStatement(sql.getSql(), Statement.RETURN_GENERATED_KEYS);
+                    ps = conn.prepareStatement(sql.getSql());
                 }
 
                 fillParam(ps, sql);

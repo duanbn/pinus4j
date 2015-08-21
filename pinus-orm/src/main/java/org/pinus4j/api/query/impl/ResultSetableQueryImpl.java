@@ -170,13 +170,26 @@ public class ResultSetableQueryImpl<T> extends DefaultQueryImpl<T> {
         Number count = 0;
 
         if (entityMetaManager.isShardingEntity(clazz)) {
-            if (this.shardingKey != null)
-                count = this.shardingQuery.getCountByQuery(this, this.shardingKey, this.clazz, this.useCache,
-                        this.masterSlave);
-            else
-                count = this.shardingQuery.getCountByQuery(this, this.clazz, this.useCache, this.masterSlave);
+            if (this.shardingKey != null) {
+                if (this.isEffect()) {
+                    count = this.shardingQuery.getCountByQuery(this, this.shardingKey, this.clazz, this.useCache,
+                            this.masterSlave);
+                } else {
+                    count = this.shardingQuery.getCount(this.shardingKey, this.clazz, this.useCache, this.masterSlave);
+                }
+            } else {
+                if (this.isEffect()) {
+                    count = this.shardingQuery.getCountByQuery(this, this.clazz, this.useCache, this.masterSlave);
+                } else {
+                    count = this.shardingQuery.getCount(this.clazz, this.useCache, this.masterSlave);
+                }
+            }
         } else {
-            count = this.globalQuery.getCountByQuery(this, this.clazz, this.useCache, this.masterSlave);
+            if (this.isEffect()) {
+                count = this.globalQuery.getCountByQuery(this, this.clazz, this.useCache, this.masterSlave);
+            } else {
+                count = this.globalQuery.getCount(this.clazz, this.useCache, this.masterSlave);
+            }
         }
 
         return count;

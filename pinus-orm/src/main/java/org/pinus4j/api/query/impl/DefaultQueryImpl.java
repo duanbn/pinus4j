@@ -219,6 +219,14 @@ public class DefaultQueryImpl<T> implements IQuery<T>, Cloneable {
     public boolean hasQueryFields() {
         return this.fields != null && this.fields.length > 0;
     }
+    
+    public boolean isEffect() {
+        if (this.condList.isEmpty() && this.orderList.isEmpty() && start == -1 && limit ==-1) {
+            return false;
+        }
+
+        return true;
+    }
 
     public IQuery<T> clone() {
         DefaultQueryImpl<T> clone = new DefaultQueryImpl<T>();
