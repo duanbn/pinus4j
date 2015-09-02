@@ -21,6 +21,7 @@ import java.util.Map;
 
 import org.pinus4j.api.SQL;
 import org.pinus4j.api.query.IQuery;
+import org.pinus4j.api.query.impl.DefaultQueryImpl.OrderBy;
 import org.pinus4j.cluster.beans.IShardingKey;
 import org.pinus4j.cluster.enums.EnumDBMasterSlave;
 import org.pinus4j.entity.meta.EntityPK;
@@ -40,15 +41,16 @@ public interface IShardingQuery extends IDataQuery {
     <T> Number getCountByQuery(IQuery<T> query, Class<T> clazz, boolean useCache, EnumDBMasterSlave masterSlave);
 
     <T> Number getCountByQuery(IQuery<T> query, IShardingKey<?> shardingKey, Class<T> clazz, boolean useCache,
-                           EnumDBMasterSlave masterSlave);
+                               EnumDBMasterSlave masterSlave);
 
     <T> T findByPk(EntityPK pk, IShardingKey<?> shardingKey, Class<T> clazz, boolean useCache,
                    EnumDBMasterSlave masterSlave);
 
-    <T> List<T> findByPkList(List<EntityPK> pkList, Class<T> clazz, boolean useCache, EnumDBMasterSlave masterSlave);
-
-    <T> List<T> findByPkList(List<EntityPK> pkList, IShardingKey<?> shardingKey, Class<T> clazz, boolean useCache,
+    <T> List<T> findByPkList(List<EntityPK> pkList, Class<T> clazz, List<OrderBy> order, boolean useCache,
                              EnumDBMasterSlave masterSlave);
+
+    <T> List<T> findByPkList(List<EntityPK> pkList, IShardingKey<?> shardingKey, Class<T> clazz, List<OrderBy> order,
+                             boolean useCache, EnumDBMasterSlave masterSlave);
 
     <T> List<T> findByQuery(IQuery<T> query, Class<T> clazz, boolean useCache, EnumDBMasterSlave masterSlave);
 

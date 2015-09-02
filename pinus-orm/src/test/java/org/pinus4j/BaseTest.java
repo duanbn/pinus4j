@@ -81,7 +81,7 @@ public class BaseTest {
         testEntity.setoTestDouble(1.0);
         testEntity.setTestFloat(2.0f);
         testEntity.setoTestFloat(2.0f);
-        testEntity.setTestInt(5);
+        testEntity.setTestInt(r.nextInt(9999));
         testEntity.setoTestInt(r.nextInt(9999));
         testEntity.setTestLong(6l);
         testEntity.setoTestLong(6l);

@@ -143,10 +143,11 @@ public class ResultSetableQueryImpl<T> extends DefaultQueryImpl<T> {
 
             if (entityPkList != null && !entityPkList.isEmpty())
                 if (this.shardingKey != null)
-                    result = this.shardingQuery.findByPkList(entityPkList, this.shardingKey, this.clazz, this.useCache,
-                            this.masterSlave);
+                    result = this.shardingQuery.findByPkList(entityPkList, this.shardingKey, this.clazz,
+                            this.orderList, this.useCache, this.masterSlave);
                 else
-                    result = this.shardingQuery.findByPkList(entityPkList, this.clazz, this.useCache, this.masterSlave);
+                    result = this.shardingQuery.findByPkList(entityPkList, this.clazz, this.orderList, this.useCache,
+                            this.masterSlave);
             else if (this.shardingKey != null)
                 result = this.shardingQuery.findByQuery(this, this.shardingKey, this.clazz, this.useCache,
                         this.masterSlave);
@@ -156,7 +157,8 @@ public class ResultSetableQueryImpl<T> extends DefaultQueryImpl<T> {
         } else {
 
             if (entityPkList != null && !entityPkList.isEmpty())
-                result = this.globalQuery.findByPkList(entityPkList, this.clazz, this.useCache, this.masterSlave);
+                result = this.globalQuery.findByPkList(entityPkList, this.clazz, this.orderList, this.useCache,
+                        this.masterSlave);
             else
                 result = this.globalQuery.findByQuery(this, this.clazz, this.useCache, this.masterSlave);
 

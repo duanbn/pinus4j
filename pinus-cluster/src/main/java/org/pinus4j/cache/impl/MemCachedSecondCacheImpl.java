@@ -45,8 +45,8 @@ public class MemCachedSecondCacheImpl extends AbstractMemCachedCache implements 
     }
 
     @Override
-    public void putGlobal(String whereSql, String clusterName, String tableName, List data) {
-        if (StringUtil.isBlank(whereSql) || data == null || data.isEmpty()) {
+    public void putGlobal(String whereKey, String clusterName, String tableName, List data) {
+        if (StringUtil.isBlank(whereKey) || data == null || data.isEmpty()) {
             return;
         }
 
@@ -59,7 +59,7 @@ public class MemCachedSecondCacheImpl extends AbstractMemCachedCache implements 
                 version = Integer.parseInt((String) this.memClient.get(versionKey));
             }
 
-            String cacheKey = _buildGlobalCacheKey(whereSql, clusterName, tableName, version);
+            String cacheKey = _buildGlobalCacheKey(whereKey, clusterName, tableName, version);
             this.memClient.set(cacheKey, expire, data);
 
             if (LOG.isDebugEnabled()) {
@@ -71,8 +71,8 @@ public class MemCachedSecondCacheImpl extends AbstractMemCachedCache implements 
     }
 
     @Override
-    public List getGlobal(String whereSql, String clusterName, String tableName) {
-        if (StringUtil.isBlank(whereSql)) {
+    public List getGlobal(String whereKey, String clusterName, String tableName) {
+        if (StringUtil.isBlank(whereKey)) {
             return null;
         }
 
@@ -81,7 +81,7 @@ public class MemCachedSecondCacheImpl extends AbstractMemCachedCache implements 
             if (_exists(versionKey)) {
                 int version = Integer.parseInt((String) this.memClient.get(versionKey));
 
-                String cacheKey = _buildGlobalCacheKey(whereSql, clusterName, tableName, version);
+                String cacheKey = _buildGlobalCacheKey(whereKey, clusterName, tableName, version);
                 List data = (List) this.memClient.get(cacheKey);
 
                 if (LOG.isDebugEnabled() && data != null) {
@@ -109,8 +109,8 @@ public class MemCachedSecondCacheImpl extends AbstractMemCachedCache implements 
     }
 
     @Override
-    public void put(String whereSql, ShardingDBResource db, List data) {
-        if (StringUtil.isBlank(whereSql) || data == null || data.isEmpty()) {
+    public void put(String whereKey, ShardingDBResource db, List data) {
+        if (StringUtil.isBlank(whereKey) || data == null || data.isEmpty()) {
             return;
         }
 
@@ -123,7 +123,7 @@ public class MemCachedSecondCacheImpl extends AbstractMemCachedCache implements 
                 version = Integer.parseInt((String) this.memClient.get(versionKey));
             }
 
-            String cacheKey = _buildShardingCacheKey(whereSql, db, version);
+            String cacheKey = _buildShardingCacheKey(whereKey, db, version);
             this.memClient.set(cacheKey, expire, data);
 
             if (LOG.isDebugEnabled()) {
@@ -135,8 +135,8 @@ public class MemCachedSecondCacheImpl extends AbstractMemCachedCache implements 
     }
 
     @Override
-    public List get(String whereSql, ShardingDBResource db) {
-        if (StringUtil.isBlank(whereSql)) {
+    public List get(String whereKey, ShardingDBResource db) {
+        if (StringUtil.isBlank(whereKey)) {
             return null;
         }
 
@@ -146,7 +146,7 @@ public class MemCachedSecondCacheImpl extends AbstractMemCachedCache implements 
             if (_exists(versionKey)) {
                 int version = Integer.parseInt((String) this.memClient.get(versionKey));
 
-                String cacheKey = _buildShardingCacheKey(whereSql, db, version);
+                String cacheKey = _buildShardingCacheKey(whereKey, db, version);
                 List data = (List) this.memClient.get(cacheKey);
 
                 if (LOG.isDebugEnabled() && data != null) {
@@ -199,12 +199,12 @@ public class MemCachedSecondCacheImpl extends AbstractMemCachedCache implements 
     /**
      * global second cache key. sec.[clustername].[tablename].[version].hashCode
      */
-    private String _buildGlobalCacheKey(String whereSql, String clusterName, String tableName, int version) {
+    private String _buildGlobalCacheKey(String whereKey, String clusterName, String tableName, int version) {
         StringBuilder cacheKey = new StringBuilder("sec.");
         cacheKey.append(clusterName).append(".");
         cacheKey.append(tableName).append(".");
         cacheKey.append(version).append(".");
-        cacheKey.append(SecurityUtil.md5(whereSql));
+        cacheKey.append(SecurityUtil.md5(whereKey));
         return cacheKey.toString();
     }
 
@@ -212,7 +212,7 @@ public class MemCachedSecondCacheImpl extends AbstractMemCachedCache implements 
      * sharding second cache key. sec.[clustername].[startend].[tablename +
      * tableIndex].[version].hashCode
      */
-    private String _buildShardingCacheKey(String whereSql, ShardingDBResource shardingDBResource, int version) {
+    private String _buildShardingCacheKey(String whereKey, ShardingDBResource shardingDBResource, int version) {
         StringBuilder cacheKey = new StringBuilder("sec.");
         cacheKey.append(shardingDBResource.getClusterName());
         cacheKey.append(".");
@@ -223,7 +223,7 @@ public class MemCachedSecondCacheImpl extends AbstractMemCachedCache implements 
         cacheKey.append(shardingDBResource.getTableName()).append(shardingDBResource.getTableIndex());
         cacheKey.append(".");
         cacheKey.append(version).append(".");
-        cacheKey.append(SecurityUtil.md5(whereSql));
+        cacheKey.append(SecurityUtil.md5(whereKey));
         return cacheKey.toString();
     }
 

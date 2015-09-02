@@ -107,20 +107,20 @@ public interface IEntityMetaManager {
     public PKName[] getPkName(Class<?> clazz);
 
     /**
-     * 获取联合主键的主键名
-     * 
-     * @param clazz
-     * @return
-     */
-    public PKName getNotUnionPkName(Class<?> clazz);
-
-    /**
      * 获取主键信息，包括联合主键
      * 
      * @param obj
      * @return
      */
     public EntityPK getEntityPK(Object obj);
+
+    /**
+     * 获取非联合主键的主键名
+     * 
+     * @param clazz
+     * @return
+     */
+    public PKName getNotUnionPkName(Class<?> clazz);
 
     /**
      * 获取非联合主键的主键值
@@ -139,7 +139,7 @@ public interface IEntityMetaManager {
     public boolean isUnionKey(Class<?> clazz);
 
     /**
-     * 获取实体的自增主键信息，如果没有则返回null;
+     * 获取实体的非联合主键信息，如果没有则返回null;
      * 
      * @return
      */

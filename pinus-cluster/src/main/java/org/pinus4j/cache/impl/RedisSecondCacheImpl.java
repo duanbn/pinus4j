@@ -36,8 +36,8 @@ public class RedisSecondCacheImpl extends AbstractRedisCache implements ISecondC
     }
 
     @Override
-    public void putGlobal(String whereSql, String clusterName, String tableName, List data) {
-        if (StringUtil.isBlank(whereSql) || data == null || data.isEmpty()) {
+    public void putGlobal(String whereKey, String clusterName, String tableName, List data) {
+        if (StringUtil.isBlank(whereKey) || data == null || data.isEmpty()) {
             return;
         }
 
@@ -45,7 +45,7 @@ public class RedisSecondCacheImpl extends AbstractRedisCache implements ISecondC
         try {
             redisClient = jedisPool.getResource();
 
-            String cacheKey = _buildGlobalCacheKey(whereSql, clusterName, tableName);
+            String cacheKey = _buildGlobalCacheKey(whereKey, clusterName, tableName);
 
             redisClient.set(cacheKey.getBytes(), IOUtil.getBytes(data));
             redisClient.expire(cacheKey.getBytes(), expire);
@@ -62,8 +62,8 @@ public class RedisSecondCacheImpl extends AbstractRedisCache implements ISecondC
     }
 
     @Override
-    public List getGlobal(String whereSql, String clusterName, String tableName) {
-        if (StringUtil.isBlank(whereSql)) {
+    public List getGlobal(String whereKey, String clusterName, String tableName) {
+        if (StringUtil.isBlank(whereKey)) {
             return null;
         }
 
@@ -71,7 +71,7 @@ public class RedisSecondCacheImpl extends AbstractRedisCache implements ISecondC
         try {
             redisClient = jedisPool.getResource();
 
-            String cacheKey = _buildGlobalCacheKey(whereSql, clusterName, tableName);
+            String cacheKey = _buildGlobalCacheKey(whereKey, clusterName, tableName);
             List data = IOUtil.getObject(redisClient.get(cacheKey.getBytes()), List.class);
 
             if (LOG.isDebugEnabled() && data != null) {
@@ -117,15 +117,15 @@ public class RedisSecondCacheImpl extends AbstractRedisCache implements ISecondC
     }
 
     @Override
-    public void put(String whereSql, ShardingDBResource db, List data) {
-        if (StringUtil.isBlank(whereSql) || data == null || data.isEmpty()) {
+    public void put(String whereKey, ShardingDBResource db, List data) {
+        if (StringUtil.isBlank(whereKey) || data == null || data.isEmpty()) {
             return;
         }
 
         ShardedJedis redisClient = null;
         try {
             redisClient = jedisPool.getResource();
-            String cacheKey = _buildShardingCacheKey(whereSql, db);
+            String cacheKey = _buildShardingCacheKey(whereKey, db);
             redisClient.set(cacheKey.getBytes(), IOUtil.getBytes(data));
             redisClient.expire(cacheKey.getBytes(), expire);
 
@@ -141,15 +141,15 @@ public class RedisSecondCacheImpl extends AbstractRedisCache implements ISecondC
     }
 
     @Override
-    public List get(String whereSql, ShardingDBResource db) {
-        if (StringUtil.isBlank(whereSql)) {
+    public List get(String whereKey, ShardingDBResource db) {
+        if (StringUtil.isBlank(whereKey)) {
             return null;
         }
 
         ShardedJedis redisClient = null;
         try {
             redisClient = jedisPool.getResource();
-            String cacheKey = _buildShardingCacheKey(whereSql, db);
+            String cacheKey = _buildShardingCacheKey(whereKey, db);
             List data = IOUtil.getObject(redisClient.get(cacheKey.getBytes()), List.class);
 
             if (LOG.isDebugEnabled() && data != null) {
@@ -197,12 +197,12 @@ public class RedisSecondCacheImpl extends AbstractRedisCache implements ISecondC
     /**
      * global second cache key. sec.[clustername].[tablename].hashCode
      */
-    private String _buildGlobalCacheKey(String whereSql, String clusterName, String tableName) {
+    private String _buildGlobalCacheKey(String whereKey, String clusterName, String tableName) {
         StringBuilder cacheKey = new StringBuilder("sec.");
         cacheKey.append(clusterName).append(".");
         cacheKey.append(tableName).append(".");
-        if (StringUtil.isNotBlank(whereSql))
-            cacheKey.append(SecurityUtil.md5(whereSql));
+        if (StringUtil.isNotBlank(whereKey))
+            cacheKey.append(SecurityUtil.md5(whereKey));
         else
             cacheKey.append("*");
         return cacheKey.toString();
@@ -212,7 +212,7 @@ public class RedisSecondCacheImpl extends AbstractRedisCache implements ISecondC
      * sharding second cache key. sec.[clustername].[startend].[tablename +
      * tableIndex].hashCode
      */
-    private String _buildShardingCacheKey(String whereSql, ShardingDBResource shardingDBResource) {
+    private String _buildShardingCacheKey(String whereKey, ShardingDBResource shardingDBResource) {
         StringBuilder cacheKey = new StringBuilder("sec.");
         cacheKey.append(shardingDBResource.getClusterName());
         cacheKey.append(".");
@@ -222,8 +222,8 @@ public class RedisSecondCacheImpl extends AbstractRedisCache implements ISecondC
         cacheKey.append(".");
         cacheKey.append(shardingDBResource.getTableName()).append(shardingDBResource.getTableIndex());
         cacheKey.append(".");
-        if (StringUtil.isNotBlank(whereSql))
-            cacheKey.append(SecurityUtil.md5(whereSql));
+        if (StringUtil.isNotBlank(whereKey))
+            cacheKey.append(SecurityUtil.md5(whereKey));
         else
             cacheKey.append("*");
         return cacheKey.toString();

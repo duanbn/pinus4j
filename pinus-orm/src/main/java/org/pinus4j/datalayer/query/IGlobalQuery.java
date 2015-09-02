@@ -21,6 +21,7 @@ import java.util.Map;
 
 import org.pinus4j.api.SQL;
 import org.pinus4j.api.query.IQuery;
+import org.pinus4j.api.query.impl.DefaultQueryImpl.OrderBy;
 import org.pinus4j.cluster.enums.EnumDBMasterSlave;
 import org.pinus4j.entity.meta.EntityPK;
 
@@ -34,10 +35,11 @@ public interface IGlobalQuery extends IDataQuery {
     Number getCount(Class<?> clazz, boolean useCache, EnumDBMasterSlave masterSlave);
 
     <T> Number getCountByQuery(IQuery<T> query, Class<T> clazz, boolean useCache, EnumDBMasterSlave masterSlave);
-    
+
     <T> T findByPk(EntityPK pk, Class<T> clazz, boolean useCache, EnumDBMasterSlave masterSlave);
 
-    <T> List<T> findByPkList(List<EntityPK> pks, Class<T> clazz, boolean useCache, EnumDBMasterSlave masterSlave);
+    <T> List<T> findByPkList(List<EntityPK> pks, Class<T> clazz, List<OrderBy> order, boolean useCache,
+                             EnumDBMasterSlave masterSlave);
 
     <T> List<T> findByQuery(IQuery<T> query, Class<T> clazz, boolean useCache, EnumDBMasterSlave masterSlave);
 

@@ -88,7 +88,8 @@ public class SQLBuilder {
 
         SQL sql = SQL.valueOf(sqlText.toString(), querySQL.getParams());
 
-        debugSQL(sql);
+        debugSQL(sql.getSql());
+        debugSQLParam(sql.getParams());
 
         return sql;
     }
@@ -122,7 +123,8 @@ public class SQLBuilder {
 
         SQL sql = SQL.valueOf(sqlText.toString(), querySQL.getParams());
 
-        debugSQL(sql);
+        debugSQL(sql.getSql());
+        debugSQLParam(sql.getParams());
 
         return sql;
     }
@@ -141,7 +143,8 @@ public class SQLBuilder {
 
         SQL sql = SQL.valueOf(sqlText.toString(), querySQL.getParams());
 
-        debugSQL(sql);
+        debugSQL(sql.getSql());
+        debugSQLParam(sql.getParams());
 
         return sql;
     }
@@ -155,7 +158,8 @@ public class SQLBuilder {
             }
         }
 
-        debugSQL(sql);
+        debugSQL(sql.getSql());
+        debugSQLParam(sql.getParams());
 
         return ps;
     }
@@ -180,7 +184,8 @@ public class SQLBuilder {
             }
         }
 
-        debugSQL(sql);
+        debugSQL(sql.getSql());
+        debugSQLParam(sql.getParams());
 
         return ps;
     }
@@ -236,23 +241,59 @@ public class SQLBuilder {
         Field[] fields = BeansUtil.getFields(clazz, true);
         String tableName = entityMetaManager.getTableName(clazz, tableIndex);
 
-        // build where
         StringBuilder whereSql = new StringBuilder();
-        List<Object> paramList = Lists.newArrayList();
-        for (EntityPK pk : pks) {
-            whereSql.append("(");
-            for (int i = 0; i < pk.getPkNames().length; i++) {
-                whereSql.append('`').append(pk.getPkNames()[i].getValue()).append('`');
-                whereSql.append("=").append('?');
-                whereSql.append(" and ");
+        StringBuilder orderSql = new StringBuilder();
+        StringBuilder findInSet = new StringBuilder();
 
-                paramList.add(formatValue(pk.getPkValues()[i].getValue()));
+        // build where
+        // build find in set just only not union pk.
+        List<Object> paramList = Lists.newArrayList();
+        if (entityMetaManager.isUnionKey(clazz)) {
+            // union pk, build (pk1 = ? and pk2 = ?) or (pk1 = ? and pk2 = ?)
+            for (EntityPK pk : pks) {
+                whereSql.append("(");
+                for (int i = 0; i < pk.getPkNames().length; i++) {
+                    whereSql.append('`').append(pk.getPkNames()[i].getValue()).append('`');
+                    whereSql.append("=").append('?');
+                    whereSql.append(" and ");
+
+                    paramList.add(formatValue(pk.getPkValues()[i].getValue()));
+                }
+                whereSql.delete(whereSql.length() - 5, whereSql.length());
+                whereSql.append(")");
+                whereSql.append(" or ");
             }
-            whereSql.delete(whereSql.length() - 5, whereSql.length());
+            whereSql.delete(whereSql.length() - 4, whereSql.length());
+        } else {
+            // not union pk, build pk in (?,?,?)
+            String pkName = entityMetaManager.getNotUnionPkName(clazz).getValue();
+            findInSet.append("find_in_set(").append(pkName).append(",'");
+            whereSql.append(pkName).append(" in (");
+            for (EntityPK pk : pks) {
+                whereSql.append("?,");
+                findInSet.append(pk.getPkValues()[0].getValue()).append(',');
+                paramList.add(formatValue(pk.getPkValues()[0].getValue()));
+            }
+            whereSql.deleteCharAt(whereSql.length() - 1);
             whereSql.append(")");
-            whereSql.append(" or ");
+            findInSet.deleteCharAt(findInSet.length() - 1);
+            findInSet.append("')");
         }
-        whereSql.delete(whereSql.length() - 4, whereSql.length());
+
+        // build order
+        if (orders != null && !orders.isEmpty()) {
+            orderSql.append(" order by ");
+            for (OrderBy orderBy : orders) {
+                orderSql.append('`').append(orderBy.getField()).append('`');
+                orderSql.append(" ");
+                orderSql.append(orderBy.getOrder().getValue());
+                orderSql.append(",");
+            }
+            orderSql.deleteCharAt(orderSql.length() - 1);
+        } else if (StringUtil.isNotBlank(findInSet.toString())) {
+            orderSql.append(" order by ");
+            orderSql.append(findInSet);
+        }
 
         // build sql
         StringBuilder sqlText = new StringBuilder("SELECT ");
@@ -262,22 +303,14 @@ public class SQLBuilder {
         sqlText.deleteCharAt(sqlText.length() - 1);
         sqlText.append(" FROM ").append('`').append(tableName).append('`');
         sqlText.append(" WHERE ").append(whereSql.toString());
-
-        // build order
-        if (orders != null && !orders.isEmpty()) {
-            sqlText.append(" order by ");
-            for (OrderBy orderBy : orders) {
-                sqlText.append('`').append(orderBy.getField()).append('`');
-                sqlText.append(" ");
-                sqlText.append(orderBy.getOrder().getValue());
-                sqlText.append(",");
-            }
-            sqlText.deleteCharAt(sqlText.length() - 1);
+        if (StringUtil.isNotBlank(orderSql.toString())) {
+            sqlText.append(orderSql);
         }
 
         SQL sql = SQL.valueOf(sqlText.toString(), paramList);
 
-        debugSQL(sql);
+        debugSQL(sql.getSql());
+        debugSQLParam(sql.getParams());
 
         return sql;
     }
@@ -313,7 +346,8 @@ public class SQLBuilder {
 
         SQL sql = SQL.valueOf(sqlText.toString(), paramList);
 
-        debugSQL(sql);
+        debugSQL(sql.getSql());
+        debugSQLParam(sql.getParams());
 
         return sql;
     }
@@ -370,7 +404,8 @@ public class SQLBuilder {
 
         SQL sql = SQL.valueOf(sqlText.toString(), paramList);
 
-        debugSQL(sql);
+        debugSQL(sqlText.toString());
+        debugSQLParam(paramList);
 
         return sql;
     }
@@ -416,7 +451,8 @@ public class SQLBuilder {
 
         SQL sql = SQL.valueOf(sqlText.toString(), paramList);
 
-        debugSQL(sql);
+        debugSQL(sqlText.toString());
+        debugSQLParam(paramList);
 
         return sql;
     }
@@ -590,13 +626,11 @@ public class SQLBuilder {
     /**
      * 打印SQL日志.
      */
-    public static void debugSQL(SQL sql) {
+    public static void debugSQLParam(List<Object> params) {
         if (LOG.isDebugEnabled()) {
-            LOG.debug(sql.getSql());
-
-            if (!sql.getParams().isEmpty()) {
+            if (params != null && !params.isEmpty()) {
                 StringBuilder paramText = new StringBuilder();
-                for (Object param : sql.getParams()) {
+                for (Object param : params) {
                     paramText.append(param).append(',');
                 }
                 paramText.deleteCharAt(paramText.length() - 1);

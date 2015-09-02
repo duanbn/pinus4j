@@ -45,6 +45,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 /**
  * jdbc sharding query implements.
@@ -325,7 +326,7 @@ public class ShardingJdbcQueryImpl extends AbstractJdbcQuery implements IShardin
     }
 
     @Override
-    public <T> List<T> findByPkList(List<EntityPK> pkList, Class<T> clazz, boolean useCache,
+    public <T> List<T> findByPkList(List<EntityPK> pkList, Class<T> clazz, List<OrderBy> order, boolean useCache,
                                     EnumDBMasterSlave masterSlave) {
 
         List<T> result = Lists.newArrayList();
@@ -347,13 +348,13 @@ public class ShardingJdbcQueryImpl extends AbstractJdbcQuery implements IShardin
 
             EntityPK[] entityPkList = pkList.toArray(new EntityPK[pkList.size()]);
 
-            Map<EntityPK, T> data = null;
+            Map<EntityPK, T> data = Maps.newLinkedHashMap();
             for (IDBResource dbResource : dbResources) {
                 if (tx != null) {
                     tx.enlistResource((ShardingDBResource) dbResource);
                 }
 
-                data = selectByPksWithCache((ShardingDBResource) dbResource, clazz, entityPkList, null, useCache);
+                data.putAll(selectByPksWithCache((ShardingDBResource) dbResource, clazz, entityPkList, order, useCache));
             }
 
             // query from master again
@@ -367,7 +368,8 @@ public class ShardingJdbcQueryImpl extends AbstractJdbcQuery implements IShardin
                         tx.enlistResource((ShardingDBResource) dbResource);
                     }
 
-                    data = selectByPksWithCache((ShardingDBResource) dbResource, clazz, entityPkList, null, useCache);
+                    data.putAll(selectByPksWithCache((ShardingDBResource) dbResource, clazz, entityPkList, order,
+                            useCache));
                 }
             }
 
@@ -394,7 +396,7 @@ public class ShardingJdbcQueryImpl extends AbstractJdbcQuery implements IShardin
 
     @Override
     public <T> List<T> findByPkList(List<EntityPK> pkList, IShardingKey<?> shardingKey, Class<T> clazz,
-                                    boolean useCache, EnumDBMasterSlave masterSlave) {
+                                    List<OrderBy> order, boolean useCache, EnumDBMasterSlave masterSlave) {
         List<T> result = Lists.newArrayList();
 
         Transaction tx = null;
@@ -418,7 +420,7 @@ public class ShardingJdbcQueryImpl extends AbstractJdbcQuery implements IShardin
 
             EntityPK[] entityPkList = pkList.toArray(new EntityPK[pkList.size()]);
 
-            Map<EntityPK, T> data = selectByPksWithCache(dbResource, clazz, entityPkList, null, useCache);
+            Map<EntityPK, T> data = selectByPksWithCache(dbResource, clazz, entityPkList, order, useCache);
 
             if (data.isEmpty() && isFromSlave) {
                 dbResource.close();
@@ -426,7 +428,7 @@ public class ShardingJdbcQueryImpl extends AbstractJdbcQuery implements IShardin
                 if (tx != null) {
                     tx.enlistResource(dbResource);
                 }
-                data = selectByPksWithCache(dbResource, clazz, entityPkList, null, useCache);
+                data = selectByPksWithCache(dbResource, clazz, entityPkList, order, useCache);
             }
 
             result.addAll(data.values());
@@ -626,8 +628,8 @@ public class ShardingJdbcQueryImpl extends AbstractJdbcQuery implements IShardin
             Map<EntityPK, T> data = null;
 
             if (isSecondCacheAvailable(clazz, useCache)) {
-                List<T> sCacheData = (List<T>) secondCache.get(((DefaultQueryImpl<T>) query).getWhereSql().getSql(),
-                        (ShardingDBResource) dbResource);
+                String sCacheKey = ((DefaultQueryImpl<T>) query).getWhereSql().getSecondCacheKey();
+                List<T> sCacheData = (List<T>) secondCache.get(sCacheKey, (ShardingDBResource) dbResource);
                 if (sCacheData != null && !sCacheData.isEmpty()) {
                     result.addAll(sCacheData);
                 }
@@ -644,8 +646,8 @@ public class ShardingJdbcQueryImpl extends AbstractJdbcQuery implements IShardin
                 }
 
                 if (isSecondCacheAvailable(clazz, useCache)) {
-                    secondCache.put(((DefaultQueryImpl<T>) query).getWhereSql().getSql(),
-                            (ShardingDBResource) dbResource, result);
+                    String sCacheKey = ((DefaultQueryImpl<T>) query).getWhereSql().getSecondCacheKey();
+                    secondCache.put(sCacheKey, (ShardingDBResource) dbResource, result);
                 }
             }
             // 过滤从缓存结果, 将没有指定的字段设置为默认值.

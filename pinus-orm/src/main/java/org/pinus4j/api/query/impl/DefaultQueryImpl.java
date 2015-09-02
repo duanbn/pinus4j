@@ -20,6 +20,8 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.management.Query;
+
 import org.pinus4j.api.SQL;
 import org.pinus4j.api.query.IQuery;
 import org.pinus4j.cluster.beans.IShardingKey;
@@ -219,9 +221,9 @@ public class DefaultQueryImpl<T> implements IQuery<T>, Cloneable {
     public boolean hasQueryFields() {
         return this.fields != null && this.fields.length > 0;
     }
-    
+
     public boolean isEffect() {
-        if (this.condList.isEmpty() && this.orderList.isEmpty() && start == -1 && limit ==-1) {
+        if (this.condList.isEmpty() && this.orderList.isEmpty() && start == -1 && limit == -1) {
             return false;
         }
 
@@ -240,37 +242,63 @@ public class DefaultQueryImpl<T> implements IQuery<T>, Cloneable {
 
     public SQL getWhereSql() {
         StringBuilder sqlText = new StringBuilder();
+        StringBuilder whereSql = new StringBuilder();
+        StringBuilder orderSql = new StringBuilder();
+        StringBuilder findInSet = new StringBuilder();
         List<Object> paramList = Lists.newArrayList();
 
         // 添加查询条件
+        // 当查询条件中只有一个in查询，则需要对此in查询进行排序
+        List<Condition> inConditionList = Lists.newArrayList();
         if (!condList.isEmpty()) {
-            sqlText.append(" where ");
+            whereSql.append(" where ");
 
             Condition cond = null;
             for (int i = 0; i < condList.size(); i++) {
                 cond = condList.get(i);
                 if (i > 0) {
-                    sqlText.append(" ").append(cond.getConditionRelation().getValue()).append(" ")
+                    whereSql.append(" ").append(cond.getConditionRelation().getValue()).append(" ")
                             .append(cond.getSql().getSql());
                 } else {
-                    sqlText.append(cond.getSql().getSql()); // first one
+                    whereSql.append(cond.getSql().getSql()); // first one
                 }
+
+                if (QueryOpt.IN == cond.getOpt()) {
+                    inConditionList.add(cond);
+                }
+
                 paramList.addAll(cond.getSql().getParams());
+            }
+
+            // sort by find in set
+            if (!inConditionList.isEmpty() && inConditionList.size() == 1) {
+                Condition inCondition = inConditionList.get(0);
+                findInSet.append("find_in_set(").append(inCondition.getField()).append(",'");
+                for (Object param : inCondition.getSql().getParams()) {
+                    findInSet.append(param).append(',');
+                }
+                findInSet.deleteCharAt(findInSet.length() - 1);
+                findInSet.append("')");
             }
         }
 
         // 添加排序条件
-        if (!orderList.isEmpty()) {
-            sqlText.append(" order by ");
+        if (orderList != null && !orderList.isEmpty()) {
+            orderSql.append(" order by ");
             for (OrderBy orderBy : orderList) {
-                sqlText.append('`').append(orderBy.getField()).append('`');
-                sqlText.append(" ");
-                sqlText.append(orderBy.getOrder().getValue());
-                sqlText.append(",");
+                orderSql.append('`').append(orderBy.getField()).append('`');
+                orderSql.append(" ");
+                orderSql.append(orderBy.getOrder().getValue());
+                orderSql.append(",");
             }
-            sqlText.deleteCharAt(sqlText.length() - 1);
+            orderSql.deleteCharAt(orderSql.length() - 1);
+        } else if (StringUtil.isNotBlank(findInSet.toString())) {
+            orderSql.append(" order by ");
+            orderSql.append(findInSet);
         }
 
+        sqlText.append(whereSql);
+        sqlText.append(orderSql);
         // 添加分页
         if (start > -1 && limit > -1) {
             sqlText.append(" limit ?,?");

@@ -46,7 +46,7 @@ import com.google.common.collect.Lists;
  */
 public abstract class AbstractJdbcUpdate extends AbstractDataLayer implements IDataUpdate {
 
-    public static final Logger   LOG               = LoggerFactory.getLogger(AbstractJdbcUpdate.class);
+    public static final Logger LOG = LoggerFactory.getLogger(AbstractJdbcUpdate.class);
 
     /**
      * 执行保存数据操作.
@@ -122,8 +122,9 @@ public abstract class AbstractJdbcUpdate extends AbstractDataLayer implements ID
 
             SQL sql = null;
             for (Object entity : entities) {
+                sql = SQLBuilder.getInsert(entity, tableIndex);
+                
                 if (ps == null) {
-                    sql = SQLBuilder.getInsert(entity, tableIndex);
                     ps = conn.prepareStatement(sql.getSql());
                 }
 
@@ -176,9 +177,9 @@ public abstract class AbstractJdbcUpdate extends AbstractDataLayer implements ID
         PreparedStatement ps = null;
         try {
 
+            SQL sql = null;
             for (Object entity : entities) {
-                SQL sql = SQLBuilder.getUpdate(entity, tableIndex);
-
+                sql = SQLBuilder.getUpdate(entity, tableIndex);
                 if (ps == null) {
                     ps = conn.prepareStatement(sql.getSql());
                 }

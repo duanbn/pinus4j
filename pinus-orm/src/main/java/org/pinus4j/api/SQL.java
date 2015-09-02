@@ -49,13 +49,26 @@ public class SQL {
     public static final SQL valueOf(String sql, Object... params) {
         return new SQL(sql, Arrays.asList(params));
     }
-    
+
     public static final SQL valueOf(String sql, List<Object> paramList) {
         return new SQL(sql, paramList);
     }
-    
+
     public List<String> getTableNames() {
         return SQLParser.parseTableName(sql);
+    }
+
+    public String getSecondCacheKey() {
+        StringBuilder key = new StringBuilder(this.sql);
+        key.append("[");
+        for (Object param : params) {
+            key.append(param).append(",");
+        }
+        if (!params.isEmpty()) {
+            key.deleteCharAt(key.length() - 1);
+        }
+        key.append("]");
+        return key.toString();
     }
 
     @Override

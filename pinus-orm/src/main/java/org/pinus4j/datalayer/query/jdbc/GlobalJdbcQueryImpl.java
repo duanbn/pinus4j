@@ -26,6 +26,7 @@ import javax.transaction.xa.XAResource;
 import org.pinus4j.api.SQL;
 import org.pinus4j.api.query.IQuery;
 import org.pinus4j.api.query.impl.DefaultQueryImpl;
+import org.pinus4j.api.query.impl.DefaultQueryImpl.OrderBy;
 import org.pinus4j.cluster.enums.EnumDBMasterSlave;
 import org.pinus4j.cluster.resources.IDBResource;
 import org.pinus4j.datalayer.query.IGlobalQuery;
@@ -154,7 +155,7 @@ public class GlobalJdbcQueryImpl extends AbstractJdbcQuery implements IGlobalQue
 
     @Override
     public <T> T findByPk(EntityPK pk, Class<T> clazz, boolean useCache, EnumDBMasterSlave masterSlave) {
-        List<T> result = findByPkList(Lists.newArrayList(pk), clazz, useCache, masterSlave);
+        List<T> result = findByPkList(Lists.newArrayList(pk), clazz, null, useCache, masterSlave);
 
         if (!result.isEmpty()) {
             return result.get(0);
@@ -164,7 +165,7 @@ public class GlobalJdbcQueryImpl extends AbstractJdbcQuery implements IGlobalQue
     }
 
     @Override
-    public <T> List<T> findByPkList(List<EntityPK> pkList, Class<T> clazz, boolean useCache,
+    public <T> List<T> findByPkList(List<EntityPK> pkList, Class<T> clazz, List<OrderBy> order, boolean useCache,
                                     EnumDBMasterSlave masterSlave) {
         List<T> result = Lists.newArrayList();
 
@@ -188,7 +189,7 @@ public class GlobalJdbcQueryImpl extends AbstractJdbcQuery implements IGlobalQue
             }
 
             EntityPK[] entityPks = pkList.toArray(new EntityPK[pkList.size()]);
-            Map<EntityPK, T> data = selectByPksWithCache(dbResource, clazz, entityPks, null, useCache);
+            Map<EntityPK, T> data = selectByPksWithCache(dbResource, clazz, entityPks, order, useCache);
             if (data.isEmpty() && isFromSlave) {
                 dbResource.close();
                 dbResource = this.dbCluster.getMasterGlobalDBResource(clusterName, tableName);
@@ -197,7 +198,7 @@ public class GlobalJdbcQueryImpl extends AbstractJdbcQuery implements IGlobalQue
                     tx.enlistResource((XAResource) dbResource);
                 }
 
-                data = selectByPksWithCache(dbResource, clazz, entityPks, null, useCache);
+                data = selectByPksWithCache(dbResource, clazz, entityPks, order, useCache);
             }
 
             result.addAll(data.values());
@@ -231,8 +232,8 @@ public class GlobalJdbcQueryImpl extends AbstractJdbcQuery implements IGlobalQue
         String tableName = entityMetaManager.getTableName(clazz);
 
         if (isSecondCacheAvailable(clazz, useCache)) {
-            List<T> sCacheData = secondCache.getGlobal(((DefaultQueryImpl<T>) query).getWhereSql().getSql(),
-                    clusterName, tableName);
+            String sCacheKey = ((DefaultQueryImpl<T>) query).getWhereSql().getSecondCacheKey();
+            List<T> sCacheData = secondCache.getGlobal(sCacheKey, clusterName, tableName);
             if (sCacheData != null) {
                 return sCacheData;
             }
@@ -288,8 +289,8 @@ public class GlobalJdbcQueryImpl extends AbstractJdbcQuery implements IGlobalQue
             }
 
             if (isSecondCacheAvailable(clazz, useCache)) {
-                secondCache.putGlobal(((DefaultQueryImpl<T>) query).getWhereSql().getSql(), clusterName, tableName,
-                        result);
+                String sCacheKey = ((DefaultQueryImpl<T>) query).getWhereSql().getSecondCacheKey();
+                secondCache.putGlobal(sCacheKey, clusterName, tableName, result);
             }
 
             // 过滤从缓存结果, 将没有指定的字段设置为默认值.
