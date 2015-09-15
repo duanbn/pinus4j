@@ -320,9 +320,7 @@ public class GlobalJdbcQueryImpl extends AbstractJdbcQuery implements IGlobalQue
     }
 
     @Override
-    public List<Map<String, Object>> findBySql(SQL sql, Class<?> clazz, EnumDBMasterSlave masterSlave) {
-        String clusterName = entityMetaManager.getClusterName(clazz);
-
+    public List<Map<String, Object>> findBySql(SQL sql, String clusterName, EnumDBMasterSlave masterSlave) {
         IDBResource next = null;
 
         for (String tableName : sql.getTableNames()) {

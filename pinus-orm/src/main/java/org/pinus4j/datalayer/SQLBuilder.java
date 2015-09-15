@@ -23,7 +23,6 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -470,7 +469,7 @@ public class SQLBuilder {
         Map<String, Object> one = null;
         while (rs.next()) {
             try {
-                one = new HashMap<String, Object>();
+                one = Maps.newLinkedHashMap();
                 String fieldName = null;
                 Object value = null;
                 for (int i = 1; i <= rsmd.getColumnCount(); i++) {

@@ -1,6 +1,7 @@
 package org.pinus4j.api;
 
 import java.util.List;
+import java.util.Map;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -169,6 +170,15 @@ public class DefaultPinusClientTest extends BaseTest {
         //        globalQuery.orderBy("pk", Order.DESC);
         for (TestGlobalEntity entity : globalQuery.list()) {
             System.out.println(entity);
+        }
+    }
+
+    @Test
+    public void TestSql() throws Exception {
+        SQL sql = SQL.valueOf("select * from testglobalentity where pk < ?", 20);
+        List<Map<String, Object>> result = pinusClient.findBySQL(sql, CLUSTER_KLSTORAGE);
+        for (Map<String, Object> res : result) {
+            System.out.println(res);
         }
     }
 

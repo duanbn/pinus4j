@@ -122,7 +122,10 @@ public interface PinusClient {
 
     public <T> IQuery<T> createQuery(Class<T> clazz);
 
+    @Deprecated
     public List<Map<String, Object>> findBySQL(SQL sql, Class<?> clazz);
+    
+    public List<Map<String, Object>> findBySQL(SQL sql, String clusterName);
 
     /**********************************************************
      * other相关

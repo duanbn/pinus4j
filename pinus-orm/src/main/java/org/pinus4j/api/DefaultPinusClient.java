@@ -623,11 +623,24 @@ public class DefaultPinusClient implements PinusClient {
         CheckUtil.checkSQL(sql);
         CheckUtil.checkClass(clazz);
 
+        String clusterName = entityMetaManager.getClusterName(clazz);
+
         if (entityMetaManager.isShardingEntity(clazz)) {
             return this.shardingQuery.findBySql(sql, EnumDBMasterSlave.AUTO);
         } else {
-            return this.globalQuery.findBySql(sql, clazz, EnumDBMasterSlave.AUTO);
+            return this.globalQuery.findBySql(sql, clusterName, EnumDBMasterSlave.AUTO);
         }
+    }
+
+    @Override
+    public List<Map<String, Object>> findBySQL(SQL sql, String clusterName) {
+        if (sql == null) {
+            throw new IllegalArgumentException("param sql should not be null");
+        }
+
+        CheckUtil.checkSQL(sql);
+
+        return this.globalQuery.findBySql(sql, clusterName, EnumDBMasterSlave.AUTO);
     }
 
     @Override

@@ -43,6 +43,6 @@ public interface IGlobalQuery extends IDataQuery {
 
     <T> List<T> findByQuery(IQuery<T> query, Class<T> clazz, boolean useCache, EnumDBMasterSlave masterSlave);
 
-    List<Map<String, Object>> findBySql(SQL sql, Class<?> clazz, EnumDBMasterSlave masterSlave);
+    List<Map<String, Object>> findBySql(SQL sql, String clusterName, EnumDBMasterSlave masterSlave);
 
 }
