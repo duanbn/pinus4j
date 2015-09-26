@@ -255,6 +255,7 @@ public class RedisPrimaryCacheImpl extends AbstractRedisCache implements IPrimar
             }
 
             redisClient.hmset(key.getBytes(), data);
+            redisClient.exists(key.getBytes());
 
             if (LOG.isDebugEnabled()) {
                 LOG.debug("[PRIMARY CACHE] - put (" + data.size() + ") to cache " + key);
