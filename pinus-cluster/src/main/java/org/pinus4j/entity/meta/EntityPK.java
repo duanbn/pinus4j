@@ -26,9 +26,11 @@ import java.util.Arrays;
  */
 public class EntityPK implements Serializable {
 
-    private PKName[]  pkNames;
+    private static final long serialVersionUID = 1L;
 
-    private PKValue[] pkValues;
+    private PKName[]          pkNames;
+
+    private PKValue[]         pkValues;
 
     private EntityPK() {
     }

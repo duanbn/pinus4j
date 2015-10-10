@@ -21,6 +21,8 @@ import java.util.Map;
 import java.util.concurrent.locks.Lock;
 
 import org.pinus4j.api.query.IQuery;
+import org.pinus4j.cache.IPrimaryCache;
+import org.pinus4j.cache.ISecondCache;
 import org.pinus4j.cluster.IDBCluster;
 import org.pinus4j.cluster.enums.EnumDBMasterSlave;
 import org.pinus4j.cluster.enums.EnumSyncAction;
@@ -124,7 +126,7 @@ public interface PinusClient {
 
     @Deprecated
     public List<Map<String, Object>> findBySQL(SQL sql, Class<?> clazz);
-    
+
     public List<Map<String, Object>> findBySQL(SQL sql, String clusterName);
 
     /**********************************************************
@@ -139,12 +141,25 @@ public interface PinusClient {
     Lock createLock(String lockName);
 
     /**
-    /**
-     * 获取当前使用的数据库集群.
+     * /** 获取当前使用的数据库集群.
      * 
      * @return 数据库集群
      */
     IDBCluster getDBCluster();
+
+    /**
+     * 获取一级缓存控制接口
+     * 
+     * @return
+     */
+    IPrimaryCache getPrimaryCache();
+
+    /**
+     * 获取二级缓存控制接口
+     * 
+     * @return
+     */
+    ISecondCache getSecondCache();
 
     /**
      * 生成全局唯一的int id. 对一个数据对象的集群全局唯一id.
