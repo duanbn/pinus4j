@@ -163,4 +163,6 @@ public interface IEntityMetaManager {
 
     public DBTable getTableMeta(Class<?> entityClass);
 
+    public DBTable getTableMeta(String tableName);
+
 }

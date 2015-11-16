@@ -74,6 +74,8 @@ public class DBTable implements Serializable {
      */
     private boolean             isCache;
 
+    private String              cacheVersion;
+
     /**
      * 主键
      */
@@ -440,6 +442,14 @@ public class DBTable implements Serializable {
 
     public void setCache(boolean isCache) {
         this.isCache = isCache;
+    }
+
+    public String getCacheVersion() {
+        return cacheVersion;
+    }
+
+    public void setCacheVersion(String cacheVersion) {
+        this.cacheVersion = cacheVersion;
     }
 
     @Override

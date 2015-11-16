@@ -35,6 +35,7 @@ import java.util.jar.JarFile;
 import org.pinus4j.cluster.beans.IShardingKey;
 import org.pinus4j.cluster.beans.ShardingKey;
 import org.pinus4j.constant.Const;
+import org.pinus4j.entity.annotations.CacheVersion;
 import org.pinus4j.entity.annotations.DateTime;
 import org.pinus4j.entity.annotations.Index;
 import org.pinus4j.entity.annotations.Indexes;
@@ -54,6 +55,7 @@ import org.pinus4j.utils.BeansUtil;
 import org.pinus4j.utils.StringUtil;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 /**
  * 管理加载的Entity信息.
@@ -65,11 +67,11 @@ public class DefaultEntityMetaManager implements IEntityMetaManager {
     /**
      * 当前线程的类装载器. 用于扫描可以生成数据表的数据对象.
      */
-    private final ClassLoader                   classloader = Thread.currentThread().getContextClassLoader();
+    private final ClassLoader                   classloader  = Thread.currentThread().getContextClassLoader();
 
-    private final static Map<Class<?>, DBTable> tableMap    = new HashMap<Class<?>, DBTable>();
-
-    private final static List<DBTable>          tables      = new ArrayList<DBTable>();
+    private final static Map<Class<?>, DBTable> tableMap     = new HashMap<Class<?>, DBTable>();
+    private final static Map<String, DBTable>   tableNameMap = Maps.newHashMap();
+    private final static List<DBTable>          tables       = new ArrayList<DBTable>();
 
     private volatile static IEntityMetaManager  instance;
 
@@ -171,7 +173,7 @@ public class DefaultEntityMetaManager implements IEntityMetaManager {
             throw new IllegalStateException("shardingValue is null, clazz=" + clazz + " field=" + shardingField);
         }
 
-        return new ShardingKey(clusterName, shardingValue);
+        return new ShardingKey<Object>(clusterName, shardingValue);
     }
 
     @Override
@@ -285,6 +287,7 @@ public class DefaultEntityMetaManager implements IEntityMetaManager {
                                 dbTable = converTo(tableClass);
                                 tables.add(dbTable);
                                 tableMap.put(tableClass, dbTable);
+                                tableNameMap.put(dbTable.getName(), dbTable);
                             }
                         }
                     }
@@ -319,6 +322,7 @@ public class DefaultEntityMetaManager implements IEntityMetaManager {
                     dbTable = converTo(tableClass);
                     tables.add(dbTable);
                     tableMap.put(tableClass, dbTable);
+                    tableNameMap.put(dbTable.getName(), dbTable);
                 }
             }
         }
@@ -346,7 +350,17 @@ public class DefaultEntityMetaManager implements IEntityMetaManager {
         }
         // 获取表名
         String tableName = StringUtil.isBlank(annoTable.name()) ? clazz.getSimpleName() : annoTable.name();
+
         DBTable table = new DBTable(tableName.toLowerCase());
+
+        // 解析cache version
+        String cacheVersion = Const.DEFAULT_CACHE_VERSION;
+        CacheVersion annoCacheVersion = clazz.getAnnotation(CacheVersion.class);
+        if (annoCacheVersion != null && StringUtil.isNotBlank(annoCacheVersion.value())) {
+            cacheVersion = annoCacheVersion.value();
+        }
+        table.setCacheVersion(cacheVersion);
+
         // 获取集群名
         String cluster = annoTable.cluster();
         if (StringUtil.isBlank(cluster)) {
@@ -574,6 +588,17 @@ public class DefaultEntityMetaManager implements IEntityMetaManager {
 
         if (dbTable == null) {
             throw new IllegalStateException("找不到实体的元信息 class=" + clazz);
+        }
+
+        return dbTable;
+    }
+
+    @Override
+    public DBTable getTableMeta(String tableName) {
+        DBTable dbTable = tableNameMap.get(tableName);
+
+        if (dbTable == null) {
+            throw new IllegalStateException("找不到实体的元信息 table name=" + tableName);
         }
 
         return dbTable;

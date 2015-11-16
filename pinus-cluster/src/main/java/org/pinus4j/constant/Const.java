@@ -23,6 +23,8 @@ package org.pinus4j.constant;
  */
 public class Const {
 
+    public static final String DEFAULT_CACHE_VERSION         = "1";
+
     //
     // zookeeper目录相关常量.
     //

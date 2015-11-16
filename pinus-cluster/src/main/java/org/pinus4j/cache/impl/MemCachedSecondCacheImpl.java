@@ -181,6 +181,8 @@ public class MemCachedSecondCacheImpl extends AbstractMemCachedCache implements 
         StringBuilder versionKey = new StringBuilder("sec.version.");
         versionKey.append(clusterName).append(".");
         versionKey.append(tableName);
+        versionKey.append(".");
+        versionKey.append(getCacheVersion(tableName));
         return versionKey.toString();
     }
 
@@ -193,6 +195,8 @@ public class MemCachedSecondCacheImpl extends AbstractMemCachedCache implements 
         versionKey.append(shardingDBResource.getRegionCapacity());
         versionKey.append(".");
         versionKey.append(shardingDBResource.getTableName()).append(shardingDBResource.getTableIndex());
+        versionKey.append(".");
+        versionKey.append(getCacheVersion(shardingDBResource.getTableName()));
         return versionKey.toString();
     }
 
@@ -203,6 +207,7 @@ public class MemCachedSecondCacheImpl extends AbstractMemCachedCache implements 
         StringBuilder cacheKey = new StringBuilder("sec.");
         cacheKey.append(clusterName).append(".");
         cacheKey.append(tableName).append(".");
+        cacheKey.append(getCacheVersion(tableName)).append(".");
         cacheKey.append(version).append(".");
         cacheKey.append(SecurityUtil.md5(whereKey));
         return cacheKey.toString();
@@ -221,6 +226,8 @@ public class MemCachedSecondCacheImpl extends AbstractMemCachedCache implements 
         cacheKey.append(shardingDBResource.getRegionCapacity());
         cacheKey.append(".");
         cacheKey.append(shardingDBResource.getTableName()).append(shardingDBResource.getTableIndex());
+        cacheKey.append(".");
+        cacheKey.append(getCacheVersion(shardingDBResource.getTableName()));
         cacheKey.append(".");
         cacheKey.append(version).append(".");
         cacheKey.append(SecurityUtil.md5(whereKey));

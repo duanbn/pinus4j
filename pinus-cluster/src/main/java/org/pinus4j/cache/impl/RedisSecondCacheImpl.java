@@ -200,7 +200,10 @@ public class RedisSecondCacheImpl extends AbstractRedisCache implements ISecondC
     private String _buildGlobalCacheKey(String whereKey, String clusterName, String tableName) {
         StringBuilder cacheKey = new StringBuilder("sec.");
         cacheKey.append(clusterName).append(".");
-        cacheKey.append(tableName).append(".");
+        cacheKey.append(tableName);
+        cacheKey.append(".");
+        cacheKey.append(getCacheVersion(tableName));
+        cacheKey.append(".");
         if (StringUtil.isNotBlank(whereKey))
             cacheKey.append(SecurityUtil.md5(whereKey));
         else
@@ -221,6 +224,8 @@ public class RedisSecondCacheImpl extends AbstractRedisCache implements ISecondC
         cacheKey.append(shardingDBResource.getRegionCapacity());
         cacheKey.append(".");
         cacheKey.append(shardingDBResource.getTableName()).append(shardingDBResource.getTableIndex());
+        cacheKey.append(".");
+        cacheKey.append(getCacheVersion(shardingDBResource.getTableName()));
         cacheKey.append(".");
         if (StringUtil.isNotBlank(whereKey))
             cacheKey.append(SecurityUtil.md5(whereKey));

@@ -5,6 +5,7 @@ import java.sql.Timestamp;
 import java.util.Date;
 
 import org.pinus4j.api.FashionEntity;
+import org.pinus4j.entity.annotations.CacheVersion;
 import org.pinus4j.entity.annotations.DateTime;
 import org.pinus4j.entity.annotations.Field;
 import org.pinus4j.entity.annotations.Index;
@@ -13,6 +14,7 @@ import org.pinus4j.entity.annotations.PrimaryKey;
 import org.pinus4j.entity.annotations.Table;
 import org.pinus4j.entity.annotations.UpdateTime;
 
+@CacheVersion("v1")
 @Table(cluster = "pinus", cache = true)
 @Indexes({ @Index(field = "testInt") })
 public class TestGlobalEntity extends FashionEntity implements Serializable {
