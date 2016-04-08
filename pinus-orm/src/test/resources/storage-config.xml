@@ -16,7 +16,7 @@
 	<!-- <db.cluster.cache enabled="true"> <primary expire="1800"> <address>127.0.0.1:11211</address> 
 		</primary> <second expire="1800"> <address>127.0.0.1:11211</address> </second> 
 		</db.cluster.cache> -->
-	<db.cluster.cache enabled="true">
+	<db.cluster.cache enabled="false">
 		<primary expire="1800" class="org.pinus4j.cache.impl.RedisPrimaryCacheImpl"
 			maxTotal="10">
 			<address>127.0.0.1:6379</address>

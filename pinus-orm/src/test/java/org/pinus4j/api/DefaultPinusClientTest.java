@@ -217,14 +217,16 @@ public class DefaultPinusClientTest extends BaseTest {
     @Test
     public void testConcurrent() throws Exception {
         List<Thread> threads = Lists.newArrayList();
-        for (int i = 0; i < 500; i++) {
+        for (int i = 0; i < Runtime.getRuntime().availableProcessors(); i++) {
             Thread t = new Thread(new Runnable() {
 
                 @Override
                 public void run() {
                     IQuery<TestGlobalEntity> globalQuery = pinusClient.createQuery(TestGlobalEntity.class);
+                    IQuery<TestEntity> query = pinusClient.createQuery(TestEntity.class);
                     for (int i = 0; i < 10000; i++) {
-                        globalQuery.limit(100).list();
+                        globalQuery.limit(10).list();
+                        query.limit(100, 10).list();
                     }
                 }
             });
@@ -235,6 +237,14 @@ public class DefaultPinusClientTest extends BaseTest {
 
         for (Thread t : threads) {
             t.join();
+        }
+    }
+
+    @Test
+    public void testSharding() throws Exception {
+        IQuery<TestEntity> query = pinusClient.createQuery(TestEntity.class);
+        for (;;) {
+            query.limit(10).list();
         }
     }
 

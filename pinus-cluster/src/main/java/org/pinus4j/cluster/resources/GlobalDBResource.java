@@ -17,7 +17,6 @@
 package org.pinus4j.cluster.resources;
 
 import java.sql.Connection;
-import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 
 import org.pinus4j.cluster.beans.DBInfo;
@@ -44,13 +43,6 @@ public class GlobalDBResource extends AbstractXADBResource {
 
     private EnumDBMasterSlave masterSlave;
 
-    //
-    // database meta data.
-    //
-    private String            databaseProductName;
-    private String            host;
-    private String            catalog;
-
     private GlobalDBResource() {
     }
 
@@ -72,32 +64,15 @@ public class GlobalDBResource extends AbstractXADBResource {
 
         } else {
 
-            dbResource = (GlobalDBResource) DBResourceCache.getGlobalDBResource(resId);
-
             Connection conn = dbInfo.getDatasource().getConnection();
             conn.setAutoCommit(false);
 
-            if (dbResource == null) {
-                dbResource = new GlobalDBResource();
+            dbResource = new GlobalDBResource();
 
-                dbResource.setId(resId);
-                dbResource.setClusterName(dbInfo.getClusterName());
-                dbResource.setDbName(dbInfo.getDbName());
-                dbResource.setMasterSlave(dbInfo.getMasterSlave());
-
-                // get database meta info.
-                DatabaseMetaData dbMeta = conn.getMetaData();
-                String databaseProductName = dbMeta.getDatabaseProductName();
-                String url = dbMeta.getURL().substring(13);
-                String host = url.substring(0, url.indexOf("/"));
-                String catalog = conn.getCatalog();
-
-                dbResource.setDatabaseProductName(databaseProductName);
-                dbResource.setHost(host);
-                dbResource.setCatalog(catalog);
-
-                DBResourceCache.putGlobalDBResource(resId, dbResource);
-            }
+            dbResource.setId(resId);
+            dbResource.setClusterName(dbInfo.getClusterName());
+            dbResource.setDbName(dbInfo.getDbName());
+            dbResource.setMasterSlave(dbInfo.getMasterSlave());
 
             dbResource.setConnection(conn);
         }
@@ -191,30 +166,6 @@ public class GlobalDBResource extends AbstractXADBResource {
 
     public void setDbName(String dbName) {
         this.dbName = dbName;
-    }
-
-    public String getDatabaseProductName() {
-        return databaseProductName;
-    }
-
-    public void setDatabaseProductName(String databaseProductName) {
-        this.databaseProductName = databaseProductName;
-    }
-
-    public String getHost() {
-        return host;
-    }
-
-    public void setHost(String host) {
-        this.host = host;
-    }
-
-    public String getCatalog() {
-        return catalog;
-    }
-
-    public void setCatalog(String catalog) {
-        this.catalog = catalog;
     }
 
     public void setConnection(Connection conn) {

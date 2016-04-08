@@ -56,7 +56,6 @@ import org.pinus4j.cluster.config.impl.XmlClusterConfigImpl;
 import org.pinus4j.cluster.enums.EnumDB;
 import org.pinus4j.cluster.enums.EnumDBMasterSlave;
 import org.pinus4j.cluster.enums.EnumSyncAction;
-import org.pinus4j.cluster.resources.DBResourceCache;
 import org.pinus4j.cluster.resources.GlobalDBResource;
 import org.pinus4j.cluster.resources.IDBResource;
 import org.pinus4j.cluster.resources.ShardingDBResource;
@@ -365,9 +364,6 @@ public abstract class AbstractDBCluster implements IDBCluster {
         } catch (Exception e) {
             throw new DBClusterException("关闭数据库集群失败", e);
         }
-
-        // clear resource cache.
-        DBResourceCache.clear();
 
         // close curator
         CloseableUtils.closeQuietly(this.curatorClient);

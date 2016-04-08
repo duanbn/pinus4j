@@ -17,11 +17,10 @@
 package org.pinus4j.cluster.resources;
 
 import java.sql.Connection;
-import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 
-import org.pinus4j.cluster.beans.DBRegionInfo;
 import org.pinus4j.cluster.beans.DBInfo;
+import org.pinus4j.cluster.beans.DBRegionInfo;
 import org.pinus4j.cluster.enums.EnumDBMasterSlave;
 import org.pinus4j.exceptions.DBOperationException;
 import org.pinus4j.transaction.ITransaction;
@@ -65,13 +64,6 @@ public class ShardingDBResource extends AbstractXADBResource {
 
     private EnumDBMasterSlave masterSlave;
 
-    //
-    // database meta data.
-    //
-    private String            databaseProductName;
-    private String            host;
-    private String            catalog;
-
     private ShardingDBResource() {
     }
 
@@ -88,35 +80,18 @@ public class ShardingDBResource extends AbstractXADBResource {
 
         } else {
 
-            dbResource = (ShardingDBResource) DBResourceCache.getShardingDBResource(resId);
-
             Connection conn = dbInfo.getDatasource().getConnection();
             conn.setAutoCommit(false);
 
-            if (dbResource == null) {
-                dbResource = new ShardingDBResource();
+            dbResource = new ShardingDBResource();
 
-                dbResource.setId(resId);
-                dbResource.setClusterName(dbInfo.getClusterName());
-                dbResource.setDbName(dbInfo.getDbName());
-                dbResource.setRegionCapacity(regionInfo.getCapacity());
-                dbResource.setTableName(tableName);
-                dbResource.setTableIndex(tableIndex);
-                dbResource.setMasterSlave(dbInfo.getMasterSlave());
-
-                // get database meta info.
-                DatabaseMetaData dbMeta = conn.getMetaData();
-                String databaseProductName = dbMeta.getDatabaseProductName();
-                String url = dbMeta.getURL().substring(13);
-                String host = url.substring(0, url.indexOf("/"));
-                String catalog = conn.getCatalog();
-
-                dbResource.setDatabaseProductName(databaseProductName);
-                dbResource.setHost(host);
-                dbResource.setCatalog(catalog);
-
-                DBResourceCache.putShardingDBResource(resId, dbResource);
-            }
+            dbResource.setId(resId);
+            dbResource.setClusterName(dbInfo.getClusterName());
+            dbResource.setDbName(dbInfo.getDbName());
+            dbResource.setRegionCapacity(regionInfo.getCapacity());
+            dbResource.setTableName(tableName);
+            dbResource.setTableIndex(tableIndex);
+            dbResource.setMasterSlave(dbInfo.getMasterSlave());
 
             dbResource.setConnection(conn);
         }
@@ -240,30 +215,6 @@ public class ShardingDBResource extends AbstractXADBResource {
         this.regionCapacity = regionCapacity;
     }
 
-    public String getDatabaseProductName() {
-        return databaseProductName;
-    }
-
-    public void setDatabaseProductName(String databaseProductName) {
-        this.databaseProductName = databaseProductName;
-    }
-
-    public String getHost() {
-        return host;
-    }
-
-    public void setHost(String host) {
-        this.host = host;
-    }
-
-    public String getCatalog() {
-        return catalog;
-    }
-
-    public void setCatalog(String catalog) {
-        this.catalog = catalog;
-    }
-
     public void setMasterSlave(EnumDBMasterSlave masterSlave) {
         this.masterSlave = masterSlave;
     }
@@ -272,7 +223,7 @@ public class ShardingDBResource extends AbstractXADBResource {
     public String toString() {
         return "ShardingDBResource [clusterName=" + clusterName + ", dbName=" + dbName + ", tableName=" + tableName
                 + ", tableIndex=" + tableIndex + ", regionCapacity=" + regionCapacity + ", masterSlave=" + masterSlave
-                + ", databaseProductName=" + databaseProductName + ", host=" + host + ", catalog=" + catalog + "]";
+                + "]";
     }
 
 }

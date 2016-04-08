@@ -484,9 +484,10 @@ public class ShardingJdbcQueryImpl extends AbstractJdbcQuery implements IShardin
                 if (isOrderQuery) {
                     mergeResult.addAll(_findByQuery(internalQuery, dbResource, clazz, useCache, masterSlave));
                 } else {
-                    mergeResult.addAll(_findByQuery(internalQuery, dbResource, clazz, useCache, masterSlave));
-                    if (mergeResult.size() >= sum) {
-                        break;
+                    if (mergeResult.size() < sum) {
+                        mergeResult.addAll(_findByQuery(internalQuery, dbResource, clazz, useCache, masterSlave));
+                    } else {
+                        dbResource.close();
                     }
                 }
             }
@@ -501,9 +502,10 @@ public class ShardingJdbcQueryImpl extends AbstractJdbcQuery implements IShardin
                     if (isOrderQuery) {
                         mergeResult.addAll(_findByQuery(internalQuery, dbResource, clazz, useCache, masterSlave));
                     } else {
-                        mergeResult.addAll(_findByQuery(internalQuery, dbResource, clazz, useCache, masterSlave));
-                        if (mergeResult.size() >= sum) {
-                            break;
+                        if (mergeResult.size() < sum) {
+                            mergeResult.addAll(_findByQuery(internalQuery, dbResource, clazz, useCache, masterSlave));
+                        } else {
+                            dbResource.close();
                         }
                     }
                 }
@@ -651,7 +653,7 @@ public class ShardingJdbcQueryImpl extends AbstractJdbcQuery implements IShardin
                 }
             }
             // 过滤从缓存结果, 将没有指定的字段设置为默认值.
-            List<T> filteResult = new ArrayList<T>(data.size());
+            List<T> filteResult = new ArrayList<T>(result.size());
             if (((DefaultQueryImpl<T>) query).hasQueryFields()) {
                 for (T obj : result) {
                     try {
