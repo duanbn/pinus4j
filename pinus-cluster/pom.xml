@@ -5,11 +5,13 @@
 	<parent>
 		<groupId>org.pinus4j</groupId>
 		<artifactId>pinus</artifactId>
-		<version>1.1.1</version>
+		<version>1.2.0</version>
 	</parent>
 
 	<artifactId>pinus-cluster</artifactId>
 	<packaging>jar</packaging>
+
+    <name>pinus-cluster</name>
 
 	<dependencies>
 		<dependency>
@@ -27,7 +29,11 @@
 		<dependency>
 			<groupId>commons-dbcp</groupId>
 			<artifactId>commons-dbcp</artifactId>
-		</dependency>
+        </dependency>
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>druid</artifactId>
+        </dependency>
 		<dependency>
 			<groupId>com.google.code.simple-spring-memcached</groupId>
 			<artifactId>spymemcached</artifactId>
@@ -45,11 +51,9 @@
 			<artifactId>javax.transaction-api</artifactId>
 		</dependency>
 
-		<!-- test -->
 		<dependency>
 			<groupId>mysql</groupId>
 			<artifactId>mysql-connector-java</artifactId>
-			<scope>test</scope>
 		</dependency>
 	</dependencies>
 

@@ -16,96 +16,148 @@
 
 package org.pinus4j.api.query;
 
+import java.util.List;
+
+import org.pinus4j.api.query.impl.Condition;
+import org.pinus4j.api.query.impl.Order;
+import org.pinus4j.cluster.beans.IShardingKey;
+import org.pinus4j.cluster.enums.EnumDBMasterSlave;
+
 /**
- * 查询对象.
+ * 查询对象. 线程不安全
  * 
  * @author duanbn
  */
-public interface IQuery {
+public interface IQuery<T> {
 
-	/**
-	 * get value of start.
-	 * 
-	 * @return
-	 */
-	public int getStart();
+    /**
+     * 获取一条记录. 如果有多条只获取第一条.
+     * 
+     * @return
+     */
+    public T load();
 
-	/**
-	 * get value of limit
-	 * 
-	 * @return
-	 */
-	public int getLimit();
+    /**
+     * 获取此Query查询到的结果集.
+     * 
+     * @return
+     */
+    public List<T> list();
 
-	/**
-	 * 判断是否有查询字段.
-	 */
-	public boolean hasQueryFields();
+    /**
+     * 获取此Query查询到的结果集数量.
+     * 
+     * @return
+     */
+    public Number count();
 
-	/**
-	 * 获取此对象的复制对象.
-	 *
-	 * @return 此对象实例的复制
-	 */
-	public IQuery clone();
+    /**
+     * set sharding key.
+     * 
+     * @param shardingKey
+     * @return
+     */
+    public IQuery<T> setShardingKey(IShardingKey<?> shardingKey);
 
-	/**
-	 * 添加取值字段.
-	 * 
-	 * @param field
-	 *            获取值的字段
-	 * @return
-	 */
-	public IQuery setFields(String... field);
+    /**
+     * 设置查询主从库.
+     * 
+     * @param masterSlave
+     * @return
+     */
+    public IQuery<T> setMasterSlave(EnumDBMasterSlave masterSlave);
 
-	/**
-	 * 获取取值字段.
-	 * 
-	 * @return
-	 */
-	public String[] getFields();
+    /**
+     * 设置查询是否使用缓存
+     * 
+     * @param useCache
+     * @return
+     */
+    public IQuery<T> setUseCache(boolean useCache);
 
-	/**
-	 * 返回查询条件的sql语句.
-	 * 
-	 * @return 查询条件sql
-	 */
-	public String getWhereSql();
+    /**
+     * 添加取值字段.
+     * 
+     * @param field 获取值的字段
+     * @return
+     */
+    public IQuery<T> setFields(String... field);
 
-	/**
-	 * 添加查询条件.
-	 * 
-	 * @param cond
-	 *            一个查询条件
-	 */
-	public IQuery add(Condition cond);
+    /**
+     * 添加取值字段.
+     *
+     * @param clazz class
+     * @param field 获取值的字段
+     * @return
+     */
+    public IQuery<T> setFields(Class<?> clazz, String... field);
 
-	/**
-	 * 添加排序字段.
-	 * 
-	 * @param field
-	 *            被排序字段
-	 * @param order
-	 *            升序降序
-	 */
-	public IQuery orderBy(String field, Order order);
+    /**
+     * and查询条件. {@link and}
+     * 
+     * @param cond 一个查询条件
+     */
+    @Deprecated
+    public IQuery<T> add(Condition cond);
 
-	/**
-	 * 分页参数.
-	 * 
-	 * @param start
-	 *            开始偏移量
-	 * @param limit
-	 *            页大小
-	 */
-	public IQuery limit(int start, int limit);
+    /**
+     * and查询条件
+     * 
+     * @param cond
+     * @return
+     */
+    public IQuery<T> and(Condition cond);
 
-	/**
-	 * 设置limit参数
-	 * 
-	 * @param limit
-	 *            limit
-	 */
-	public IQuery limit(int limit);
+    /**
+     * or查询条件.
+     * 
+     * @param cond 查询条件
+     * @return
+     */
+    public IQuery<T> or(Condition cond);
+
+    /**
+     * 添加怕需字段
+     * 
+     * @param field
+     * @param order
+     * @return
+     */
+    public IQuery<T> orderBy(String field, Order order);
+
+    /**
+     * 添加排序字段.
+     * 
+     * @param field 被排序字段
+     * @param order 升序降序
+     */
+    public IQuery<T> orderBy(String field, Order order, Class<?> clazz);
+
+    /**
+     * 分页参数.
+     * 
+     * @param start 开始偏移量
+     * @param limit 页大小
+     */
+    public IQuery<T> limit(int start, int limit);
+
+    /**
+     * 设置limit参数
+     * 
+     * @param limit limit
+     */
+    public IQuery<T> limit(int limit);
+
+    /**
+     * clone.
+     * 
+     * @return
+     */
+    public IQuery<T> clone();
+
+    /**
+     * 清除当前已经设置的查询条件.
+     */
+    public void clean();
 
 }

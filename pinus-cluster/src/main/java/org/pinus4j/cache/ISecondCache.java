@@ -35,7 +35,7 @@ public interface ISecondCache extends ICache {
      * @param clusterName 集群名
      * @param clazz 对象class
      */
-    public void putGlobal(String whereSql, String clusterName, String tableName, List data);
+    public void putGlobal(String whereKey, String clusterName, String tableName, List data);
 
     /**
      * 读取全局缓存
@@ -45,7 +45,7 @@ public interface ISecondCache extends ICache {
      * @param clazz 对象class
      * @return 结果集
      */
-    public List getGlobal(String whereSql, String clusterName, String tableName);
+    public List getGlobal(String whereKey, String clusterName, String tableName);
 
     /**
      * 清除全局缓存.
@@ -58,7 +58,7 @@ public interface ISecondCache extends ICache {
      * @param query 查询条件
      * @param data 结果集
      */
-    public void put(String whereSql, ShardingDBResource db, List data);
+    public void put(String whereKey, ShardingDBResource db, List data);
 
     /**
      * 读取分片缓存.
@@ -66,7 +66,7 @@ public interface ISecondCache extends ICache {
      * @param query 查询条件
      * @return 结果集.
      */
-    public List get(String whereSql, ShardingDBResource db);
+    public List get(String whereKey, ShardingDBResource db);
 
     /**
      * 清除分片缓存.

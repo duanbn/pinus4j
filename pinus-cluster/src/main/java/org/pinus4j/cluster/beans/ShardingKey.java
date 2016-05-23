@@ -21,60 +21,89 @@ package org.pinus4j.cluster.beans;
  * 
  * @author duanbn
  */
-public class ShardingKey<T> implements IShardingKey<T> {
+public class ShardingKey<T> implements IShardingKey<T>, Cloneable {
 
-	/**
-	 * 集群数据库名称.
-	 */
-	private String clusterName;
+    /**
+     * 集群数据库名称.
+     */
+    private String clusterName;
 
-	/**
-	 * 分库分表因子.
-	 */
-	private T value;
+    /**
+     * 分库分表因子.
+     */
+    private T      value;
 
-	/**
-	 * 构造方法.
-	 * 
-	 * @param clusterName
-	 *            数据库集群名
-	 * @param value
-	 *            分库分表因子值
-	 */
-	public ShardingKey(String clusterName, T value) {
-		this.clusterName = clusterName;
-		this.value = value;
-	}
+    /**
+     * 构造方法.
+     * 
+     * @param clusterName 数据库集群名
+     * @param value 分库分表因子值
+     */
+    public ShardingKey(String clusterName, T value) {
+        this.clusterName = clusterName;
+        this.value = value;
+    }
 
-	/**
-	 * 构造方法
-	 */
-	public static final <T> ShardingKey<T> valueOf(String clusterName, T value) {
-		ShardingKey<T> sk = new ShardingKey<T>(clusterName, value);
-		return sk;
-	}
+    /**
+     * 构造方法
+     */
+    public static final <T> ShardingKey<T> valueOf(String clusterName, T value) {
+        ShardingKey<T> sk = new ShardingKey<T>(clusterName, value);
+        return sk;
+    }
 
-	@Override
-	public String getClusterName() {
-		return this.clusterName;
-	}
+    @Override
+    public String getClusterName() {
+        return this.clusterName;
+    }
 
-	@Override
-	public T getValue() {
-		return this.value;
-	}
+    @Override
+    public T getValue() {
+        return this.value;
+    }
 
-	@Override
-	public void setValue(T value) {
-		this.value = value;
-	}
+    @Override
+    public void setValue(T value) {
+        this.value = value;
+    }
 
-	@Override
-	public String toString() {
-		StringBuilder info = new StringBuilder();
-		info.append("clusterName=").append(this.clusterName);
-		info.append(", value=").append(this.value);
-		return info.toString();
-	}
+    @Override
+    public String toString() {
+        StringBuilder info = new StringBuilder();
+        info.append("clusterName=").append(this.clusterName);
+        info.append(", value=").append(this.value);
+        return info.toString();
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((clusterName == null) ? 0 : clusterName.hashCode());
+        result = prime * result + ((value == null) ? 0 : value.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        ShardingKey other = (ShardingKey) obj;
+        if (clusterName == null) {
+            if (other.clusterName != null)
+                return false;
+        } else if (!clusterName.equals(other.clusterName))
+            return false;
+        if (value == null) {
+            if (other.value != null)
+                return false;
+        } else if (!value.equals(other.value))
+            return false;
+        return true;
+    }
 
 }

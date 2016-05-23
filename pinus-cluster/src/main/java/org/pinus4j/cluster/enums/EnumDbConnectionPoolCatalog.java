@@ -25,6 +25,7 @@ import java.util.Map;
  * @author duanbn
  *
  */
+@Deprecated
 public enum EnumDbConnectionPoolCatalog {
 
 	/**

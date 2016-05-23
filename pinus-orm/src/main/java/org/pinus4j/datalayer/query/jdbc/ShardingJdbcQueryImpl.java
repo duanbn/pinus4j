@@ -16,9 +16,11 @@
 
 package org.pinus4j.datalayer.query.jdbc;
 
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -27,16 +29,23 @@ import javax.transaction.xa.XAResource;
 
 import org.pinus4j.api.SQL;
 import org.pinus4j.api.query.IQuery;
+import org.pinus4j.api.query.impl.DefaultQueryImpl;
+import org.pinus4j.api.query.impl.Order;
+import org.pinus4j.api.query.impl.DefaultQueryImpl.OrderBy;
 import org.pinus4j.cluster.beans.IShardingKey;
 import org.pinus4j.cluster.enums.EnumDBMasterSlave;
 import org.pinus4j.cluster.resources.IDBResource;
 import org.pinus4j.cluster.resources.ShardingDBResource;
 import org.pinus4j.datalayer.query.IShardingQuery;
+import org.pinus4j.entity.meta.EntityPK;
 import org.pinus4j.exceptions.DBClusterException;
 import org.pinus4j.exceptions.DBOperationException;
-import org.pinus4j.utils.ReflectUtil;
+import org.pinus4j.utils.BeansUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 /**
  * jdbc sharding query implements.
@@ -46,774 +55,762 @@ import org.slf4j.LoggerFactory;
  */
 public class ShardingJdbcQueryImpl extends AbstractJdbcQuery implements IShardingQuery {
 
-	public static final Logger LOG = LoggerFactory.getLogger(ShardingJdbcQueryImpl.class);
-
-	@Override
-	public Number getCount(Class<?> clazz, boolean useCache) {
-		return getCount(clazz, useCache, EnumDBMasterSlave.MASTER);
-	}
-
-	@Override
-	public Number getCount(Class<?> clazz, boolean useCache, EnumDBMasterSlave masterSlave) {
-		Transaction tx = null;
-		List<IDBResource> dbResources = null;
-		try {
-
-			tx = txManager.getTransaction();
-
-			String clusterName = ReflectUtil.getClusterName(clazz);
-			if (EnumDBMasterSlave.MASTER == masterSlave || this.dbCluster.isShardingSlaveExist(clusterName)) {
-				dbResources = this.dbCluster.getAllMasterShardingDBResource(clazz);
-			} else {
-				dbResources = this.dbCluster.getAllSlaveShardingDBResource(clazz, masterSlave);
-			}
-
-			long count = 0;
-			for (IDBResource dbResource : dbResources) {
-				if (tx != null) {
-					tx.enlistResource((ShardingDBResource) dbResource);
-				}
-				count += selectCountWithCache((ShardingDBResource) dbResource, clazz, useCache).longValue();
-			}
-
-			// query from master again
-			if (count == 0) {
-				dbResources = this.dbCluster.getAllMasterShardingDBResource(clazz);
-				for (IDBResource dbResource : dbResources) {
-					if (tx != null) {
-						tx.enlistResource((ShardingDBResource) dbResource);
-					}
-					count += selectCountWithCache((ShardingDBResource) dbResource, clazz, useCache).longValue();
-				}
-			}
-
-			return count;
-		} catch (Exception e) {
-			if (tx != null) {
-				try {
-					tx.rollback();
-				} catch (Exception e1) {
-					throw new DBOperationException(e1);
-				}
-			}
-
-			throw new DBOperationException(e);
-		} finally {
-			if (tx == null && dbResources != null) {
-				for (IDBResource dbResource : dbResources) {
-					dbResource.close();
-				}
-			}
-		}
-	}
-
-	@Override
-	public Number getCount(IShardingKey<?> shardingKey, Class<?> clazz, boolean useCache) {
-		return getCount(shardingKey, clazz, useCache, EnumDBMasterSlave.MASTER);
-	}
-
-	@Override
-	public Number getCount(IShardingKey<?> shardingKey, Class<?> clazz, boolean useCache, EnumDBMasterSlave masterSlave) {
-		Transaction tx = null;
-		ShardingDBResource dbResource = null;
-		try {
-			tx = txManager.getTransaction();
-
-			if (EnumDBMasterSlave.MASTER == masterSlave
-					|| this.dbCluster.isShardingSlaveExist(shardingKey.getClusterName())) {
-				dbResource = _getDbFromMaster(clazz, shardingKey);
-			} else {
-				dbResource = _getDbFromSlave(clazz, shardingKey, masterSlave);
-			}
-
-			if (tx != null) {
-				tx.enlistResource(dbResource);
-			}
-
-			long count = selectCountWithCache(dbResource, clazz, useCache).longValue();
-
-			// quer from master again
-			if (count == 0) {
-				dbResource = _getDbFromMaster(clazz, shardingKey);
-				selectCountWithCache(dbResource, clazz, useCache);
-			}
-
-			return count;
-		} catch (Exception e) {
-			if (tx != null) {
-				try {
-					tx.rollback();
-				} catch (Exception e1) {
-					throw new DBOperationException(e1);
-				}
-			}
-
-			throw new DBOperationException(e);
-		} finally {
-			if (tx == null && dbResource != null) {
-				dbResource.close();
-			}
-		}
-	}
-
-	@Override
-	public Number getCountByQuery(IQuery query, Class<?> clazz, boolean useCache) {
-		return getCountByQuery(query, clazz, useCache, EnumDBMasterSlave.MASTER);
-	}
-
-	@Override
-	public Number getCountByQuery(IQuery query, Class<?> clazz, boolean useCache, EnumDBMasterSlave masterSlave) {
-		Transaction tx = null;
-		List<IDBResource> dbResources = null;
-		try {
-			tx = txManager.getTransaction();
-
-			String clusterName = ReflectUtil.getClusterName(clazz);
-			if (EnumDBMasterSlave.MASTER == masterSlave || this.dbCluster.isShardingSlaveExist(clusterName)) {
-				dbResources = this.dbCluster.getAllMasterShardingDBResource(clazz);
-			} else {
-				dbResources = this.dbCluster.getAllSlaveShardingDBResource(clazz, masterSlave);
-			}
-
-			long count = 0;
-			for (IDBResource dbResource : dbResources) {
-				if (tx != null) {
-					tx.enlistResource((ShardingDBResource) dbResource);
-				}
-				count += selectCount((ShardingDBResource) dbResource, clazz, query).longValue();
-			}
-
-			// query from master again
-			if (count == 0) {
-				dbResources = this.dbCluster.getAllMasterShardingDBResource(clazz);
-				for (IDBResource dbResource : dbResources) {
-					if (tx != null) {
-						tx.enlistResource((ShardingDBResource) dbResource);
-					}
-					count += selectCount((ShardingDBResource) dbResource, clazz, query).longValue();
-				}
-			}
-
-			return count;
-		} catch (Exception e) {
-			if (tx != null) {
-				try {
-					tx.rollback();
-				} catch (Exception e1) {
-					throw new DBOperationException(e1);
-				}
-			}
-
-			throw new DBOperationException(e);
-		} finally {
-			if (tx == null && dbResources != null) {
-				for (IDBResource dbResource : dbResources) {
-					dbResource.close();
-				}
-			}
-		}
-	}
-
-	@Override
-	public Number getCountByQuery(IQuery query, IShardingKey<?> shardingKey, Class<?> clazz, boolean useCache) {
-		return getCountByQuery(query, shardingKey, clazz, useCache, EnumDBMasterSlave.MASTER);
-	}
-
-	@Override
-	public Number getCountByQuery(IQuery query, IShardingKey<?> shardingKey, Class<?> clazz, boolean useCache,
-			EnumDBMasterSlave masterSlave) {
-		Transaction tx = null;
-		ShardingDBResource dbResource = null;
-
-		try {
-			tx = txManager.getTransaction();
-
-			if (EnumDBMasterSlave.MASTER == masterSlave
-					|| this.dbCluster.isShardingSlaveExist(shardingKey.getClusterName())) {
-				dbResource = _getDbFromMaster(clazz, shardingKey);
-			} else {
-				dbResource = _getDbFromSlave(clazz, shardingKey, masterSlave);
-			}
-
-			if (tx != null) {
-				tx.enlistResource(dbResource);
-			}
-
-			long count = selectCount(dbResource, clazz, query).longValue();
-
-			// query from master again
-			if (count == 0) {
-				dbResource = _getDbFromMaster(clazz, shardingKey);
-				count = selectCount(dbResource, clazz, query).longValue();
-			}
-
-			return count;
-		} catch (Exception e) {
-			if (tx != null) {
-				try {
-					tx.rollback();
-				} catch (Exception e1) {
-					throw new DBOperationException(e1);
-				}
-			}
-
-			throw new DBOperationException(e);
-		} finally {
-			if (tx == null && dbResource != null) {
-				dbResource.close();
-			}
-		}
-	}
-
-	@Override
-	public <T> T findByPk(Number pk, Class<T> clazz, boolean useCache) {
-		return findByPk(pk, clazz, useCache, EnumDBMasterSlave.MASTER);
-	}
-
-	@Override
-	public <T> T findByPk(Number pk, Class<T> clazz, boolean useCache, EnumDBMasterSlave masterSlave) {
-		Transaction tx = null;
-		List<IDBResource> dbResources = null;
-		try {
-
-			tx = txManager.getTransaction();
-
-			String clusterName = ReflectUtil.getClusterName(clazz);
-			if (EnumDBMasterSlave.MASTER == masterSlave || this.dbCluster.isShardingSlaveExist(clusterName)) {
-				dbResources = this.dbCluster.getAllMasterShardingDBResource(clazz);
-			} else {
-				dbResources = this.dbCluster.getAllSlaveShardingDBResource(clazz, masterSlave);
-			}
-
-			T data = null;
-			for (IDBResource dbResource : dbResources) {
-				if (tx != null) {
-					tx.enlistResource((ShardingDBResource) dbResource);
-				}
-
-				data = selectByPkWithCache((ShardingDBResource) dbResource, pk, clazz, useCache);
-				if (data != null) {
-					break;
-				}
-			}
-
-			// query from master again
-			if (data == null) {
-				dbResources = this.dbCluster.getAllMasterShardingDBResource(clazz);
-				for (IDBResource dbResource : dbResources) {
-					if (tx != null) {
-						tx.enlistResource((ShardingDBResource) dbResource);
-					}
-
-					data = selectByPkWithCache((ShardingDBResource) dbResource, pk, clazz, useCache);
-					if (data != null) {
-						break;
-					}
-				}
-			}
-
-			return data;
-		} catch (Exception e) {
-			if (tx != null) {
-				try {
-					tx.rollback();
-				} catch (Exception e1) {
-					throw new DBOperationException(e1);
-				}
-			}
-
-			throw new DBOperationException(e);
-		} finally {
-			if (tx == null && dbResources != null) {
-				for (IDBResource dbResource : dbResources) {
-					dbResource.close();
-				}
-			}
-		}
-	}
-
-	@Override
-	public <T> T findByPk(Number pk, IShardingKey<?> shardingKey, Class<T> clazz, boolean useCache) {
-		return findByPk(pk, shardingKey, clazz, useCache, EnumDBMasterSlave.MASTER);
-	}
-
-	@Override
-	public <T> T findByPk(Number pk, IShardingKey<?> shardingKey, Class<T> clazz, boolean useCache,
-			EnumDBMasterSlave masterSlave) {
-		Transaction tx = null;
-		ShardingDBResource dbResource = null;
-		try {
-
-			tx = txManager.getTransaction();
-
-			if (EnumDBMasterSlave.MASTER == masterSlave
-					|| this.dbCluster.isShardingSlaveExist(shardingKey.getClusterName())) {
-				dbResource = _getDbFromMaster(clazz, shardingKey);
-			} else {
-				dbResource = _getDbFromSlave(clazz, shardingKey, masterSlave);
-			}
-
-			if (tx != null) {
-				tx.enlistResource(dbResource);
-			}
-
-			T data = selectByPkWithCache(dbResource, pk, clazz, useCache);
-
-			// query from master again
-			if (data == null) {
-				dbResource = _getDbFromMaster(clazz, shardingKey);
-				selectByPkWithCache(dbResource, pk, clazz, useCache);
-			}
-
-			return data;
-		} catch (Exception e) {
-			if (tx != null) {
-				try {
-					tx.rollback();
-				} catch (Exception e1) {
-					throw new DBOperationException(e1);
-				}
-			}
-
-			throw new DBOperationException(e);
-		} finally {
-			if (tx == null && dbResource != null) {
-				dbResource.close();
-			}
-		}
-	}
-
-	@Override
-	public <T> List<T> findByPkList(List<? extends Number> pkList, Class<T> clazz, boolean useCache) {
-		return findByPkList(pkList, clazz, useCache, EnumDBMasterSlave.MASTER);
-	}
-
-	@Override
-	public <T> List<T> findByPkList(List<? extends Number> pkList, Class<T> clazz, boolean useCache,
-			EnumDBMasterSlave masterSlave) {
-		Transaction tx = null;
-		List<IDBResource> dbResources = null;
-		try {
-
-			tx = txManager.getTransaction();
-
-			String clusterName = ReflectUtil.getClusterName(clazz);
-			if (EnumDBMasterSlave.MASTER == masterSlave || this.dbCluster.isShardingSlaveExist(clusterName)) {
-				dbResources = this.dbCluster.getAllMasterShardingDBResource(clazz);
-			} else {
-				dbResources = this.dbCluster.getAllSlaveShardingDBResource(clazz, masterSlave);
-			}
-
-			List<T> data = new ArrayList<T>();
-			for (IDBResource dbResource : dbResources) {
-				if (tx != null) {
-					tx.enlistResource((ShardingDBResource) dbResource);
-				}
-
-				data.addAll(selectByPksWithCache((ShardingDBResource) dbResource, clazz,
-						pkList.toArray(new Number[pkList.size()]), useCache));
-			}
-
-			// query from master again
-			if (data.isEmpty()) {
-				dbResources = this.dbCluster.getAllMasterShardingDBResource(clazz);
-				for (IDBResource dbResource : dbResources) {
-					if (tx != null) {
-						tx.enlistResource((ShardingDBResource) dbResource);
-					}
-
-					data.addAll(selectByPksWithCache((ShardingDBResource) dbResource, clazz,
-							pkList.toArray(new Number[pkList.size()]), useCache));
-				}
-			}
-
-			return data;
-		} catch (Exception e) {
-			if (tx != null) {
-				try {
-					tx.rollback();
-				} catch (Exception e1) {
-					throw new DBOperationException(e1);
-				}
-			}
-
-			throw new DBOperationException(e);
-		} finally {
-			if (tx == null && dbResources != null) {
-				for (IDBResource dbResource : dbResources) {
-					dbResource.close();
-				}
-			}
-		}
-	}
-
-	@Override
-	public <T> List<T> findByPkList(List<? extends Number> pkList, IShardingKey<?> shardingKey, Class<T> clazz,
-			boolean useCache) {
-		return findByPkList(pkList, shardingKey, clazz, useCache, EnumDBMasterSlave.MASTER);
-	}
-
-	@Override
-	public <T> List<T> findByPkList(List<? extends Number> pkList, IShardingKey<?> shardingKey, Class<T> clazz,
-			boolean useCache, EnumDBMasterSlave masterSlave) {
-		Transaction tx = null;
-		ShardingDBResource dbResource = null;
-		try {
-
-			tx = txManager.getTransaction();
-
-			if (EnumDBMasterSlave.MASTER == masterSlave
-					|| this.dbCluster.isShardingSlaveExist(shardingKey.getClusterName())) {
-				dbResource = _getDbFromMaster(clazz, shardingKey);
-			} else {
-				dbResource = _getDbFromSlave(clazz, shardingKey, masterSlave);
-			}
-
-			if (tx != null) {
-				tx.enlistResource(dbResource);
-			}
-
-			List<T> data = selectByPksWithCache(dbResource, clazz, pkList.toArray(new Number[pkList.size()]), useCache);
-
-			if (data.isEmpty()) {
-				dbResource = _getDbFromMaster(clazz, shardingKey);
-				data = selectByPksWithCache(dbResource, clazz, pkList.toArray(new Number[pkList.size()]), useCache);
-			}
-
-			return data;
-		} catch (Exception e) {
-			if (tx != null) {
-				try {
-					tx.rollback();
-				} catch (Exception e1) {
-					throw new DBOperationException(e1);
-				}
-			}
-
-			throw new DBOperationException(e);
-		} finally {
-			if (tx == null && dbResource != null) {
-				dbResource.close();
-			}
-		}
-	}
-
-	@Override
-	public <T> T findOneByQuery(IQuery query, Class<T> clazz, boolean useCache) {
-		return findOneByQuery(query, clazz, useCache, EnumDBMasterSlave.MASTER);
-	}
-
-	@Override
-	public <T> T findOneByQuery(IQuery query, Class<T> clazz, boolean useCache, EnumDBMasterSlave masterSlave) {
-		List<T> entities = findByQuery(query, clazz, useCache, masterSlave);
-
-		if (entities.isEmpty()) {
-			return null;
-		}
-
-		return entities.get(0);
-	}
-
-	@Override
-	public <T> T findOneByQuery(IQuery query, IShardingKey<?> shardingKey, Class<T> clazz, boolean useCache) {
-		return findOneByQuery(query, shardingKey, clazz, useCache, EnumDBMasterSlave.MASTER);
-	}
-
-	@Override
-	public <T> T findOneByQuery(IQuery query, IShardingKey<?> shardingKey, Class<T> clazz, boolean useCache,
-			EnumDBMasterSlave masterSlave) {
-		List<T> entities = findByQuery(query, shardingKey, clazz, useCache, masterSlave);
-
-		if (entities.isEmpty()) {
-			return null;
-		}
-
-		return entities.get(0);
-	}
-
-	@Override
-	public <T> List<T> findByQuery(IQuery query, Class<T> clazz, boolean useCache) {
-		return findByQuery(query, clazz, useCache, EnumDBMasterSlave.MASTER);
-	}
-
-	@Override
-	public <T> List<T> findByQuery(IQuery query, Class<T> clazz, boolean useCache, EnumDBMasterSlave masterSlave) {
-
-		List<IDBResource> dbResources = null;
-
-		try {
-			String clusterName = ReflectUtil.getClusterName(clazz);
-			if (EnumDBMasterSlave.MASTER == masterSlave || this.dbCluster.isShardingSlaveExist(clusterName)) {
-				dbResources = this.dbCluster.getAllMasterShardingDBResource(clazz);
-			} else {
-				dbResources = this.dbCluster.getAllSlaveShardingDBResource(clazz, masterSlave);
-			}
-
-			List<T> mergeResult = new ArrayList<T>();
-			for (IDBResource dbResource : dbResources) {
-				mergeResult.addAll(findByQuery(query, dbResource, clazz, useCache, masterSlave));
-			}
-
-			// query from master again
-			if (mergeResult.isEmpty()) {
-				dbResources = this.dbCluster.getAllMasterShardingDBResource(clazz);
-				for (IDBResource dbResource : dbResources) {
-					mergeResult.addAll(findByQuery(query, dbResource, clazz, useCache, masterSlave));
-				}
-			}
-
-			// sort by pk
-			Collections.sort(mergeResult, new Comparator<T>() {
-				@Override
-				public int compare(T o1, T o2) {
-					long pk1 = ReflectUtil.getPkValue(o1).longValue();
-					long pk2 = ReflectUtil.getPkValue(o2).longValue();
-					return (int) (pk1 - pk2);
-				}
-			});
-
-			List<T> result = null;
-			if (query.getStart() > -1 && query.getLimit() > -1) {
-				result = mergeResult.subList(query.getStart(), query.getStart() + query.getLimit());
-			} else if (query.getLimit() > -1) {
-				result = mergeResult.subList(0, query.getLimit());
-			} else {
-				result = mergeResult;
-			}
-
-			return result;
-		} catch (Exception e) {
-			throw new DBOperationException(e);
-		}
-
-	}
-
-	@Override
-	public <T> List<T> findByQuery(IQuery query, IShardingKey<?> shardingKey, Class<T> clazz, boolean useCache) {
-		return findByQuery(query, shardingKey, clazz, useCache, EnumDBMasterSlave.MASTER);
-	}
-
-	@Override
-	public <T> List<T> findByQuery(IQuery query, IShardingKey<?> shardingKey, Class<T> clazz, boolean useCache,
-			EnumDBMasterSlave masterSlave) {
-
-		ShardingDBResource dbResource = null;
-
-		if (EnumDBMasterSlave.MASTER == masterSlave
-				|| this.dbCluster.isShardingSlaveExist(shardingKey.getClusterName())) {
-			dbResource = _getDbFromMaster(clazz, shardingKey);
-		} else {
-			dbResource = _getDbFromSlave(clazz, shardingKey, masterSlave);
-		}
-
-		List<T> data = findByQuery(query, dbResource, clazz, useCache, masterSlave);
-
-		// query from master againe
-		if (data.isEmpty()) {
-			dbResource = _getDbFromMaster(clazz, shardingKey);
-			data = findByQuery(query, dbResource, clazz, useCache, masterSlave);
-		}
-
-		return data;
-	}
-
-	private <T> List<T> findByQuery(IQuery query, IDBResource dbResource, Class<T> clazz, boolean useCache,
-			EnumDBMasterSlave masterSlave) {
-		Transaction tx = null;
-
-		try {
-
-			tx = txManager.getTransaction();
-
-			if (tx != null) {
-				tx.enlistResource((XAResource) dbResource);
-			}
-
-			List<T> result = null;
-
-			if (isSecondCacheAvailable(clazz, useCache)) {
-				result = (List<T>) secondCache.get(query.getWhereSql(), (ShardingDBResource) dbResource);
-			}
-
-			if (result == null || result.isEmpty()) {
-				if (isCacheAvailable(clazz, useCache)) {
-					Number[] pkValues = selectPksByQuery((ShardingDBResource) dbResource, query, clazz);
-					result = selectByPksWithCache((ShardingDBResource) dbResource, clazz, pkValues, useCache);
-				} else {
-					result = selectByQuery((ShardingDBResource) dbResource, query, clazz);
-				}
-
-				if (isSecondCacheAvailable(clazz, useCache)) {
-					secondCache.put(query.getWhereSql(), (ShardingDBResource) dbResource, result);
-				}
-			}
-			// 过滤从缓存结果, 将没有指定的字段设置为默认值.
-			List<T> filteResult = new ArrayList<T>(result.size());
-			if (query.hasQueryFields()) {
-				for (T obj : result) {
-					try {
-						filteResult.add((T) ReflectUtil.cloneWithGivenField(obj, query.getFields()));
-					} catch (Exception e) {
-						throw new DBOperationException(e);
-					}
-				}
-				result = filteResult;
-			}
-
-			return result;
-		} catch (Exception e) {
-			if (tx != null) {
-				try {
-					tx.rollback();
-				} catch (Exception e1) {
-					throw new DBOperationException(e1);
-				}
-			}
-
-			throw new DBOperationException(e);
-		} finally {
-			if (tx == null && dbResource != null) {
-				dbResource.close();
-			}
-		}
-	}
-
-	@Override
-	public List<Map<String, Object>> findBySql(SQL sql) {
-		return findBySql(sql, EnumDBMasterSlave.MASTER);
-	}
-
-	@Override
-	public List<Map<String, Object>> findBySql(SQL sql, EnumDBMasterSlave masterSlave) {
-		throw new UnsupportedOperationException("not support");
-	}
-
-	@Override
-	public List<Map<String, Object>> findBySql(SQL sql, IShardingKey<?> shardingKey) {
-		return findBySql(sql, shardingKey, EnumDBMasterSlave.MASTER);
-	}
-
-	@Override
-	public List<Map<String, Object>> findBySql(SQL sql, IShardingKey<?> shardingKey, EnumDBMasterSlave masterSlave) {
-		ShardingDBResource dbResource = _getDbBySQL(sql, shardingKey, masterSlave);
-
-		Transaction tx = null;
-		try {
-			tx = txManager.getTransaction();
-
-			if (tx != null) {
-				tx.enlistResource(dbResource);
-			}
-
-			List<Map<String, Object>> result = selectBySql(dbResource, sql);
-
-			// query from master againe
-			if (result.isEmpty()) {
-				dbResource = _getDbBySQL(sql, shardingKey, EnumDBMasterSlave.MASTER);
-				result = selectBySql(dbResource, sql);
-			}
-
-			return result;
-		} catch (Exception e) {
-			if (tx != null) {
-				try {
-					tx.rollback();
-				} catch (Exception e1) {
-					throw new DBOperationException(e1);
-				}
-			}
-
-			throw new DBOperationException(e);
-		} finally {
-			if (tx == null && dbResource != null) {
-				dbResource.close();
-			}
-		}
-	}
-
-	private ShardingDBResource _getDbBySQL(SQL sql, IShardingKey<?> shardingKey, EnumDBMasterSlave masterSlave) {
-		ShardingDBResource next = null;
-		for (String tableName : sql.getTableNames()) {
-
-			ShardingDBResource cur = null;
-			if (EnumDBMasterSlave.MASTER == masterSlave
-					|| this.dbCluster.isShardingSlaveExist(shardingKey.getClusterName())) {
-				cur = _getDbFromMaster(tableName, shardingKey);
-			} else {
-				cur = _getDbFromSlave(tableName, shardingKey, masterSlave);
-			}
-
-			if (next != null && (cur != next)) {
-				throw new DBOperationException("the tables in sql maybe not at the same database");
-			}
-			next = cur;
-		}
-
-		return next;
-	}
-
-	/**
-	 * 路由选择.
-	 * 
-	 * @param clazz
-	 *            数据对象
-	 * @param shardingKey
-	 *            路由因子
-	 */
-	private ShardingDBResource _getDbFromMaster(Class<?> clazz, IShardingKey<?> shardingKey) {
-		String tableName = ReflectUtil.getTableName(clazz);
-		return _getDbFromMaster(tableName, shardingKey);
-	}
-
-	private ShardingDBResource _getDbFromMaster(String tableName, IShardingKey<?> shardingKey) {
-		ShardingDBResource shardingDBResource = null;
-		try {
-			shardingDBResource = (ShardingDBResource) this.dbCluster.selectDBResourceFromMaster(tableName, shardingKey);
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("[" + shardingDBResource + "]");
-			}
-		} catch (DBClusterException e) {
-			throw new DBOperationException(e);
-		}
-		return shardingDBResource;
-	}
-
-	/**
-	 * 路由选择.
-	 * 
-	 * @param clazz
-	 *            数据对象
-	 * @param shardingKey
-	 *            路由因子
-	 */
-	private ShardingDBResource _getDbFromSlave(Class<?> clazz, IShardingKey<?> shardingKey,
-			EnumDBMasterSlave masterSlave) {
-		String tableName = ReflectUtil.getTableName(clazz);
-		ShardingDBResource shardingDBResource = null;
-		try {
-			shardingDBResource = (ShardingDBResource) this.dbCluster.selectDBResourceFromSlave(tableName, shardingKey,
-					masterSlave);
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("[" + shardingDBResource + "]");
-			}
-		} catch (DBClusterException e) {
-			throw new DBOperationException(e);
-		}
-		return shardingDBResource;
-	}
-
-	private ShardingDBResource _getDbFromSlave(String tableName, IShardingKey<?> shardingKey, EnumDBMasterSlave slave) {
-		ShardingDBResource shardingDBResource = null;
-		try {
-			shardingDBResource = (ShardingDBResource) this.dbCluster.selectDBResourceFromSlave(tableName, shardingKey,
-					slave);
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("[" + shardingDBResource + "]");
-			}
-		} catch (DBClusterException e) {
-			throw new DBOperationException(e);
-		}
-		return shardingDBResource;
-	}
+    public static final Logger LOG = LoggerFactory.getLogger(ShardingJdbcQueryImpl.class);
+
+    @Override
+    public Number getCount(Class<?> clazz, boolean useCache, EnumDBMasterSlave masterSlave) {
+        Transaction tx = null;
+        List<IDBResource> dbResources = null;
+        try {
+
+            tx = txManager.getTransaction();
+            boolean isFromSlave = false;
+
+            String clusterName = entityMetaManager.getClusterName(clazz);
+            if (EnumDBMasterSlave.MASTER == masterSlave || !this.dbCluster.isShardingSlaveExist(clusterName)) {
+                dbResources = this.dbCluster.getAllMasterShardingDBResource(clazz);
+            } else {
+                dbResources = this.dbCluster.getAllSlaveShardingDBResource(clazz, masterSlave);
+                isFromSlave = true;
+            }
+
+            long count = 0;
+            for (IDBResource dbResource : dbResources) {
+                if (tx != null) {
+                    tx.enlistResource((ShardingDBResource) dbResource);
+                }
+                count += selectCountWithCache(dbResource, clazz, useCache).longValue();
+            }
+
+            // query from master again
+            if (count == 0 && isFromSlave) {
+                for (IDBResource dbResource : dbResources) {
+                    dbResource.close();
+                }
+                dbResources = this.dbCluster.getAllMasterShardingDBResource(clazz);
+                for (IDBResource dbResource : dbResources) {
+                    if (tx != null) {
+                        tx.enlistResource((ShardingDBResource) dbResource);
+                    }
+                    count += selectCountWithCache((ShardingDBResource) dbResource, clazz, useCache).longValue();
+                }
+            }
+
+            return count;
+        } catch (Exception e) {
+            if (tx != null) {
+                try {
+                    tx.rollback();
+                } catch (Exception e1) {
+                    throw new DBOperationException(e1);
+                }
+            }
+
+            throw new DBOperationException(e);
+        } finally {
+            if (tx == null && dbResources != null) {
+                for (IDBResource dbResource : dbResources) {
+                    dbResource.close();
+                }
+            }
+        }
+    }
+
+    @Override
+    public Number getCount(IShardingKey<?> shardingKey, Class<?> clazz, boolean useCache, EnumDBMasterSlave masterSlave) {
+        Transaction tx = null;
+        ShardingDBResource dbResource = null;
+        try {
+            tx = txManager.getTransaction();
+            boolean isFromSlave = false;
+
+            if (EnumDBMasterSlave.MASTER == masterSlave
+                    || !this.dbCluster.isShardingSlaveExist(shardingKey.getClusterName())) {
+                dbResource = _getDbFromMaster(clazz, shardingKey);
+            } else {
+                dbResource = _getDbFromSlave(clazz, shardingKey, masterSlave);
+                isFromSlave = true;
+            }
+            if (tx != null) {
+                tx.enlistResource(dbResource);
+            }
+
+            long count = selectCountWithCache(dbResource, clazz, useCache).longValue();
+
+            // quer from master again
+            if (count == 0 && isFromSlave) {
+                dbResource.close();
+                dbResource = _getDbFromMaster(clazz, shardingKey);
+                if (tx != null) {
+                    tx.enlistResource(dbResource);
+                }
+                selectCountWithCache(dbResource, clazz, useCache);
+            }
+
+            return count;
+        } catch (Exception e) {
+            if (tx != null) {
+                try {
+                    tx.rollback();
+                } catch (Exception e1) {
+                    throw new DBOperationException(e1);
+                }
+            }
+
+            throw new DBOperationException(e);
+        } finally {
+            if (tx == null && dbResource != null) {
+                dbResource.close();
+            }
+        }
+    }
+
+    @Override
+    public <T> Number getCountByQuery(IQuery<T> query, Class<T> clazz, boolean useCache, EnumDBMasterSlave masterSlave) {
+        Transaction tx = null;
+        List<IDBResource> dbResources = null;
+        try {
+            tx = txManager.getTransaction();
+            boolean isFromSlave = false;
+
+            String clusterName = entityMetaManager.getClusterName(clazz);
+            if (EnumDBMasterSlave.MASTER == masterSlave || !this.dbCluster.isShardingSlaveExist(clusterName)) {
+                dbResources = this.dbCluster.getAllMasterShardingDBResource(clazz);
+            } else {
+                dbResources = this.dbCluster.getAllSlaveShardingDBResource(clazz, masterSlave);
+                isFromSlave = true;
+            }
+
+            long count = 0;
+            for (IDBResource dbResource : dbResources) {
+                if (tx != null) {
+                    tx.enlistResource((ShardingDBResource) dbResource);
+                }
+                count += selectCountByQuery(query, (ShardingDBResource) dbResource, clazz).longValue();
+            }
+
+            // query from master again
+            if (count == 0 && isFromSlave) {
+                for (IDBResource dbResource : dbResources) {
+                    dbResource.close();
+                }
+                dbResources = this.dbCluster.getAllMasterShardingDBResource(clazz);
+                for (IDBResource dbResource : dbResources) {
+                    if (tx != null) {
+                        tx.enlistResource((ShardingDBResource) dbResource);
+                    }
+                    count += selectCountByQuery(query, (ShardingDBResource) dbResource, clazz).longValue();
+                }
+            }
+
+            return count;
+        } catch (Exception e) {
+            if (tx != null) {
+                try {
+                    tx.rollback();
+                } catch (Exception e1) {
+                    throw new DBOperationException(e1);
+                }
+            }
+
+            throw new DBOperationException(e);
+        } finally {
+            if (tx == null && dbResources != null) {
+                for (IDBResource dbResource : dbResources) {
+                    dbResource.close();
+                }
+            }
+        }
+    }
+
+    @Override
+    public <T> Number getCountByQuery(IQuery<T> query, IShardingKey<?> shardingKey, Class<T> clazz, boolean useCache,
+                                      EnumDBMasterSlave masterSlave) {
+        Transaction tx = null;
+        ShardingDBResource dbResource = null;
+
+        try {
+            tx = txManager.getTransaction();
+            boolean isFromSlave = false;
+
+            if (EnumDBMasterSlave.MASTER == masterSlave
+                    || !this.dbCluster.isShardingSlaveExist(shardingKey.getClusterName())) {
+                dbResource = _getDbFromMaster(clazz, shardingKey);
+            } else {
+                dbResource = _getDbFromSlave(clazz, shardingKey, masterSlave);
+                isFromSlave = true;
+            }
+            if (tx != null) {
+                tx.enlistResource(dbResource);
+            }
+
+            long count = selectCountByQuery(query, dbResource, clazz).longValue();
+
+            // query from master again
+            if (count == 0 && isFromSlave) {
+                dbResource.close();
+                dbResource = _getDbFromMaster(clazz, shardingKey);
+                if (tx != null) {
+                    tx.enlistResource(dbResource);
+                }
+                count = selectCountByQuery(query, dbResource, clazz).longValue();
+            }
+
+            return count;
+        } catch (Exception e) {
+            if (tx != null) {
+                try {
+                    tx.rollback();
+                } catch (Exception e1) {
+                    throw new DBOperationException(e1);
+                }
+            }
+
+            throw new DBOperationException(e);
+        } finally {
+            if (tx == null && dbResource != null) {
+                dbResource.close();
+            }
+        }
+    }
+
+    @Override
+    public <T> T findByPk(EntityPK pk, IShardingKey<?> shardingKey, Class<T> clazz, boolean useCache,
+                          EnumDBMasterSlave masterSlave) {
+        Transaction tx = null;
+        ShardingDBResource dbResource = null;
+        try {
+
+            tx = txManager.getTransaction();
+            boolean isFromSlave = false;
+
+            if (EnumDBMasterSlave.MASTER == masterSlave
+                    || !this.dbCluster.isShardingSlaveExist(shardingKey.getClusterName())) {
+                dbResource = _getDbFromMaster(clazz, shardingKey);
+            } else {
+                dbResource = _getDbFromSlave(clazz, shardingKey, masterSlave);
+                isFromSlave = true;
+            }
+            if (tx != null) {
+                tx.enlistResource(dbResource);
+            }
+
+            Map<EntityPK, T> data = selectByPksWithCache(dbResource, clazz, new EntityPK[] { pk }, null, useCache);
+
+            // query from master again
+            if ((data == null || data.isEmpty()) && isFromSlave) {
+                dbResource.close();
+                dbResource = _getDbFromMaster(clazz, shardingKey);
+                if (tx != null) {
+                    tx.enlistResource(dbResource);
+                }
+                data = selectByPksWithCache(dbResource, clazz, new EntityPK[] { pk }, null, useCache);
+            }
+
+            return data.get(pk);
+        } catch (Exception e) {
+            if (tx != null) {
+                try {
+                    tx.rollback();
+                } catch (Exception e1) {
+                    throw new DBOperationException(e1);
+                }
+            }
+
+            throw new DBOperationException(e);
+        } finally {
+            if (tx == null && dbResource != null) {
+                dbResource.close();
+            }
+        }
+    }
+
+    @Override
+    public <T> List<T> findByPkList(List<EntityPK> pkList, Class<T> clazz, List<OrderBy> order, boolean useCache,
+                                    EnumDBMasterSlave masterSlave) {
+
+        List<T> result = Lists.newArrayList();
+
+        Transaction tx = null;
+        List<IDBResource> dbResources = null;
+        try {
+
+            tx = txManager.getTransaction();
+            boolean isFromSlave = false;
+
+            String clusterName = entityMetaManager.getClusterName(clazz);
+            if (EnumDBMasterSlave.MASTER == masterSlave || !this.dbCluster.isShardingSlaveExist(clusterName)) {
+                dbResources = this.dbCluster.getAllMasterShardingDBResource(clazz);
+            } else {
+                dbResources = this.dbCluster.getAllSlaveShardingDBResource(clazz, masterSlave);
+                isFromSlave = true;
+            }
+
+            EntityPK[] entityPkList = pkList.toArray(new EntityPK[pkList.size()]);
+
+            Map<EntityPK, T> data = Maps.newLinkedHashMap();
+            for (IDBResource dbResource : dbResources) {
+                if (tx != null) {
+                    tx.enlistResource((ShardingDBResource) dbResource);
+                }
+
+                data.putAll(selectByPksWithCache((ShardingDBResource) dbResource, clazz, entityPkList, order, useCache));
+            }
+
+            // query from master again
+            if (data.isEmpty() && isFromSlave) {
+                for (IDBResource dbResource : dbResources) {
+                    dbResource.close();
+                }
+                dbResources = this.dbCluster.getAllMasterShardingDBResource(clazz);
+                for (IDBResource dbResource : dbResources) {
+                    if (tx != null) {
+                        tx.enlistResource((ShardingDBResource) dbResource);
+                    }
+
+                    data.putAll(selectByPksWithCache((ShardingDBResource) dbResource, clazz, entityPkList, order,
+                            useCache));
+                }
+            }
+
+            result.addAll(data.values());
+            return result;
+        } catch (Exception e) {
+            if (tx != null) {
+                try {
+                    tx.rollback();
+                } catch (Exception e1) {
+                    throw new DBOperationException(e1);
+                }
+            }
+
+            throw new DBOperationException(e);
+        } finally {
+            if (tx == null && dbResources != null) {
+                for (IDBResource dbResource : dbResources) {
+                    dbResource.close();
+                }
+            }
+        }
+    }
+
+    @Override
+    public <T> List<T> findByPkList(List<EntityPK> pkList, IShardingKey<?> shardingKey, Class<T> clazz,
+                                    List<OrderBy> order, boolean useCache, EnumDBMasterSlave masterSlave) {
+        List<T> result = Lists.newArrayList();
+
+        Transaction tx = null;
+        ShardingDBResource dbResource = null;
+        try {
+
+            tx = txManager.getTransaction();
+            boolean isFromSlave = false;
+
+            if (EnumDBMasterSlave.MASTER == masterSlave
+                    || !this.dbCluster.isShardingSlaveExist(shardingKey.getClusterName())) {
+                dbResource = _getDbFromMaster(clazz, shardingKey);
+            } else {
+                dbResource = _getDbFromSlave(clazz, shardingKey, masterSlave);
+                isFromSlave = true;
+            }
+
+            if (tx != null) {
+                tx.enlistResource(dbResource);
+            }
+
+            EntityPK[] entityPkList = pkList.toArray(new EntityPK[pkList.size()]);
+
+            Map<EntityPK, T> data = selectByPksWithCache(dbResource, clazz, entityPkList, order, useCache);
+
+            if (data.isEmpty() && isFromSlave) {
+                dbResource.close();
+                dbResource = _getDbFromMaster(clazz, shardingKey);
+                if (tx != null) {
+                    tx.enlistResource(dbResource);
+                }
+                data = selectByPksWithCache(dbResource, clazz, entityPkList, order, useCache);
+            }
+
+            result.addAll(data.values());
+            return result;
+        } catch (Exception e) {
+            if (tx != null) {
+                try {
+                    tx.rollback();
+                } catch (Exception e1) {
+                    throw new DBOperationException(e1);
+                }
+            }
+
+            throw new DBOperationException(e);
+        } finally {
+            if (tx == null && dbResource != null) {
+                dbResource.close();
+            }
+        }
+    }
+
+    @Override
+    public <T> List<T> findByQuery(IQuery<T> query, Class<T> clazz, boolean useCache, EnumDBMasterSlave masterSlave) {
+
+        boolean isFromSlave = false;
+        List<IDBResource> dbResources = null;
+        DefaultQueryImpl<T> internalQuery = (DefaultQueryImpl<T>) query;
+
+        try {
+            String clusterName = entityMetaManager.getClusterName(clazz);
+            if (EnumDBMasterSlave.MASTER == masterSlave || !this.dbCluster.isShardingSlaveExist(clusterName)) {
+                dbResources = this.dbCluster.getAllMasterShardingDBResource(clazz);
+            } else {
+                dbResources = this.dbCluster.getAllSlaveShardingDBResource(clazz, masterSlave);
+                isFromSlave = true;
+            }
+
+            int start = internalQuery.getStart();
+            int limit = internalQuery.getLimit();
+            int sum = start + limit;
+            if (start >= 0 && limit > 0)
+                internalQuery.limit(0, sum);
+
+            final List<OrderBy> orderList = internalQuery.getOrderList();
+
+            boolean isOrderQuery = false;
+            if (orderList != null && !orderList.isEmpty()) {
+                isOrderQuery = true;
+            }
+
+            List<T> mergeResult = Lists.newArrayList();
+            for (IDBResource dbResource : dbResources) {
+                if (isOrderQuery) {
+                    mergeResult.addAll(_findByQuery(internalQuery, dbResource, clazz, useCache, masterSlave));
+                } else {
+                    if (mergeResult.size() < sum) {
+                        mergeResult.addAll(_findByQuery(internalQuery, dbResource, clazz, useCache, masterSlave));
+                    } else {
+                        dbResource.close();
+                    }
+                }
+            }
+
+            // query from master again
+            if (mergeResult.isEmpty() && isFromSlave) {
+                for (IDBResource dbResource : dbResources) {
+                    dbResource.close();
+                }
+                dbResources = this.dbCluster.getAllMasterShardingDBResource(clazz);
+                for (IDBResource dbResource : dbResources) {
+                    if (isOrderQuery) {
+                        mergeResult.addAll(_findByQuery(internalQuery, dbResource, clazz, useCache, masterSlave));
+                    } else {
+                        if (mergeResult.size() < sum) {
+                            mergeResult.addAll(_findByQuery(internalQuery, dbResource, clazz, useCache, masterSlave));
+                        } else {
+                            dbResource.close();
+                        }
+                    }
+                }
+            }
+
+            // if order by exists, sort by order.
+            if (orderList != null && !orderList.isEmpty()) {
+                Collections.sort(mergeResult, new Comparator<T>() {
+
+                    @Override
+                    public int compare(T o1, T o2) {
+                        Object v1 = null, v2 = null;
+                        Class<?> fieldType = null;
+                        int compareVal = 0;
+
+                        for (OrderBy order : orderList) {
+                            v1 = BeansUtil.getProperty(o1, order.getField());
+                            v2 = BeansUtil.getProperty(o2, order.getField());
+                            fieldType = order.getFieldType();
+
+                            if (fieldType == Boolean.class || fieldType == Boolean.TYPE) {
+                                compareVal = ((Boolean) v1).compareTo((Boolean) v2);
+                            } else if (fieldType == Character.class || fieldType == Character.TYPE) {
+                                compareVal = ((Character) v1).compareTo((Character) v2);
+                            } else if (fieldType == Byte.class || fieldType == Byte.TYPE) {
+                                compareVal = ((Byte) v1).compareTo((Byte) v2);
+                            } else if (fieldType == Short.class || fieldType == Short.TYPE) {
+                                compareVal = ((Short) v1).compareTo((Short) v2);
+                            } else if (fieldType == Integer.class || fieldType == Integer.TYPE) {
+                                compareVal = ((Integer) v1).compareTo((Integer) v2);
+                            } else if (fieldType == Long.class || fieldType == Long.TYPE) {
+                                compareVal = ((Long) v1).compareTo((Long) v2);
+                            } else if (fieldType == Float.class || fieldType == Float.TYPE) {
+                                compareVal = ((Float) v1).compareTo((Float) v2);
+                            } else if (fieldType == Double.class || fieldType == Double.TYPE) {
+                                compareVal = ((Double) v1).compareTo((Double) v2);
+                            } else if (fieldType == String.class) {
+                                compareVal = ((String) v1).compareTo((String) v2);
+                            } else if (fieldType == Date.class) {
+                                compareVal = ((Date) v1).compareTo((Date) v2);
+                            } else if (fieldType == Timestamp.class) {
+                                compareVal = ((Timestamp) v1).compareTo((Timestamp) v2);
+                            } else {
+                                throw new RuntimeException("无法排序的类型" + order);
+                            }
+
+                            if (order.getOrder() == Order.DESC) {
+                                compareVal *= -1;
+                            }
+
+                            if (compareVal != 0) {
+                                break;
+                            }
+                        }
+
+                        return compareVal;
+                    }
+
+                });
+            }
+
+            // get result
+            List<T> result = null;
+            if (start > -1 && limit > -1) {
+                int fromIndex = start;
+                int endIndex = sum > mergeResult.size() ? mergeResult.size() : sum;
+                result = mergeResult.subList(fromIndex, endIndex);
+            } else if (limit > -1) {
+                result = mergeResult.subList(0, limit - 1);
+            } else {
+                result = mergeResult;
+            }
+
+            return result;
+        } catch (Exception e) {
+            throw new DBOperationException(e);
+        }
+
+    }
+
+    @Override
+    public <T> List<T> findByQuery(IQuery<T> query, IShardingKey<?> shardingKey, Class<T> clazz, boolean useCache,
+                                   EnumDBMasterSlave masterSlave) {
+
+        boolean isFromSlave = false;
+        ShardingDBResource dbResource = null;
+
+        if (EnumDBMasterSlave.MASTER == masterSlave
+                || !this.dbCluster.isShardingSlaveExist(shardingKey.getClusterName())) {
+            dbResource = _getDbFromMaster(clazz, shardingKey);
+        } else {
+            dbResource = _getDbFromSlave(clazz, shardingKey, masterSlave);
+            isFromSlave = true;
+        }
+
+        List<T> data = _findByQuery(query, dbResource, clazz, useCache, masterSlave);
+
+        // query from master againe
+        if (data.isEmpty() && isFromSlave) {
+            dbResource.close();
+            dbResource = _getDbFromMaster(clazz, shardingKey);
+            data = _findByQuery(query, dbResource, clazz, useCache, masterSlave);
+        }
+
+        return data;
+    }
+
+    @SuppressWarnings("unchecked")
+    private <T> List<T> _findByQuery(IQuery<T> query, IDBResource dbResource, Class<T> clazz, boolean useCache,
+                                     EnumDBMasterSlave masterSlave) {
+        List<T> result = Lists.newArrayList();
+        Transaction tx = null;
+
+        try {
+
+            tx = txManager.getTransaction();
+
+            if (tx != null) {
+                tx.enlistResource((XAResource) dbResource);
+            }
+
+            Map<EntityPK, T> data = null;
+
+            if (isSecondCacheAvailable(clazz, useCache)) {
+                String sCacheKey = ((DefaultQueryImpl<T>) query).getWhereSql().getSecondCacheKey();
+                List<T> sCacheData = (List<T>) secondCache.get(sCacheKey, (ShardingDBResource) dbResource);
+                if (sCacheData != null && !sCacheData.isEmpty()) {
+                    result.addAll(sCacheData);
+                }
+            }
+
+            if (result == null || result.isEmpty()) {
+                if (isCacheAvailable(clazz, useCache)) {
+                    EntityPK[] entityPks = selectPksByQuery((ShardingDBResource) dbResource, query, clazz);
+                    data = selectByPksWithCache(dbResource, clazz, entityPks,
+                            ((DefaultQueryImpl<T>) query).getOrderList(), useCache);
+                    result.addAll(data.values());
+                } else {
+                    result = selectByQuery((ShardingDBResource) dbResource, query, clazz);
+                }
+
+                if (isSecondCacheAvailable(clazz, useCache)) {
+                    String sCacheKey = ((DefaultQueryImpl<T>) query).getWhereSql().getSecondCacheKey();
+                    secondCache.put(sCacheKey, (ShardingDBResource) dbResource, result);
+                }
+            }
+            // 过滤从缓存结果, 将没有指定的字段设置为默认值.
+            List<T> filteResult = new ArrayList<T>(result.size());
+            if (((DefaultQueryImpl<T>) query).hasQueryFields()) {
+                for (T obj : result) {
+                    try {
+                        filteResult.add((T) BeansUtil.cloneWithGivenField(obj,
+                                ((DefaultQueryImpl<T>) query).getFields()));
+                    } catch (Exception e) {
+                        throw new DBOperationException(e);
+                    }
+                }
+                result = filteResult;
+            }
+
+            return result;
+        } catch (Exception e) {
+            if (tx != null) {
+                try {
+                    tx.rollback();
+                } catch (Exception e1) {
+                    throw new DBOperationException(e1);
+                }
+            }
+
+            throw new DBOperationException(e);
+        } finally {
+            if (tx == null && dbResource != null) {
+                dbResource.close();
+            }
+        }
+    }
+
+    @Override
+    public List<Map<String, Object>> findBySql(SQL sql, EnumDBMasterSlave masterSlave) {
+        throw new UnsupportedOperationException("not support");
+    }
+
+    @Override
+    public List<Map<String, Object>> findBySql(SQL sql, IShardingKey<?> shardingKey, EnumDBMasterSlave masterSlave) {
+        Transaction tx = null;
+        ShardingDBResource dbResource = _getDbBySQL(sql, shardingKey, masterSlave);
+        try {
+            tx = txManager.getTransaction();
+
+            if (tx != null) {
+                tx.enlistResource(dbResource);
+            }
+
+            boolean isFromSlave = false;
+            if (EnumDBMasterSlave.MASTER != masterSlave
+                    && this.dbCluster.isShardingSlaveExist(shardingKey.getClusterName())) {
+                isFromSlave = true;
+            }
+
+            List<Map<String, Object>> result = selectBySql(dbResource, sql);
+
+            // query from master againe
+            if (result.isEmpty() && isFromSlave) {
+                dbResource = _getDbBySQL(sql, shardingKey, EnumDBMasterSlave.MASTER);
+                result = selectBySql(dbResource, sql);
+            }
+
+            return result;
+        } catch (Exception e) {
+            if (tx != null) {
+                try {
+                    tx.rollback();
+                } catch (Exception e1) {
+                    throw new DBOperationException(e1);
+                }
+            }
+
+            throw new DBOperationException(e);
+        } finally {
+            if (tx == null && dbResource != null) {
+                dbResource.close();
+            }
+        }
+    }
+
+    private ShardingDBResource _getDbBySQL(SQL sql, IShardingKey<?> shardingKey, EnumDBMasterSlave masterSlave) {
+        ShardingDBResource next = null;
+        for (String tableName : sql.getTableNames()) {
+
+            ShardingDBResource cur = null;
+            if (EnumDBMasterSlave.MASTER == masterSlave
+                    || !this.dbCluster.isShardingSlaveExist(shardingKey.getClusterName())) {
+                cur = _getDbFromMaster(tableName, shardingKey);
+            } else {
+                cur = _getDbFromSlave(tableName, shardingKey, masterSlave);
+            }
+
+            if (next != null && (cur != next)) {
+                throw new DBOperationException("the tables in sql maybe not at the same database");
+            }
+            next = cur;
+        }
+
+        return next;
+    }
+
+    /**
+     * 路由选择.
+     * 
+     * @param clazz 数据对象
+     * @param shardingKey 路由因子
+     */
+    private ShardingDBResource _getDbFromMaster(Class<?> clazz, IShardingKey<?> shardingKey) {
+        String tableName = entityMetaManager.getTableName(clazz);
+        return _getDbFromMaster(tableName, shardingKey);
+    }
+
+    private ShardingDBResource _getDbFromMaster(String tableName, IShardingKey<?> shardingKey) {
+        ShardingDBResource shardingDBResource = null;
+        try {
+            shardingDBResource = (ShardingDBResource) this.dbCluster.selectDBResourceFromMaster(tableName, shardingKey);
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("[" + shardingDBResource + "]");
+            }
+        } catch (DBClusterException e) {
+            throw new DBOperationException(e);
+        }
+        return shardingDBResource;
+    }
+
+    /**
+     * 路由选择.
+     * 
+     * @param clazz 数据对象
+     * @param shardingKey 路由因子
+     */
+    private ShardingDBResource _getDbFromSlave(Class<?> clazz, IShardingKey<?> shardingKey,
+                                               EnumDBMasterSlave masterSlave) {
+        String tableName = entityMetaManager.getTableName(clazz);
+        ShardingDBResource shardingDBResource = null;
+        try {
+            shardingDBResource = (ShardingDBResource) this.dbCluster.selectDBResourceFromSlave(tableName, shardingKey,
+                    masterSlave);
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("[" + shardingDBResource + "]");
+            }
+        } catch (DBClusterException e) {
+            throw new DBOperationException(e);
+        }
+        return shardingDBResource;
+    }
+
+    private ShardingDBResource _getDbFromSlave(String tableName, IShardingKey<?> shardingKey, EnumDBMasterSlave slave) {
+        ShardingDBResource shardingDBResource = null;
+        try {
+            shardingDBResource = (ShardingDBResource) this.dbCluster.selectDBResourceFromSlave(tableName, shardingKey,
+                    slave);
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("[" + shardingDBResource + "]");
+            }
+        } catch (DBClusterException e) {
+            throw new DBOperationException(e);
+        }
+        return shardingDBResource;
+    }
 
 }

@@ -16,6 +16,7 @@
 
 package org.pinus4j.api;
 
+import java.util.Arrays;
 import java.util.List;
 
 import org.pinus4j.datalayer.SQLParser;
@@ -27,62 +28,60 @@ import org.pinus4j.datalayer.SQLParser;
  */
 public class SQL {
 
-	/**
-	 * sql语句
-	 */
-	private String sql;
+    /**
+     * sql语句
+     */
+    private String       sql;
 
-	/**
-	 * 查询参数
-	 */
-	private Object[] params;
+    /**
+     * 查询参数
+     */
+    private List<Object> params;
 
-	private SQL() {
-	}
+    private SQL() {
+    }
 
-	private SQL(String sql, Object... params) {
-		this.sql = sql;
-		this.params = params;
-	}
+    private SQL(String sql, List<Object> paramList) {
+        this.sql = sql;
+        this.params = paramList;
+    }
 
-	public static final SQL valueOf(String sql, Object... params) {
-		SQL obj = new SQL(sql, params);
+    public static final SQL valueOf(String sql, Object... params) {
+        return new SQL(sql, Arrays.asList(params));
+    }
 
-		return obj;
-	}
+    public static final SQL valueOf(String sql, List<Object> paramList) {
+        return new SQL(sql, paramList);
+    }
 
-	public List<String> getTableNames() {
-		return SQLParser.parseTableName(sql);
-	}
+    public List<String> getTableNames() {
+        return SQLParser.parseTableName(sql);
+    }
 
-	@Override
-	public String toString() {
-		String s = sql;
+    public String getSecondCacheKey() {
+        StringBuilder key = new StringBuilder(this.sql);
+        key.append("[");
+        for (Object param : params) {
+            key.append(param).append(",");
+        }
+        if (!params.isEmpty()) {
+            key.deleteCharAt(key.length() - 1);
+        }
+        key.append("]");
+        return key.toString();
+    }
 
-		if (params != null && params.length > 0) {
-			for (Object param : params) {
-				if (param instanceof String)
-					s = s.replaceFirst("\\?", "'" + String.valueOf(param) + "'");
-				else
-					s = s.replaceFirst("\\?", String.valueOf(param));
-			}
-		} else {
-			s = sql;
-		}
+    @Override
+    public String toString() {
+        return this.sql;
+    }
 
-		return s;
-	}
+    public String getSql() {
+        return sql;
+    }
 
-	public String getSql() {
-		return sql;
-	}
-
-	public void setParams(Object[] params) {
-		this.params = params;
-	}
-
-	public Object[] getParams() {
-		return params;
-	}
+    public List<Object> getParams() {
+        return params;
+    }
 
 }

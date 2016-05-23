@@ -5,22 +5,24 @@ import java.sql.Timestamp;
 import java.util.Date;
 
 import org.pinus4j.api.FashionEntity;
-import org.pinus4j.generator.annotations.DateTime;
-import org.pinus4j.generator.annotations.Field;
-import org.pinus4j.generator.annotations.Index;
-import org.pinus4j.generator.annotations.Indexes;
-import org.pinus4j.generator.annotations.PrimaryKey;
-import org.pinus4j.generator.annotations.Table;
-import org.pinus4j.generator.annotations.UpdateTime;
+import org.pinus4j.entity.annotations.CacheVersion;
+import org.pinus4j.entity.annotations.DateTime;
+import org.pinus4j.entity.annotations.Field;
+import org.pinus4j.entity.annotations.Index;
+import org.pinus4j.entity.annotations.Indexes;
+import org.pinus4j.entity.annotations.PrimaryKey;
+import org.pinus4j.entity.annotations.Table;
+import org.pinus4j.entity.annotations.UpdateTime;
 
+@CacheVersion("v1")
 @Table(cluster = "pinus", cache = true)
 @Indexes({ @Index(field = "testInt") })
 public class TestGlobalEntity extends FashionEntity implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    @PrimaryKey(comment = "主键", name = "pk")
-    private long              id;
+    @PrimaryKey(comment = "主键", name = "pk", isAutoIncrement = true)
+    private Long              id;
 
     @Field
     private byte              testByte;

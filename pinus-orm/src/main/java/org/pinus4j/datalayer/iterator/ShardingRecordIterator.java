@@ -19,13 +19,14 @@ package org.pinus4j.datalayer.iterator;
 import java.sql.SQLException;
 import java.util.List;
 
-import org.pinus4j.api.query.Condition;
 import org.pinus4j.api.query.IQuery;
-import org.pinus4j.api.query.Order;
-import org.pinus4j.api.query.QueryImpl;
+import org.pinus4j.api.query.impl.Condition;
+import org.pinus4j.api.query.impl.DefaultQueryImpl;
+import org.pinus4j.api.query.impl.Order;
 import org.pinus4j.cluster.resources.ShardingDBResource;
+import org.pinus4j.entity.DefaultEntityMetaManager;
+import org.pinus4j.entity.IEntityMetaManager;
 import org.pinus4j.exceptions.DBOperationException;
-import org.pinus4j.utils.ReflectUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,76 +34,77 @@ import org.slf4j.LoggerFactory;
  * 某个实体对象的一个分表遍历器. <b>需要注意的是此遍历器只能遍历主键是数值型的实体</b>
  * 
  * @author duanbn
- * 
  */
 public class ShardingRecordIterator<E> extends AbstractRecordIterator<E> {
 
-	public static final Logger LOG = LoggerFactory.getLogger(ShardingRecordIterator.class);
+    public static final Logger LOG               = LoggerFactory.getLogger(ShardingRecordIterator.class);
 
-	private ShardingDBResource dbResource;
+    private ShardingDBResource dbResource;
 
-	public ShardingRecordIterator(ShardingDBResource dbResource, Class<E> clazz) {
-		super(clazz);
+    private IEntityMetaManager entityMetaManager = DefaultEntityMetaManager.getInstance();
 
-		this.dbResource = dbResource;
+    public ShardingRecordIterator(ShardingDBResource dbResource, Class<E> clazz) {
+        super(clazz);
 
-		this.maxId = getMaxId();
-	}
+        this.dbResource = dbResource;
 
-	public long getMaxId() {
-		long maxId = 0;
+        this.maxId = getMaxId();
+    }
 
-		IQuery query = new QueryImpl();
-		query.limit(1).orderBy(pkName, Order.DESC);
-		List<E> one;
-		try {
-			one = selectByQuery(dbResource, query, clazz);
-		} catch (SQLException e1) {
-			throw new DBOperationException(e1);
-		}
-		if (!one.isEmpty()) {
-			E e = one.get(0);
-			maxId = ReflectUtil.getPkValue(e).longValue();
-		}
+    public long getMaxId() {
+        long maxId = 0;
 
-		LOG.info("clazz " + clazz + " DB " + dbResource + " maxId=" + maxId);
+        IQuery query = new DefaultQueryImpl();
+        query.limit(1).orderBy(pkName, Order.DESC, clazz);
+        List<E> one;
+        try {
+            one = selectByQuery(dbResource, query, clazz);
+        } catch (SQLException e1) {
+            throw new DBOperationException(e1);
+        }
+        if (!one.isEmpty()) {
+            E e = one.get(0);
+            maxId = entityMetaManager.getNotUnionPkValue(e).getValueAsLong();
+        }
 
-		return maxId;
-	}
+        LOG.info("clazz " + clazz + " DB " + dbResource + " maxId=" + maxId);
 
-	@Override
-	public long getCount() {
-		try {
-			return selectCount(dbResource, clazz, query).longValue();
-		} catch (SQLException e) {
-			throw new DBOperationException(e);
-		}
-	}
+        return maxId;
+    }
 
-	@Override
-	public boolean hasNext() {
-		if (this.recordQ.isEmpty()) {
-			IQuery query = this.query.clone();
-			long high = this.latestId + step;
-			query.add(Condition.gte(pkName, latestId)).add(Condition.lt(pkName, high));
-			try {
-				List<E> recrods = selectByQuery(dbResource, query, clazz);
-				this.latestId = high;
+    @Override
+    public long getCount() {
+        try {
+            return selectCountByQuery(query, dbResource, clazz).longValue();
+        } catch (SQLException e) {
+            throw new DBOperationException(e);
+        }
+    }
 
-				while (recrods.isEmpty() && this.latestId < maxId) {
-					query = this.query.clone();
-					high = this.latestId + step;
-					query.add(Condition.gte(pkName, this.latestId)).add(Condition.lt(pkName, high));
-					recrods = selectByQuery(dbResource, query, clazz);
-					this.latestId = high;
-				}
-				this.recordQ.addAll(recrods);
-			} catch (SQLException e) {
-				throw new DBOperationException(e);
-			}
-		}
+    @Override
+    public boolean hasNext() {
+        if (this.recordQ.isEmpty()) {
+            IQuery query = ((DefaultQueryImpl) this.query).clone();
+            long high = this.latestId + step;
+            query.and(Condition.gte(pkName, latestId, clazz)).and(Condition.lt(pkName, high, clazz));
+            try {
+                List<E> recrods = selectByQuery(dbResource, query, clazz);
+                this.latestId = high;
 
-		return !this.recordQ.isEmpty();
-	}
+                while (recrods.isEmpty() && this.latestId < maxId) {
+                    query = ((DefaultQueryImpl) this.query).clone();
+                    high = this.latestId + step;
+                    query.and(Condition.gte(pkName, this.latestId, clazz)).and(Condition.lt(pkName, high, clazz));
+                    recrods = selectByQuery(dbResource, query, clazz);
+                    this.latestId = high;
+                }
+                this.recordQ.addAll(recrods);
+            } catch (SQLException e) {
+                throw new DBOperationException(e);
+            }
+        }
+
+        return !this.recordQ.isEmpty();
+    }
 
 }

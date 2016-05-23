@@ -21,54 +21,28 @@ import java.util.Map;
 
 import org.pinus4j.api.SQL;
 import org.pinus4j.api.query.IQuery;
+import org.pinus4j.api.query.impl.DefaultQueryImpl.OrderBy;
 import org.pinus4j.cluster.enums.EnumDBMasterSlave;
+import org.pinus4j.entity.meta.EntityPK;
 
 /**
  * query global data.
  * 
  * @author duanbn
- *
  */
 public interface IGlobalQuery extends IDataQuery {
 
-	Number getCount(Class<?> clazz);
+    Number getCount(Class<?> clazz, boolean useCache, EnumDBMasterSlave masterSlave);
 
-	Number getCount(Class<?> clazz, boolean useCache);
+    <T> Number getCountByQuery(IQuery<T> query, Class<T> clazz, boolean useCache, EnumDBMasterSlave masterSlave);
 
-	Number getCount(Class<?> clazz, boolean useCache, EnumDBMasterSlave masterSlave);
+    <T> T findByPk(EntityPK pk, Class<T> clazz, boolean useCache, EnumDBMasterSlave masterSlave);
 
-	Number getCountByQuery(IQuery query, Class<?> clazz);
+    <T> List<T> findByPkList(List<EntityPK> pks, Class<T> clazz, List<OrderBy> order, boolean useCache,
+                             EnumDBMasterSlave masterSlave);
 
-	Number getCountByQuery(IQuery query, Class<?> clazz, boolean useCache);
+    <T> List<T> findByQuery(IQuery<T> query, Class<T> clazz, boolean useCache, EnumDBMasterSlave masterSlave);
 
-	Number getCountByQuery(IQuery query, Class<?> clazz, boolean useCache, EnumDBMasterSlave masterSlave);
-
-	<T> T getByPk(Number pk, Class<T> clazz);
-
-	<T> T getByPk(Number pk, Class<T> clazz, boolean useCache);
-
-	<T> T getByPk(Number pk, Class<T> clazz, boolean useCache, EnumDBMasterSlave masterSlave);
-
-	<T> List<T> findByPkList(List<? extends Number> pks, Class<T> clazz);
-
-	<T> List<T> findByPkList(List<? extends Number> pks, Class<T> clazz, boolean useCache);
-
-	<T> List<T> findByPkList(List<? extends Number> pks, Class<T> clazz, boolean useCache, EnumDBMasterSlave masterSlave);
-
-	<T> T findOneByQuery(IQuery query, Class<T> clazz);
-
-	<T> T findOneByQuery(IQuery query, Class<T> clazz, boolean useCache);
-
-	<T> T findOneByQuery(IQuery query, Class<T> clazz, boolean useCache, EnumDBMasterSlave masterSlave);
-
-	<T> List<T> findByQuery(IQuery query, Class<T> clazz);
-
-	<T> List<T> findByQuery(IQuery query, Class<T> clazz, boolean useCache);
-
-	<T> List<T> findByQuery(IQuery query, Class<T> clazz, boolean useCache, EnumDBMasterSlave masterSlave);
-
-	List<Map<String, Object>> findBySql(SQL sql, Class<?> clazz);
-
-	List<Map<String, Object>> findBySql(SQL sql, Class<?> clazz, EnumDBMasterSlave masterSlave);
+    List<Map<String, Object>> findBySql(SQL sql, String clusterName, EnumDBMasterSlave masterSlave);
 
 }

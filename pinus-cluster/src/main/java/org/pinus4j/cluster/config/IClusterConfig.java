@@ -21,7 +21,7 @@ import java.util.Collection;
 import org.pinus4j.cache.beans.PrimaryCacheInfo;
 import org.pinus4j.cache.beans.SecondCacheInfo;
 import org.pinus4j.cluster.beans.DBClusterInfo;
-import org.pinus4j.cluster.enums.EnumDbConnectionPoolCatalog;
+import org.pinus4j.cluster.cp.IDBConnectionPool;
 import org.pinus4j.cluster.enums.HashAlgoEnum;
 
 /**
@@ -32,6 +32,14 @@ import org.pinus4j.cluster.enums.HashAlgoEnum;
  * @since 0.1.0
  */
 public interface IClusterConfig {
+
+    /*************************************************************
+     * 默认实现
+     *************************************************************/
+    /**
+     * the class of default connection pool implement.
+     */
+    public static final String DEFAULT_CP_CLASS             = "org.pinus4j.cluster.cp.impl.DBCPConnectionPoolImpl";
 
     /**
      * the class of default primary cache implement.
@@ -47,6 +55,16 @@ public interface IClusterConfig {
      * the class of default cluster router implement.
      */
     public static final String DEFAULT_CLUSTER_ROUTER_CLASS = "org.pinus4j.cluster.router.impl.SimpleHashClusterRouter";
+
+    /*************************************************************
+     * 配置参数
+     *************************************************************/
+    /**
+     * get connection pool implement class.
+     * 
+     * @return
+     */
+    public IDBConnectionPool getImplConnectionPool();
 
     /**
      * ture is enabled, false is not.
@@ -66,13 +84,6 @@ public interface IClusterConfig {
      * @return
      */
     public SecondCacheInfo getSecondCacheInfo();
-
-    /**
-     * 获取数据库连接方式.
-     * 
-     * @return
-     */
-    public EnumDbConnectionPoolCatalog getDbConnectionPoolCatalog();
 
     /**
      * 获取ID生成器默认批量生成值.

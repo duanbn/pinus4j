@@ -19,7 +19,6 @@ package org.pinus4j.cluster.config.impl;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -34,19 +33,19 @@ import org.pinus4j.cluster.beans.DBRegionInfo;
 import org.pinus4j.cluster.beans.DBRegionInfo.Value;
 import org.pinus4j.cluster.beans.EnvDBInfo;
 import org.pinus4j.cluster.config.IClusterConfig;
-import org.pinus4j.cluster.enums.EnumClusterCatalog;
+import org.pinus4j.cluster.cp.IDBConnectionPool;
 import org.pinus4j.cluster.enums.EnumDBMasterSlave;
-import org.pinus4j.cluster.enums.EnumDbConnectionPoolCatalog;
 import org.pinus4j.cluster.enums.HashAlgoEnum;
 import org.pinus4j.cluster.router.IClusterRouter;
 import org.pinus4j.constant.Const;
 import org.pinus4j.exceptions.LoadConfigException;
-import org.pinus4j.utils.StringUtils;
+import org.pinus4j.utils.StringUtil;
 import org.pinus4j.utils.XmlUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
+
+import com.google.common.collect.Maps;
 
 /**
  * xml config implements.
@@ -56,48 +55,48 @@ import org.w3c.dom.NodeList;
  */
 public class XmlClusterConfigImpl implements IClusterConfig {
 
-    public static final Logger                 LOG            = LoggerFactory.getLogger(XmlClusterConfigImpl.class);
-
-    /**
-     * 数据库连接方式. 从应用加载连接，或者从容器加载连接.
-     */
-    private static EnumDbConnectionPoolCatalog enumCpCatalog;
+    public static final Logger               LOG                        = LoggerFactory
+                                                                                .getLogger(XmlClusterConfigImpl.class);
 
     /**
      * 主键批量生成数
      */
-    private static int                         idGenerateBatch;
+    private static int                       idGenerateBatch;
 
     /**
      * hash算法.
      */
-    private static HashAlgoEnum                hashAlgo;
+    private static HashAlgoEnum              hashAlgo;
+
+    private static String                    defaultConnectionPoolClass = DEFAULT_CP_CLASS;
 
     /**
      * cache config param.
      */
-    private static boolean                     isCacheEnabled;
-    private static PrimaryCacheInfo            primaryCacheInfo;
-    private static SecondCacheInfo             secondCacheInfo;
+    private static boolean                   isCacheEnabled;
+    private static PrimaryCacheInfo          primaryCacheInfo;
+    private static SecondCacheInfo           secondCacheInfo;
 
     /**
      * DB集群信息.
      */
-    private static Collection<DBClusterInfo>   dbClusterInfos = new ArrayList<DBClusterInfo>();
+    private static Collection<DBClusterInfo> dbClusterInfos             = new ArrayList<DBClusterInfo>();
 
-    private XmlUtil                            xmlUtil;
+    private XmlUtil                          xmlUtil;
 
     /**
      * zookeeper连接地址.
      */
-    private static String                      zkUrl;
+    private static String                    zkUrl;
+
+    private static Map<String, DBInfo>       dsBucketMap                = Maps.newHashMap();
 
     private XmlClusterConfigImpl() throws LoadConfigException {
         this(null);
     }
 
     private XmlClusterConfigImpl(String xmlFilePath) throws LoadConfigException {
-        if (StringUtils.isBlank(xmlFilePath))
+        if (StringUtil.isBlank(xmlFilePath))
             xmlUtil = XmlUtil.getInstance();
         else
             xmlUtil = XmlUtil.getInstance(new File(xmlFilePath));
@@ -107,23 +106,72 @@ public class XmlClusterConfigImpl implements IClusterConfig {
             throw new LoadConfigException("can not found root node");
         }
 
-        try {
-            // load id generator
-            _loadIdGeneratorBatch(root);
+        // load id generator
+        _loadIdGeneratorBatch(root);
 
-            // load zookeeper url
-            _loadZkUrl(root);
+        // load zookeeper url
+        _loadZkUrl(root);
 
-            // load hash algo
-            _loadHashAlgo(root);
+        // load hash algo
+        _loadHashAlgo(root);
 
-            // load cluster info
-            _loadDBClusterInfo(root);
+        // load datasource bucket
+        _loadDatasourceBucket(root);
 
-            // load cache info
-            _loadCacheInfo(root);
-        } catch (Exception e) {
-            throw new LoadConfigException(e);
+        // load cluster info
+        _loadDBClusterInfo(root);
+
+        // load cache info
+        _loadCacheInfo(root);
+    }
+
+    private void _loadDatasourceBucket(Node root) throws LoadConfigException {
+        Node dsBucket = xmlUtil.getFirstChildByName(root, "datasource-bucket");
+        if (dsBucket == null) {
+            throw new LoadConfigException("can not found <datasource-bucket>");
+        }
+
+        String cpClassFullpath = xmlUtil.getAttributeValue(dsBucket, "cpclass");
+        if (StringUtil.isNotBlank(cpClassFullpath)) {
+            defaultConnectionPoolClass = cpClassFullpath;
+        }
+
+        String dbInfoId = null;
+        DBInfo dbInfo = null;
+
+        for (Node appDBInfoNode : xmlUtil.getChildByName(dsBucket, "appds")) {
+            dbInfoId = xmlUtil.getAttributeValue(appDBInfoNode, "id");
+            if (StringUtil.isBlank(dbInfoId))
+                throw new LoadConfigException("<envds> <appds> 必须设置id属性");
+            dbInfo = new AppDBInfo();
+            String username = xmlUtil.getFirstChildByName(appDBInfoNode, "username").getTextContent().trim();
+            String password = xmlUtil.getFirstChildByName(appDBInfoNode, "password").getTextContent().trim();
+            String url = xmlUtil.getFirstChildByName(appDBInfoNode, "url").getTextContent().trim();
+            ((AppDBInfo) dbInfo).setUsername(username);
+            ((AppDBInfo) dbInfo).setPassword(password);
+            ((AppDBInfo) dbInfo).setUrl(url);
+            Map<String, String> connectParam = xmlUtil.getAttributeAsMap(dsBucket, "cpclass");
+            Map<String, String> oneDBConnectParam = xmlUtil.getAttributeAsMap(appDBInfoNode, "id");
+            for (Map.Entry<String, String> connectParamEntry : oneDBConnectParam.entrySet()) {
+                connectParam.put(connectParamEntry.getKey(), connectParamEntry.getValue());
+            }
+            ((AppDBInfo) dbInfo).setConnPoolInfo(connectParam);
+
+            if (dsBucketMap.get(dbInfoId) != null) {
+                throw new LoadConfigException("配置错误，数据源id配置重复，id=" + dbInfoId);
+            }
+            dsBucketMap.put(dbInfoId, dbInfo);
+        }
+
+        for (Node envDBInfoNode : xmlUtil.getChildByName(dsBucket, "envds")) {
+            dbInfo = new EnvDBInfo();
+            String envDsName = xmlUtil.getFirstChildByName(envDBInfoNode, "jndi").getTextContent().trim();
+            ((EnvDBInfo) dbInfo).setEnvDsName(envDsName);
+
+            if (dsBucketMap.get(dbInfoId) != null) {
+                throw new LoadConfigException("配置错误，数据源id配置重复，id=" + dbInfoId);
+            }
+            dsBucketMap.put(dbInfoId, dbInfo);
         }
 
     }
@@ -154,50 +202,6 @@ public class XmlClusterConfigImpl implements IClusterConfig {
     private void _loadHashAlgo(Node root) throws LoadConfigException {
         Node hashAlgoNode = xmlUtil.getFirstChildByName(root, Const.PROP_HASH_ALGO);
         hashAlgo = HashAlgoEnum.getEnum(hashAlgoNode.getTextContent().trim());
-    }
-
-    /**
-     * load db-connection-pool
-     */
-    private Map<String, Object> _loadDbConnectInfo(Node connPoolNode) throws LoadConfigException {
-        Map<String, Object> map = new HashMap<String, Object>();
-
-        NodeList child = connPoolNode.getChildNodes();
-        Node currentNode = null;
-        for (int i = 0; i < child.getLength(); i++) {
-            currentNode = child.item(i);
-            if (currentNode.getNodeName().equals(Const.PROP_MAXACTIVE)) {
-                map.put(Const.PROP_MAXACTIVE, Integer.parseInt(currentNode.getTextContent().trim()));
-            }
-            if (currentNode.getNodeName().equals(Const.PROP_MINIDLE)) {
-                map.put(Const.PROP_MINIDLE, Integer.parseInt(currentNode.getTextContent().trim()));
-            }
-            if (currentNode.getNodeName().equals(Const.PROP_MAXIDLE)) {
-                map.put(Const.PROP_MAXIDLE, Integer.parseInt(currentNode.getTextContent().trim()));
-            }
-            if (currentNode.getNodeName().equals(Const.PROP_INITIALSIZE)) {
-                map.put(Const.PROP_INITIALSIZE, Integer.parseInt(currentNode.getTextContent().trim()));
-            }
-            if (currentNode.getNodeName().equals(Const.PROP_REMOVEABANDONED)) {
-                map.put(Const.PROP_REMOVEABANDONED, Boolean.valueOf(currentNode.getTextContent().trim()));
-            }
-            if (currentNode.getNodeName().equals(Const.PROP_REMOVEABANDONEDTIMEOUT)) {
-                map.put(Const.PROP_REMOVEABANDONEDTIMEOUT, Integer.parseInt(currentNode.getTextContent().trim()));
-            }
-            if (currentNode.getNodeName().equals(Const.PROP_MAXWAIT)) {
-                map.put(Const.PROP_MAXWAIT, Integer.parseInt(currentNode.getTextContent().trim()));
-            }
-            if (currentNode.getNodeName().equals(Const.PROP_TIMEBETWEENEVICTIONRUNSMILLIS)) {
-                map.put(Const.PROP_TIMEBETWEENEVICTIONRUNSMILLIS, Integer.parseInt(currentNode.getTextContent().trim()));
-            }
-            if (currentNode.getNodeName().equals(Const.PROP_NUMTESTSPEREVICTIONRUN)) {
-                map.put(Const.PROP_NUMTESTSPEREVICTIONRUN, Integer.parseInt(currentNode.getTextContent().trim()));
-            }
-            if (currentNode.getNodeName().equals(Const.PROP_MINEVICTABLEIDLETIMEMILLIS)) {
-                map.put(Const.PROP_MINEVICTABLEIDLETIMEMILLIS, Integer.parseInt(currentNode.getTextContent().trim()));
-            }
-        }
-        return map;
     }
 
     private List<Value> _parseCapacity(String clusterName, String regionCapacity) throws LoadConfigException {
@@ -234,65 +238,7 @@ public class XmlClusterConfigImpl implements IClusterConfig {
         return values;
     }
 
-    /**
-     * load db info.
-     */
-    private DBInfo _getDBInfo(String clusterName, Node node, EnumDBMasterSlave masterSlave) throws LoadConfigException {
-        DBInfo dbInfo = null;
-
-        Node root = xmlUtil.getRoot();
-        if (root == null) {
-            throw new LoadConfigException("找不到root节点");
-        }
-
-        Node connPoolNode = xmlUtil.getFirstChildByName(root, "db-connection-pool");
-        if (connPoolNode == null) {
-            throw new LoadConfigException("找不到db-connection-pool节点");
-        }
-
-        Node cpCatalogNode = connPoolNode.getAttributes().getNamedItem("catalog");
-        String cpCatalog = EnumDbConnectionPoolCatalog.APP.getValue();
-        if (cpCatalogNode != null) {
-            cpCatalog = cpCatalogNode.getTextContent();
-        }
-        enumCpCatalog = EnumDbConnectionPoolCatalog.getEnum(cpCatalog);
-
-        switch (enumCpCatalog) {
-            case ENV:
-                dbInfo = new EnvDBInfo();
-                dbInfo.setClusterName(clusterName);
-                dbInfo.setMasterSlave(masterSlave);
-
-                String envDsName = node.getTextContent().trim();
-                ((EnvDBInfo) dbInfo).setEnvDsName(envDsName);
-                break;
-            case APP:
-                dbInfo = new AppDBInfo();
-                dbInfo.setClusterName(clusterName);
-                dbInfo.setMasterSlave(masterSlave);
-
-                String username = xmlUtil.getFirstChildByName(node, "db.username").getTextContent().trim();
-                String password = xmlUtil.getFirstChildByName(node, "db.password").getTextContent().trim();
-                String url = xmlUtil.getFirstChildByName(node, "db.url").getTextContent().trim();
-                ((AppDBInfo) dbInfo).setUsername(username);
-                ((AppDBInfo) dbInfo).setPassword(password);
-                ((AppDBInfo) dbInfo).setUrl(url);
-                ((AppDBInfo) dbInfo).setConnPoolInfo(_loadDbConnectInfo(connPoolNode));
-                break;
-            default:
-                throw new LoadConfigException("catalog attribute of db-connection-pool config error, catalog = "
-                        + cpCatalog + " you should be select in \"env\" or \"app\"");
-        }
-
-        // set custom property
-        Map<String, String> propMap = xmlUtil.getAttributeAsMap(node);
-        dbInfo.setCustomProperties(propMap);
-
-        dbInfo.check();
-
-        return dbInfo;
-    }
-
+    @SuppressWarnings("unchecked")
     private DBClusterInfo _getDBClusterInfo(String clusterName, Node clusterNode) throws LoadConfigException {
         DBClusterInfo dbClusterInfo = new DBClusterInfo();
         // set cluster name
@@ -301,7 +247,7 @@ public class XmlClusterConfigImpl implements IClusterConfig {
         // set router class
         try {
             String classFullPath = xmlUtil.getAttributeValue(clusterNode, "router");
-            if (StringUtils.isBlank(classFullPath)) {
+            if (StringUtil.isBlank(classFullPath)) {
                 classFullPath = DEFAULT_CLUSTER_ROUTER_CLASS;
             }
             Class<IClusterRouter> clazz = (Class<IClusterRouter>) Class.forName(classFullPath);
@@ -310,10 +256,6 @@ public class XmlClusterConfigImpl implements IClusterConfig {
             throw new LoadConfigException(e);
         }
 
-        // set cluster catalog
-        String catalog = xmlUtil.getAttributeValue(clusterNode, "catalog");
-        dbClusterInfo.setCatalog(EnumClusterCatalog.getEnum(catalog));
-
         //
         // load global
         //
@@ -321,8 +263,19 @@ public class XmlClusterConfigImpl implements IClusterConfig {
         if (global != null) {
             // load master global
             Node masterGlobal = xmlUtil.getFirstChildByName(global, "master");
-            DBInfo masterGlobalConnection = _getDBInfo(clusterName, masterGlobal, EnumDBMasterSlave.MASTER);
-            dbClusterInfo.setMasterGlobalDBInfo(masterGlobalConnection);
+            String dsId = masterGlobal.getTextContent().trim();
+            if (dsBucketMap.get(dsId) == null) {
+                throw new LoadConfigException("配置错误，找不到datasource id=" + dsId);
+            }
+            DBInfo masterGlobalDBInfo = dsBucketMap.get(dsId).clone();
+            masterGlobalDBInfo.setClusterName(clusterName);
+            masterGlobalDBInfo.setMasterSlave(EnumDBMasterSlave.MASTER);
+            // set custom property
+            Map<String, String> propMap = xmlUtil.getAttributeAsMap(masterGlobal);
+            masterGlobalDBInfo.setCustomProperties(propMap);
+            masterGlobalDBInfo.check();
+
+            dbClusterInfo.setMasterGlobalDBInfo(masterGlobalDBInfo);
 
             // load slave global
             List<Node> slaveGlobalList = xmlUtil.getChildByName(global, "slave");
@@ -331,8 +284,18 @@ public class XmlClusterConfigImpl implements IClusterConfig {
 
                 int slaveIndex = 0;
                 for (Node slaveGlobal : slaveGlobalList) {
-                    slaveGlobalConnection.add(_getDBInfo(clusterName, slaveGlobal,
-                            EnumDBMasterSlave.getSlaveEnum(slaveIndex++)));
+                    dsId = slaveGlobal.getTextContent().trim();
+                    if (dsBucketMap.get(dsId) == null) {
+                        throw new LoadConfigException("配置错误，找不到datasource id=" + dsId);
+                    }
+                    DBInfo slaveGlobalDBInfo = dsBucketMap.get(dsId).clone();
+                    slaveGlobalDBInfo.setClusterName(clusterName);
+                    slaveGlobalDBInfo.setMasterSlave(EnumDBMasterSlave.getSlaveEnum(slaveIndex++));
+                    // set custom property
+                    propMap = xmlUtil.getAttributeAsMap(slaveGlobal);
+                    slaveGlobalDBInfo.setCustomProperties(propMap);
+                    slaveGlobalDBInfo.check();
+                    slaveGlobalConnection.add(slaveGlobalDBInfo);
                 }
 
                 dbClusterInfo.setSlaveGlobalDBInfo(slaveGlobalConnection);
@@ -362,7 +325,18 @@ public class XmlClusterConfigImpl implements IClusterConfig {
             Node master = xmlUtil.getFirstChildByName(regionNode, "master");
             List<Node> shardingNodeList = xmlUtil.getChildByName(master, "sharding");
             for (Node shardingNode : shardingNodeList) {
-                regionMasterConnection.add(_getDBInfo(clusterName, shardingNode, EnumDBMasterSlave.MASTER));
+                String dsId = shardingNode.getTextContent().trim();
+                if (dsBucketMap.get(dsId) == null) {
+                    throw new LoadConfigException("配置错误，找不到datasource id=" + dsId);
+                }
+                DBInfo masterShardingDBInfo = dsBucketMap.get(dsId).clone();
+                masterShardingDBInfo.setClusterName(clusterName);
+                masterShardingDBInfo.setMasterSlave(EnumDBMasterSlave.MASTER);
+                // set custom property
+                Map<String, String> propMap = xmlUtil.getAttributeAsMap(shardingNode);
+                masterShardingDBInfo.setCustomProperties(propMap);
+                masterShardingDBInfo.check();
+                regionMasterConnection.add(masterShardingDBInfo);
             }
             regionInfo.setMasterDBInfos(regionMasterConnection);
 
@@ -375,8 +349,18 @@ public class XmlClusterConfigImpl implements IClusterConfig {
 
                 List<DBInfo> slaveConnections = new ArrayList<DBInfo>();
                 for (Node shardingNode : shardingNodeList) {
-                    slaveConnections.add(_getDBInfo(clusterName, shardingNode,
-                            EnumDBMasterSlave.getSlaveEnum(slaveIndex)));
+                    String dsId = shardingNode.getTextContent().trim();
+                    if (dsBucketMap.get(dsId) == null) {
+                        throw new LoadConfigException("配置错误，找不到datasource id=" + dsId);
+                    }
+                    DBInfo slaveShardingDBInfo = dsBucketMap.get(dsId).clone();
+                    slaveShardingDBInfo.setClusterName(clusterName);
+                    slaveShardingDBInfo.setMasterSlave(EnumDBMasterSlave.getSlaveEnum(slaveIndex++));
+                    // set custom property
+                    Map<String, String> propMap = xmlUtil.getAttributeAsMap(shardingNode);
+                    slaveShardingDBInfo.setCustomProperties(propMap);
+                    slaveShardingDBInfo.check();
+                    slaveConnections.add(slaveShardingDBInfo);
                 }
 
                 regionSlaveConnection.add(slaveConnections);
@@ -394,25 +378,21 @@ public class XmlClusterConfigImpl implements IClusterConfig {
         List<Node> clusterNodeList = xmlUtil.getChildByName(root, "cluster");
 
         for (Node clusterNode : clusterNodeList) {
-            String catalog = xmlUtil.getAttributeValue(clusterNode, "catalog");
-            if (!catalog.equalsIgnoreCase(EnumClusterCatalog.MYSQL.getValue())) {
-                continue;
-            }
-
             String name = xmlUtil.getAttributeValue(clusterNode, "name");
             dbClusterInfos.add(_getDBClusterInfo(name, clusterNode));
         }
     }
 
+    @SuppressWarnings("unchecked")
     private void _loadCacheInfo(Node root) throws LoadConfigException {
         Node dbClusterCacheNode = xmlUtil.getFirstChildByName(root, Const.PROP_DB_CLUSTER_CACHE);
         if (dbClusterCacheNode == null) {
-            throw new LoadConfigException("can not found node " + Const.PROP_DB_CLUSTER_CACHE);
+            return;
         }
 
         try {
             String isCacheEnabled = xmlUtil.getAttributeValue(dbClusterCacheNode, "enabled");
-            if (StringUtils.isNotBlank(isCacheEnabled)) {
+            if (StringUtil.isNotBlank(isCacheEnabled)) {
                 XmlClusterConfigImpl.isCacheEnabled = Boolean.valueOf(isCacheEnabled);
             }
 
@@ -420,7 +400,7 @@ public class XmlClusterConfigImpl implements IClusterConfig {
                 Node primaryNode = xmlUtil.getFirstChildByName(dbClusterCacheNode, Const.PROP_DB_CLUSTER_CACHE_PRIMARY);
                 int primaryCacheExpire = Integer.parseInt(xmlUtil.getAttributeValue(primaryNode, "expire"));
                 String classFullPath = xmlUtil.getAttributeValue(primaryNode, "class");
-                if (StringUtils.isBlank(classFullPath)) {
+                if (StringUtil.isBlank(classFullPath)) {
                     classFullPath = DEFAULT_PRIMARY_CACHE_CLASS;
                 }
                 Class<IPrimaryCache> primaryCacheClass = (Class<IPrimaryCache>) Class.forName(classFullPath);
@@ -436,7 +416,7 @@ public class XmlClusterConfigImpl implements IClusterConfig {
                 Node secondNode = xmlUtil.getFirstChildByName(dbClusterCacheNode, Const.PROP_DB_CLUSTER_CACHE_SECOND);
                 int secondCacheExpire = Integer.parseInt(xmlUtil.getAttributeValue(secondNode, "expire"));
                 classFullPath = xmlUtil.getAttributeValue(secondNode, "class");
-                if (StringUtils.isBlank(classFullPath)) {
+                if (StringUtil.isBlank(classFullPath)) {
                     classFullPath = DEFAULT_SECOND_CACHE_CLASS;
                 }
                 Class<ISecondCache> secondCacheClass = (Class<ISecondCache>) Class.forName(classFullPath);
@@ -481,11 +461,6 @@ public class XmlClusterConfigImpl implements IClusterConfig {
     }
 
     @Override
-    public EnumDbConnectionPoolCatalog getDbConnectionPoolCatalog() {
-        return enumCpCatalog;
-    }
-
-    @Override
     public int getIdGeneratorBatch() {
         return idGenerateBatch;
     }
@@ -503,6 +478,17 @@ public class XmlClusterConfigImpl implements IClusterConfig {
     @Override
     public String getZookeeperUrl() {
         return zkUrl;
+    }
+
+    @Override
+    public IDBConnectionPool getImplConnectionPool() {
+        try {
+            Class<?> clazz = Class.forName(defaultConnectionPoolClass);
+
+            return (IDBConnectionPool) clazz.newInstance();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override

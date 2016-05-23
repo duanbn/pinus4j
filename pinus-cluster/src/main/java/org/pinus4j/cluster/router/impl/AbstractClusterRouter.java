@@ -129,7 +129,7 @@ public abstract class AbstractClusterRouter implements IClusterRouter {
 			if (multiSlaveDBInfos == null || multiSlaveDBInfos.isEmpty()) {
 				throw new DBRouteException("find slave db cluster failure cluster name is " + clusterName);
 			}
-			int slaveIndex = AbstractDBCluster.r.nextInt(multiSlaveDBInfos.size() - 1);
+			int slaveIndex = AbstractDBCluster.r.nextInt(multiSlaveDBInfos.size());
 			dbInfos = multiSlaveDBInfos.get(slaveIndex);
 			break;
 		default:

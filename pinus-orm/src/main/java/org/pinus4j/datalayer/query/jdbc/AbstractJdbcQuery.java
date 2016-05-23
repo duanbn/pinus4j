@@ -19,860 +19,375 @@ package org.pinus4j.datalayer.query.jdbc;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.transaction.TransactionManager;
-
 import org.pinus4j.api.SQL;
 import org.pinus4j.api.query.IQuery;
-import org.pinus4j.cache.IPrimaryCache;
-import org.pinus4j.cache.ISecondCache;
-import org.pinus4j.cluster.IDBCluster;
+import org.pinus4j.api.query.impl.DefaultQueryImpl.OrderBy;
 import org.pinus4j.cluster.resources.IDBResource;
 import org.pinus4j.cluster.resources.ShardingDBResource;
 import org.pinus4j.constant.Const;
+import org.pinus4j.datalayer.AbstractDataLayer;
 import org.pinus4j.datalayer.SQLBuilder;
 import org.pinus4j.datalayer.SlowQueryLogger;
 import org.pinus4j.datalayer.query.IDataQuery;
-import org.pinus4j.exceptions.DBOperationException;
+import org.pinus4j.entity.meta.EntityPK;
+import org.pinus4j.entity.meta.PKName;
+import org.pinus4j.entity.meta.PKValue;
 import org.pinus4j.utils.JdbcUtil;
-import org.pinus4j.utils.ReflectUtil;
+
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 /**
  * 分库分表查询抽象类. 此类封装了分库分表查询的公共操作. 子类可以针对主库、从库实现相关的查询.
  * 
  * @author duanbn
  */
-public abstract class AbstractJdbcQuery implements IDataQuery {
+public abstract class AbstractJdbcQuery extends AbstractDataLayer implements IDataQuery {
 
-	/**
-	 * 数据库集群引用.
-	 */
-	protected IDBCluster dbCluster;
-
-	/**
-	 * 一级缓存.
-	 */
-	protected IPrimaryCache primaryCache;
-
-	/**
-	 * 二级缓存.
-	 */
-	protected ISecondCache secondCache;
-
-	protected TransactionManager txManager;
-
-	/**
-	 * 判断一级缓存是否可用
-	 * 
-	 * @return true:启用cache, false:不启用
-	 */
-	protected boolean isCacheAvailable(Class<?> clazz, boolean useCache) {
-		return primaryCache != null && ReflectUtil.isCache(clazz) && useCache;
-	}
-
-	/**
-	 * 判断二级缓存是否可用
-	 * 
-	 * @return true:启用cache, false:不启用
-	 */
-	protected boolean isSecondCacheAvailable(Class<?> clazz, boolean useCache) {
-		return secondCache != null && ReflectUtil.isCache(clazz) && useCache;
-	}
-
-	// //////////////////////////////////////////////////////////////////////////////////////
-	// count相关
-	// //////////////////////////////////////////////////////////////////////////////////////
-	/**
-	 * 获取全局表的count数
-	 * 
-	 * @param conn
-	 * @param clazz
-	 * @return count数
-	 */
-	private Number _selectGlobalCount(IDBResource dbResource, Class<?> clazz) throws SQLException {
-		PreparedStatement ps = null;
-		ResultSet rs = null;
-		try {
+    // //////////////////////////////////////////////////////////////////////////////////////
+    // count相关
+    // //////////////////////////////////////////////////////////////////////////////////////
+    /**
+     * 获取全局表的count数
+     * 
+     * @param conn
+     * @param clazz
+     * @return count数
+     */
+    private Number _selectCount(IDBResource dbResource, Class<?> clazz) throws SQLException {
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        try {
             Connection conn = dbResource.getConnection();
 
-			String sql = SQLBuilder.buildSelectCountGlobalSql(clazz);
-			ps = conn.prepareStatement(sql);
-			long begin = System.currentTimeMillis();
-			rs = ps.executeQuery();
-			long constTime = System.currentTimeMillis() - begin;
-			if (constTime > Const.SLOWQUERY_COUNT) {
-				SlowQueryLogger.write(conn, sql, constTime);
-			}
+            String sql = null;
+            if (dbResource.isGlobal())
+                sql = SQLBuilder.buildSelectCountGlobalSql(clazz);
+            else
+                sql = SQLBuilder.buildSelectCountSql(clazz, ((ShardingDBResource) dbResource).getTableIndex());
 
-			long count = -1;
-			if (rs.next()) {
-				count = rs.getLong(1);
-			}
-			return count;
-		} finally {
-			JdbcUtil.close(ps, rs);
-		}
-	}
+            ps = conn.prepareStatement(sql);
+            long begin = System.currentTimeMillis();
+            rs = ps.executeQuery();
+            long constTime = System.currentTimeMillis() - begin;
+            if (constTime > Const.SLOWQUERY_COUNT) {
+                SlowQueryLogger.write(conn, sql, constTime);
+            }
 
-	protected Number selectGlobalCount(IQuery query, IDBResource dbResource, String clusterName, Class<?> clazz) throws SQLException {
-		long count = 0;
-		PreparedStatement ps = null;
-		ResultSet rs = null;
-		try {
-			Connection conn = dbResource.getConnection();
-			String sql = SQLBuilder.buildSelectCountGlobalSql(clazz, query);
-			ps = conn.prepareStatement(sql);
-			long begin = System.currentTimeMillis();
-			rs = ps.executeQuery();
-			long constTime = System.currentTimeMillis() - begin;
-			if (constTime > Const.SLOWQUERY_COUNT) {
-				SlowQueryLogger.write(conn, sql, constTime);
-			}
+            long count = -1;
+            if (rs.next()) {
+                count = rs.getLong(1);
+            }
+            return count;
+        } finally {
+            JdbcUtil.close(ps, rs);
+        }
+    }
 
-			if (rs.next()) {
-				count = rs.getLong(1);
-			}
-		} finally {
-			JdbcUtil.close(ps, rs);
-		}
-		return count;
-	}
+    /**
+     * 带缓存的获取全局表count
+     * 
+     * @param conn
+     * @param clusterName
+     * @param clazz
+     * @return count数
+     * @throws SQLException
+     */
+    protected Number selectCountWithCache(IDBResource dbResource, Class<?> clazz, boolean useCache) throws SQLException {
+        String clusterName = dbResource.getClusterName();
+        String tableName = entityMetaManager.getTableName(clazz);
 
-	/**
-	 * 带缓存的获取全局表count
-	 * 
-	 * @param conn
-	 * @param clusterName
-	 * @param clazz
-	 * @return count数
-	 * @throws SQLException 
-	 */
-	protected Number selectGlobalCountWithCache(IDBResource dbResource, String clusterName, Class<?> clazz,
-			boolean useCache) throws SQLException {
-		String tableName = ReflectUtil.getTableName(clazz);
+        // 操作缓存
+        if (isCacheAvailable(clazz, useCache)) {
+            long count = 0;
+            if (dbResource.isGlobal())
+                count = primaryCache.getCountGlobal(clusterName, tableName);
+            else
+                count = primaryCache.getCount((ShardingDBResource) dbResource);
+            if (count > 0) {
+                return count;
+            }
+        }
 
-		// 操作缓存
-		if (isCacheAvailable(clazz, useCache)) {
-			long count = primaryCache.getCountGlobal(clusterName, tableName);
-			if (count > 0) {
-				return count;
-			}
-		}
+        long count = 0;
+        count = _selectCount(dbResource, clazz).longValue();
 
-		long count = 0;
-		count = _selectGlobalCount(dbResource, clazz).longValue();
+        // 操作缓存
+        if (isCacheAvailable(clazz, useCache) && count > 0) {
+            if (dbResource.isGlobal())
+                primaryCache.setCountGlobal(clusterName, tableName, count);
+            else
+                primaryCache.setCount((ShardingDBResource) dbResource, count);
+        }
 
-		// 操作缓存
-		if (isCacheAvailable(clazz, useCache) && count > 0)
-			primaryCache.setCountGlobal(clusterName, tableName, count);
+        return count;
+    }
 
-		return count;
-	}
+    protected <T> Number selectCountByQuery(IQuery<T> query, IDBResource dbResource, Class<T> clazz)
+            throws SQLException {
+        long count = -1;
 
-	/**
-	 * 获取分库分表记录总数.
-	 * 
-	 * @param db
-	 *            分库分表
-	 * @param clazz
-	 *            数据对象
-	 * 
-	 * @return 表记录总数
-	 * @throws DBOperationException
-	 *             操作失败
-	 * @throws IllegalArgumentException
-	 *             输入参数错误
-	 */
-	private Number _selectCount(ShardingDBResource db, Class<?> clazz) throws SQLException {
-		PreparedStatement ps = null;
-		ResultSet rs = null;
-		try {
-			Connection conn = db.getConnection();
-			String sql = SQLBuilder.buildSelectCountSql(clazz, db.getTableIndex());
-			ps = conn.prepareStatement(sql);
-			long begin = System.currentTimeMillis();
-			rs = ps.executeQuery();
-			long constTime = System.currentTimeMillis() - begin;
-			if (constTime > Const.SLOWQUERY_COUNT) {
-				SlowQueryLogger.write(db, sql, constTime);
-			}
-
-			long count = -1;
-			if (rs.next()) {
-				count = rs.getLong(1);
-			}
-			return count;
-		} finally {
-			JdbcUtil.close(ps, rs);
-		}
-	}
-
-	/**
-	 * getCount加入缓存
-	 * 
-	 * @param db
-	 * @param clazz
-	 * @return count数
-	 * @throws SQLException 
-	 */
-	protected Number selectCountWithCache(ShardingDBResource db, Class<?> clazz, boolean useCache) throws SQLException {
-		// 操作缓存
-		if (isCacheAvailable(clazz, useCache)) {
-			long count = primaryCache.getCount(db);
-			if (count > 0) {
-				return count;
-			}
-		}
-
-		long count = _selectCount(db, clazz).longValue();
-
-		// 操作缓存
-		if (isCacheAvailable(clazz, useCache) && count > 0)
-			primaryCache.setCount(db, count);
-
-		return count;
-	}
-
-	/**
-	 * 根据查询条件查询记录数.
-	 * 
-	 * @param db
-	 *            分库分表引用
-	 * @param clazz
-	 *            实体对象
-	 * @param query
-	 *            查询条件
-	 * 
-	 * @return 记录数
-	 */
-	protected Number selectCount(ShardingDBResource db, Class<?> clazz, IQuery query) throws SQLException {
-		PreparedStatement ps = null;
-		ResultSet rs = null;
-		try {
-			Connection conn = db.getConnection();
-			String sql = SQLBuilder.buildSelectCountByQuery(clazz, db.getTableIndex(), query);
-			ps = conn.prepareStatement(sql);
-			long begin = System.currentTimeMillis();
-			rs = ps.executeQuery();
-			long constTime = System.currentTimeMillis() - begin;
-			if (constTime > Const.SLOWQUERY_COUNT) {
-				SlowQueryLogger.write(db, sql, constTime);
-			}
-
-			if (rs.next()) {
-				return rs.getLong(1);
-			}
-		} finally {
-			JdbcUtil.close(ps, rs);
-		}
-
-		return -1;
-	}
-
-	// //////////////////////////////////////////////////////////////////////////////////////
-	// findByPk相关
-	// //////////////////////////////////////////////////////////////////////////////////////
-	private <T> T _selectGlobalByPk(IDBResource dbResource, Number pk, Class<T> clazz) throws SQLException {
-		PreparedStatement ps = null;
-		ResultSet rs = null;
-		try {
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        try {
             Connection conn = dbResource.getConnection();
-			String sql = SQLBuilder.buildSelectByPk(pk, clazz, -1);
-			ps = conn.prepareStatement(sql);
-			long begin = System.currentTimeMillis();
-			rs = ps.executeQuery();
-			long constTime = System.currentTimeMillis() - begin;
-			if (constTime > Const.SLOWQUERY_PK) {
-				SlowQueryLogger.write(conn, sql, constTime);
-			}
 
-			List<T> result = SQLBuilder.buildResultObject(clazz, rs);
-			if (!result.isEmpty()) {
-				return result.get(0);
-			}
-		} finally {
-			JdbcUtil.close(ps, rs);
-		}
+            SQL sql = null;
+            if (dbResource.isGlobal())
+                sql = SQLBuilder.buildSelectCountByQuery(clazz, -1, query);
+            else
+                sql = SQLBuilder.buildSelectCountByQuery(clazz, ((ShardingDBResource) dbResource).getTableIndex(),
+                        query);
 
-		return null;
-	}
+            ps = conn.prepareStatement(sql.getSql());
+            fillParam(ps, sql);
 
-	protected <T> T selectByPkWithCache(IDBResource dbResource, String clusterName, Number pk, Class<T> clazz,
-			boolean useCache) throws SQLException {
-		String tableName = ReflectUtil.getTableName(clazz);
+            long begin = System.currentTimeMillis();
+            rs = ps.executeQuery();
+            long constTime = System.currentTimeMillis() - begin;
 
-		T data = null;
-		if (isCacheAvailable(clazz, useCache)) {
-			data = primaryCache.getGlobal(clusterName, tableName, pk);
-			if (data == null) {
-				data = _selectGlobalByPk(dbResource, pk, clazz);
-				if (data != null) {
-					primaryCache.putGlobal(clusterName, tableName, pk, data);
-				}
-			}
-		} else {
-			data = _selectGlobalByPk(dbResource, pk, clazz);
-		}
+            if (constTime > Const.SLOWQUERY_COUNT) {
+                SlowQueryLogger.write(conn, sql, constTime);
+            }
 
-		return data;
-	}
+            if (rs.next()) {
+                count = rs.getLong(1);
+            }
+        } finally {
+            JdbcUtil.close(ps, rs);
+        }
 
-	/**
-	 * 一个主分库分表, 根据主键查询.
-	 * 
-	 * @param pk
-	 *            主键
-	 * @param clazz
-	 *            数据对象类型
-	 * 
-	 * @return 查询结果，找不到返回null
-	 * 
-	 * @throws DBOperationException
-	 *             操作失败
-	 * @throws IllegalArgumentException
-	 *             输入参数错误
-	 */
-	private <T> T _selectByPk(ShardingDBResource db, Number pk, Class<T> clazz) throws SQLException {
-		PreparedStatement ps = null;
-		ResultSet rs = null;
-		try {
-			Connection conn = db.getConnection();
-			String sql = SQLBuilder.buildSelectByPk(pk, clazz, db.getTableIndex());
-			ps = conn.prepareStatement(sql);
-			long begin = System.currentTimeMillis();
-			rs = ps.executeQuery();
-			long constTime = System.currentTimeMillis() - begin;
-			if (constTime > Const.SLOWQUERY_PK) {
-				SlowQueryLogger.write(db, sql, constTime);
-			}
+        return count;
+    }
 
-			List<T> result = SQLBuilder.buildResultObject(clazz, rs);
-			if (!result.isEmpty()) {
-				return result.get(0);
-			}
-		} finally {
-			JdbcUtil.close(ps, rs);
-		}
+    // //////////////////////////////////////////////////////////////////////////////////////
+    // findByPks相关
+    // //////////////////////////////////////////////////////////////////////////////////////
+    private <T> Map<EntityPK, T> _selectByPks(IDBResource dbResource, Class<T> clazz, EntityPK[] pks,
+                                              List<OrderBy> order) throws SQLException {
+        Map<EntityPK, T> result = Maps.newLinkedHashMap();
 
-		return null;
-	}
-
-	/**
-	 * findByPk加入缓存.
-	 * 
-	 * @param db
-	 * @param pk
-	 * @param clazz
-	 * @return 查询结果
-	 * @throws SQLException
-	 */
-	protected <T> T selectByPkWithCache(ShardingDBResource db, Number pk, Class<T> clazz, boolean useCache) throws SQLException {
-		T data = null;
-		if (isCacheAvailable(clazz, useCache)) {
-			data = primaryCache.get(db, pk);
-			if (data == null) {
-				data = _selectByPk(db, pk, clazz);
-				if (data != null) {
-					primaryCache.put(db, pk, data);
-				}
-			}
-		} else {
-			data = _selectByPk(db, pk, clazz);
-		}
-
-		return data;
-	}
-
-	// //////////////////////////////////////////////////////////////////////////////////////
-	// findByPks相关
-	// //////////////////////////////////////////////////////////////////////////////////////
-	private <T> List<T> _selectGlobalByPks(IDBResource dbResource, Class<T> clazz, Number[] pks) throws SQLException {
-		List<T> result = new ArrayList<T>(1);
-
-		PreparedStatement ps = null;
-		ResultSet rs = null;
-		try {
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        try {
             Connection conn = dbResource.getConnection();
-			String sql = SQLBuilder.buildSelectByPks(clazz, -1, pks);
-			ps = conn.prepareStatement(sql);
-			long begin = System.currentTimeMillis();
-			rs = ps.executeQuery();
-			long constTime = System.currentTimeMillis() - begin;
-			if (constTime > Const.SLOWQUERY_PKS) {
-				SlowQueryLogger.write(conn, sql, constTime);
-			}
-			result = SQLBuilder.buildResultObject(clazz, rs);
-		} finally {
-			JdbcUtil.close(ps, rs);
-		}
 
-		return result;
-	}
+            SQL sql = null;
+            if (dbResource.isGlobal())
+                sql = SQLBuilder.buildSelectByPks(pks, order, clazz, -1);
+            else
+                sql = SQLBuilder.buildSelectByPks(pks, order, clazz, ((ShardingDBResource) dbResource).getTableIndex());
 
-	private <T> Map<Number, T> _selectGlobalByPksWithMap(IDBResource dbResource, Class<T> clazz, Number[] pks) throws SQLException {
-		Map<Number, T> result = new HashMap<Number, T>();
+            ps = conn.prepareStatement(sql.getSql());
+            fillParam(ps, sql);
 
-		PreparedStatement ps = null;
-		ResultSet rs = null;
-		try {
+            long begin = System.currentTimeMillis();
+            rs = ps.executeQuery();
+            long constTime = System.currentTimeMillis() - begin;
+
+            if (constTime > Const.SLOWQUERY_PKS) {
+                SlowQueryLogger.write(conn, sql, constTime);
+            }
+
+            result = SQLBuilder.createResultObjectAsMap(clazz, rs);
+        } finally {
+            JdbcUtil.close(ps, rs);
+        }
+
+        return result;
+    }
+
+    protected <T> Map<EntityPK, T> selectByPksWithCache(IDBResource dbResource, Class<T> clazz, EntityPK[] pks,
+                                                        List<OrderBy> order, boolean useCache) throws SQLException {
+        Map<EntityPK, T> result = Maps.newLinkedHashMap();
+
+        if (pks == null || pks.length == 0) {
+            return result;
+        }
+
+        if (!isCacheAvailable(clazz, useCache)) {
+            return _selectByPks(dbResource, clazz, pks, order);
+        }
+
+        String tableName = entityMetaManager.getTableName(clazz);
+        String clusterName = dbResource.getClusterName();
+
+        Map<EntityPK, T> hitResult = null;
+        if (dbResource.isGlobal())
+            hitResult = primaryCache.getGlobal(clusterName, tableName, pks);
+        else
+            hitResult = primaryCache.get((ShardingDBResource) dbResource, pks);
+
+        if (hitResult == null || hitResult.isEmpty()) {
+            result = _selectByPks(dbResource, clazz, pks, order);
+
+            if (dbResource.isGlobal())
+                primaryCache.putGlobal(clusterName, tableName, result);
+            else
+                primaryCache.put((ShardingDBResource) dbResource, result);
+
+            return result;
+        }
+
+        if (hitResult.size() == pks.length) {
+            return hitResult;
+        }
+
+        try {
+            // 计算没有命中缓存的主键
+            List<EntityPK> noHitPkList = Lists.newArrayList();
+            for (EntityPK pk : pks) {
+                if (hitResult.get(pk) == null) {
+                    noHitPkList.add(pk);
+                }
+            }
+            EntityPK[] noHitPks = noHitPkList.toArray(new EntityPK[noHitPkList.size()]);
+
+            // 从数据库中查询没有命中缓存的数据
+            Map<EntityPK, T> noHitMap = _selectByPks(dbResource, clazz, noHitPks, order);
+            if (!noHitMap.isEmpty()) {
+                if (dbResource.isGlobal())
+                    primaryCache.putGlobal(clusterName, tableName, noHitMap);
+                else
+                    primaryCache.put((ShardingDBResource) dbResource, noHitMap);
+            }
+
+            // 为了保证pks的顺序
+            for (EntityPK pk : pks) {
+                if (hitResult.get(pk) != null) {
+                    result.put(pk, hitResult.get(pk));
+                } else {
+                    result.put(pk, noHitMap.get(pk));
+                }
+            }
+        } catch (Exception e) {
+            result = _selectByPks(dbResource, clazz, pks, order);
+        }
+
+        return result;
+    }
+
+    // //////////////////////////////////////////////////////////////////////////////////////
+    // findBySql相关
+    // //////////////////////////////////////////////////////////////////////////////////////
+    protected List<Map<String, Object>> selectBySql(IDBResource dbResource, SQL sql) throws SQLException {
+        List<Map<String, Object>> result = new ArrayList<Map<String, Object>>();
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        try {
             Connection conn = dbResource.getConnection();
-			String sql = SQLBuilder.buildSelectByPks(clazz, -1, pks);
-			ps = conn.prepareStatement(sql);
-			long begin = System.currentTimeMillis();
-			rs = ps.executeQuery();
-			long constTime = System.currentTimeMillis() - begin;
-			if (constTime > Const.SLOWQUERY_PKS) {
-				SlowQueryLogger.write(conn, sql, constTime);
-			}
-			result = SQLBuilder.buildResultObjectAsMap(clazz, rs);
-		} finally {
-			JdbcUtil.close(ps, rs);
-		}
 
-		return result;
-	}
+            if (dbResource.isGlobal())
+                ps = SQLBuilder.buildSelectBySqlGlobal(conn, sql);
+            else
+                ps = SQLBuilder.buildSelectBySql(conn, sql, ((ShardingDBResource) dbResource).getTableIndex());
 
-	protected <T> List<T> selectGlobalByPksWithCache(IDBResource dbResource, String clusterName, Class<T> clazz, Number[] pks,
- boolean useCache) throws SQLException {
-		List<T> result = new ArrayList<T>();
+            long begin = System.currentTimeMillis();
+            rs = ps.executeQuery();
+            long constTime = System.currentTimeMillis() - begin;
 
-		if (pks == null || pks.length == 0) {
-			return result;
-		}
+            if (constTime > Const.SLOWQUERY_SQL) {
+                SlowQueryLogger.write(conn, sql, constTime);
+            }
+            result = (List<Map<String, Object>>) SQLBuilder.createResultObject(rs);
+        } finally {
+            JdbcUtil.close(ps, rs);
+        }
 
-		if (isCacheAvailable(clazz, useCache)) { // 缓存可用
-			String tableName = ReflectUtil.getTableName(clazz);
-			List<T> hitResult = primaryCache.getGlobal(clusterName, tableName, pks);
-			if (hitResult != null && !hitResult.isEmpty()) {
-				if (hitResult.size() == pks.length) {
-					result = hitResult;
-				} else {
-					try {
-						// 计算没有命中缓存的主键
-						Map<Number, T> hitMap = _getPkValues(hitResult);
-						List<Number> noHitPkList = new ArrayList<Number>();
-						for (Number pk : pks) {
-							if (hitMap.get(pk) == null) {
-								noHitPkList.add(pk);
-							}
-						}
-						Number[] noHitPks = noHitPkList.toArray(new Number[noHitPkList.size()]);
+        return result;
+    }
 
-						// 从数据库中查询没有命中缓存的数据
-						Map<Number, T> noHitMap = _selectGlobalByPksWithMap(dbResource, clazz, noHitPks);
-						if (!noHitMap.isEmpty()) {
-							primaryCache.putGlobal(clusterName, tableName, noHitMap);
-						}
+    // //////////////////////////////////////////////////////////////////////////////////////
+    // findByQuery相关
+    // //////////////////////////////////////////////////////////////////////////////////////
+    protected <T> List<T> selectByQuery(IDBResource dbResource, IQuery<T> query, Class<T> clazz) throws SQLException {
+        List<T> result = null;
 
-						// 为了保证pks的顺序
-						for (Number pk : pks) {
-							if (hitMap.get(pk) != null) {
-								result.add(hitMap.get(pk));
-							} else {
-								result.add(noHitMap.get(pk));
-							}
-						}
-					} catch (Exception e) {
-						result = _selectGlobalByPks(dbResource, clazz, pks);
-					}
-				}
-			} else {
-				result = _selectGlobalByPks(dbResource, clazz, pks);
-				primaryCache.putGlobal(clusterName, tableName, result);
-			}
-		} else {
-			result = _selectGlobalByPks(dbResource, clazz, pks);
-		}
-
-		return result;
-	}
-
-	/**
-	 * 一个主分库分表, 根据多个主键查询.
-	 * 
-	 * @param db
-	 *            分库分表
-	 * @param clazz
-	 *            数据对象类型
-	 * @param pks
-	 *            主键
-	 * 
-	 * @return 查询结果
-	 * 
-	 * @throws DBOperationException
-	 *             操作失败
-	 * @throws IllegalArgumentException
-	 *             输入参数错误
-	 */
-	private <T> List<T> _selectByPks(ShardingDBResource db, Class<T> clazz, Number[] pks) throws SQLException {
-		List<T> result = new ArrayList<T>(1);
-
-		PreparedStatement ps = null;
-		ResultSet rs = null;
-		try {
-			Connection conn = db.getConnection();
-			String sql = SQLBuilder.buildSelectByPks(clazz, db.getTableIndex(), pks);
-			long begin = System.currentTimeMillis();
-			ps = conn.prepareStatement(sql);
-			long constTime = System.currentTimeMillis() - begin;
-			if (constTime > Const.SLOWQUERY_PKS) {
-				SlowQueryLogger.write(db, sql, constTime);
-			}
-			rs = ps.executeQuery();
-			result = SQLBuilder.buildResultObject(clazz, rs);
-		} finally {
-			JdbcUtil.close(ps, rs);
-		}
-
-		return result;
-	}
-
-	private <T> Map<Number, T> selectByPksWithMap(ShardingDBResource db, Class<T> clazz, Number[] pks) throws SQLException {
-		Map<Number, T> result = new HashMap<Number, T>();
-
-		PreparedStatement ps = null;
-		ResultSet rs = null;
-		try {
-			Connection conn = db.getConnection();
-			String sql = SQLBuilder.buildSelectByPks(clazz, db.getTableIndex(), pks);
-			ps = conn.prepareStatement(sql);
-
-			long begin = System.currentTimeMillis();
-			rs = ps.executeQuery();
-			long constTime = System.currentTimeMillis() - begin;
-			if (constTime > Const.SLOWQUERY_PKS) {
-				SlowQueryLogger.write(db, sql, constTime);
-			}
-
-			result = SQLBuilder.buildResultObjectAsMap(clazz, rs);
-
-		} finally {
-			JdbcUtil.close(ps, rs);
-		}
-
-		return result;
-	}
-
-	/**
-	 * findByPks加入缓存
-	 * 
-	 * @param db
-	 * @param clazz
-	 * @param pks
-	 * @return 查询结果
-	 * @throws SQLException
-	 */
-	protected <T> List<T> selectByPksWithCache(ShardingDBResource db, Class<T> clazz, Number[] pks, boolean useCache) throws SQLException {
-		List<T> result = new ArrayList<T>();
-		if (pks.length == 0 || pks == null) {
-			return result;
-		}
-
-		if (isCacheAvailable(clazz, useCache)) { // 缓存可用
-			List<T> hitResult = primaryCache.get(db, pks);
-			if (hitResult != null && !hitResult.isEmpty()) {
-				if (hitResult.size() == pks.length) {
-					result = hitResult;
-				} else {
-					try {
-						// 计算没有命中缓存的主键
-						Map<Number, T> hitMap = _getPkValues(hitResult);
-						List<Number> noHitPkList = new ArrayList<Number>();
-						for (Number pk : pks) {
-							if (hitMap.get(pk) == null) {
-								noHitPkList.add(pk);
-							}
-						}
-						Number[] noHitPks = noHitPkList.toArray(new Number[noHitPkList.size()]);
-
-						// 从数据库中查询没有命中缓存的数据
-						Map<Number, T> noHitMap = selectByPksWithMap(db, clazz, noHitPks);
-						if (!noHitMap.isEmpty()) {
-							primaryCache.put(db, noHitMap);
-						}
-
-						// 为了保证pks的顺序
-						for (Number pk : pks) {
-							if (hitMap.get(pk) != null) {
-								result.add(hitMap.get(pk));
-							} else {
-								result.add(noHitMap.get(pk));
-							}
-						}
-					} catch (Exception e) {
-						result = _selectByPks(db, clazz, pks);
-					}
-				}
-			} else {
-				result = _selectByPks(db, clazz, pks);
-				primaryCache.put(db, pks, result);
-			}
-		} else {
-			result = _selectByPks(db, clazz, pks);
-		}
-
-		return result;
-	}
-
-	// //////////////////////////////////////////////////////////////////////////////////////
-	// findBySql相关
-	// //////////////////////////////////////////////////////////////////////////////////////
-	protected List<Map<String, Object>> selectGlobalBySql(IDBResource dbResource, SQL sql) throws SQLException {
-		List<Map<String, Object>> result = new ArrayList<Map<String, Object>>();
-		PreparedStatement ps = null;
-		ResultSet rs = null;
-		try {
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        try {
             Connection conn = dbResource.getConnection();
-			ps = SQLBuilder.buildSelectBySqlGlobal(conn, sql);
-			long begin = System.currentTimeMillis();
-			rs = ps.executeQuery();
-			long constTime = System.currentTimeMillis() - begin;
-			if (constTime > Const.SLOWQUERY_SQL) {
-				SlowQueryLogger.write(conn, sql, constTime);
-			}
-			result = (List<Map<String, Object>>) SQLBuilder.buildResultObject(rs);
-		} finally {
-			JdbcUtil.close(ps, rs);
-		}
 
-		return result;
-	}
+            SQL sql = null;
+            if (dbResource.isGlobal())
+                sql = SQLBuilder.buildSelectByQuery(clazz, -1, query);
+            else
+                sql = SQLBuilder.buildSelectByQuery(clazz, ((ShardingDBResource) dbResource).getTableIndex(), query);
 
-	/**
-	 * 一个主分库分表, 根据条件查询.
-	 * 
-	 * @param db
-	 *            分库分表
-	 * @param sql
-	 *            查询语句
-	 * 
-	 * @return 查询结果
-	 * 
-	 * @throws DBOperationException
-	 *             操作失败
-	 * @throws IllegalArgumentException
-	 *             输入参数错误
-	 */
-	protected List<Map<String, Object>> selectBySql(ShardingDBResource db, SQL sql) throws SQLException {
-		List<Map<String, Object>> result = new ArrayList<Map<String, Object>>();
-		PreparedStatement ps = null;
-		ResultSet rs = null;
-		try {
-			Connection conn = db.getConnection();
-			ps = SQLBuilder.buildSelectBySql(conn, sql, db.getTableIndex());
+            ps = conn.prepareStatement(sql.getSql());
+            fillParam(ps, sql);
 
-			long begin = System.currentTimeMillis();
-			rs = ps.executeQuery();
-			long constTime = System.currentTimeMillis() - begin;
-			if (constTime > Const.SLOWQUERY_SQL) {
-				SlowQueryLogger.write(db, sql, constTime);
-			}
+            long begin = System.currentTimeMillis();
+            rs = ps.executeQuery();
+            long constTime = System.currentTimeMillis() - begin;
 
-			result = (List<Map<String, Object>>) SQLBuilder.buildResultObject(rs);
-		} finally {
-			JdbcUtil.close(ps, rs);
-		}
+            if (constTime > Const.SLOWQUERY_QUERY) {
+                SlowQueryLogger.write(conn, sql, constTime);
+            }
 
-		return result;
-	}
+            result = (List<T>) SQLBuilder.createResultObject(clazz, rs);
+        } finally {
+            JdbcUtil.close(ps, rs);
+        }
 
-	// //////////////////////////////////////////////////////////////////////////////////////
-	// findByQuery相关
-	// //////////////////////////////////////////////////////////////////////////////////////
-	protected <T> List<T> selectGlobalByQuery(IDBResource dbResource, IQuery query, Class<T> clazz) throws SQLException {
-		List<T> result = new ArrayList<T>();
+        return result;
+    }
 
-		PreparedStatement ps = null;
-		ResultSet rs = null;
-		try {
+    // //////////////////////////////////////////////////////////////////////////////////////
+    // getPk相关
+    // //////////////////////////////////////////////////////////////////////////////////////
+    protected <T> EntityPK[] selectPksByQuery(IDBResource dbResource, IQuery<T> query, Class<T> clazz)
+            throws SQLException {
+        List<EntityPK> result = Lists.newArrayList();
+
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        try {
             Connection conn = dbResource.getConnection();
-			String sql = SQLBuilder.buildSelectByQuery(clazz, -1, query);
-			ps = conn.prepareStatement(sql);
 
-			long begin = System.currentTimeMillis();
-			rs = ps.executeQuery();
-			long constTime = System.currentTimeMillis() - begin;
+            SQL sql = null;
+            if (dbResource.isGlobal())
+                sql = SQLBuilder.buildSelectPkByQuery(clazz, -1, query);
+            else
+                sql = SQLBuilder.buildSelectPkByQuery(clazz, ((ShardingDBResource) dbResource).getTableIndex(), query);
 
-			if (constTime > Const.SLOWQUERY_QUERY) {
-				SlowQueryLogger.write(conn, sql, constTime);
-			}
+            ps = conn.prepareStatement(sql.getSql());
+            fillParam(ps, sql);
 
-			result = (List<T>) SQLBuilder.buildResultObject(clazz, rs);
-		} finally {
-			JdbcUtil.close(ps, rs);
-		}
+            long begin = System.currentTimeMillis();
+            rs = ps.executeQuery();
+            long constTime = System.currentTimeMillis() - begin;
 
-		return result;
-	}
+            if (constTime > Const.SLOWQUERY_PKS) {
+                SlowQueryLogger.write(conn, sql, constTime);
+            }
 
-	/**
-	 * 根据查询条件对象进行查询.
-	 * 
-	 * @param db
-	 *            分库分表
-	 * @param query
-	 *            查询条件
-	 * @param clazz
-	 *            数据对象class
-	 * 
-	 * @throws DBOperationException
-	 *             操作失败
-	 * @throws IllegalArgumentException
-	 *             输入参数错误
-	 */
-	protected <T> List<T> selectByQuery(ShardingDBResource db, IQuery query, Class<T> clazz) throws SQLException {
-		List<T> result = new ArrayList<T>();
+            ResultSetMetaData rsmd = rs.getMetaData();
+            int pkNum = rsmd.getColumnCount();
+            while (rs.next()) {
+                try {
+                    PKName[] pkNames = new PKName[pkNum];
+                    PKValue[] pkValues = new PKValue[pkNum];
+                    for (int i = 1; i <= pkNum; i++) {
+                        pkNames[i - 1] = PKName.valueOf(rsmd.getColumnName(i));
+                        pkValues[i - 1] = PKValue.valueOf(rs.getObject(i));
+                    }
+                    result.add(EntityPK.valueOf(pkNames, pkValues));
+                } catch (Exception e) {
+                    throw new SQLException(e);
+                }
+            }
+        } finally {
+            JdbcUtil.close(ps, rs);
+        }
 
-		PreparedStatement ps = null;
-		ResultSet rs = null;
-		try {
-			Connection conn = db.getConnection();
-			String sql = SQLBuilder.buildSelectByQuery(clazz, db.getTableIndex(), query);
-			ps = conn.prepareStatement(sql);
+        return result.toArray(new EntityPK[result.size()]);
+    }
 
-			long begin = System.currentTimeMillis();
-			rs = ps.executeQuery();
-			long constTime = System.currentTimeMillis() - begin;
-
-			if (constTime > Const.SLOWQUERY_QUERY) {
-				SlowQueryLogger.write(db, sql, constTime);
-			}
-
-			result = (List<T>) SQLBuilder.buildResultObject(clazz, rs);
-		} finally {
-			JdbcUtil.close(ps, rs);
-		}
-
-		return result;
-	}
-
-	// //////////////////////////////////////////////////////////////////////////////////////
-	// getPk相关
-	// //////////////////////////////////////////////////////////////////////////////////////
-	protected <T> Number[] selectGlobalPksByQuery(IDBResource dbResource, IQuery query, Class<T> clazz) throws SQLException {
-		List<Number> result = new ArrayList<Number>();
-
-		PreparedStatement ps = null;
-		ResultSet rs = null;
-		try {
-            Connection conn = dbResource.getConnection();
-			String sql = SQLBuilder.buildSelectPkByQuery(clazz, -1, query);
-			ps = conn.prepareStatement(sql);
-
-			long begin = System.currentTimeMillis();
-			rs = ps.executeQuery();
-			long constTime = System.currentTimeMillis() - begin;
-
-			if (constTime > Const.SLOWQUERY_PKS) {
-				SlowQueryLogger.write(conn, sql, constTime);
-			}
-
-			while (rs.next()) {
-				result.add((Number) rs.getObject(1));
-			}
-		} finally {
-			JdbcUtil.close(ps, rs);
-		}
-
-		return result.toArray(new Number[result.size()]);
-	}
-
-	/**
-	 * 根据查询条件查询主键.
-	 * 
-	 * @param db
-	 * @param query
-	 * @param clazz
-	 * @return pk值
-	 */
-	protected <T> Number[] selectPksByQuery(ShardingDBResource db, IQuery query, Class<T> clazz) throws SQLException {
-		List<Number> result = new ArrayList<Number>();
-
-		PreparedStatement ps = null;
-		ResultSet rs = null;
-		try {
-			Connection conn = db.getConnection();
-
-			String sql = SQLBuilder.buildSelectPkByQuery(clazz, db.getTableIndex(), query);
-			ps = conn.prepareStatement(sql);
-			long begin = System.currentTimeMillis();
-			rs = ps.executeQuery();
-			long constTime = System.currentTimeMillis() - begin;
-			if (constTime > Const.SLOWQUERY_PKS) {
-				SlowQueryLogger.write(db, sql, constTime);
-			}
-			while (rs.next()) {
-				result.add((Number) rs.getObject(1));
-			}
-		} finally {
-			JdbcUtil.close(ps, rs);
-		}
-
-		return result.toArray(new Number[result.size()]);
-	}
-
-	/**
-	 * 获取列表的主键.
-	 * 
-	 * @param entities
-	 * @return pk值
-	 * @throws Exception
-	 *             获取pk值失败
-	 */
-	private <T> Map<Number, T> _getPkValues(List<T> entities) {
-		Map<Number, T> map = new HashMap<Number, T>();
-
-		Number pkValue = null;
-		for (T entity : entities) {
-			pkValue = ReflectUtil.getPkValue(entity);
-			map.put(pkValue, entity);
-		}
-
-		return map;
-	}
-
-	@Override
-	public IDBCluster getDBCluster() {
-		return dbCluster;
-	}
-
-	@Override
-	public void setDBCluster(IDBCluster dbCluster) {
-		this.dbCluster = dbCluster;
-	}
-
-	@Override
-	public void setPrimaryCache(IPrimaryCache primaryCache) {
-		this.primaryCache = primaryCache;
-	}
-
-	@Override
-	public IPrimaryCache getPrimaryCache() {
-		return this.primaryCache;
-	}
-
-	@Override
-	public void setSecondCache(ISecondCache secondCache) {
-		this.secondCache = secondCache;
-	}
-
-	@Override
-	public ISecondCache getSecondCache() {
-		return this.secondCache;
-	}
-
-	@Override
-	public void setTransactionManager(TransactionManager txManager) {
-		this.txManager = txManager;
-	}
-
-	@Override
-	public TransactionManager getTransactionManager() {
-		return this.txManager;
-	}
 }

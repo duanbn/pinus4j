@@ -5,17 +5,19 @@
 	<parent>
 		<groupId>org.pinus4j</groupId>
 		<artifactId>pinus</artifactId>
-		<version>1.1.1</version>
+		<version>1.2.0</version>
 	</parent>
 
 	<artifactId>pinus-orm</artifactId>
 	<packaging>jar</packaging>
 
+    <name>pinus-orm</name>
+
 	<dependencies>
 		<dependency>
 			<groupId>org.pinus4j</groupId>
 			<artifactId>pinus-cluster</artifactId>
-			<version>1.1.1</version>
+            <version>${project.version}</version>
 		</dependency>
 
 		<dependency>
@@ -26,37 +28,30 @@
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-log4j12</artifactId>
-			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>mysql</groupId>
 			<artifactId>mysql-connector-java</artifactId>
-			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-test</artifactId>
-			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-core</artifactId>
-			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-context</artifactId>
-			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-context-support</artifactId>
-			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-tx</artifactId>
-			<scope>test</scope>
 		</dependency>
 	</dependencies>
 

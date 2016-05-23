@@ -12,126 +12,72 @@
 	<!-- id generator batch -->
 	<db.cluster.generateid.batch>1</db.cluster.generateid.batch>
 
-    <!-- db query cache expire is seconds -->
-    <!-- 
-    <db.cluster.cache enabled="true">
-        <primary expire="300">
-            <address>127.0.0.1:11211</address>
-        </primary>
-        <second expire="300">
-            <address>127.0.0.1:11211</address>
-        </second>
-    </db.cluster.cache>
-     -->
-    <db.cluster.cache enabled="true">
-        <primary expire="300" class="org.pinus4j.cache.impl.RedisPrimaryCacheImpl" maxTotal="10">
-            <address>127.0.0.1:6379</address>
-        </primary>
-        <second expire="300" class="org.pinus4j.cache.impl.RedisSecondCacheImpl" maxTotal="10">
-            <address>127.0.0.1:6379</address>
-        </second>
-    </db.cluster.cache>
-     
-	<!-- catalog is "env" or "app" -->
-	<!-- env represent get connection pool from container -->
-	<!-- app represent get connection pool from internal application -->
-	<db-connection-pool catalog="app">
-		<maxActive>10</maxActive>
-		<minIdle>10</minIdle>
-		<maxIdle>10</maxIdle>
-		<initialSize>1</initialSize>
-		<removeAbandoned>true</removeAbandoned>
-		<removeAbandonedTimeout>10</removeAbandonedTimeout>
-		<maxWait>1000</maxWait>
-		<timeBetweenEvictionRunsMillis>10000</timeBetweenEvictionRunsMillis>
-		<numTestsPerEvictionRun>10</numTestsPerEvictionRun>
-		<minEvictableIdleTimeMillis>10000</minEvictableIdleTimeMillis>
-	</db-connection-pool>
+	<!-- db query cache expire is seconds -->
+	<!-- <db.cluster.cache enabled="true"> <primary expire="1800"> <address>127.0.0.1:11211</address> 
+		</primary> <second expire="1800"> <address>127.0.0.1:11211</address> </second> 
+		</db.cluster.cache> -->
+	<db.cluster.cache enabled="false">
+		<primary expire="1800" class="org.pinus4j.cache.impl.RedisPrimaryCacheImpl"
+			maxTotal="10">
+			<address>127.0.0.1:6379</address>
+		</primary>
+		<second expire="1800" class="org.pinus4j.cache.impl.RedisSecondCacheImpl"
+			maxTotal="10">
+			<address>127.0.0.1:6379</address>
+		</second>
+	</db.cluster.cache>
 
-    <!-- cluster config -->
-	<cluster name="pinus" catalog="mysql">
+	<datasource-bucket
+		cpclass="org.pinus4j.cluster.cp.impl.DruidConnectionPoolImpl"
+		maxActive="1000" minIdle="10" initialSize="1" removeAbandoned="false"
+		removeAbandonedTimeout="100" maxWait="10000"
+		timeBetweenEvictionRunsMillis="100000" numTestsPerEvictionRun="10"
+		minEvictableIdleTimeMillis="500000" filters="stat"
+		poolPreparedStatements="true">
+		<!-- <envds id=""> <jndi></jndi> </envds> -->
+		<appds id="pinus-global">
+			<username>root</username>
+			<password>root%1234</password>
+			<url>
+				jdbc:mysql://127.0.0.1:3306/pinus?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
+			</url>
+		</appds>
+		<appds id="pinus-sharding1">
+			<username>root</username>
+			<password>root%1234</password>
+			<url>
+				jdbc:mysql://127.0.0.1:3306/pinus0?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
+			</url>
+		</appds>
+		<appds id="pinus-sharding2">
+			<username>root</username>
+			<password>root%1234</password>
+			<url>
+				jdbc:mysql://127.0.0.1:3306/pinus1?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
+			</url>
+		</appds>
+	</datasource-bucket>
+
+	<!-- cluster config -->
+	<cluster name="pinus">
 		<global>
-			<master>
-				<db.username>root</db.username>
-				<db.password>root%1234</db.password>
-				<db.url>
-					jdbc:mysql://127.0.0.1:3306/pinus?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
-				</db.url>
-			</master>
-			<slave>
-				<db.username>root</db.username>
-				<db.password>root%1234</db.password>
-				<db.url>
-					jdbc:mysql://127.0.0.1:3306/pinus0?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
-				</db.url>
-			</slave>
+			<master>pinus-global</master>
+			<slave>pinus-global</slave>
 		</global>
-		<region capacity="1-30000000">
+		<region capacity="0-30000000">
 			<master>
-				<sharding>
-					<db.username>root</db.username>
-					<db.password>root%1234</db.password>
-					<db.url>
-						jdbc:mysql://127.0.0.1:3306/pinus1?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
-					</db.url>
-				</sharding>
-				<sharding>
-					<db.username>root</db.username>
-					<db.password>root%1234</db.password>
-					<db.url>
-						jdbc:mysql://127.0.0.1:3306/pinus2?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
-					</db.url>
-				</sharding>
+				<sharding>pinus-sharding1</sharding>
 			</master>
 			<slave>
-				<sharding>
-					<db.username>root</db.username>
-					<db.password>root%1234</db.password>
-					<db.url>
-						jdbc:mysql://127.0.0.1:3306/pinus3?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
-					</db.url>
-				</sharding>
-				<sharding>
-					<db.username>root</db.username>
-					<db.password>root%1234</db.password>
-					<db.url>
-						jdbc:mysql://127.0.0.1:3306/pinus4?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
-					</db.url>
-				</sharding>
+				<sharding>pinus-sharding1</sharding>
 			</slave>
 		</region>
 		<region capacity="30000001-60000000">
 			<master>
-				<sharding>
-					<db.username>root</db.username>
-					<db.password>root%1234</db.password>
-					<db.url>
-						jdbc:mysql://127.0.0.1:3306/pinus5?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
-					</db.url>
-				</sharding>
-				<sharding>
-					<db.username>root</db.username>
-					<db.password>root%1234</db.password>
-					<db.url>
-						jdbc:mysql://127.0.0.1:3306/pinus6?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
-					</db.url>
-				</sharding>
+				<sharding>pinus-sharding2</sharding>
 			</master>
 			<slave>
-				<sharding>
-					<db.username>root</db.username>
-					<db.password>root%1234</db.password>
-					<db.url>
-						jdbc:mysql://127.0.0.1:3306/pinus7?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
-					</db.url>
-				</sharding>
-				<sharding>
-					<db.username>root</db.username>
-					<db.password>root%1234</db.password>
-					<db.url>
-						jdbc:mysql://127.0.0.1:3306/pinus8?useUnicode=true&amp;characterEncoding=UTF-8&amp;zeroDateTimeBehavior=convertToNull&amp;transformedBitIsBoolean=true
-					</db.url>
-				</sharding>
+				<sharding>pinus-sharding2</sharding>
 			</slave>
 		</region>
 	</cluster>

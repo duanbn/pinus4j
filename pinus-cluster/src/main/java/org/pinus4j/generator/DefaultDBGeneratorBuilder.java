@@ -28,54 +28,54 @@ import org.pinus4j.generator.impl.DBMySqlGeneratorImpl;
  */
 public class DefaultDBGeneratorBuilder implements IDBGeneratorBuilder {
 
-	/**
-	 * 同步数据表操作.
-	 */
-	private EnumSyncAction syncAction = EnumSyncAction.CREATE;
+    /**
+     * 同步数据表操作.
+     */
+    private EnumSyncAction syncAction = EnumSyncAction.CREATE;
 
-	/**
-	 * 数据库类型.
-	 */
-	private EnumDB enumDb = EnumDB.MYSQL;
+    /**
+     * 数据库类型.
+     */
+    private EnumDB         enumDb     = EnumDB.MYSQL;
 
-	private DefaultDBGeneratorBuilder() {
-	}
+    private DefaultDBGeneratorBuilder() {
+    }
 
-	public static IDBGeneratorBuilder valueOf(EnumSyncAction syncAction, EnumDB enumDb) {
-		IDBGeneratorBuilder builder = new DefaultDBGeneratorBuilder();
-		builder.setSyncAction(syncAction);
-		builder.setDBCatalog(enumDb);
-		return builder;
-	}
+    public static IDBGeneratorBuilder valueOf(EnumSyncAction syncAction, EnumDB enumDb) {
+        IDBGeneratorBuilder builder = new DefaultDBGeneratorBuilder();
+        builder.setSyncAction(syncAction);
+        builder.setDBCatalog(enumDb);
+        return builder;
+    }
 
-	@Override
-	public IDBGenerator build() {
-		IDBGenerator dbGenerator = null;
+    @Override
+    public IDBGenerator build() {
+        IDBGenerator dbGenerator = null;
 
-		switch (enumDb) {
-		case MYSQL:
-			dbGenerator = new DBMySqlGeneratorImpl();
-			break;
-		default:
-			dbGenerator = new DBMySqlGeneratorImpl();
-			break;
-		}
+        switch (enumDb) {
+            case MYSQL:
+                dbGenerator = new DBMySqlGeneratorImpl();
+                break;
+            default:
+                dbGenerator = new DBMySqlGeneratorImpl();
+                break;
+        }
 
-		dbGenerator.setSyncAction(this.syncAction);
+        dbGenerator.setSyncAction(this.syncAction);
 
-		return dbGenerator;
-	}
+        return dbGenerator;
+    }
 
-	public EnumSyncAction getSyncAction() {
-		return syncAction;
-	}
+    public EnumSyncAction getSyncAction() {
+        return syncAction;
+    }
 
-	public void setSyncAction(EnumSyncAction syncAction) {
-		this.syncAction = syncAction;
-	}
+    public void setSyncAction(EnumSyncAction syncAction) {
+        this.syncAction = syncAction;
+    }
 
-	@Override
-	public void setDBCatalog(EnumDB enumDb) {
-		this.enumDb = enumDb;
-	}
+    @Override
+    public void setDBCatalog(EnumDB enumDb) {
+        this.enumDb = enumDb;
+    }
 }

@@ -27,7 +27,6 @@ import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.ZooDefs;
 import org.apache.zookeeper.ZooKeeper;
 import org.apache.zookeeper.data.Stat;
-import org.pinus4j.cluster.config.IClusterConfig;
 import org.pinus4j.constant.Const;
 import org.pinus4j.exceptions.DBOperationException;
 import org.slf4j.Logger;
@@ -44,7 +43,7 @@ public abstract class AbstractSequenceIdGenerator implements IIdGenerator {
 	/**
 	 * 日志.
 	 */
-	public static final Logger LOG = LoggerFactory.getLogger(AbstractDBGenerator.class);
+	public static final Logger LOG = LoggerFactory.getLogger(AbstractSequenceIdGenerator.class);
 
 	/**
 	 * 批量生成id缓冲

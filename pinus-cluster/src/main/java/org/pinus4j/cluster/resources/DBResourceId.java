@@ -109,6 +109,12 @@ public class DBResourceId implements IResourceId {
 	}
 
 	@Override
+    public String toString() {
+        return "DBResourceId [clusterName=" + clusterName + ", dbName=" + dbName + ", regionCapacity=" + regionCapacity
+                + ", tableName=" + tableName + ", tableIndex=" + tableIndex + ", masterSlave=" + masterSlave + "]";
+    }
+
+    @Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;

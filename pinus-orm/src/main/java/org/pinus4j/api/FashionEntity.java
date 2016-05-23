@@ -1,4 +1,5 @@
 /**
+
  * Copyright 2014 Duan Bingnan
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,9 +17,18 @@
 
 package org.pinus4j.api;
 
+import java.util.List;
+
+import org.pinus4j.api.query.IQuery;
+import org.pinus4j.api.query.impl.Condition;
 import org.pinus4j.cluster.beans.IShardingKey;
-import org.pinus4j.cluster.beans.ShardingKey;
-import org.pinus4j.utils.ReflectUtil;
+import org.pinus4j.entity.DefaultEntityMetaManager;
+import org.pinus4j.entity.IEntityMetaManager;
+import org.pinus4j.entity.meta.EntityPK;
+import org.pinus4j.entity.meta.PKName;
+import org.pinus4j.entity.meta.PKValue;
+
+import com.google.common.collect.Lists;
 
 /**
  * 继承此对象的Entity对象会具备save, update, saveOrUpdate, remove方法.
@@ -27,83 +37,67 @@ import org.pinus4j.utils.ReflectUtil;
  */
 public abstract class FashionEntity {
 
-	/**
-	 * 保存
-	 */
-	public Number save() {
-		Number pk = null;
+    private IEntityMetaManager entityMetaManager = DefaultEntityMetaManager.getInstance();
+    
+    public void load() {
+        PinusClient pinusClient = DefaultPinusClient.instance;
+        pinusClient.load(this);
+    }
 
-		IShardingStorageClient storageClient = ShardingStorageClientImpl.instance;
-		if (ReflectUtil.isShardingEntity(this.getClass())) {
-			pk = storageClient.save(this);
-		} else {
-			pk = storageClient.globalSave(this);
-		}
+    /**
+     * 保存
+     */
+    public void save() {
+        PinusClient pinusClient = DefaultPinusClient.instance;
+        pinusClient.save(this);
+    }
 
-		return pk;
-	}
+    /**
+     * 更新
+     */
+    public void update() {
+        PinusClient pinusClient = DefaultPinusClient.instance;
+        pinusClient.update(this);
+    }
 
-	/**
-	 * 更新
-	 */
-	public void update() {
-		IShardingStorageClient storageClient = ShardingStorageClientImpl.instance;
-		if (ReflectUtil.isShardingEntity(this.getClass())) {
-			storageClient.update(this);
-		} else {
-			storageClient.globalUpdate(this);
-		}
-	}
+    /**
+     * 如果存在则更新，否则保存.
+     */
+    public void saveOrUpdate() {
+        Class<?> clazz = this.getClass();
 
-	/**
-	 * 如果存在则更新，否则保存.
-	 */
-	public Number saveOrUpdate() {
-		Number pk = ReflectUtil.getPkValue(this);
-		if (pk.intValue() == 0) {
-			return save();
-		}
+        PinusClient pinusClient = DefaultPinusClient.instance;
 
-		Object obj = null;
+        EntityPK entityPK = entityMetaManager.getEntityPK(this);
 
-		Class<?> clazz = this.getClass();
-		String clusterName = ReflectUtil.getClusterName(clazz);
-		IShardingStorageClient storageClient = ShardingStorageClientImpl.instance;
-		if (ReflectUtil.isShardingEntity(clazz)) {
-			Object shardingValue = ReflectUtil.getShardingValue(this);
-			IShardingKey<Object> sk = new ShardingKey<Object>(clusterName, shardingValue);
-			obj = storageClient.findByPk(pk, sk, clazz);
-		} else {
-			obj = storageClient.findByPk(pk, clazz);
-		}
+        IQuery<?> query = pinusClient.createQuery(clazz);
+        List<Condition> orCond = Lists.newArrayList();
+        PKName[] pkNames = entityPK.getPkNames();
+        PKValue[] pkValues = entityPK.getPkValues();
+        for (int i = 0; i < pkNames.length; i++) {
+            orCond.add(Condition.eq(pkNames[i].getValue(), pkValues[i].getValue()));
+        }
+        query.and(Condition.or(orCond.toArray(new Condition[orCond.size()])));
 
-		if (obj != null) {
-			update();
-			return pk;
-		} else {
-			return save();
-		}
-	}
+        if (entityMetaManager.isShardingEntity(clazz)) {
+            IShardingKey<?> sk = entityMetaManager.getShardingKey(this);
+            query.setShardingKey(sk);
+        }
 
-	/**
-	 * 删除.
-	 */
-	public void remove() {
-		Number pk = ReflectUtil.getPkValue(this);
+        Object obj = query.load();
 
-		if (pk.intValue() == 0) {
-			return;
-		}
+        if (obj != null) {
+            update();
+        } else {
+            save();
+        }
+    }
 
-		Class<?> clazz = this.getClass();
-		String clusterName = ReflectUtil.getClusterName(clazz);
-		IShardingStorageClient storageClient = ShardingStorageClientImpl.instance;
-		if (ReflectUtil.isShardingEntity(this.getClass())) {
-			Object shardingValue = ReflectUtil.getShardingValue(this);
-			IShardingKey<Object> sk = new ShardingKey<Object>(clusterName, shardingValue);
-			storageClient.removeByPk(pk, sk, clazz);
-		} else {
-			storageClient.globalRemoveByPk(pk, clazz, clusterName);
-		}
-	}
+    /**
+     * 删除.
+     */
+    public void remove() {
+        PinusClient pinusClient = DefaultPinusClient.instance;
+        pinusClient.delete(this);
+    }
 }

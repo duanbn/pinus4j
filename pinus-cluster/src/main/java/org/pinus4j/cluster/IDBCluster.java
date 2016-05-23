@@ -21,6 +21,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.locks.Lock;
 
+import javax.transaction.SystemException;
 import javax.transaction.TransactionManager;
 
 import org.pinus4j.cache.IPrimaryCache;
@@ -30,9 +31,9 @@ import org.pinus4j.cluster.beans.IShardingKey;
 import org.pinus4j.cluster.enums.EnumDBMasterSlave;
 import org.pinus4j.cluster.enums.EnumSyncAction;
 import org.pinus4j.cluster.resources.IDBResource;
+import org.pinus4j.entity.meta.DBTable;
 import org.pinus4j.exceptions.DBClusterException;
 import org.pinus4j.generator.IIdGenerator;
-import org.pinus4j.generator.beans.DBTable;
 
 /**
  * 数据库集群. 数据库集群主要类，持有所有的数据库集群信息，保存集群的数据库连接包括主库和从库。 初始化集群的方法，<br/>
@@ -50,215 +51,199 @@ import org.pinus4j.generator.beans.DBTable;
  */
 public interface IDBCluster {
 
-	/**
-	 * judge this cluster have global slave.
-	 * 
-	 * @return
-	 */
-	boolean isGlobalSlaveExist(String clusterName);
+    /**
+     * judge this cluster have global slave.
+     * 
+     * @return
+     */
+    boolean isGlobalSlaveExist(String clusterName);
 
-	/**
-	 * judege this cluster have sharding slave.
-	 * 
-	 * @param shardingKey
-	 * @return
-	 */
-	boolean isShardingSlaveExist(String clusterName);
+    /**
+     * judege this cluster have sharding slave.
+     * 
+     * @param shardingKey
+     * @return
+     */
+    boolean isShardingSlaveExist(String clusterName);
 
-	/**
-	 * get transaction manager.
-	 * 
-	 * @return
-	 */
-	TransactionManager getTransactionManager();
+    /**
+     * get transaction manager.
+     * 
+     * @return
+     */
+    TransactionManager getTransactionManager();
 
-	/**
-	 * get primary cache ref.
-	 * 
-	 * @return primary cache instance.
-	 */
-	IPrimaryCache getPrimaryCache();
+    /**
+     * get primary cache ref.
+     * 
+     * @return primary cache instance.
+     */
+    IPrimaryCache getPrimaryCache();
 
-	/**
-	 * get second cache ref.
-	 * 
-	 * @return second cache instance.
-	 */
-	ISecondCache getSecondCache();
+    /**
+     * get second cache ref.
+     * 
+     * @return second cache instance.
+     */
+    ISecondCache getSecondCache();
 
-	/**
-	 * create a destribute lock by give name.
-	 *
-	 * @return destirbute lock.
-	 */
-	Lock createLock(String name);
+    /**
+     * create a destribute lock by give name.
+     *
+     * @return destirbute lock.
+     */
+    Lock createLock(String name);
 
-	/**
-	 * 设置此集群是否从zookeeper中加载分片信息.
-	 *
-	 * @param value
-	 *            true:是， false:否.
-	 */
-	void setShardInfoFromZk(boolean value);
+    /**
+     * 设置此集群是否从zookeeper中加载分片信息.
+     *
+     * @param value true:是， false:否.
+     */
+    void setShardInfoFromZk(boolean value);
 
-	/**
-	 * 从Zookeeper中获取分片信息.
-	 *
-	 * @return 分片信息.
-	 */
-	List<DBTable> getDBTableFromZk();
+    /**
+     * 从Zookeeper中获取分片信息.
+     *
+     * @return 分片信息.
+     */
+    List<DBTable> getDBTableFromZk();
 
-	/**
-	 * 从Jvm中获取分片信息.
-	 *
-	 * @return 分片信息.
-	 */
-	List<DBTable> getDBTableFromJvm();
+    /**
+     * 从Jvm中获取分片信息.
+     *
+     * @return 分片信息.
+     */
+    List<DBTable> getDBTableFromJvm();
 
-	/**
-	 * Get all info about this cluster.
-	 *
-	 * @return all cluster info.
-	 */
-	Collection<DBClusterInfo> getDBClusterInfo();
+    /**
+     * Get all info about this cluster.
+     *
+     * @return all cluster info.
+     */
+    Collection<DBClusterInfo> getDBClusterInfo();
 
-	/**
-	 * 获取集群信息.
-	 * 
-	 * @param clusterName
-	 *            集群名
-	 * @return 集群信息
-	 */
-	DBClusterInfo getDBClusterInfo(String clusterName);
+    /**
+     * 获取集群信息.
+     * 
+     * @param clusterName 集群名
+     * @return 集群信息
+     */
+    DBClusterInfo getDBClusterInfo(String clusterName);
 
-	/**
-	 * 启动集群. 调用数据库集群前需要调用此方法，为了初始化集群连接.
-	 * 
-	 * @throws DBClusterException
-	 *             初始化失败
-	 */
-	void startup() throws DBClusterException;
+    /**
+     * 启动集群. 调用数据库集群前需要调用此方法，为了初始化集群连接.
+     * 
+     * @throws DBClusterException 初始化失败
+     */
+    void startup() throws DBClusterException;
 
-	/**
-	 * 启动集群. 调用数据库集群前需要调用此方法，为了初始化集群连接.
-	 * 
-	 * @param xmlFilePath
-	 *            配置文件绝对路径
-	 * 
-	 * @throws DBClusterException
-	 *             初始化失败
-	 */
-	void startup(String xmlFilePath) throws DBClusterException;
+    /**
+     * 启动集群. 调用数据库集群前需要调用此方法，为了初始化集群连接.
+     * 
+     * @param xmlFilePath 配置文件绝对路径
+     * @throws DBClusterException 初始化失败
+     */
+    void startup(String xmlFilePath) throws DBClusterException;
 
-	/**
-	 * 关闭集群. 系统停止时关闭数据库集群.
-	 * 
-	 * @throws DBClusterException
-	 *             关闭失败
-	 */
-	void shutdown() throws DBClusterException;
+    /**
+     * 关闭集群. 系统停止时关闭数据库集群.
+     * 
+     * @throws DBClusterException 关闭失败
+     */
+    void shutdown() throws DBClusterException;
 
-	/**
-	 * 获取主全局库连接.
-	 * 
-	 * @param clusterName
-	 * @return
-	 */
-	IDBResource getMasterGlobalDBResource(String clusterName, String tableName) throws DBClusterException;
+    /**
+     * 获取主全局库连接.
+     * 
+     * @param clusterName
+     * @return
+     */
+    IDBResource getMasterGlobalDBResource(String clusterName, String tableName) throws DBClusterException;
 
-	/**
-	 * 获取从库的全局库连接
-	 * 
-	 * @param clusterName
-	 * @param slave
-	 * @return
-	 */
-	IDBResource getSlaveGlobalDBResource(String clusterName, String tableName, EnumDBMasterSlave slave)
-			throws DBClusterException;
+    /**
+     * 获取从库的全局库连接
+     * 
+     * @param clusterName
+     * @param slave
+     * @return
+     */
+    IDBResource getSlaveGlobalDBResource(String clusterName, String tableName, EnumDBMasterSlave slave)
+            throws DBClusterException;
 
-	/**
-	 * 从主库集群中获取被操作的库表.
-	 * 
-	 * @param tableName
-	 *            数据表名
-	 * @param value
-	 *            分库分表因子.
-	 * @return 被操作的库表
-	 */
-	IDBResource selectDBResourceFromMaster(String tableName, IShardingKey<?> value) throws DBClusterException;
+    /**
+     * 从主库集群中获取被操作的库表.
+     * 
+     * @param tableName 数据表名
+     * @param value 分库分表因子.
+     * @return 被操作的库表
+     */
+    IDBResource selectDBResourceFromMaster(String tableName, IShardingKey<?> value) throws DBClusterException;
 
-	/**
-	 * 从从库集群中获取被操作的库表.
-	 * 
-	 * @param slave
-	 *            从库
-	 * @param tableName
-	 *            数据库表名
-	 * @param value
-	 *            分库分表因子
-	 * @return 被操作的库表
-	 */
-	IDBResource selectDBResourceFromSlave(String tableName, IShardingKey<?> value, EnumDBMasterSlave slave)
-			throws DBClusterException;
+    /**
+     * 从从库集群中获取被操作的库表.
+     * 
+     * @param slave 从库
+     * @param tableName 数据库表名
+     * @param value 分库分表因子
+     * @return 被操作的库表
+     */
+    IDBResource selectDBResourceFromSlave(String tableName, IShardingKey<?> value, EnumDBMasterSlave slave)
+            throws DBClusterException;
 
-	/**
-	 * 获取此实体对象对应的所有的分库分表引用.
-	 * 
-	 * @param clazz
-	 *            数据对象
-	 * @return
-	 */
-	List<IDBResource> getAllMasterShardingDBResource(Class<?> clazz) throws SQLException, DBClusterException;
+    /**
+     * 获取此实体对象对应的所有的分库分表引用.
+     * 
+     * @param clazz 数据对象
+     * @return
+     */
+    List<IDBResource> getAllMasterShardingDBResource(Class<?> clazz) throws SQLException, SystemException;
 
-	/**
-	 * get all master sharding info.
-	 * 
-	 * @param tableNum
-	 * @param clusterName
-	 * @param tableName
-	 * @return
-	 */
-	List<IDBResource> getAllMasterShardingDBResource(int tableNum, String clusterName, String tableName)
-			throws SQLException, DBClusterException;
+    /**
+     * get all master sharding info.
+     * 
+     * @param tableNum
+     * @param clusterName
+     * @param tableName
+     * @return
+     */
+    List<IDBResource> getAllMasterShardingDBResource(int tableNum, String clusterName, String tableName)
+            throws SQLException, SystemException;
 
-	/**
-	 * 获取集群从库列表.
-	 * 
-	 * @param clazz
-	 *            数据对象
-	 * @param slave
-	 *            从库号
-	 */
-	List<IDBResource> getAllSlaveShardingDBResource(Class<?> clazz, EnumDBMasterSlave slave) throws SQLException,
-			DBClusterException;
+    /**
+     * 获取集群从库列表.
+     * 
+     * @param clazz 数据对象
+     * @param slave 从库号
+     */
+    List<IDBResource> getAllSlaveShardingDBResource(Class<?> clazz, EnumDBMasterSlave slave) throws SQLException,
+            DBClusterException, SystemException;
 
-	/**
-	 * 设置数据表同步动作.
-	 * 
-	 * @param syncAction
-	 */
-	void setSyncAction(EnumSyncAction syncAction);
+    /**
+     * 设置数据表同步动作.
+     * 
+     * @param syncAction
+     */
+    void setSyncAction(EnumSyncAction syncAction);
 
-	/**
-	 * 获取id生成器.
-	 * 
-	 * @return
-	 */
-	IIdGenerator getIdGenerator();
+    /**
+     * 获取id生成器.
+     * 
+     * @return
+     */
+    IIdGenerator getIdGenerator();
 
-	/**
-	 * 设置需要扫描的实体对象包.
-	 * 
-	 * @param scanPackage
-	 *            包名
-	 */
-	void setScanPackage(String scanPackage);
+    /**
+     * 设置需要扫描的实体对象包.
+     * 
+     * @param scanPackage 包名
+     */
+    void setScanPackage(String scanPackage);
 
-	/**
-	 * 获取集群表集合.
-	 * 
-	 * @return 集群表集合
-	 */
-	ITableCluster getTableCluster();
+    /**
+     * 获取集群表集合.
+     * 
+     * @return 集群表集合
+     */
+    ITableCluster getTableCluster();
 
 }

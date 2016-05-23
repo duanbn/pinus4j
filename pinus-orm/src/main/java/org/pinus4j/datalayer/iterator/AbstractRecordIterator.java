@@ -1,3 +1,19 @@
+/**
+ * Copyright 2014 Duan Bingnan
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *   
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.pinus4j.datalayer.iterator;
 
 import java.util.ArrayList;
@@ -6,90 +22,91 @@ import java.util.List;
 import java.util.Queue;
 
 import org.pinus4j.api.query.IQuery;
-import org.pinus4j.api.query.QueryImpl;
+import org.pinus4j.api.query.impl.DefaultQueryImpl;
 import org.pinus4j.datalayer.IRecordIterator;
 import org.pinus4j.datalayer.query.jdbc.AbstractJdbcQuery;
+import org.pinus4j.entity.DefaultEntityMetaManager;
+import org.pinus4j.entity.IEntityMetaManager;
 import org.pinus4j.exceptions.DBOperationException;
-import org.pinus4j.utils.ReflectUtil;
+import org.pinus4j.utils.BeansUtil;
 
 /**
  * 抽象数据库记录迭代器.
  * 
  * @author duanbn
- *
  */
 public abstract class AbstractRecordIterator<E> extends AbstractJdbcQuery implements IRecordIterator<E> {
-	
-	public static final int STEP = 5000;
+    
+    private IEntityMetaManager entityMetaManager = DefaultEntityMetaManager.getInstance();
 
-	protected Class<E> clazz;
+    public static final int STEP     = 5000;
 
-	protected String pkName;
+    protected Class<E>      clazz;
 
-	protected IQuery query;
+    protected String        pkName;
 
-	protected Queue<E> recordQ;
-	protected int step = STEP;
-	protected long latestId = 0;
-	protected long maxId;
+    protected IQuery        query;
 
-	public AbstractRecordIterator(Class<E> clazz) {
-		// check pk type
-		pkName = ReflectUtil.getPkName(clazz);
-		Class<?> type;
-		try {
-			type = clazz.getDeclaredField(pkName).getType();
-		} catch (NoSuchFieldException e) {
-			throw new DBOperationException("遍历数据失败, clazz " + clazz, e);
-		} catch (SecurityException e) {
-			throw new DBOperationException("遍历数据失败, clazz " + clazz, e);
-		}
-		if (type != Long.TYPE && type != Integer.TYPE && type != Short.TYPE && type != Long.class && type != Long.class
-				&& type != Short.class) {
-			throw new DBOperationException("被遍历的数据主键不是数值型");
-		}
+    protected Queue<E>      recordQ;
+    protected int           step     = STEP;
+    protected long          latestId = 0;
+    protected long          maxId;
 
-		this.clazz = clazz;
+    public AbstractRecordIterator(Class<E> clazz) {
+        // check pk type
+        pkName = entityMetaManager.getNotUnionPkName(clazz).getValue();
+        Class<?> type;
+        try {
+            type = BeansUtil.getField(clazz, pkName).getType();
+        } catch (SecurityException e) {
+            throw new DBOperationException("遍历数据失败, clazz " + clazz, e);
+        }
+        if (type != Long.TYPE && type != Integer.TYPE && type != Short.TYPE && type != Long.class && type != Long.class
+                && type != Short.class) {
+            throw new DBOperationException("被遍历的数据主键不是数值型");
+        }
 
-		if (this.query == null) {
-			this.query = new QueryImpl();
-		}
+        this.clazz = clazz;
 
-		this.recordQ = new LinkedList<E>();
-	}
+        if (this.query == null) {
+            this.query = new DefaultQueryImpl();
+        }
 
-	@Override
-	public E next() {
-		return this.recordQ.poll();
-	}
+        this.recordQ = new LinkedList<E>();
+    }
 
-	@Override
-	public void remove() {
-		throw new UnsupportedOperationException("this iterator cann't doing remove");
-	}
+    @Override
+    public E next() {
+        return this.recordQ.poll();
+    }
 
-	@Override
-	public List<E> nextMore() {
-		List<E> data = new ArrayList<E>(this.recordQ);
-		this.recordQ.clear();
-		return data;
-	}
+    @Override
+    public void remove() {
+        throw new UnsupportedOperationException("this iterator cann't doing remove");
+    }
 
-	@Override
-	public void setQuery(IQuery query) {
-		if (query != null)
-			this.query = query;
-	}
+    @Override
+    public List<E> nextMore() {
+        List<E> data = new ArrayList<E>(this.recordQ);
+        this.recordQ.clear();
+        return data;
+    }
 
-	public abstract long getMaxId();
+    @Override
+    public void setQuery(IQuery query) {
+        if (query != null)
+            this.query = query;
+    }
 
-	public int getStep() {
-		return step;
-	}
+    public abstract long getMaxId();
 
-	@Override
-	public void setStep(int step) {
-		this.step = step;
-	}
+    public int getStep() {
+        return step;
+    }
+
+    @Override
+    public void setStep(int step) {
+        this.step = step;
+    }
 
 }

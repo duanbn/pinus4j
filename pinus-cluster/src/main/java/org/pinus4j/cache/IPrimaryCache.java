@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.pinus4j.cluster.resources.ShardingDBResource;
+import org.pinus4j.entity.meta.EntityPK;
 
 /**
  * 主缓存接口. 为Pinus存储提供一级缓存, 一级缓存使用memcached作为存储主要是对数据库表中的数据进行缓存查询进行缓存.
@@ -36,13 +37,6 @@ public interface IPrimaryCache extends ICache {
      * @param count count数
      */
     public void setCountGlobal(String clusterName, String tableName, long count);
-
-    /**
-     * 删除count数.
-     * 
-     * @param db 分库分表
-     */
-    public void removeCountGlobal(String clusterName, String tableName);
 
     /**
      * 减少分表count数.
@@ -71,65 +65,30 @@ public interface IPrimaryCache extends ICache {
     public long getCountGlobal(String clusterName, String tableName);
 
     /**
-     * 添加一条记录. 如果存在则替换.
-     * 
-     * @param db 分库分表
-     * @param id 主键
-     * @param data 记录
-     */
-    public void putGlobal(String clusterName, String tableName, Number id, Object data);
-
-    /**
-     * 批量添加记录.
-     * 
-     * @param db 分库分表
-     * @param ids 主键
-     * @param data 批量数据
-     */
-    public void putGlobal(String clusterName, String tableName, List<? extends Object> data);
-
-    /**
      * 批量添加记录
      * 
      * @param clusterName
      * @param tableName
      * @param data
      */
-    public void putGlobal(String clusterName, String tableName, Map<Number, ? extends Object> data);
-
-    /**
-     * 获取记录.
-     * 
-     * @param db 分库分表
-     * @param id 主键
-     * @return 记录
-     */
-    public <T> T getGlobal(String clusterName, String tableName, Number Id);
+    public void putGlobal(String clusterName, String tableName, Map<EntityPK, ? extends Object> data);
 
     /**
      * 获取多条记录.
      * 
      * @param db 分库分表
-     * @param ids 主键
+     * @param pks 主键
      * @return 多条数据
      */
-    public <T> List<T> getGlobal(String clusterName, String tableName, Number[] ids);
-
-    /**
-     * 删除一条记录.
-     * 
-     * @param db 分库分表
-     * @param id 主键
-     */
-    public void removeGlobal(String clusterName, String tableName, Number id);
+    public <T> Map<EntityPK, T> getGlobal(String clusterName, String tableName, EntityPK[] pks);
 
     /**
      * 批量删除缓存.
      * 
      * @param db 分库分表
-     * @param ids 主键
+     * @param pks 主键
      */
-    public void removeGlobal(String clusterName, String tableName, List<? extends Number> ids);
+    public void removeGlobal(String clusterName, String tableName, List<EntityPK> pks);
 
     /**
      * 设置count数.
@@ -138,13 +97,6 @@ public interface IPrimaryCache extends ICache {
      * @param count count数
      */
     public void setCount(ShardingDBResource db, long count);
-
-    /**
-     * 删除count数.
-     * 
-     * @param db 分库分表
-     */
-    public void removeCount(ShardingDBResource db);
 
     /**
      * 减少分表count数.
@@ -173,39 +125,12 @@ public interface IPrimaryCache extends ICache {
     public long getCount(ShardingDBResource db);
 
     /**
-     * 添加一条记录. 如果存在则替换.
-     * 
-     * @param db 分库分表
-     * @param id 主键
-     * @param data 记录
-     */
-    public void put(ShardingDBResource db, Number id, Object data);
-
-    /**
-     * 批量添加记录.
-     * 
-     * @param db 分库分表
-     * @param ids 主键
-     * @param data 批量数据
-     */
-    public void put(ShardingDBResource db, Number[] ids, List<? extends Object> data);
-
-    /**
      * 批量添加记录.
      * 
      * @param db
      * @param data
      */
-    public void put(ShardingDBResource db, Map<Number, ? extends Object> data);
-
-    /**
-     * 获取记录.
-     * 
-     * @param db 分库分表
-     * @param id 主键
-     * @return 记录
-     */
-    public <T> T get(ShardingDBResource db, Number Id);
+    public void put(ShardingDBResource db, Map<EntityPK, ? extends Object> data);
 
     /**
      * 获取多条记录.
@@ -214,15 +139,7 @@ public interface IPrimaryCache extends ICache {
      * @param ids 主键
      * @return 多条数据
      */
-    public <T> List<T> get(ShardingDBResource db, Number... ids);
-
-    /**
-     * 删除一条记录.
-     * 
-     * @param db 分库分表
-     * @param id 主键
-     */
-    public void remove(ShardingDBResource db, Number pk);
+    public <T> Map<EntityPK, T> get(ShardingDBResource db, EntityPK[] ids);
 
     /**
      * 批量删除缓存.
@@ -230,6 +147,6 @@ public interface IPrimaryCache extends ICache {
      * @param db 分库分表
      * @param ids 主键
      */
-    public void remove(ShardingDBResource db, List<? extends Number> pks);
+    public void remove(ShardingDBResource db, List<EntityPK> pks);
 
 }

@@ -5,11 +5,11 @@ import java.sql.Timestamp;
 import java.util.Date;
 
 import org.pinus4j.api.FashionEntity;
-import org.pinus4j.generator.annotations.DateTime;
-import org.pinus4j.generator.annotations.Field;
-import org.pinus4j.generator.annotations.PrimaryKey;
-import org.pinus4j.generator.annotations.Table;
-import org.pinus4j.generator.annotations.UpdateTime;
+import org.pinus4j.entity.annotations.DateTime;
+import org.pinus4j.entity.annotations.Field;
+import org.pinus4j.entity.annotations.PrimaryKey;
+import org.pinus4j.entity.annotations.Table;
+import org.pinus4j.entity.annotations.UpdateTime;
 
 @Table(name = "test_entity", cluster = "pinus", shardingBy = "testInt", shardingNum = 3, cache = true)
 public class TestEntity extends FashionEntity implements Serializable {
@@ -17,7 +17,7 @@ public class TestEntity extends FashionEntity implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @PrimaryKey(comment = "主键")
-    private long              id;
+    private Long              id;
 
     @Field(comment = "测试byte类型的字段")
     private byte              testByte;
@@ -51,7 +51,7 @@ public class TestEntity extends FashionEntity implements Serializable {
 
     @Field
     private float             testFloat;
-    @Field
+    @Field(isCanNull = true)
     private Float             oTestFloat;
 
     @Field
@@ -82,7 +82,28 @@ public class TestEntity extends FashionEntity implements Serializable {
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + (int) (id ^ (id >>> 32));
+        result = prime * result + ((id == null) ? 0 : id.hashCode());
+        result = prime * result + ((oTestBool == null) ? 0 : oTestBool.hashCode());
+        result = prime * result + ((oTestByte == null) ? 0 : oTestByte.hashCode());
+        result = prime * result + ((oTestChar == null) ? 0 : oTestChar.hashCode());
+        result = prime * result + ((oTestDouble == null) ? 0 : oTestDouble.hashCode());
+        result = prime * result + ((oTestFloat == null) ? 0 : oTestFloat.hashCode());
+        result = prime * result + ((oTestInt == null) ? 0 : oTestInt.hashCode());
+        result = prime * result + ((oTestLong == null) ? 0 : oTestLong.hashCode());
+        result = prime * result + ((oTestShort == null) ? 0 : oTestShort.hashCode());
+        result = prime * result + (testBool ? 1231 : 1237);
+        result = prime * result + testByte;
+        result = prime * result + testChar;
+        result = prime * result + ((testDate == null) ? 0 : testDate.hashCode());
+        long temp;
+        temp = Double.doubleToLongBits(testDouble);
+        result = prime * result + (int) (temp ^ (temp >>> 32));
+        result = prime * result + Float.floatToIntBits(testFloat);
+        result = prime * result + testInt;
+        result = prime * result + (int) (testLong ^ (testLong >>> 32));
+        result = prime * result + testShort;
+        result = prime * result + ((testString == null) ? 0 : testString.hashCode());
+        result = prime * result + ((testTime == null) ? 0 : testTime.hashCode());
         return result;
     }
 
@@ -95,7 +116,81 @@ public class TestEntity extends FashionEntity implements Serializable {
         if (getClass() != obj.getClass())
             return false;
         TestEntity other = (TestEntity) obj;
-        if (id != other.id)
+        if (id == null) {
+            if (other.id != null)
+                return false;
+        } else if (!id.equals(other.id))
+            return false;
+        if (oTestBool == null) {
+            if (other.oTestBool != null)
+                return false;
+        } else if (!oTestBool.equals(other.oTestBool))
+            return false;
+        if (oTestByte == null) {
+            if (other.oTestByte != null)
+                return false;
+        } else if (!oTestByte.equals(other.oTestByte))
+            return false;
+        if (oTestChar == null) {
+            if (other.oTestChar != null)
+                return false;
+        } else if (!oTestChar.equals(other.oTestChar))
+            return false;
+        if (oTestDouble == null) {
+            if (other.oTestDouble != null)
+                return false;
+        } else if (!oTestDouble.equals(other.oTestDouble))
+            return false;
+        if (oTestFloat == null) {
+            if (other.oTestFloat != null)
+                return false;
+        } else if (!oTestFloat.equals(other.oTestFloat))
+            return false;
+        if (oTestInt == null) {
+            if (other.oTestInt != null)
+                return false;
+        } else if (!oTestInt.equals(other.oTestInt))
+            return false;
+        if (oTestLong == null) {
+            if (other.oTestLong != null)
+                return false;
+        } else if (!oTestLong.equals(other.oTestLong))
+            return false;
+        if (oTestShort == null) {
+            if (other.oTestShort != null)
+                return false;
+        } else if (!oTestShort.equals(other.oTestShort))
+            return false;
+        if (testBool != other.testBool)
+            return false;
+        if (testByte != other.testByte)
+            return false;
+        if (testChar != other.testChar)
+            return false;
+        if (testDate == null) {
+            if (other.testDate != null)
+                return false;
+        } else if (!testDate.equals(other.testDate))
+            return false;
+        if (Double.doubleToLongBits(testDouble) != Double.doubleToLongBits(other.testDouble))
+            return false;
+        if (Float.floatToIntBits(testFloat) != Float.floatToIntBits(other.testFloat))
+            return false;
+        if (testInt != other.testInt)
+            return false;
+        if (testLong != other.testLong)
+            return false;
+        if (testShort != other.testShort)
+            return false;
+        if (testString == null) {
+            if (other.testString != null)
+                return false;
+        } else if (!testString.equals(other.testString))
+            return false;
+        if (testTime == null) {
+            if (other.testTime != null)
+                return false;
+        } else if (!testTime.equals(other.testTime))
             return false;
         return true;
     }
