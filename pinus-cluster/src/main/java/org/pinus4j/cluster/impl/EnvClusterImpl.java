@@ -28,45 +28,45 @@ import org.pinus4j.exceptions.LoadConfigException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+@Deprecated
 public class EnvClusterImpl extends AbstractDBCluster {
 
-	public static final Logger LOG = LoggerFactory.getLogger(EnvClusterImpl.class);
+    public static final Logger LOG = LoggerFactory.getLogger(EnvClusterImpl.class);
 
-	private Context initCtx;
+    private Context            initCtx;
 
-	/**
-	 * 构造方法.
-	 * 
-	 * @param enumDb
-	 *            数据库类型
-	 */
-	public EnvClusterImpl(EnumDB enumDb) {
-		super(enumDb);
+    /**
+     * 构造方法.
+     * 
+     * @param enumDb 数据库类型
+     */
+    public EnvClusterImpl(EnumDB enumDb) {
+        super(enumDb);
 
-		try {
-			this.initCtx = new InitialContext();
-		} catch (NamingException e) {
-			throw new RuntimeException(e);
-		}
-	}
+        try {
+            this.initCtx = new InitialContext();
+        } catch (NamingException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
-	@Override
-	public void buildDataSource(DBInfo dbConnInfo) throws LoadConfigException {
-		EnvDBInfo envDbConnInfo = (EnvDBInfo) dbConnInfo;
+    @Override
+    public void buildDataSource(DBInfo dbConnInfo) throws LoadConfigException {
+        EnvDBInfo envDbConnInfo = (EnvDBInfo) dbConnInfo;
 
-		LOG.info(envDbConnInfo.toString());
+        LOG.info(envDbConnInfo.toString());
 
-		try {
-			DataSource ds = (DataSource) this.initCtx.lookup(envDbConnInfo.getEnvDsName());
-			dbConnInfo.setDatasource(ds);
-		} catch (NamingException e) {
-			throw new LoadConfigException("load jndi datasource failure, env name " + envDbConnInfo.getEnvDsName());
-		}
-	}
+        try {
+            DataSource ds = (DataSource) this.initCtx.lookup(envDbConnInfo.getEnvDsName());
+            dbConnInfo.setDatasource(ds);
+        } catch (NamingException e) {
+            throw new LoadConfigException("load jndi datasource failure, env name " + envDbConnInfo.getEnvDsName());
+        }
+    }
 
-	@Override
-	public void closeDataSource(DBInfo dbConnInfo) {
-		// 由容器负责关闭数据库连接
-	}
+    @Override
+    public void closeDataSource(DBInfo dbConnInfo) {
+        // 由容器负责关闭数据库连接
+    }
 
 }
