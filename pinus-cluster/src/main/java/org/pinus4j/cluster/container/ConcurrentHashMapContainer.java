@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.pinus4j.cluster;
+package org.pinus4j.cluster.container;
 
 import java.util.Collection;
 import java.util.Map;
@@ -28,26 +28,26 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class ConcurrentHashMapContainer<E> implements IContainer<E> {
 
-	private final Map<String, E> map;
+    private final Map<String, E> map;
 
-	ConcurrentHashMapContainer() {
-		map = new ConcurrentHashMap<String, E>();
-	}
+    ConcurrentHashMapContainer() {
+        map = new ConcurrentHashMap<String, E>();
+    }
 
-	@Override
-	public E find(String key) {
-		E e = map.get(key);
-		return e;
-	}
+    @Override
+    public E find(String key) {
+        E e = map.get(key);
+        return e;
+    }
 
-	@Override
-	public void add(String key, E e) {
-		this.map.put(key, e);
-	}
+    @Override
+    public void put(String key, E e) {
+        this.map.put(key, e);
+    }
 
-	@Override
-	public Collection<E> values() {
-		return this.map.values();
-	}
+    @Override
+    public Collection<E> values() {
+        return this.map.values();
+    }
 
 }

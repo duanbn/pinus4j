@@ -41,9 +41,6 @@ import org.pinus4j.cache.ICacheBuilder;
 import org.pinus4j.cache.IPrimaryCache;
 import org.pinus4j.cache.ISecondCache;
 import org.pinus4j.cache.impl.DefaultCacheBuilder;
-import org.pinus4j.cluster.DefaultContainerFactory;
-import org.pinus4j.cluster.DefaultContainerFactory.ContainerType;
-import org.pinus4j.cluster.IContainer;
 import org.pinus4j.cluster.IDBCluster;
 import org.pinus4j.cluster.ITableCluster;
 import org.pinus4j.cluster.ITableClusterBuilder;
@@ -52,7 +49,10 @@ import org.pinus4j.cluster.beans.DBInfo;
 import org.pinus4j.cluster.beans.DBRegionInfo;
 import org.pinus4j.cluster.beans.IShardingKey;
 import org.pinus4j.cluster.config.IClusterConfig;
-import org.pinus4j.cluster.config.impl.XmlClusterConfigImpl;
+import org.pinus4j.cluster.config.impl.XMLClusterConfigImpl;
+import org.pinus4j.cluster.container.ContainerType;
+import org.pinus4j.cluster.container.DefaultContainerFactory;
+import org.pinus4j.cluster.container.IContainer;
 import org.pinus4j.cluster.enums.EnumDB;
 import org.pinus4j.cluster.enums.EnumDBMasterSlave;
 import org.pinus4j.cluster.enums.EnumSyncAction;
@@ -310,7 +310,7 @@ public abstract class AbstractDBCluster implements IDBCluster {
             clusterName = clusterInfo.getClusterName();
             routerBuilder = DefaultClusterRouterBuilder.valueOf(this);
             routerBuilder.setHashAlgo(config.getHashAlgo());
-            this.dbRouterC.add(clusterName, routerBuilder.build(clusterName));
+            this.dbRouterC.put(clusterName, routerBuilder.build(clusterName));
         }
         LOG.info("init database cluster done.");
     }
@@ -806,7 +806,7 @@ public abstract class AbstractDBCluster implements IDBCluster {
             LOG.info("init db cluster " + dbClusterInfo.getClusterName() + ", router is ["
                     + dbClusterInfo.getRouterClass().getName() + "]");
 
-            this.dbClusterInfoC.add(dbClusterInfo.getClusterName(), dbClusterInfo);
+            this.dbClusterInfoC.put(dbClusterInfo.getClusterName(), dbClusterInfo);
 
             // 初始化全局主库
             DBInfo masterGlobalDBInfo = dbClusterInfo.getMasterGlobalDBInfo();
@@ -871,9 +871,9 @@ public abstract class AbstractDBCluster implements IDBCluster {
         IClusterConfig config = null;
 
         if (StringUtil.isBlank(xmlFilePath)) {
-            config = XmlClusterConfigImpl.getInstance();
+            config = XMLClusterConfigImpl.getInstance();
         } else {
-            config = XmlClusterConfigImpl.getInstance(xmlFilePath);
+            config = XMLClusterConfigImpl.getInstance(xmlFilePath);
         }
 
         return config;

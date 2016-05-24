@@ -16,11 +16,11 @@
 
 package org.pinus4j.cluster.impl;
 
-import org.pinus4j.cluster.DefaultContainerFactory;
-import org.pinus4j.cluster.IContainer;
 import org.pinus4j.cluster.ITableCluster;
-import org.pinus4j.cluster.DefaultContainerFactory.ContainerType;
 import org.pinus4j.cluster.beans.TableNumberInfo;
+import org.pinus4j.cluster.container.ContainerType;
+import org.pinus4j.cluster.container.DefaultContainerFactory;
+import org.pinus4j.cluster.container.IContainer;
 
 /**
  * table name is prefix by number.
@@ -33,7 +33,7 @@ public class NumberIndexTableCluster implements ITableCluster {
     //private Map<String, TableNumberInfo> meta;
     private IContainer<TableNumberInfo> tableNumberInfoC;
 
-	public NumberIndexTableCluster() {
+    public NumberIndexTableCluster() {
         //this.meta = new ConcurrentHashMap<String, TableNumberInfo>();
         this.tableNumberInfoC = DefaultContainerFactory.createContainer(ContainerType.MAP);
     }
@@ -50,7 +50,7 @@ public class NumberIndexTableCluster implements ITableCluster {
     }
 
     public void addTableNumberInfo(String clusterName, TableNumberInfo tableNumberInfo) {
-        this.tableNumberInfoC.add(clusterName, tableNumberInfo);
+        this.tableNumberInfoC.put(clusterName, tableNumberInfo);
     }
 
     public TableNumberInfo getTableNumberInfo(String clusterName) {

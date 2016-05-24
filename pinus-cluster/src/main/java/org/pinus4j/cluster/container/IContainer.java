@@ -14,37 +14,38 @@
  * limitations under the License.
  */
 
-package org.pinus4j.cluster;
+package org.pinus4j.cluster.container;
+
+import java.util.Collection;
 
 /**
- * a static factory for create container.
+ * container interface.
  *
  * @author duanbn
  * @since 1.0.0
  */
-public class DefaultContainerFactory {
+public interface IContainer<E> {
 
-	/**
-	 * create a new container instance.
-	 *
-	 * @param containerType
-	 */
-	public static <E> IContainer<E> createContainer(ContainerType containerType) {
-		IContainer<E> instance = null;
+    /**
+     * find a element from this container.
+     *
+     * @return if can find will be return null.
+     */
+    public E find(String key);
 
-		switch (containerType) {
-		case MAP:
-			instance = new ConcurrentHashMapContainer<E>();
-			break;
-		default:
-			throw new IllegalArgumentException("unknow container type " + containerType);
-		}
+    /**
+     * add element to this container.
+     *
+     * @param key a key.
+     * @param e element will be puted to container.
+     */
+    public void put(String key, E e);
 
-		return instance;
-	}
-
-	public static enum ContainerType {
-		MAP;
-	}
+    /**
+     * get collection of this container's value.
+     *
+     * @return collection of container's value.
+     */
+    public Collection<E> values();
 
 }

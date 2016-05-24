@@ -10,14 +10,14 @@ import org.pinus4j.cluster.beans.DBClusterInfo;
 import org.pinus4j.cluster.beans.DBRegionInfo;
 import org.pinus4j.cluster.beans.DBInfo;
 import org.pinus4j.cluster.config.IClusterConfig;
-import org.pinus4j.cluster.config.impl.XmlClusterConfigImpl;
+import org.pinus4j.cluster.config.impl.XMLClusterConfigImpl;
 
 public class XmlCinfigImplTest extends BaseTest {
 
 	private IClusterConfig config;
 
 	public XmlCinfigImplTest() throws Exception {
-		this.config = XmlClusterConfigImpl.getInstance();
+		this.config = XMLClusterConfigImpl.getInstance();
 	}
 
 	@Test

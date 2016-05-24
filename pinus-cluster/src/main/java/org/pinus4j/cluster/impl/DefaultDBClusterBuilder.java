@@ -19,7 +19,7 @@ package org.pinus4j.cluster.impl;
 import org.pinus4j.cluster.IDBCluster;
 import org.pinus4j.cluster.IDBClusterBuilder;
 import org.pinus4j.cluster.config.IClusterConfig;
-import org.pinus4j.cluster.config.impl.XmlClusterConfigImpl;
+import org.pinus4j.cluster.config.impl.XMLClusterConfigImpl;
 import org.pinus4j.cluster.cp.IDBConnectionPool;
 import org.pinus4j.cluster.enums.EnumDB;
 import org.pinus4j.cluster.enums.EnumSyncAction;
@@ -41,7 +41,7 @@ public class DefaultDBClusterBuilder implements IDBClusterBuilder {
     public IDBCluster build() {
         IDBCluster dbCluster = null;
         try {
-            IClusterConfig config = XmlClusterConfigImpl.getInstance();
+            IClusterConfig config = XMLClusterConfigImpl.getInstance();
 
             IDBConnectionPool cp = config.getImplConnectionPool();
             dbCluster = new DBClusterImpl(enumDB, cp);
