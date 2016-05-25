@@ -21,7 +21,6 @@ import org.pinus4j.cluster.IDBClusterBuilder;
 import org.pinus4j.cluster.config.IClusterConfig;
 import org.pinus4j.cluster.config.impl.XMLClusterConfigImpl;
 import org.pinus4j.cluster.cp.IDBConnectionPool;
-import org.pinus4j.cluster.enums.EnumDB;
 import org.pinus4j.cluster.enums.EnumSyncAction;
 import org.pinus4j.exceptions.DBClusterException;
 import org.pinus4j.exceptions.LoadConfigException;
@@ -30,8 +29,6 @@ import org.pinus4j.exceptions.LoadConfigException;
  * @author duanbn
  */
 public class DefaultDBClusterBuilder implements IDBClusterBuilder {
-
-    private EnumDB         enumDB = EnumDB.MYSQL;
 
     private EnumSyncAction syncAction;
 
@@ -44,7 +41,7 @@ public class DefaultDBClusterBuilder implements IDBClusterBuilder {
             IClusterConfig config = XMLClusterConfigImpl.getInstance();
 
             IDBConnectionPool cp = config.getImplConnectionPool();
-            dbCluster = new DBClusterImpl(enumDB, cp);
+            dbCluster = new DBClusterImpl(cp);
 
             // 设置生成数据库表动作
             dbCluster.setSyncAction(this.syncAction);
@@ -59,11 +56,6 @@ public class DefaultDBClusterBuilder implements IDBClusterBuilder {
         }
 
         return dbCluster;
-    }
-
-    @Override
-    public void setDbType(EnumDB enumDB) {
-        this.enumDB = enumDB;
     }
 
     @Override

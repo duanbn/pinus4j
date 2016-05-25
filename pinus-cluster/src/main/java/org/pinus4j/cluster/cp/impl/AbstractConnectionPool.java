@@ -17,13 +17,94 @@
 package org.pinus4j.cluster.cp.impl;
 
 import java.lang.reflect.Method;
+import java.sql.Connection;
+import java.sql.SQLException;
 
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
 import javax.sql.DataSource;
 
+import org.pinus4j.cluster.beans.AppDBInfo;
+import org.pinus4j.cluster.beans.DBInfo;
+import org.pinus4j.cluster.beans.EnvDBInfo;
+import org.pinus4j.cluster.container.ContainerType;
+import org.pinus4j.cluster.container.DefaultContainerFactory;
+import org.pinus4j.cluster.container.IContainer;
 import org.pinus4j.cluster.cp.IDBConnectionPool;
+import org.pinus4j.cluster.enums.EnumDB;
+import org.pinus4j.exceptions.LoadConfigException;
+import org.pinus4j.utils.JdbcUtil;
 import org.pinus4j.utils.StringUtil;
 
 public abstract class AbstractConnectionPool implements IDBConnectionPool {
+
+    private IContainer<DataSource> dsC = DefaultContainerFactory.createContainer(ContainerType.MAP);
+
+    private IContainer<DBInfo>     dbInfos;
+
+    private InitialContext         initCtx;
+
+    public AbstractConnectionPool() {
+        try {
+            this.initCtx = new InitialContext();
+        } catch (NamingException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public IContainer<DataSource> getAllDataSources() {
+        return this.dsC;
+    }
+
+    @Override
+    public void addDataSource(DBInfo dbInfo) throws LoadConfigException {
+        DataSource datasource = null;
+
+        if (dbInfo instanceof AppDBInfo) {
+            AppDBInfo appDBInfo = (AppDBInfo) dbInfo;
+            datasource = buildAppDataSource(appDBInfo);
+        } else if (dbInfo instanceof EnvDBInfo) {
+            EnvDBInfo envDbConnInfo = (EnvDBInfo) dbInfo;
+            Connection conn = null;
+            try {
+                datasource = (DataSource) this.initCtx.lookup(envDbConnInfo.getEnvDsName());
+                conn = datasource.getConnection();
+                String dbCatalog = conn.getMetaData().getDatabaseProductName();
+                envDbConnInfo.setDbCatalog(EnumDB.getEnum(dbCatalog));
+            } catch (NamingException e) {
+                throw new LoadConfigException("load jndi datasource failure, env name " + envDbConnInfo.getEnvDsName());
+            } catch (SQLException e) {
+                throw new LoadConfigException("get database catalog failure, env name " + envDbConnInfo.getEnvDsName());
+            } finally {
+                JdbcUtil.close(conn);
+            }
+        } else {
+            throw new LoadConfigException("unknow db info type " + dbInfo.getClass());
+        }
+
+        dsC.put(dbInfo.getId(), datasource);
+    }
+
+    @Override
+    public DataSource findDataSource(String dbInfoId) {
+        return dsC.find(dbInfoId);
+    }
+
+    @Override
+    public DBInfo findDBInfo(String dbInfoId) {
+        return dbInfos.find(dbInfoId);
+    }
+
+    public IContainer<DBInfo> getDbInfos() {
+        return dbInfos;
+    }
+
+    public void setDbInfos(IContainer<DBInfo> dbInfos) {
+        this.dbInfos = dbInfos;
+    }
+
+    protected abstract DataSource buildAppDataSource(AppDBInfo appDBInfo) throws LoadConfigException;
 
     protected void setConnectionParam(DataSource obj, String propertyName, String value) {
         Method[] setMethods = obj.getClass().getMethods();

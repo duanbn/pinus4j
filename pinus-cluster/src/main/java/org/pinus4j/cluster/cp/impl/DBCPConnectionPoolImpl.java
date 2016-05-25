@@ -22,6 +22,7 @@ import java.util.Map;
 import javax.sql.DataSource;
 
 import org.apache.commons.dbcp.BasicDataSource;
+import org.pinus4j.cluster.beans.AppDBInfo;
 import org.pinus4j.exceptions.LoadConfigException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,17 +46,16 @@ public class DBCPConnectionPoolImpl extends AbstractConnectionPool {
     }
 
     @Override
-    public DataSource buildDataSource(String driverClass, String userName, String password, String url,
-                                      Map<String, String> connectParam) throws LoadConfigException {
+    public DataSource buildAppDataSource(AppDBInfo dbInfo) throws LoadConfigException {
         BasicDataSource ds = new BasicDataSource();
-        ds.setDriverClassName(driverClass);
-        ds.setUsername(userName);
-        ds.setPassword(password);
-        ds.setUrl(url);
+        ds.setDriverClassName(dbInfo.getDbCatalog().getDriverClass());
+        ds.setUsername(dbInfo.getUsername());
+        ds.setPassword(dbInfo.getPassword());
+        ds.setUrl(dbInfo.getUrl());
 
         // 设置连接池信息
         ds.setValidationQuery("SELECT 1");
-        for (Map.Entry<String, String> entry : connectParam.entrySet()) {
+        for (Map.Entry<String, String> entry : dbInfo.getConnPoolInfo().entrySet()) {
             try {
                 setConnectionParam(ds, entry.getKey(), entry.getValue());
             } catch (Exception e) {

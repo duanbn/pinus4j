@@ -24,16 +24,13 @@ import java.util.List;
 import org.pinus4j.cache.beans.PrimaryCacheInfo;
 import org.pinus4j.cache.beans.SecondCacheInfo;
 import org.pinus4j.cluster.beans.DBClusterInfo;
-import org.pinus4j.cluster.beans.DBInfo;
 import org.pinus4j.cluster.config.IClusterConfig;
 import org.pinus4j.cluster.config.loader.IXMLConfigLoader;
 import org.pinus4j.cluster.config.loader.impl.CacheEnabledLoader;
-import org.pinus4j.cluster.config.loader.impl.ConnectionPoolClassLoader;
 import org.pinus4j.cluster.config.loader.impl.DBClusterInfoLoader;
-import org.pinus4j.cluster.config.loader.impl.DataSourceBucketLoader;
+import org.pinus4j.cluster.config.loader.impl.DBConnectionPoolLoader;
 import org.pinus4j.cluster.config.loader.impl.PrimaryCacheInfoLoader;
 import org.pinus4j.cluster.config.loader.impl.SecondCacheInfoLoader;
-import org.pinus4j.cluster.container.IContainer;
 import org.pinus4j.cluster.cp.IDBConnectionPool;
 import org.pinus4j.cluster.enums.HashAlgoEnum;
 import org.pinus4j.constant.Const;
@@ -71,6 +68,8 @@ public class XMLClusterConfigImpl implements IClusterConfig {
     private static PrimaryCacheInfo          primaryCacheInfo;
     private static SecondCacheInfo           secondCacheInfo;
 
+    private static IDBConnectionPool         dbConnectionPool;
+
     /**
      * DB集群信息.
      */
@@ -107,12 +106,12 @@ public class XMLClusterConfigImpl implements IClusterConfig {
         // load hash algo
         _loadHashAlgo(root);
 
-        // load datasource bucket
-        IXMLConfigLoader<IContainer<DBInfo>> dbInfoLoader = new DataSourceBucketLoader();
-        IContainer<DBInfo> dbInfos = dbInfoLoader.load(root);
+        // load datasource connect info
+        IXMLConfigLoader<IDBConnectionPool> dbInfoLoader = new DBConnectionPoolLoader();
+        dbConnectionPool = dbInfoLoader.load(root);
 
         // load cluster info
-        IXMLConfigLoader<List<DBClusterInfo>> dbClusterInfoLoader = new DBClusterInfoLoader(dbInfos);
+        IXMLConfigLoader<List<DBClusterInfo>> dbClusterInfoLoader = new DBClusterInfoLoader(dbConnectionPool);
         dbClusterInfos.addAll(dbClusterInfoLoader.load(root));
 
         // load cache info
@@ -203,16 +202,7 @@ public class XMLClusterConfigImpl implements IClusterConfig {
 
     @Override
     public IDBConnectionPool getImplConnectionPool() {
-        try {
-            ConnectionPoolClassLoader loader = new ConnectionPoolClassLoader();
-            String connectionPoolClass = loader.load(xmlUtil.getRoot());
-
-            Class<?> clazz = Class.forName(connectionPoolClass);
-
-            return (IDBConnectionPool) clazz.newInstance();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        return dbConnectionPool;
     }
 
     @Override

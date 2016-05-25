@@ -28,6 +28,7 @@ import org.pinus4j.cache.IPrimaryCache;
 import org.pinus4j.cache.ISecondCache;
 import org.pinus4j.cluster.beans.DBClusterInfo;
 import org.pinus4j.cluster.beans.IShardingKey;
+import org.pinus4j.cluster.cp.IDBConnectionPool;
 import org.pinus4j.cluster.enums.EnumDBMasterSlave;
 import org.pinus4j.cluster.enums.EnumSyncAction;
 import org.pinus4j.cluster.resources.IDBResource;
@@ -50,6 +51,13 @@ import org.pinus4j.generator.IIdGenerator;
  * @author duanbn
  */
 public interface IDBCluster {
+
+    /**
+     * get connection pool.
+     * 
+     * @return
+     */
+    IDBConnectionPool getDBConnectionPool();
 
     /**
      * judge this cluster have global slave.

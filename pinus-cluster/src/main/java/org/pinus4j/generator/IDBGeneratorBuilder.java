@@ -17,7 +17,6 @@
 package org.pinus4j.generator;
 
 import org.pinus4j.cluster.enums.EnumDB;
-import org.pinus4j.cluster.enums.EnumSyncAction;
 
 /**
  * db generator builder interface.
@@ -28,18 +27,8 @@ import org.pinus4j.cluster.enums.EnumSyncAction;
 public interface IDBGeneratorBuilder {
 
     /**
-     * set sync action.
-     */
-    public void setSyncAction(EnumSyncAction syncAction);
-
-    /**
-     * set db catalog.
-     */
-    public void setDBCatalog(EnumDB enumDb);
-
-    /**
      * create new db generator instance.
      */
-    public IDBGenerator build();
+    public IDBGenerator build(EnumDB enumDB);
 
 }

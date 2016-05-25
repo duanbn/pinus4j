@@ -20,6 +20,7 @@ import java.util.Map;
 
 import javax.sql.DataSource;
 
+import org.pinus4j.cluster.beans.AppDBInfo;
 import org.pinus4j.exceptions.LoadConfigException;
 import org.pinus4j.utils.BeansUtil;
 import org.slf4j.Logger;
@@ -42,16 +43,15 @@ public class DruidConnectionPoolImpl extends AbstractConnectionPool {
     }
 
     @Override
-    public DataSource buildDataSource(String driverClass, String userName, String password, String url,
-                                      Map<String, String> connectParam) throws LoadConfigException {
+    public DataSource buildAppDataSource(AppDBInfo dbInfo) throws LoadConfigException {
         DruidDataSource ds = new DruidDataSource();
-        ds.setDriverClassName(driverClass);
-        ds.setUsername(userName);
-        ds.setPassword(password);
-        ds.setUrl(url);
+        ds.setDriverClassName(dbInfo.getDbCatalog().getDriverClass());
+        ds.setUsername(dbInfo.getUsername());
+        ds.setPassword(dbInfo.getPassword());
+        ds.setUrl(dbInfo.getUrl());
 
         // 设置连接池信息
-        for (Map.Entry<String, String> entry : connectParam.entrySet()) {
+        for (Map.Entry<String, String> entry : dbInfo.getConnPoolInfo().entrySet()) {
             if (entry.getKey().equals("passwordCallback")) {
                 try {
                     BeansUtil.setProperty(ds, entry.getKey(), Class.forName(entry.getValue()).newInstance());

@@ -53,7 +53,7 @@ import org.pinus4j.cluster.config.impl.XMLClusterConfigImpl;
 import org.pinus4j.cluster.container.ContainerType;
 import org.pinus4j.cluster.container.DefaultContainerFactory;
 import org.pinus4j.cluster.container.IContainer;
-import org.pinus4j.cluster.enums.EnumDB;
+import org.pinus4j.cluster.cp.IDBConnectionPool;
 import org.pinus4j.cluster.enums.EnumDBMasterSlave;
 import org.pinus4j.cluster.enums.EnumSyncAction;
 import org.pinus4j.cluster.resources.GlobalDBResource;
@@ -72,7 +72,6 @@ import org.pinus4j.exceptions.DBOperationException;
 import org.pinus4j.exceptions.DBRouteException;
 import org.pinus4j.exceptions.LoadConfigException;
 import org.pinus4j.generator.DefaultDBGeneratorBuilder;
-import org.pinus4j.generator.IDBGenerator;
 import org.pinus4j.generator.IDBGeneratorBuilder;
 import org.pinus4j.generator.IIdGenerator;
 import org.pinus4j.generator.impl.DistributedSequenceIdGeneratorImpl;
@@ -80,7 +79,6 @@ import org.pinus4j.transaction.ITransaction;
 import org.pinus4j.transaction.impl.BestEffortsOnePCJtaTransactionManager;
 import org.pinus4j.utils.CuratorDistributeedLock;
 import org.pinus4j.utils.IOUtil;
-import org.pinus4j.utils.JdbcUtil;
 import org.pinus4j.utils.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -100,6 +98,8 @@ public abstract class AbstractDBCluster implements IDBCluster {
 
     public static final Random         r                 = new Random();
 
+    protected IDBConnectionPool        dbConnectionPool;
+
     /**
      * 同步数据表操作.
      */
@@ -116,19 +116,9 @@ public abstract class AbstractDBCluster implements IDBCluster {
     private boolean                    isShardInfoFromZk;
 
     /**
-     * 数据库类型.
-     */
-    protected EnumDB                   enumDb            = EnumDB.MYSQL;
-
-    /**
      * Entity管理器
      */
     private IEntityMetaManager         entityMetaManager = DefaultEntityMetaManager.getInstance();
-
-    /**
-     * 数据库表生成器.
-     */
-    private IDBGenerator               dbGenerator;
 
     /**
      * 主键生成器. 默认使用SimpleIdGeneratorImpl生成器.
@@ -175,13 +165,8 @@ public abstract class AbstractDBCluster implements IDBCluster {
      */
     private CuratorFramework           curatorClient;
 
-    /**
-     * 构造方法.
-     * 
-     * @param enumDb 数据库类型.
-     */
-    public AbstractDBCluster(EnumDB enumDb) {
-        this.enumDb = enumDb;
+    public AbstractDBCluster(IDBConnectionPool dbConnectionPool) {
+        this.dbConnectionPool = dbConnectionPool;
     }
 
     @Override
@@ -243,18 +228,11 @@ public abstract class AbstractDBCluster implements IDBCluster {
         ICacheBuilder cacheBuilder = DefaultCacheBuilder.valueOf(config);
         // find primary cache
         this.primaryCache = cacheBuilder.buildPrimaryCache();
-
         // find second cache
         this.secondCache = cacheBuilder.buildSecondCache();
 
         // init transaction manager
         this.txManager = BestEffortsOnePCJtaTransactionManager.getInstance();
-
-        //
-        // init db generator
-        //
-        IDBGeneratorBuilder dbGeneratorBuilder = DefaultDBGeneratorBuilder.valueOf(this.syncAction, this.enumDb);
-        this.dbGenerator = dbGeneratorBuilder.build();
 
         //
         // load db cluster info.
@@ -615,6 +593,11 @@ public abstract class AbstractDBCluster implements IDBCluster {
     }
 
     @Override
+    public IDBConnectionPool getDBConnectionPool() {
+        return dbConnectionPool;
+    }
+
+    @Override
     public boolean isGlobalSlaveExist(String clusterName) {
         DBClusterInfo dbClusterInfo = this.dbClusterInfoC.find(clusterName);
         return dbClusterInfo.getSlaveGlobalDBInfo() != null && !dbClusterInfo.getSlaveGlobalDBInfo().isEmpty();
@@ -735,6 +718,8 @@ public abstract class AbstractDBCluster implements IDBCluster {
      * @throws IOException
      */
     private void _createTable(List<DBTable> tables) throws Exception {
+        IDBGeneratorBuilder dbGeneratorBuilder = DefaultDBGeneratorBuilder.valueOf(this.syncAction);
+
         String clusterName = null;
         for (DBTable table : tables) {
             clusterName = table.getCluster();
@@ -750,7 +735,7 @@ public abstract class AbstractDBCluster implements IDBCluster {
                     for (DBInfo dbInfo : region.getMasterDBInfos()) {
                         Connection dbConn = dbInfo.getDatasource().getConnection();
                         int tableNum = table.getShardingNum();
-                        this.dbGenerator.syncTable(dbConn, table, tableNum);
+                        dbGeneratorBuilder.build(dbInfo.getDbCatalog()).syncTable(dbConn, table, tableNum);
                         dbConn.close();
                     }
                 }
@@ -759,10 +744,10 @@ public abstract class AbstractDBCluster implements IDBCluster {
                 for (DBRegionInfo region : dbClusterInfo.getDbRegions()) {
                     List<List<DBInfo>> slaveDbs = region.getSlaveDBInfos();
                     for (List<DBInfo> slaveConns : slaveDbs) {
-                        for (DBInfo dbConnInfo : slaveConns) {
-                            Connection dbConn = dbConnInfo.getDatasource().getConnection();
+                        for (DBInfo dbInfo : slaveConns) {
+                            Connection dbConn = dbInfo.getDatasource().getConnection();
                             int tableNum = table.getShardingNum();
-                            this.dbGenerator.syncTable(dbConn, table, tableNum);
+                            dbGeneratorBuilder.build(dbInfo.getDbCatalog()).syncTable(dbConn, table, tableNum);
                             dbConn.close();
                         }
                     }
@@ -774,22 +759,22 @@ public abstract class AbstractDBCluster implements IDBCluster {
                     throw new DBClusterException("加载集群失败，未知的集群，cluster name=" + clusterName);
                 }
                 // 全局主库
-                DBInfo dbConnInfo = dbClusterInfo.getMasterGlobalDBInfo();
-                if (dbConnInfo != null) {
-                    DataSource globalDs = dbConnInfo.getDatasource();
+                DBInfo masterGlobalDBInfo = dbClusterInfo.getMasterGlobalDBInfo();
+                if (masterGlobalDBInfo != null) {
+                    DataSource globalDs = masterGlobalDBInfo.getDatasource();
                     if (globalDs != null) {
                         Connection conn = globalDs.getConnection();
-                        this.dbGenerator.syncTable(conn, table);
+                        dbGeneratorBuilder.build(masterGlobalDBInfo.getDbCatalog()).syncTable(conn, table);
                         conn.close();
                     }
                 }
 
                 // 全局从库
-                List<DBInfo> slaveDbs = dbClusterInfo.getSlaveGlobalDBInfo();
-                if (slaveDbs != null && !slaveDbs.isEmpty()) {
-                    for (DBInfo slaveConnInfo : slaveDbs) {
-                        Connection conn = slaveConnInfo.getDatasource().getConnection();
-                        this.dbGenerator.syncTable(conn, table);
+                List<DBInfo> slaveGlobalDBInfos = dbClusterInfo.getSlaveGlobalDBInfo();
+                if (slaveGlobalDBInfos != null && !slaveGlobalDBInfos.isEmpty()) {
+                    for (DBInfo slaveGlobalDBInfo : slaveGlobalDBInfos) {
+                        Connection conn = slaveGlobalDBInfo.getDatasource().getConnection();
+                        dbGeneratorBuilder.build(slaveGlobalDBInfo.getDbCatalog()).syncTable(conn, table);
                         conn.close();
                     }
                 }
@@ -812,7 +797,6 @@ public abstract class AbstractDBCluster implements IDBCluster {
             DBInfo masterGlobalDBInfo = dbClusterInfo.getMasterGlobalDBInfo();
             if (masterGlobalDBInfo != null) {
                 buildDataSource(masterGlobalDBInfo);
-                _initDatabaseName(masterGlobalDBInfo);
             }
 
             // 初始化全局从库
@@ -820,7 +804,6 @@ public abstract class AbstractDBCluster implements IDBCluster {
             if (slaveDbs != null && !slaveDbs.isEmpty()) {
                 for (DBInfo slaveGlobalDBInfo : slaveDbs) {
                     buildDataSource(slaveGlobalDBInfo);
-                    _initDatabaseName(slaveGlobalDBInfo);
                 }
             }
 
@@ -829,37 +812,17 @@ public abstract class AbstractDBCluster implements IDBCluster {
                 // 初始化集群主库
                 for (DBInfo masterDBInfo : regionInfo.getMasterDBInfos()) {
                     buildDataSource(masterDBInfo);
-                    _initDatabaseName(masterDBInfo);
                 }
 
                 // 初始化集群从库
                 for (List<DBInfo> slaveConnections : regionInfo.getSlaveDBInfos()) {
                     for (DBInfo slaveDBInfo : slaveConnections) {
                         buildDataSource(slaveDBInfo);
-                        _initDatabaseName(slaveDBInfo);
                     }
                 }
             }
 
         }
-    }
-
-    private void _initDatabaseName(DBInfo dbInfo) {
-        DataSource ds = dbInfo.getDatasource();
-
-        if (ds != null) {
-            Connection conn = null;
-            try {
-                conn = ds.getConnection();
-                String dbName = conn.getCatalog();
-                dbInfo.setDbName(dbName);
-            } catch (Exception e) {
-                throw new RuntimeException("get database name failure ", e);
-            } finally {
-                JdbcUtil.close(conn);
-            }
-        }
-
     }
 
     /**

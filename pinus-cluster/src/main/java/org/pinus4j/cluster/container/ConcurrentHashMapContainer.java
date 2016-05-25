@@ -46,6 +46,11 @@ public class ConcurrentHashMapContainer<E> implements IContainer<E> {
     }
 
     @Override
+    public Collection<String> keys() {
+        return this.map.keySet();
+    }
+
+    @Override
     public Collection<E> values() {
         return this.map.values();
     }

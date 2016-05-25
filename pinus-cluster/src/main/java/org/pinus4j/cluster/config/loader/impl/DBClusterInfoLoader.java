@@ -25,7 +25,7 @@ import org.pinus4j.cluster.beans.DBInfo;
 import org.pinus4j.cluster.beans.DBRegionInfo;
 import org.pinus4j.cluster.beans.DBRegionInfo.Value;
 import org.pinus4j.cluster.config.IClusterConfig;
-import org.pinus4j.cluster.container.IContainer;
+import org.pinus4j.cluster.cp.IDBConnectionPool;
 import org.pinus4j.cluster.enums.EnumDBMasterSlave;
 import org.pinus4j.cluster.router.IClusterRouter;
 import org.pinus4j.exceptions.LoadConfigException;
@@ -36,10 +36,10 @@ import com.google.common.collect.Lists;
 
 public class DBClusterInfoLoader extends AbstractXMLConfigLoader<List<DBClusterInfo>> {
 
-    private IContainer<DBInfo> dbInfos;
+    private IDBConnectionPool dbConnectionPool;
 
-    public DBClusterInfoLoader(IContainer<DBInfo> dbInfos) {
-        this.dbInfos = dbInfos;
+    public DBClusterInfoLoader(IDBConnectionPool dbConnectionPool) {
+        this.dbConnectionPool = dbConnectionPool;
     }
 
     @Override
@@ -80,11 +80,8 @@ public class DBClusterInfoLoader extends AbstractXMLConfigLoader<List<DBClusterI
         if (global != null) {
             // load master global
             Node masterGlobal = xmlUtil.getFirstChildByName(global, "master");
-            String dsId = masterGlobal.getTextContent().trim();
-            if (dbInfos.find(dsId) == null) {
-                throw new LoadConfigException("配置错误，找不到datasource id=" + dsId);
-            }
-            DBInfo masterGlobalDBInfo = dbInfos.find(dsId).clone();
+            String dbInfoId = masterGlobal.getTextContent().trim();
+            DBInfo masterGlobalDBInfo = dbConnectionPool.findDBInfo(dbInfoId).clone();
             masterGlobalDBInfo.setClusterName(clusterName);
             masterGlobalDBInfo.setMasterSlave(EnumDBMasterSlave.MASTER);
             // set custom property
@@ -101,11 +98,11 @@ public class DBClusterInfoLoader extends AbstractXMLConfigLoader<List<DBClusterI
 
                 int slaveIndex = 0;
                 for (Node slaveGlobal : slaveGlobalList) {
-                    dsId = slaveGlobal.getTextContent().trim();
-                    if (dbInfos.find(dsId) == null) {
-                        throw new LoadConfigException("配置错误，找不到datasource id=" + dsId);
+                    dbInfoId = slaveGlobal.getTextContent().trim();
+                    if (dbConnectionPool.findDBInfo(dbInfoId) == null) {
+                        throw new LoadConfigException("配置错误，找不到datasource id=" + dbInfoId);
                     }
-                    DBInfo slaveGlobalDBInfo = dbInfos.find(dsId).clone();
+                    DBInfo slaveGlobalDBInfo = dbConnectionPool.findDBInfo(dbInfoId).clone();
                     slaveGlobalDBInfo.setClusterName(clusterName);
                     slaveGlobalDBInfo.setMasterSlave(EnumDBMasterSlave.getSlaveEnum(slaveIndex++));
                     // set custom property
@@ -142,11 +139,11 @@ public class DBClusterInfoLoader extends AbstractXMLConfigLoader<List<DBClusterI
             Node master = xmlUtil.getFirstChildByName(regionNode, "master");
             List<Node> shardingNodeList = xmlUtil.getChildByName(master, "sharding");
             for (Node shardingNode : shardingNodeList) {
-                String dsId = shardingNode.getTextContent().trim();
-                if (dbInfos.find(dsId) == null) {
-                    throw new LoadConfigException("配置错误，找不到datasource id=" + dsId);
+                String dbInfoId = shardingNode.getTextContent().trim();
+                if (dbConnectionPool.findDBInfo(dbInfoId) == null) {
+                    throw new LoadConfigException("配置错误，找不到datasource id=" + dbInfoId);
                 }
-                DBInfo masterShardingDBInfo = dbInfos.find(dsId).clone();
+                DBInfo masterShardingDBInfo = dbConnectionPool.findDBInfo(dbInfoId).clone();
                 masterShardingDBInfo.setClusterName(clusterName);
                 masterShardingDBInfo.setMasterSlave(EnumDBMasterSlave.MASTER);
                 // set custom property
@@ -166,11 +163,11 @@ public class DBClusterInfoLoader extends AbstractXMLConfigLoader<List<DBClusterI
 
                 List<DBInfo> slaveConnections = new ArrayList<DBInfo>();
                 for (Node shardingNode : shardingNodeList) {
-                    String dsId = shardingNode.getTextContent().trim();
-                    if (dbInfos.find(dsId) == null) {
-                        throw new LoadConfigException("配置错误，找不到datasource id=" + dsId);
+                    String dbInfoId = shardingNode.getTextContent().trim();
+                    if (dbConnectionPool.findDBInfo(dbInfoId) == null) {
+                        throw new LoadConfigException("配置错误，找不到datasource id=" + dbInfoId);
                     }
-                    DBInfo slaveShardingDBInfo = dbInfos.find(dsId).clone();
+                    DBInfo slaveShardingDBInfo = dbConnectionPool.findDBInfo(dbInfoId).clone();
                     slaveShardingDBInfo.setClusterName(clusterName);
                     slaveShardingDBInfo.setMasterSlave(EnumDBMasterSlave.getSlaveEnum(slaveIndex++));
                     // set custom property

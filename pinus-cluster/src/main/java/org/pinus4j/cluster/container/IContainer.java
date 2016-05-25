@@ -42,6 +42,13 @@ public interface IContainer<E> {
     public void put(String key, E e);
 
     /**
+     * get all keys.
+     * 
+     * @return
+     */
+    public Collection<String> keys();
+
+    /**
      * get collection of this container's value.
      *
      * @return collection of container's value.

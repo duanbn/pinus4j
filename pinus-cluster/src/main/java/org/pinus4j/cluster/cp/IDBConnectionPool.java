@@ -16,10 +16,10 @@
 
 package org.pinus4j.cluster.cp;
 
-import java.util.Map;
-
 import javax.sql.DataSource;
 
+import org.pinus4j.cluster.beans.DBInfo;
+import org.pinus4j.cluster.container.IContainer;
 import org.pinus4j.exceptions.LoadConfigException;
 
 /**
@@ -30,18 +30,40 @@ import org.pinus4j.exceptions.LoadConfigException;
 public interface IDBConnectionPool {
 
     /**
+     * get all datasource which is managed in this pool.
+     * 
+     * @return
+     */
+    IContainer<DataSource> getAllDataSources();
+
+    /**
+     * add datasource by db info
+     * 
+     * @param dbInfo
+     */
+    void addDataSource(DBInfo dbInfo) throws LoadConfigException;
+
+    /**
+     * find datasource
+     * 
+     * @param dbInfoId
+     * @return
+     */
+    DataSource findDataSource(String dbInfoId);
+
+    /**
+     * find db info
+     * 
+     * @param dbInfoId
+     * @return
+     */
+    DBInfo findDBInfo(String dbInfoId);
+
+    /**
      * 释放连接
      * 
      * @param datasource
      */
     void releaseDataSource(DataSource datasource);
-
-    /**
-     * 创建数据源
-     * 
-     * @return
-     */
-    DataSource buildDataSource(String driverClass, String userName, String password, String url,
-                               Map<String, String> connectParam) throws LoadConfigException;
 
 }

@@ -25,6 +25,12 @@ public class EnvDBInfo extends DBInfo {
 
     @Override
     public boolean check() throws LoadConfigException {
+        if (StringUtil.isBlank(this.id)) {
+            throw new LoadConfigException("db info id is empty");
+        }
+        if (this.dbCatalog == null) {
+            throw new LoadConfigException("db info catalog is empty");
+        }
         if (StringUtil.isBlank(envDsName)) {
             throw new LoadConfigException("env ds name is empty");
         }
@@ -34,14 +40,16 @@ public class EnvDBInfo extends DBInfo {
     @Override
     public DBInfo clone() {
         EnvDBInfo clone = new EnvDBInfo();
+        clone.setId(this.id);
+        clone.setDbCatalog(this.dbCatalog);
         clone.setEnvDsName(this.envDsName);
         return clone;
     }
 
     @Override
     public String toString() {
-        return "EnvDBConnectionInfo [clusterName=" + clusterName + ", masterSlave=" + masterSlave + ", envDsName="
-                + envDsName + "]";
+        return "EnvDBInfo [envDsName=" + envDsName + ", id=" + id + ", clusterName=" + clusterName + ", dbName="
+                + dbName + ", masterSlave=" + masterSlave + "]";
     }
 
     @Override

@@ -20,6 +20,7 @@ import java.util.Map;
 
 import javax.sql.DataSource;
 
+import org.pinus4j.cluster.enums.EnumDB;
 import org.pinus4j.cluster.enums.EnumDBMasterSlave;
 import org.pinus4j.exceptions.LoadConfigException;
 
@@ -31,72 +32,92 @@ import org.pinus4j.exceptions.LoadConfigException;
  */
 public abstract class DBInfo {
 
-	/**
-	 * 数据源
-	 */
-	protected DataSource datasource;
+    protected String              id;
 
-	/**
-	 * 集群名
-	 */
-	protected String clusterName;
+    protected EnumDB              dbCatalog;
 
-	/**
-	 * database name.
-	 */
-	protected String dbName;
+    /**
+     * 数据源
+     */
+    protected DataSource          datasource;
 
-	/**
-	 * 主从中的角色.
-	 */
-	protected EnumDBMasterSlave masterSlave;
-	
-	/**
-	 * custom properties.
-	 */
-	protected Map<String, String> customProperties;
+    /**
+     * 集群名
+     */
+    protected String              clusterName;
 
-	public abstract boolean check() throws LoadConfigException;
-	
-	public abstract DBInfo clone();
+    /**
+     * database name.
+     */
+    protected String              dbName;
 
-	public String getClusterName() {
-		return clusterName;
-	}
+    /**
+     * 主从中的角色.
+     */
+    protected EnumDBMasterSlave   masterSlave;
 
-	public void setClusterName(String clusterName) {
-		this.clusterName = clusterName;
-	}
+    /**
+     * custom properties.
+     */
+    protected Map<String, String> customProperties;
 
-	public DataSource getDatasource() {
-		return datasource;
-	}
+    public abstract boolean check() throws LoadConfigException;
 
-	public void setDatasource(DataSource datasource) {
-		this.datasource = datasource;
-	}
+    public abstract DBInfo clone();
 
-	public EnumDBMasterSlave getMasterSlave() {
-		return masterSlave;
-	}
+    public String getId() {
+        return id;
+    }
 
-	public void setMasterSlave(EnumDBMasterSlave masterSlave) {
-		this.masterSlave = masterSlave;
-	}
+    public void setId(String id) {
+        this.id = id;
+    }
 
-	public String getDbName() {
-		return dbName;
-	}
+    public EnumDB getDbCatalog() {
+        return dbCatalog;
+    }
 
-	public void setDbName(String dbName) {
-		this.dbName = dbName;
-	}
+    public void setDbCatalog(EnumDB dbCatalog) {
+        this.dbCatalog = dbCatalog;
+    }
 
-	public Map<String, String> getCustomProperties() {
-		return customProperties;
-	}
+    public DataSource getDatasource() {
+        return datasource;
+    }
 
-	public void setCustomProperties(Map<String, String> customProperties) {
-		this.customProperties = customProperties;
-	}
+    public void setDatasource(DataSource datasource) {
+        this.datasource = datasource;
+    }
+
+    public String getClusterName() {
+        return clusterName;
+    }
+
+    public void setClusterName(String clusterName) {
+        this.clusterName = clusterName;
+    }
+
+    public EnumDBMasterSlave getMasterSlave() {
+        return masterSlave;
+    }
+
+    public void setMasterSlave(EnumDBMasterSlave masterSlave) {
+        this.masterSlave = masterSlave;
+    }
+
+    public String getDbName() {
+        return dbName;
+    }
+
+    public void setDbName(String dbName) {
+        this.dbName = dbName;
+    }
+
+    public Map<String, String> getCustomProperties() {
+        return customProperties;
+    }
+
+    public void setCustomProperties(Map<String, String> customProperties) {
+        this.customProperties = customProperties;
+    }
 }

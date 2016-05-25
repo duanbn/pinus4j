@@ -29,7 +29,6 @@ import org.pinus4j.cache.ISecondCache;
 import org.pinus4j.cluster.IDBCluster;
 import org.pinus4j.cluster.IDBClusterBuilder;
 import org.pinus4j.cluster.beans.IShardingKey;
-import org.pinus4j.cluster.enums.EnumDB;
 import org.pinus4j.cluster.enums.EnumDBMasterSlave;
 import org.pinus4j.cluster.enums.EnumSyncAction;
 import org.pinus4j.cluster.impl.DefaultDBClusterBuilder;
@@ -79,11 +78,6 @@ public class DefaultPinusClient implements PinusClient {
     public static PinusClient  instance;
 
     /**
-     * 数据库类型.
-     */
-    private EnumDB             enumDb            = EnumDB.MYSQL;
-
-    /**
      * 同步数据表操作.
      */
     private EnumSyncAction     syncAction        = EnumSyncAction.CREATE;
@@ -101,7 +95,7 @@ public class DefaultPinusClient implements PinusClient {
     /**
      * ref of db cluster.
      */
-    private IDBCluster         dbCluster;
+    protected IDBCluster       dbCluster;
 
     /**
      * transaction manager.
@@ -137,7 +131,6 @@ public class DefaultPinusClient implements PinusClient {
         IDBClusterBuilder dbClusterBuilder = new DefaultDBClusterBuilder();
         dbClusterBuilder.setScanPackage(this.scanPackage);
         dbClusterBuilder.setSyncAction(this.syncAction);
-        dbClusterBuilder.setDbType(this.enumDb);
         this.dbCluster = dbClusterBuilder.build();
 
         // set id generator

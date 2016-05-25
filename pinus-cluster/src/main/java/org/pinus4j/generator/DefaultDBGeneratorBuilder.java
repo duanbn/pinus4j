@@ -33,26 +33,20 @@ public class DefaultDBGeneratorBuilder implements IDBGeneratorBuilder {
      */
     private EnumSyncAction syncAction = EnumSyncAction.CREATE;
 
-    /**
-     * 数据库类型.
-     */
-    private EnumDB         enumDb     = EnumDB.MYSQL;
-
-    private DefaultDBGeneratorBuilder() {
+    private DefaultDBGeneratorBuilder(EnumSyncAction syncAction) {
+        this.syncAction = syncAction;
     }
 
-    public static IDBGeneratorBuilder valueOf(EnumSyncAction syncAction, EnumDB enumDb) {
-        IDBGeneratorBuilder builder = new DefaultDBGeneratorBuilder();
-        builder.setSyncAction(syncAction);
-        builder.setDBCatalog(enumDb);
+    public static IDBGeneratorBuilder valueOf(EnumSyncAction syncAction) {
+        IDBGeneratorBuilder builder = new DefaultDBGeneratorBuilder(syncAction);
         return builder;
     }
 
     @Override
-    public IDBGenerator build() {
+    public IDBGenerator build(EnumDB enumDB) {
         IDBGenerator dbGenerator = null;
 
-        switch (enumDb) {
+        switch (enumDB) {
             case MYSQL:
                 dbGenerator = new DBMySqlGeneratorImpl();
                 break;
@@ -74,8 +68,4 @@ public class DefaultDBGeneratorBuilder implements IDBGeneratorBuilder {
         this.syncAction = syncAction;
     }
 
-    @Override
-    public void setDBCatalog(EnumDB enumDb) {
-        this.enumDb = enumDb;
-    }
 }

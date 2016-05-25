@@ -35,7 +35,7 @@
 		minEvictableIdleTimeMillis="500000" filters="stat"
 		poolPreparedStatements="true">
 		<!-- <envds id=""> <jndi></jndi> </envds> -->
-		<appds id="pinus-global">
+		<appds id="pinus-global" catalog="mysql">
 			<username>root</username>
 			<password>root%1234</password>
 			<url>

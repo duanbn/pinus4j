@@ -9,8 +9,7 @@
     http://www.springframework.org/schema/context 
     http://www.springframework.org/schema/context/spring-context-3.0.xsd">
 
-	<bean id="shardingStorageClient" class="org.pinus4j.api.ShardingStorageClientImpl"
-		init-method="init" destroy-method="destroy">
+	<bean id="pinusClient" class="org.pinus4j.integration.spring.SpringPinusClient">
 		<property name="scanPackage" value="org.pinus4j.entity" />
 		<property name="syncAction" value="UPDATE" />
 	</bean>

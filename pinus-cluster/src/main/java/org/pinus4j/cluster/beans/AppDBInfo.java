@@ -46,14 +46,20 @@ public class AppDBInfo extends DBInfo {
      * @return
      */
     public boolean check() throws LoadConfigException {
+        if (StringUtil.isBlank(this.id)) {
+            throw new LoadConfigException("db info id is empty");
+        }
+        if (this.dbCatalog == null) {
+            throw new LoadConfigException("db info catalog is empty");
+        }
         if (StringUtil.isBlank(this.username)) {
-            throw new LoadConfigException("db username is empty");
+            throw new LoadConfigException("db info username is empty");
         }
         if (StringUtil.isBlank(this.password)) {
-            throw new LoadConfigException("db password is empty");
+            throw new LoadConfigException("db info password is empty");
         }
         if (StringUtil.isBlank(this.url)) {
-            throw new LoadConfigException("db url is empty");
+            throw new LoadConfigException("db info url is empty");
         }
         return true;
     }
@@ -61,6 +67,8 @@ public class AppDBInfo extends DBInfo {
     @Override
     public DBInfo clone() {
         AppDBInfo clone = new AppDBInfo();
+        clone.setId(this.id);
+        clone.setDbCatalog(this.dbCatalog);
         clone.setUsername(this.username);
         clone.setPassword(this.password);
         clone.setUrl(this.url);
@@ -70,8 +78,8 @@ public class AppDBInfo extends DBInfo {
 
     @Override
     public String toString() {
-        return "AppDBConnectionInfo [username=" + username + ", clusterName=" + clusterName + ", masterSlave="
-                + masterSlave + ", url=" + url + "]";
+        return "AppDBInfo [username=" + username + ", url=" + url + ", id=" + id + ", clusterName=" + clusterName
+                + ", dbName=" + dbName + ", masterSlave=" + masterSlave + "]";
     }
 
     @Override

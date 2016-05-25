@@ -21,17 +21,21 @@ import java.util.Map;
 import org.pinus4j.cluster.beans.AppDBInfo;
 import org.pinus4j.cluster.beans.DBInfo;
 import org.pinus4j.cluster.beans.EnvDBInfo;
+import org.pinus4j.cluster.config.IClusterConfig;
 import org.pinus4j.cluster.container.ContainerType;
 import org.pinus4j.cluster.container.DefaultContainerFactory;
 import org.pinus4j.cluster.container.IContainer;
+import org.pinus4j.cluster.cp.IDBConnectionPool;
+import org.pinus4j.cluster.cp.impl.AbstractConnectionPool;
+import org.pinus4j.cluster.enums.EnumDB;
 import org.pinus4j.exceptions.LoadConfigException;
 import org.pinus4j.utils.StringUtil;
 import org.w3c.dom.Node;
 
-public class DataSourceBucketLoader extends AbstractXMLConfigLoader<IContainer<DBInfo>> {
+public class DBConnectionPoolLoader extends AbstractXMLConfigLoader<IDBConnectionPool> {
 
     @Override
-    public IContainer<DBInfo> load(Node xmlNode) throws LoadConfigException {
+    public IDBConnectionPool load(Node xmlNode) throws LoadConfigException {
         IContainer<DBInfo> dbInfos = DefaultContainerFactory.createContainer(ContainerType.MAP);
 
         Node dsBucket = xmlUtil.getFirstChildByName(xmlNode, "datasource-bucket");
@@ -39,15 +43,34 @@ public class DataSourceBucketLoader extends AbstractXMLConfigLoader<IContainer<D
             throw new LoadConfigException("can not found <datasource-bucket>");
         }
 
-        String dbInfoId = null;
-        DBInfo dbInfo = null;
+        IDBConnectionPool dbConnectionPool = null;
+        String connectionPoolClass = xmlUtil.getAttributeValue(dsBucket, "cpclass");
+        if (StringUtil.isBlank(connectionPoolClass)) {
+            connectionPoolClass = IClusterConfig.DEFAULT_CP_CLASS;
+        }
+        try {
+            Class<?> clazz = Class.forName(connectionPoolClass);
+            dbConnectionPool = (IDBConnectionPool) clazz.newInstance();
+        } catch (Exception e) {
+            throw new LoadConfigException(e);
+        }
 
+        DBInfo dbInfo = null;
+        String dbInfoId = null;
+        EnumDB dbCatalog = null;
         for (Node appDBInfoNode : xmlUtil.getChildByName(dsBucket, "appds")) {
             dbInfoId = xmlUtil.getAttributeValue(appDBInfoNode, "id");
             if (StringUtil.isBlank(dbInfoId))
-                throw new LoadConfigException("<envds> <appds> 必须设置id属性");
+                throw new LoadConfigException("<appds> 必须设置id属性");
+
+            dbCatalog = EnumDB.getEnum(xmlUtil.getAttributeValue(appDBInfoNode, "catalog"));
+            if (dbCatalog == null) {
+                dbCatalog = EnumDB.MYSQL;
+            }
 
             dbInfo = new AppDBInfo();
+            dbInfo.setId(dbInfoId);
+            dbInfo.setDbCatalog(dbCatalog);
             String username = xmlUtil.getFirstChildByName(appDBInfoNode, "username").getTextContent().trim();
             String password = xmlUtil.getFirstChildByName(appDBInfoNode, "password").getTextContent().trim();
             String url = xmlUtil.getFirstChildByName(appDBInfoNode, "url").getTextContent().trim();
@@ -56,7 +79,7 @@ public class DataSourceBucketLoader extends AbstractXMLConfigLoader<IContainer<D
             ((AppDBInfo) dbInfo).setUrl(url);
 
             Map<String, String> connectParam = xmlUtil.getAttributeAsMap(dsBucket, "cpclass");
-            Map<String, String> oneDBConnectParam = xmlUtil.getAttributeAsMap(appDBInfoNode, "id");
+            Map<String, String> oneDBConnectParam = xmlUtil.getAttributeAsMap(appDBInfoNode, "id", "catalog");
             for (Map.Entry<String, String> connectParamEntry : oneDBConnectParam.entrySet()) {
                 connectParam.put(connectParamEntry.getKey(), connectParamEntry.getValue());
             }
@@ -66,10 +89,17 @@ public class DataSourceBucketLoader extends AbstractXMLConfigLoader<IContainer<D
                 throw new LoadConfigException("配置错误，数据源id配置重复，id=" + dbInfoId);
             }
             dbInfos.put(dbInfoId, dbInfo);
+
+            dbConnectionPool.addDataSource(dbInfo);
         }
 
         for (Node envDBInfoNode : xmlUtil.getChildByName(dsBucket, "envds")) {
+            dbInfoId = xmlUtil.getAttributeValue(envDBInfoNode, "id");
+            if (StringUtil.isBlank(dbInfoId))
+                throw new LoadConfigException("<envds> 必须设置id属性");
+
             dbInfo = new EnvDBInfo();
+            dbInfo.setId(dbInfoId);
             String envDsName = xmlUtil.getFirstChildByName(envDBInfoNode, "jndi").getTextContent().trim();
             ((EnvDBInfo) dbInfo).setEnvDsName(envDsName);
 
@@ -77,9 +107,13 @@ public class DataSourceBucketLoader extends AbstractXMLConfigLoader<IContainer<D
                 throw new LoadConfigException("配置错误，数据源id配置重复，id=" + dbInfoId);
             }
             dbInfos.put(dbInfoId, dbInfo);
+
+            dbConnectionPool.addDataSource(dbInfo);
         }
 
-        return dbInfos;
+        ((AbstractConnectionPool) dbConnectionPool).setDbInfos(dbInfos);
+
+        return dbConnectionPool;
     }
 
 }
