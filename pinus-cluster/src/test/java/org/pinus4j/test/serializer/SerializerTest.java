@@ -26,12 +26,12 @@ public class SerializerTest extends BaseTest {
     @Test
     public void pref() {
         try {
-            SubModel sm = new SubModel();
+            InnerModel sm = new InnerModel();
             byte[] bb = null;
             for (int i = 0; i < 1000; i++) {
 
                 bb = writeJson(sm);
-                readJson(bb, SubModel.class);
+                readJson(bb, InnerModel.class);
 
                 bb = ser.ser(sm, false);
                 deser.deser(bb, false, Model.class);
@@ -52,7 +52,7 @@ public class SerializerTest extends BaseTest {
             System.out.println("jackson ser use:" + (System.currentTimeMillis() - start));
             start = System.currentTimeMillis();
             for (int i = 0; i < times; i++)
-                readJson(b, SubModel.class);
+                readJson(b, InnerModel.class);
             System.out.println("jackson deser use:" + (System.currentTimeMillis() - start));
 
             // jdk
@@ -87,12 +87,11 @@ public class SerializerTest extends BaseTest {
     @Test
     public void testModel() {
         try {
-            Model sm = new Model();
+            Model sm = createModel();
             byte[] b = ser.ser(sm, false);
             showLength("salix write", b);
             Model sm1 = deser.deser(b, false, Model.class);
-            System.out.println(sm);
-            System.out.println(sm1);
+            Assert.assertEquals(sm, sm1);
 
             b = writeObject(sm);
             showLength("java write", b);
@@ -178,13 +177,13 @@ public class SerializerTest extends BaseTest {
     @Test
     public void testMap() {
         try {
-            Map<String, List<SubModel>> map = new HashMap<String, List<SubModel>>();
-            List<SubModel> list1 = new ArrayList<SubModel>();
-            list1.add(new SubModel());
-            list1.add(new SubModel());
-            List<SubModel> list2 = new ArrayList<SubModel>();
-            list2.add(new SubModel());
-            list2.add(new SubModel());
+            Map<String, List<InnerModel>> map = new HashMap<String, List<InnerModel>>();
+            List<InnerModel> list1 = new ArrayList<InnerModel>();
+            list1.add(new InnerModel());
+            list1.add(new InnerModel());
+            List<InnerModel> list2 = new ArrayList<InnerModel>();
+            list2.add(new InnerModel());
+            list2.add(new InnerModel());
             map.put("aa", list1);
             map.put("bb", list2);
 

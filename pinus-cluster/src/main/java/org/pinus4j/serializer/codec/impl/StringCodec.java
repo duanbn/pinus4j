@@ -16,6 +16,8 @@
 
 package org.pinus4j.serializer.codec.impl;
 
+import java.io.UnsupportedEncodingException;
+
 import org.pinus4j.serializer.codec.Codec;
 import org.pinus4j.serializer.codec.CodecConfig;
 import org.pinus4j.serializer.codec.CodecType;
@@ -25,11 +27,9 @@ import org.pinus4j.serializer.io.DataOutput;
 /**
  * @author duanbn
  */
-public class StringCodec implements Codec<String>
-{
+public class StringCodec implements Codec<String> {
 
-    public void encode(DataOutput output, String v, CodecConfig config)
-    {
+    public void encode(DataOutput output, String v, CodecConfig config) {
         output.writeByte(CodecType.TYPE_STRING);
 
         if (v == null) {
@@ -40,8 +40,7 @@ public class StringCodec implements Codec<String>
         }
     }
 
-    public String decode(DataInput input, CodecConfig config)
-    {
+    public String decode(DataInput input, CodecConfig config) {
         byte isNull = input.readByte();
         if (isNull == CodecType.NULL) {
             return null;

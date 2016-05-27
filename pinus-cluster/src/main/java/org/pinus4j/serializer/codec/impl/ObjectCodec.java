@@ -16,6 +16,7 @@
 
 package org.pinus4j.serializer.codec.impl;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 
 import org.pinus4j.exceptions.CodecException;
@@ -25,6 +26,7 @@ import org.pinus4j.serializer.codec.CodecType;
 import org.pinus4j.serializer.io.DataInput;
 import org.pinus4j.serializer.io.DataOutput;
 import org.pinus4j.utils.BeansUtil;
+import org.pinus4j.utils.ReflectUtil;
 
 /**
  * 这个类只能序列化自定义对象，不能将基本类型当作对象来进行序列化，否则会发生错误. 基本类型的序列化使用相关的编码类.
@@ -44,12 +46,12 @@ public class ObjectCodec implements Codec<Object> {
             output.writeByte(CodecType.NOT_NULL); // write is not null
 
             Class<?> oc = v.getClass();
-            output.writeUTF8(oc.getName()); // write classname
+            output.writeGBK(oc.getName()); // write classname
 
             Object fvalue = null;
             Codec codec = null;
 
-            for (Field f : BeansUtil.getFields(oc, false)) { // write field
+            for (Field f : ReflectUtil.getFields(oc)) { // write field
                 if (!f.isAccessible()) {
                     f.setAccessible(true);
                 }
@@ -111,14 +113,13 @@ public class ObjectCodec implements Codec<Object> {
                 return null;
             }
 
-            Class<?> oc = BeansUtil.getClass(input.readUTF8()); // read
-                                                                // classname
-            // FIXME: 这里需要对内部类进行特殊处理.
-            Object instance = oc.newInstance();
+            Class<?> oc = BeansUtil.getClass(input.readGBK()); // read classname
+
+            Object instance = newObject(oc);
 
             Object fvalue = null;
-            Codec codec = null;
-            for (Field f : BeansUtil.getFields(oc, false)) { // read field
+            Codec<?> codec = null;
+            for (Field f : ReflectUtil.getFields(oc)) { // read field
                 if (!f.isAccessible()) {
                     f.setAccessible(true);
                 }
@@ -169,4 +170,35 @@ public class ObjectCodec implements Codec<Object> {
         }
     }
 
+    // FIXME: 这里需要对内部类进行特殊处理.
+    private Object newObject(Class<?> clazz) throws InstantiationException, IllegalAccessException {
+
+        Object instance = null;
+        try {
+            instance = clazz.newInstance();
+        } catch (InstantiationException e) {
+            Constructor<?>[] constructors = clazz.getConstructors();
+            for (Constructor<?> c : constructors) {
+                Class<?>[] paramClasses = c.getParameterTypes();
+                Object[] paramObj = new Object[paramClasses.length];
+                for (int i = 0; i < paramClasses.length; i++) {
+                    paramObj[i] = newObject(paramClasses[i]);
+                }
+                try {
+                    instance = c.newInstance(paramObj);
+                } catch (Exception e1) {
+                }
+
+                if (instance != null) {
+                    break;
+                }
+            }
+        }
+
+        if (instance == null) {
+            throw new InstantiationException();
+        }
+
+        return instance;
+    }
 }

@@ -26,7 +26,7 @@ import org.pinus4j.serializer.io.DataInput;
 import org.pinus4j.serializer.io.DataOutput;
 
 /**
- * 列表编码解码.
+ * 列表编码解码. 只能序列化元素是同一个类的列表
  *
  * @author duanbn
  */
