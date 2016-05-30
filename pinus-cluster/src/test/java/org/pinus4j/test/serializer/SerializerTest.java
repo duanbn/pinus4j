@@ -125,76 +125,20 @@ public class SerializerTest extends BaseTest {
     @Test
     public void testList() {
         try {
-            List<String> list = new ArrayList<String>();
-            for (int i = 0; i < 10000; i++)
-                list.add("aaa");
+            List<InnerModel> list = new ArrayList<InnerModel>();
+            for (int i = 0; i < 1000; i++)
+                list.add(createInnerModel());
 
-            byte[] b = ser.ser(list);
+            byte[] b = ser.ser(list, true);
             showLength(b);
+            List<InnerModel> list1 = deser.deser(b, true, List.class);
+            Assert.assertEquals(list, list1);
 
             b = writeObject(list);
             showLength(gzip(b));
 
             b = writeJson(list);
             showLength(gzip(b));
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    @Test
-    public void testSet() {
-        try {
-            Set<String> set = new HashSet<String>();
-            for (int i = 0; i < 10000; i++)
-                set.add("aaa");
-
-            byte[] b = ser.ser(set);
-            Set s = deser.deser(b, Set.class);
-            System.out.println(s);
-
-            set = new TreeSet<String>();
-            for (int i = 0; i < 10000; i++)
-                set.add("aaa");
-
-            b = ser.ser(set);
-            s = deser.deser(b, Set.class);
-            System.out.println(s);
-
-            set = new LinkedHashSet<String>();
-            for (int i = 0; i < 10000; i++)
-                set.add("aaa");
-
-            b = ser.ser(set);
-            s = deser.deser(b, Set.class);
-            System.out.println(s);
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    @Test
-    public void testMap() {
-        try {
-            Map<String, List<InnerModel>> map = new HashMap<String, List<InnerModel>>();
-            List<InnerModel> list1 = new ArrayList<InnerModel>();
-            list1.add(new InnerModel());
-            list1.add(new InnerModel());
-            List<InnerModel> list2 = new ArrayList<InnerModel>();
-            list2.add(new InnerModel());
-            list2.add(new InnerModel());
-            map.put("aa", list1);
-            map.put("bb", list2);
-
-            byte[] b = ser.ser(map, false);
-            showLength(b);
-
-            b = writeObject(map);
-            showLength(b);
-
-            b = writeJson(map);
-            showLength(b);
         } catch (Exception e) {
             e.printStackTrace();
         }

@@ -98,7 +98,7 @@ public class IOUtil {
         }
 
         try {
-            return ser.ser(obj, false);
+            return ser.ser(obj, true);
         } catch (SerializeException e) {
             throw new DBOperationException(e);
         }
@@ -109,7 +109,7 @@ public class IOUtil {
             return null;
 
         try {
-            return deser.deser(data, false, clazz);
+            return deser.deser(data, true, clazz);
         } catch (DeserializeException e) {
             throw new DBOperationException(e);
         }

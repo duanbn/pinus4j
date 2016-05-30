@@ -251,7 +251,7 @@ public class RedisPrimaryCacheImpl extends AbstractRedisCache implements IPrimar
 
             Map<byte[], byte[]> data = Maps.newLinkedHashMap();
             for (Map.Entry<EntityPK, T> entry : param.entrySet()) {
-                data.put(IOUtil.getBytesByJava(entry.getKey()), IOUtil.getBytes(entry.getValue()));
+                data.put(IOUtil.getBytes(entry.getKey()), IOUtil.getBytes(entry.getValue()));
             }
 
             redisClient.hmset(key.getBytes(), data);
@@ -278,7 +278,7 @@ public class RedisPrimaryCacheImpl extends AbstractRedisCache implements IPrimar
 
             byte[][] fields = new byte[pks.length][];
             for (int i = 0; i < pks.length; i++) {
-                fields[i] = IOUtil.getBytesByJava(pks[i]);
+                fields[i] = IOUtil.getBytes(pks[i]);
             }
 
             List<byte[]> result = redisClient.hmget(key.getBytes(), fields);
@@ -311,7 +311,7 @@ public class RedisPrimaryCacheImpl extends AbstractRedisCache implements IPrimar
 
             byte[][] fields = new byte[pks.size()][];
             for (int i = 0; i < pks.size(); i++) {
-                fields[i] = IOUtil.getBytesByJava(pks.get(i));
+                fields[i] = IOUtil.getBytes(pks.get(i));
             }
             redisClient.hdel(key.getBytes(), fields);
 

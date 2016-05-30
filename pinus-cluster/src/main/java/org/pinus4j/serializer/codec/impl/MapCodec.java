@@ -46,7 +46,6 @@ public class MapCodec implements Codec<Map<Object, Object>> {
             int length = map.size();
             output.writeVInt(length);
 
-            boolean isWriteType = true;
             Object key = null;
             Object value = null;
             for (Map.Entry<?, ?> entry : map.entrySet()) {
@@ -64,6 +63,8 @@ public class MapCodec implements Codec<Map<Object, Object>> {
                     config.lookup(value).encode(output, value, config);
                 }
             }
+        } catch (CodecException e) {
+            throw e;
         } catch (Exception e) {
             throw new CodecException(e);
         }
@@ -94,6 +95,8 @@ public class MapCodec implements Codec<Map<Object, Object>> {
             }
 
             return map;
+        } catch (CodecException e) {
+            throw e;
         } catch (Exception e) {
             throw new CodecException(e);
         }

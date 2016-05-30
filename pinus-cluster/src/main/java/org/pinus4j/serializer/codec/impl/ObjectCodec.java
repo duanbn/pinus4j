@@ -115,7 +115,7 @@ public class ObjectCodec implements Codec<Object> {
 
             Class<?> oc = BeansUtil.getClass(input.readGBK()); // read classname
 
-            Object instance = newObject(oc);
+            Object instance = ReflectUtil.newObject(oc);
 
             Object fvalue = null;
             Codec<?> codec = null;
@@ -170,35 +170,4 @@ public class ObjectCodec implements Codec<Object> {
         }
     }
 
-    // FIXME: 这里需要对内部类进行特殊处理.
-    private Object newObject(Class<?> clazz) throws InstantiationException, IllegalAccessException {
-
-        Object instance = null;
-        try {
-            instance = clazz.newInstance();
-        } catch (InstantiationException e) {
-            Constructor<?>[] constructors = clazz.getConstructors();
-            for (Constructor<?> c : constructors) {
-                Class<?>[] paramClasses = c.getParameterTypes();
-                Object[] paramObj = new Object[paramClasses.length];
-                for (int i = 0; i < paramClasses.length; i++) {
-                    paramObj[i] = newObject(paramClasses[i]);
-                }
-                try {
-                    instance = c.newInstance(paramObj);
-                } catch (Exception e1) {
-                }
-
-                if (instance != null) {
-                    break;
-                }
-            }
-        }
-
-        if (instance == null) {
-            throw new InstantiationException();
-        }
-
-        return instance;
-    }
 }

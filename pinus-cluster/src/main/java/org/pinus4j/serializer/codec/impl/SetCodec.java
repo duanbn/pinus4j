@@ -16,7 +16,10 @@
 
 package org.pinus4j.serializer.codec.impl;
 
+import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.TreeSet;
 
 import org.pinus4j.exceptions.CodecException;
 import org.pinus4j.serializer.codec.Codec;
@@ -30,11 +33,9 @@ import org.pinus4j.serializer.io.DataOutput;
  *
  * @author duanbn
  */
-public class SetCodec implements Codec<Set<Object>>
-{
+public class SetCodec implements Codec<Set<Object>> {
 
-    public void encode(DataOutput output, Set<Object> v, CodecConfig config) throws CodecException
-    {
+    public void encode(DataOutput output, Set<Object> v, CodecConfig config) throws CodecException {
         output.writeByte(CodecType.TYPE_SET);
 
         // write set instance type
@@ -58,13 +59,14 @@ public class SetCodec implements Codec<Set<Object>>
                     config.lookup(obj).encode(output, obj, config);
                 }
             }
+        } catch (CodecException e) {
+            throw e;
         } catch (Exception e) {
             throw new CodecException(e);
         }
     }
 
-    public Set<Object> decode(DataInput input, CodecConfig config) throws CodecException
-    {
+    public Set<Object> decode(DataInput input, CodecConfig config) throws CodecException {
         try {
             byte type = input.readByte();
 
@@ -72,14 +74,16 @@ public class SetCodec implements Codec<Set<Object>>
 
             int length = input.readVInt(); // read length
 
-            for (int i=0; i<length; i++) {
+            for (int i = 0; i < length; i++) {
                 if (input.readByte() != CodecType.NULL) {
                     type = input.readByte();
                     set.add(config.lookup(type).decode(input, config));
                 }
             }
-            
+
             return set;
+        } catch (CodecException e) {
+            throw e;
         } catch (Exception e) {
             throw new CodecException(e);
         }

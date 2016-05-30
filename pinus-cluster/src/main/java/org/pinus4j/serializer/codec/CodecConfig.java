@@ -30,6 +30,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -171,6 +172,7 @@ public class CodecConfig {
 
             new ConfigItem(Map.class, CodecType.TYPE_MAP, new MapCodec()),
             new ConfigItem(HashMap.class, CodecType.TYPE_HASHMAP, new MapCodec()),
+            new ConfigItem(TreeMap.class, CodecType.TYPE_TREEMAP, new MapCodec()),
             new ConfigItem(ConcurrentHashMap.class, CodecType.TYPE_CONCURRENTHASHMAP, new MapCodec()),
             new ConfigItem(LinkedHashMap.class, CodecType.TYPE_LINKEDHASHMAP, new MapCodec()),
 

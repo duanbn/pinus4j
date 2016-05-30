@@ -16,7 +16,10 @@
 
 package org.pinus4j.serializer.codec.impl;
 
+import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.pinus4j.exceptions.CodecException;
 import org.pinus4j.serializer.codec.Codec;
@@ -56,6 +59,8 @@ public class ListCodec implements Codec<List<Object>> {
                     config.lookup(obj).encode(output, obj, config);
                 }
             }
+        } catch (CodecException e) {
+            throw e;
         } catch (Exception e) {
             throw new CodecException(e);
         }
@@ -77,6 +82,8 @@ public class ListCodec implements Codec<List<Object>> {
             }
 
             return list;
+        } catch (CodecException e) {
+            throw e;
         } catch (Exception e) {
             throw new CodecException(e);
         }

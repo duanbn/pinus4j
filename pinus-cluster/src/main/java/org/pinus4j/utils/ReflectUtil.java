@@ -1,6 +1,7 @@
 package org.pinus4j.utils;
 
 import java.io.Serializable;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
@@ -11,6 +12,37 @@ import java.util.Map;
 public class ReflectUtil {
 
     private static final Map<Class<?>, Field[]> fieldCache = new HashMap<Class<?>, Field[]>();
+
+    public static Object newObject(Class<?> clazz) throws InstantiationException, IllegalAccessException {
+        Object instance = null;
+
+        try {
+            instance = clazz.newInstance();
+        } catch (InstantiationException e) {
+            Constructor<?>[] constructors = clazz.getConstructors();
+            for (Constructor<?> c : constructors) {
+                Class<?>[] paramClasses = c.getParameterTypes();
+                Object[] paramObj = new Object[paramClasses.length];
+                for (int i = 0; i < paramClasses.length; i++) {
+                    paramObj[i] = newObject(paramClasses[i]);
+                }
+                try {
+                    instance = c.newInstance(paramObj);
+                } catch (Exception e1) {
+                }
+
+                if (instance != null) {
+                    break;
+                }
+            }
+        }
+
+        if (instance == null) {
+            throw new InstantiationException();
+        }
+
+        return instance;
+    }
 
     /**
      * 获取一个对象的所有定义字段. 从父类开始算起，第一个被标志为壳序列化的类的字段及其子类的字段的可继承字段 当前类的所有字段.

@@ -121,6 +121,7 @@ public class Model implements Serializable {
     private List<String>                list1;
     private List<?>                     nlist;
     private List<Object>                list2;
+    private List<InnerModel>            list3;
 
     private Set<InnerModel>             set1;
     private Set<InnerModel>             set2;
@@ -128,6 +129,7 @@ public class Model implements Serializable {
 
     private Map<InnerModel, InnerModel> map;
     private Map<String, Object>         map1;
+    private Map<Object, Object>         map2;
     private Map<Object, Object>         map3;
 
 }

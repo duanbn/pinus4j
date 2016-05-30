@@ -1,14 +1,33 @@
 package org.pinus4j.test.serializer;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.sql.Timestamp;
-import java.util.*;
-import java.io.*;
-import java.util.zip.*;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.TreeSet;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.zip.GZIPOutputStream;
 
-import org.codehaus.jackson.map.*;
+import org.codehaus.jackson.map.ObjectMapper;
 
 public class BaseTest {
-    protected char[] words = new char[] { '第', '提', '去', '额', '我', 'a', '速', '而', '的', '分', '平', '吗', '库', '你' };
+    protected char[] words = new char[] { '第', '提', '去', '额', '我', '中', '速', '而', '的', '分', '平', '吗', '库', '你' };
     protected Random r     = new Random();
 
     protected String genWord(int count) {
@@ -141,7 +160,8 @@ public class BaseTest {
 
         List<String> list1 = new ArrayList<String>();
         List<?> nlist = null;
-        List<Object> list2 = new ArrayList<Object>();
+        List<Object> list2 = new LinkedList<Object>();
+        List<InnerModel> list3 = new CopyOnWriteArrayList<InnerModel>();
         list1.add("aa");
         list1.add("bb");
         list2.add("hello world");
@@ -149,9 +169,11 @@ public class BaseTest {
         list2.add(createInnerModel());
         list2.add(createInnerModel());
         list2.add(createInnerModel());
+        list3.add(createInnerModel());
         model.setList1(list1);
         model.setNlist(nlist);
         model.setList2(list2);
+        model.setList3(list3);
 
         Set<InnerModel> set1 = new HashSet<InnerModel>();
         Set<InnerModel> set2 = new TreeSet<InnerModel>();
@@ -167,13 +189,16 @@ public class BaseTest {
         model.setSet3(set3);
 
         Map<InnerModel, InnerModel> map = new HashMap<InnerModel, InnerModel>();
-        Map<String, Object> map1 = new HashMap<String, Object>();
-        Map<Object, Object> map3 = new HashMap<Object, Object>();
+        Map<String, Object> map1 = new TreeMap<String, Object>();
+        Map<Object, Object> map2 = new LinkedHashMap<Object, Object>();
+        Map<Object, Object> map3 = new ConcurrentHashMap<Object, Object>();
         map.put(createInnerModel(), createInnerModel());
         map1.put("test server", createInnerModel());
+        map2.put(createInnerModel(), createInnerModel());
         map3.put(createInnerModel(), createInnerModel());
         model.setMap(map);
         model.setMap1(map1);
+        model.setMap2(map2);
         model.setMap3(map3);
 
         return model;
