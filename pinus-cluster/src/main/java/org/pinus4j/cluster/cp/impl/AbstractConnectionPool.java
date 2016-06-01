@@ -16,6 +16,9 @@
 
 package org.pinus4j.cluster.cp.impl;
 
+import java.beans.IntrospectionException;
+import java.beans.PropertyDescriptor;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -34,9 +37,13 @@ import org.pinus4j.cluster.cp.IDBConnectionPool;
 import org.pinus4j.cluster.enums.EnumDB;
 import org.pinus4j.exceptions.LoadConfigException;
 import org.pinus4j.utils.JdbcUtil;
-import org.pinus4j.utils.StringUtil;
+import org.pinus4j.utils.ReflectUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public abstract class AbstractConnectionPool implements IDBConnectionPool {
+
+    public static final Logger     LOG = LoggerFactory.getLogger(AbstractConnectionPool.class);
 
     private IContainer<DataSource> dsC = DefaultContainerFactory.createContainer(ContainerType.MAP);
 
@@ -106,52 +113,50 @@ public abstract class AbstractConnectionPool implements IDBConnectionPool {
 
     protected abstract DataSource buildAppDataSource(AppDBInfo appDBInfo) throws LoadConfigException;
 
-    protected void setConnectionParam(DataSource obj, String propertyName, String value) {
-        Method[] setMethods = obj.getClass().getMethods();
+    protected void setConnectionParam(DataSource obj, String propertyName, String value) throws IntrospectionException,
+            IllegalAccessException, IllegalArgumentException, InvocationTargetException {
 
-        for (Method setMethod : setMethods) {
-            if (!setMethod.getName().equals("set" + StringUtil.upperFirstLetter(propertyName))) {
-                continue;
-            }
+        PropertyDescriptor pd = ReflectUtil.getPropertyDescriptor(obj.getClass(), propertyName);
 
-            if (setMethod.getParameterTypes().length > 1) {
-                continue;
-            }
-
-            Class<?> paramType = setMethod.getParameterTypes()[0];
-            try {
-                if (paramType == Boolean.TYPE || paramType == Boolean.class) {
-                    Boolean v = (Boolean.valueOf(value)).booleanValue();
-                    setMethod.invoke(obj, v);
-                } else if (paramType == Integer.TYPE || paramType == Integer.class) {
-                    Integer v = Integer.parseInt(value);
-                    setMethod.invoke(obj, v);
-                } else if (paramType == Byte.TYPE || paramType == Byte.class) {
-                    Byte v = Byte.parseByte(value);
-                    setMethod.invoke(obj, v);
-                } else if (paramType == Long.TYPE || paramType == Long.class) {
-                    Long v = Long.parseLong(value);
-                    setMethod.invoke(obj, v);
-                } else if (paramType == Short.TYPE || paramType == Short.class) {
-                    Short v = Short.valueOf(value);
-                    setMethod.invoke(obj, v);
-                } else if (paramType == Float.TYPE || paramType == Float.class) {
-                    Float v = Float.valueOf(value);
-                    setMethod.invoke(obj, v);
-                } else if (paramType == Double.TYPE || paramType == Double.class) {
-                    Double v = Double.valueOf(value);
-                    setMethod.invoke(obj, v);
-                } else if (paramType == Character.TYPE || paramType == Character.class) {
-                    Character v = value.charAt(0);
-                    setMethod.invoke(obj, v);
-                } else {
-                    setMethod.invoke(obj, value);
-                }
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-
+        Method writeMethod = null;
+        if (pd != null) {
+            writeMethod = pd.getWriteMethod();
+        } else {
+            LOG.warn("无法识别的连接池参数{}", propertyName);
             return;
+        }
+
+        Class<?> paramType = pd.getPropertyType();
+        try {
+            if (paramType == Boolean.TYPE || paramType == Boolean.class) {
+                Boolean v = (Boolean.valueOf(value)).booleanValue();
+                writeMethod.invoke(obj, v);
+            } else if (paramType == Integer.TYPE || paramType == Integer.class) {
+                Integer v = Integer.parseInt(value);
+                writeMethod.invoke(obj, v);
+            } else if (paramType == Byte.TYPE || paramType == Byte.class) {
+                Byte v = Byte.parseByte(value);
+                writeMethod.invoke(obj, v);
+            } else if (paramType == Long.TYPE || paramType == Long.class) {
+                Long v = Long.parseLong(value);
+                writeMethod.invoke(obj, v);
+            } else if (paramType == Short.TYPE || paramType == Short.class) {
+                Short v = Short.valueOf(value);
+                writeMethod.invoke(obj, v);
+            } else if (paramType == Float.TYPE || paramType == Float.class) {
+                Float v = Float.valueOf(value);
+                writeMethod.invoke(obj, v);
+            } else if (paramType == Double.TYPE || paramType == Double.class) {
+                Double v = Double.valueOf(value);
+                writeMethod.invoke(obj, v);
+            } else if (paramType == Character.TYPE || paramType == Character.class) {
+                Character v = value.charAt(0);
+                writeMethod.invoke(obj, v);
+            } else {
+                writeMethod.invoke(obj, value);
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 

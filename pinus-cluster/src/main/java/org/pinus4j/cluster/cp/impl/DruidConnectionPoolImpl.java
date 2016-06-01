@@ -62,7 +62,7 @@ public class DruidConnectionPoolImpl extends AbstractConnectionPool {
                 try {
                     setConnectionParam(ds, entry.getKey(), entry.getValue());
                 } catch (Exception e) {
-                    LOG.warn("无法识别的连接池参数:" + entry);
+                    throw new LoadConfigException(e);
                 }
             }
         }

@@ -43,9 +43,7 @@ public class SpringPinusClient extends DefaultPinusClient implements PinusClient
             ((AbstractBeanDefinition) dsBean).setDestroyMethodName("close");
 
             beanFactory.registerBeanDefinition(key, dsBean);
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("reg datasouce {} to spring container done", key);
-            }
+            LOG.info("reg datasouce[{}] to spring container done", key);
         }
     }
 

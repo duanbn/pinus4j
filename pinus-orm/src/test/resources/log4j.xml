@@ -15,10 +15,10 @@
 		<level value="warn" />
 	</category>
 	<category name="org.pinus4j">
-		<level value="debug" />
+		<level value="info" />
 	</category>
 	<category name="org.springframework">
-		<level value="debug" />
+		<level value="warn" />
 	</category>
 
 	<root>

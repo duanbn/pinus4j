@@ -1,5 +1,9 @@
 package org.pinus4j.utils;
 
+import java.beans.BeanInfo;
+import java.beans.IntrospectionException;
+import java.beans.Introspector;
+import java.beans.PropertyDescriptor;
 import java.io.Serializable;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -11,7 +15,29 @@ import java.util.Map;
 
 public class ReflectUtil {
 
-    private static final Map<Class<?>, Field[]> fieldCache = new HashMap<Class<?>, Field[]>();
+    private static final Map<Class<?>, Field[]>                         fieldCache              = new HashMap<Class<?>, Field[]>();
+
+    private static final Map<Class<?>, Map<String, PropertyDescriptor>> propertyDescriptorCache = new HashMap<Class<?>, Map<String, PropertyDescriptor>>();
+
+    public static PropertyDescriptor getPropertyDescriptor(Class<?> clazz, String propertyName)
+            throws IntrospectionException {
+        Map<String, PropertyDescriptor> map = propertyDescriptorCache.get(clazz);
+
+        if (map == null) {
+            map = new HashMap<String, PropertyDescriptor>();
+
+            BeanInfo beanInfo = Introspector.getBeanInfo(clazz);
+            for (PropertyDescriptor pd : beanInfo.getPropertyDescriptors()) {
+                map.put(pd.getName(), pd);
+            }
+
+            propertyDescriptorCache.put(clazz, map);
+        }
+
+        PropertyDescriptor propertyDescriptor = map.get(propertyName);
+
+        return propertyDescriptor;
+    }
 
     public static Object newObject(Class<?> clazz) throws InstantiationException, IllegalAccessException {
         Object instance = null;
@@ -42,18 +68,6 @@ public class ReflectUtil {
         }
 
         return instance;
-    }
-
-    public static Field[] getFieldsWithoutCache(Class<?> clazz, String prefix) {
-        List<Field> fields = new ArrayList<Field>();
-
-        for (Field f : clazz.getFields()) {
-            if (f.getName().startsWith(prefix)) {
-                fields.add(f);
-            }
-        }
-
-        return fields.toArray(new Field[fields.size()]);
     }
 
     /**

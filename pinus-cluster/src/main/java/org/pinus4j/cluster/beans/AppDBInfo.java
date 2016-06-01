@@ -78,8 +78,8 @@ public class AppDBInfo extends DBInfo {
 
     @Override
     public String toString() {
-        return "AppDBInfo [username=" + username + ", url=" + url + ", id=" + id + ", clusterName=" + clusterName
-                + ", dbName=" + dbName + ", masterSlave=" + masterSlave + "]";
+        return "AppDBInfo [url=" + url + ", id=" + id + ", clusterName=" + clusterName + ", dbName=" + dbName
+                + ", masterSlave=" + masterSlave + "]";
     }
 
     @Override
