@@ -66,6 +66,10 @@ public class BeansUtil {
     public static Object getProperty(Object obj, String propertyName) {
         Field f = getField(obj.getClass(), propertyName);
 
+        if (f == null) {
+            throw new IllegalArgumentException("cann't find field " + propertyName + " from " + obj.getClass());
+        }
+
         f.setAccessible(true);
 
         try {

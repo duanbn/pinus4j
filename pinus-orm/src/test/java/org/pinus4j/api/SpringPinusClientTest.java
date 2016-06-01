@@ -22,15 +22,17 @@ public class SpringPinusClientTest {
     private PinusClient        pinusClient;
 
     @Test
-    public void testInjectDaaSource() {
+    public void testInjectDaaSource() throws Exception {
         DataSource pinusGlobal = (DataSource) appCtx.getBean("pinus-global");
         Assert.assertNotNull(pinusGlobal);
+        Assert.assertFalse(pinusGlobal.getConnection().isClosed());
 
         DataSource pinusSharding1 = (DataSource) appCtx.getBean("pinus-sharding1");
-        Assert.assertNotNull(pinusSharding1);
+        Assert.assertFalse(pinusSharding1.getConnection().isClosed());
 
         DataSource pinusSharding2 = (DataSource) appCtx.getBean("pinus-sharding2");
         Assert.assertNotNull(pinusSharding2);
+        Assert.assertFalse(pinusSharding2.getConnection().isClosed());
 
     }
 

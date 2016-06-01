@@ -44,6 +44,18 @@ public class ReflectUtil {
         return instance;
     }
 
+    public static Field[] getFieldsWithoutCache(Class<?> clazz, String prefix) {
+        List<Field> fields = new ArrayList<Field>();
+
+        for (Field f : clazz.getFields()) {
+            if (f.getName().startsWith(prefix)) {
+                fields.add(f);
+            }
+        }
+
+        return fields.toArray(new Field[fields.size()]);
+    }
+
     /**
      * 获取一个对象的所有定义字段. 从父类开始算起，第一个被标志为壳序列化的类的字段及其子类的字段的可继承字段 当前类的所有字段.
      *

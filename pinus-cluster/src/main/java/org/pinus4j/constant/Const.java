@@ -16,6 +16,9 @@
 
 package org.pinus4j.constant;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * 系统常量.
  * 
@@ -23,34 +26,34 @@ package org.pinus4j.constant;
  */
 public class Const {
 
-    public static final String DEFAULT_CACHE_VERSION         = "1";
+    public static final String DEFAULT_CACHE_VERSION                 = "1";
 
     //
     // zookeeper目录相关常量.
     //
-    public static final String ZK_ROOT                       = "/pinus";
+    public static final String ZK_ROOT                               = "/pinus";
     /**
      * 每个表的分库分表信息的根目录. 每个分表信息保存在此目录下的文件.
      */
-    public static final String ZK_SHARDINGINFO               = ZK_ROOT + "/shardinginfo";
+    public static final String ZK_SHARDINGINFO                       = ZK_ROOT + "/shardinginfo";
     /**
      * id生成器根目录. 每一个表的id当前id保存在此目录下相关文件.
      */
-    public static final String ZK_PRIMARYKEY                 = ZK_ROOT + "/primarykey";
+    public static final String ZK_PRIMARYKEY                         = ZK_ROOT + "/primarykey";
     /**
      * 序列号生成器
      */
-    public static final String ZK_SEQUENCE                   = ZK_ROOT + "/sequence";
+    public static final String ZK_SEQUENCE                           = ZK_ROOT + "/sequence";
 
     /**
      * 分布式锁目录
      */
-    public static final String ZK_LOCKS                      = ZK_ROOT + "/locks";
+    public static final String ZK_LOCKS                              = ZK_ROOT + "/locks";
 
     /**
      * 字符串超过此值则转换为Text
      */
-    public static final int    COLUMN_TEXT_LENGTH            = 4000;
+    public static final int    COLUMN_TEXT_LENGTH                    = 4000;
 
     //
     // SQL相关
@@ -58,27 +61,27 @@ public class Const {
     /**
      * 查询count的慢日志时间阈值
      */
-    public static final int    SLOWQUERY_COUNT               = 2000;
+    public static final int    SLOWQUERY_COUNT                       = 2000;
     /**
      * 遍历表慢查询时间阈值
      */
-    public static final int    SLOWQUERY_MORE                = 100;
+    public static final int    SLOWQUERY_MORE                        = 100;
     /**
      * 根据Query对象查询的慢日志时间阈值
      */
-    public static final int    SLOWQUERY_QUERY               = 50;
+    public static final int    SLOWQUERY_QUERY                       = 50;
     /**
      * 根据SQL对象查询的慢日志时间阈值
      */
-    public static final int    SLOWQUERY_SQL                 = 50;
+    public static final int    SLOWQUERY_SQL                         = 50;
     /**
      * 根据主键查询的慢日志时间阈值
      */
-    public static final int    SLOWQUERY_PK                  = 1;
+    public static final int    SLOWQUERY_PK                          = 1;
     /**
      * 根据多主键查询的慢日志时间阈值
      */
-    public static final int    SLOWQUERY_PKS                 = 10;
+    public static final int    SLOWQUERY_PKS                         = 10;
 
     //
     // 配置文件相关常量.
@@ -86,36 +89,24 @@ public class Const {
     /**
      * 默认读取的配置文件名.
      */
-    public static final String DEFAULT_CONFIG_FILENAME       = "storage-config.xml";
+    public static final String DEFAULT_CONFIG_FILENAME               = "storage-config.xml";
 
-    public static final String PROP_IDGEN_BATCH              = "db.cluster.generateid.batch";
+    public static final String PROP_IDGEN_BATCH                      = "db.cluster.generateid.batch";
 
-    public static final String PROP_HASH_ALGO                = "db.cluster.hash.algo";
+    public static final String PROP_HASH_ALGO                        = "db.cluster.hash.algo";
 
     /**
      * zookeeper连接地址
      */
-    public static final String PROP_ZK_URL                   = "db.cluster.zk";
+    public static final String PROP_ZK_URL                           = "db.cluster.zk";
 
     //
     // cache prop
     //
-    public static final String PROP_DB_CLUSTER_CACHE         = "db.cluster.cache";
-    public static final String PROP_DB_CLUSTER_CACHE_PRIMARY = "primary";
-    public static final String PROP_DB_CLUSTER_CACHE_SECOND  = "second";
-    public static final String PROP_DB_CLUSTER_CACHE_ADDRESS = "address";
-
-    // 数据库连接池连接池
-    //    public static final String PROP_MAXACTIVE                     = "maxActive";
-    //    public static final String PROP_MINIDLE                       = "minIdle";
-    //    public static final String PROP_MAXIDLE                       = "maxIdle";
-    //    public static final String PROP_INITIALSIZE                   = "initialSize";
-    //    public static final String PROP_REMOVEABANDONED               = "removeAbandoned";
-    //    public static final String PROP_REMOVEABANDONEDTIMEOUT        = "removeAbandonedTimeout";
-    //    public static final String PROP_MAXWAIT                       = "maxWait";
-    //    public static final String PROP_TIMEBETWEENEVICTIONRUNSMILLIS = "timeBetweenEvictionRunsMillis";
-    //    public static final String PROP_NUMTESTSPEREVICTIONRUN        = "numTestsPerEvictionRun";
-    //    public static final String PROP_MINEVICTABLEIDLETIMEMILLIS    = "minEvictableIdleTimeMillis";
+    public static final String PROP_DB_CLUSTER_CACHE                 = "db.cluster.cache";
+    public static final String PROP_DB_CLUSTER_CACHE_PRIMARY         = "primary";
+    public static final String PROP_DB_CLUSTER_CACHE_SECOND          = "second";
+    public static final String PROP_DB_CLUSTER_CACHE_ADDRESS         = "address";
 
     //
     // 系统变量相关常量.
@@ -123,16 +114,16 @@ public class Const {
     /**
      * zookeeper连接信息. -Dstorage.zkhost=
      */
-    public static final String SYSTEM_PROPERTY_ZKHOST        = "storage.zkhost";
+    public static final String SYSTEM_PROPERTY_ZKHOST                = "storage.zkhost";
 
     //
     // 集群相关常量.
     //
-    public static final byte   MSTYPE_MASTER                 = 0;
-    public static final byte   MSTYPE_SLAVE                  = 1;
+    public static final byte   MSTYPE_MASTER                         = 0;
+    public static final byte   MSTYPE_SLAVE                          = 1;
 
     // 数据类型
-    public static final String TRUE                          = "1";
-    public static final String FALSE                         = "0";
+    public static final String TRUE                                  = "1";
+    public static final String FALSE                                 = "0";
 
 }
